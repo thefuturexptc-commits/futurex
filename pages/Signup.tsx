@@ -19,12 +19,20 @@ export const Signup: React.FC = () => {
     e.preventDefault();
     setError('');
     setLoading(true);
+    
+    if (password.length < 6) {
+        setError('Password must be at least 6 characters long');
+        setLoading(false);
+        return;
+    }
+
     try {
       const user = await firebaseService.signup(name, email, password);
       login(user);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Signup failed');
+      console.error(err);
+      setError(err.message || 'Signup failed. Please try again.');
     } finally {
       setLoading(false);
     }

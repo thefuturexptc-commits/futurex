@@ -8,18 +8,27 @@ import { Upload, Image as ImageIcon } from 'lucide-react';
 import { Button } from '../components/Button';
 
 export const AdminDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [logoPreview, setLogoPreview] = useState<string | null>(localStorage.getItem('site_logo'));
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (user?.role !== 'admin') {
+    // Wait for auth to finish loading before checking role
+    if (loading) return;
+
+    if (!user) {
+        navigate('/admin-login');
+        return;
+    }
+
+    if (user.role !== 'admin') {
         navigate('/');
         return;
     }
+    
     firebaseService.getOrders().then(setOrders);
-  }, [user, navigate]);
+  }, [user, loading, navigate]);
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -41,6 +50,18 @@ export const AdminDashboard: React.FC = () => {
       setLogoPreview(null);
       window.dispatchEvent(new Event('logoUpdated'));
   };
+
+  if (loading) {
+      return (
+          <div className="min-h-screen pt-24 flex items-center justify-center">
+              <p className="text-slate-500">Verifying Admin Access...</p>
+          </div>
+      );
+  }
+
+  if (!user || user.role !== 'admin') {
+      return null; 
+  }
 
   const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
   

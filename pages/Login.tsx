@@ -1,9 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { firebaseService } from '../services/firebase';
-import { auth } from '../firebaseConfig'; // Needed for RecaptchaVerifier
-import { RecaptchaVerifier } from 'firebase/auth';
 import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Chrome, Phone, ArrowLeft } from 'lucide-react';
@@ -34,7 +32,7 @@ export const Login: React.FC = () => {
       navigate(from, { replace: true });
     } catch (err: any) {
       console.error(err);
-      setError('Invalid email or password. ' + err.message);
+      setError('Invalid email or password.');
     } finally {
       setLoading(false);
     }
@@ -53,25 +51,12 @@ export const Login: React.FC = () => {
       }
   };
 
-  const setupRecaptcha = () => {
-      if (!(window as any).recaptchaVerifier) {
-          (window as any).recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-              'size': 'invisible',
-              'callback': () => {
-                  // reCAPTCHA solved
-              }
-          });
-      }
-  };
-
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    setupRecaptcha();
-    const appVerifier = (window as any).recaptchaVerifier;
     try {
-        await firebaseService.requestPhoneOtp(phoneNumber, appVerifier);
+        await firebaseService.requestPhoneOtp(phoneNumber, null);
         setIsOtpSent(true);
     } catch (err: any) {
         setError("Failed to send OTP: " + err.message);
@@ -150,7 +135,7 @@ export const Login: React.FC = () => {
                  ) : (
                     <form onSubmit={handleVerifyOtp} className="space-y-4">
                         <Input
-                             label="Enter OTP"
+                             label="Enter OTP (Use 123456)"
                              value={otp}
                              onChange={(e) => setOtp(e.target.value)}
                              placeholder="123456"
@@ -194,9 +179,6 @@ export const Login: React.FC = () => {
           <Link to="/signup" className="text-primary hover:text-cyan-700 font-medium">
             Sign up
           </Link>
-        </p>
-         <p className="mt-4 text-center text-xs text-slate-400">
-          Note: Configure firebaseConfig.ts with your keys.
         </p>
       </div>
     </div>

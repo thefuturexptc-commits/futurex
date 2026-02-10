@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
@@ -11,6 +11,7 @@ import { Signup } from './pages/Signup';
 import { Profile } from './pages/Profile';
 import { Checkout } from './pages/Checkout';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { AdminLogin } from './pages/AdminLogin';
 import { ProductDetail } from './pages/ProductDetail';
 import { ScrollToTop } from './components/ScrollToTop';
 import { CartDrawer } from './components/CartDrawer';
@@ -48,6 +49,7 @@ const App: React.FC = () => {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/checkout" element={<Checkout />} />
                 <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin-login" element={<AdminLogin />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </main>
