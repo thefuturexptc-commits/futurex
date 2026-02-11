@@ -46,6 +46,21 @@ const setMockData = (key: string, data: any) => {
     }
 };
 
+// --- Helper: Ensure Firebase Connection (Fix for Normal Users) ---
+// If a user is "Local" (failed auth) or Admin, they might not have a Firebase Session.
+// We force an anonymous sign-in so they can still read/write to Firestore if rules allow.
+const ensureFirebaseConnection = async () => {
+    if (!auth.currentUser) {
+        try {
+            console.log("No active Firebase user. Attempting anonymous sign-in for DB access...");
+            await auth.signInAnonymously();
+            console.log("Anonymous connection established.");
+        } catch (e) {
+            console.warn("Anonymous auth failed (Database might be unreachable):", e);
+        }
+    }
+};
+
 // --- Helper: Seed Database ---
 export const seedDatabase = async () => {
     console.log("Seeding database...");
@@ -58,6 +73,7 @@ export const seedDatabase = async () => {
     setMockData('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
     
     try {
+        await ensureFirebaseConnection();
         const productsColl = collection(db, 'products');
         const snapshot = await getDocs(productsColl);
         if (snapshot.empty) {
@@ -79,6 +95,7 @@ export const getProducts = async (): Promise<Product[]> => {
   
   // 2. Try Firebase 
   try {
+      // Don't force auth for reading public products, but try if available
       const querySnapshot = await getDocs(collection(db, 'products'));
       if (!querySnapshot.empty) {
           const fbProducts: Product[] = [];
@@ -115,6 +132,7 @@ export const addProduct = async (product: Product): Promise<void> => {
 
   // Firebase
   try {
+      await ensureFirebaseConnection();
       if (cleanProduct.id && cleanProduct.id.startsWith('p')) {
          await setDoc(doc(db, 'products', cleanProduct.id), cleanProduct);
       } else {
@@ -136,6 +154,7 @@ export const updateProduct = async (product: Product): Promise<void> => {
 
   // Firebase
   try {
+      await ensureFirebaseConnection();
       const docRef = doc(db, 'products', cleanProduct.id);
       await updateDoc(docRef, { ...cleanProduct });
   } catch (e) { }
@@ -148,6 +167,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
   // Firebase
   try {
+      await ensureFirebaseConnection();
       await deleteDoc(doc(db, 'products', id));
   } catch (e) { }
 };
@@ -175,6 +195,7 @@ export const addCategory = async (category: string): Promise<void> => {
   }
 
   try {
+      await ensureFirebaseConnection();
       await addDoc(collection(db, 'categories'), { name: category });
   } catch (e) { }
 };
@@ -184,6 +205,7 @@ export const deleteCategory = async (category: string): Promise<void> => {
   setMockData('categories', cats.filter(c => c !== category));
 
   try {
+      await ensureFirebaseConnection();
       const q = query(collection(db, 'categories'), where('name', '==', category));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach(async (d) => {
@@ -218,7 +240,13 @@ export const registerUser = async (name: string, email: string, password: string
             await setDoc(doc(db, 'users', firebaseUser.uid), cleanUser);
         }
     } catch (e) {
-        console.warn("Auth failed/unavailable. Using local user.");
+        console.warn("Auth failed/unavailable. Using local user fallback.");
+        // CRITICAL: Force anonymous connection so this 'local' user can still write orders to DB
+        await ensureFirebaseConnection();
+        // Try to save the user profile to DB even if Auth failed (so Admin sees them)
+        try {
+           await setDoc(doc(db, 'users', cleanUser.id), cleanUser);
+        } catch(dbErr) { console.error("Could not save local user to DB", dbErr); }
     }
     
     return cleanUser;
@@ -236,17 +264,7 @@ export const loginUser = async (email: string, password: string): Promise<User> 
             setMockData('users', users);
         }
 
-        // HACK: Try to sign in anonymously to Firebase so the Admin can read the DB
-        // (If DB rules are "allow read: if request.auth != null")
-        if (!auth.currentUser) {
-            try {
-                await auth.signInAnonymously();
-                console.log("Admin logged in anonymously for DB access");
-            } catch (e) {
-                console.warn("Could not sign in anonymously for Admin DB access", e);
-            }
-        }
-
+        await ensureFirebaseConnection();
         return admin;
     }
 
@@ -274,7 +292,10 @@ export const loginUser = async (email: string, password: string): Promise<User> 
     // 3. Local Check
     const users = getMockData<User[]>('users', []);
     const found = users.find(u => u.email === email);
-    if (found) return found;
+    if (found) {
+        await ensureFirebaseConnection(); // Ensure connection for local users too
+        return found;
+    }
 
     throw new Error("Invalid credentials");
 };
@@ -315,6 +336,8 @@ export const loginWithGoogle = async (): Promise<User> => {
     const users = getMockData<User[]>('users', []);
     users.push(mockUser);
     setMockData('users', users);
+    
+    await ensureFirebaseConnection(); // Ensure connection
     return mockUser;
   }
 };
@@ -326,6 +349,7 @@ export const addNewAdmin = async (email: string, name: string): Promise<void> =>
     setMockData('users', users);
 
     try {
+        await ensureFirebaseConnection();
         await addDoc(collection(db, 'invites'), { email, name, role: 'admin', created: new Date() });
     } catch(e) { }
 };
@@ -334,6 +358,7 @@ export const getAllUsers = async (): Promise<User[]> => {
     const localUsers = getMockData<User[]>('users', []);
     
     try {
+        // We try to fetch from DB, but don't force auth here as it's a read op often done by admin
         const querySnapshot = await getDocs(collection(db, 'users'));
         const fbUsers: User[] = [];
         querySnapshot.forEach((doc) => fbUsers.push(doc.data() as User));
@@ -371,6 +396,9 @@ export const createOrder = async (userId: string, items: any[], total: number, a
 
   // 2. Try Firebase (Best effort)
   try {
+    // CRITICAL: Ensure we have a session (anonymous or real) before writing
+    await ensureFirebaseConnection();
+    
     console.log("Saving order to Firebase...", cleanOrder);
     await setDoc(doc(db, 'orders', cleanOrder.id), cleanOrder);
     console.log("Order saved successfully to Firebase!");
@@ -408,6 +436,7 @@ export const getAllOrders = async (): Promise<Order[]> => {
     let fbOrders: Order[] = [];
     
     try {
+        await ensureFirebaseConnection();
         console.log("Fetching all orders from Firebase...");
         const q = query(collection(db, 'orders'));
         const querySnapshot = await getDocs(q);
@@ -435,6 +464,7 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   // 2. Fetch Firebase Orders
   let fbOrders: Order[] = [];
   try {
+      await ensureFirebaseConnection();
       const q = query(collection(db, 'orders'), where('userId', '==', userId));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => fbOrders.push(doc.data() as Order));
@@ -463,6 +493,7 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
 
   // Firebase
   try {
+      await ensureFirebaseConnection();
       const orderRef = doc(db, 'orders', orderId);
       await updateDoc(orderRef, { status });
   } catch (e) { }
@@ -489,6 +520,7 @@ export const getWebsiteSettings = async (): Promise<WebsiteSettings> => {
 export const updateWebsiteSettings = async (settings: WebsiteSettings): Promise<void> => {
     setMockData('settings', settings);
     try {
+        await ensureFirebaseConnection();
         const docRef = doc(db, 'settings', 'general');
         await setDoc(docRef, settings, { merge: true });
     } catch (e) { }
