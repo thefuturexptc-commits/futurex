@@ -314,10 +314,13 @@ export const getAllUsers = async (): Promise<User[]> => {
 // --- Order Service ---
 
 export const createOrder = async (userId: string, items: any[], total: number, address: Address): Promise<Order> => {
+  // Sanitize items (JSON stringify/parse removes undefined or non-serializable data)
+  const cleanItems = JSON.parse(JSON.stringify(items));
+  
   const newOrder: Order = {
     id: `ORD-${Date.now()}`,
     userId,
-    items,
+    items: cleanItems,
     total,
     status: 'Processing',
     date: new Date().toISOString(),
@@ -331,19 +334,26 @@ export const createOrder = async (userId: string, items: any[], total: number, a
 
   // 2. Try Firebase (Best effort)
   try {
+    console.log("Saving order to Firebase...", newOrder);
     await setDoc(doc(db, 'orders', newOrder.id), newOrder);
+    console.log("Order saved successfully to Firebase");
     
     // Inventory reduction
     for (const item of items) {
-        const pRef = doc(db, 'products', item.id);
-        const pSnap = await getDoc(pRef);
-        if(pSnap.exists()) {
-            const currentStock = pSnap.data().stock;
-            await updateDoc(pRef, { stock: Math.max(0, currentStock - item.quantity) });
+        try {
+            const pRef = doc(db, 'products', item.id);
+            const pSnap = await getDoc(pRef);
+            if(pSnap.exists()) {
+                const currentStock = pSnap.data().stock;
+                await updateDoc(pRef, { stock: Math.max(0, currentStock - item.quantity) });
+            }
+        } catch(invError) {
+            console.warn("Failed to update inventory for item", item.id, invError);
         }
     }
   } catch (error) {
-    // Ignore firebase failure, local is saved.
+    console.error("FIREBASE SAVE FAILED:", error);
+    // We ignore the error so the user flow continues (Local storage fallback active)
   }
   
   // Local Inventory Reduction
@@ -357,6 +367,28 @@ export const createOrder = async (userId: string, items: any[], total: number, a
   return newOrder;
 };
 
+// New: Explicitly fetch all orders for Admin
+export const getAllOrders = async (): Promise<Order[]> => {
+    const localOrders = getMockData<Order[]>('orders', []);
+    let fbOrders: Order[] = [];
+    
+    try {
+        const q = query(collection(db, 'orders'));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => fbOrders.push(doc.data() as Order));
+    } catch (e) {
+        console.error("Error fetching admin orders:", e);
+    }
+
+    // Merge logic
+    const combined = [...localOrders];
+    fbOrders.forEach(fbO => {
+        if (!combined.find(o => o.id === fbO.id)) combined.push(fbO);
+    });
+
+    return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+};
+
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
   // 1. Get Local Orders
   const mockOrders = getMockData<Order[]>('orders', []);
@@ -364,48 +396,20 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   // 2. Fetch Firebase Orders
   let fbOrders: Order[] = [];
   try {
-      // Determine if requester is admin
-      // Quick check: is userId the hardcoded admin?
-      let isAdmin = (userId === 'admin_1');
-
-      // If not, check DB if available
-      if (!isAdmin) {
-          try {
-             const userRef = doc(db, 'users', userId);
-             const userSnap = await getDoc(userRef);
-             if (userSnap.exists() && userSnap.data().role === 'admin') isAdmin = true;
-          } catch(e) {}
-      }
-
-      let q;
-      if (isAdmin) {
-          q = query(collection(db, 'orders'));
-      } else {
-          q = query(collection(db, 'orders'), where('userId', '==', userId));
-      }
-
+      const q = query(collection(db, 'orders'), where('userId', '==', userId));
       const querySnapshot = await getDocs(q);
       querySnapshot.forEach((doc) => fbOrders.push(doc.data() as Order));
   } catch (e) { }
 
-  // 3. Filter Local Orders based on role (Mock data might contain orders for all users)
-  // We need to know if the CURRENT user (userId) is an admin to decide whether to return all local orders or just theirs.
-  // In this demo, we can check if userId exists in our local users as admin
-  const localUsers = getMockData<User[]>('users', []);
-  const localUser = localUsers.find(u => u.id === userId);
-  const isLocalAdmin = (userId === 'admin_1') || (localUser && localUser.role === 'admin');
+  // 3. Filter Local Orders
+  const filteredMock = mockOrders.filter(o => o.userId === userId);
 
-  const filteredMock = isLocalAdmin 
-      ? mockOrders 
-      : mockOrders.filter(o => o.userId === userId);
-
-  // 4. Merge and Dedupe
+  // 4. Merge
   const combined = [...filteredMock];
   fbOrders.forEach(fbO => {
       if (!combined.find(o => o.id === fbO.id)) combined.push(fbO);
   });
   
-  // Sort by date desc
   return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 

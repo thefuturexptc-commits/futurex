@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
-    getProducts, getUserOrders, addProduct, deleteProduct, updateOrderStatus, 
+    getProducts, getAllOrders, addProduct, deleteProduct, updateOrderStatus, 
     updateProduct, getCategories, addCategory, deleteCategory, updateWebsiteSettings, getWebsiteSettings,
     getAllUsers, addNewAdmin, seedDatabase
 } from '../services/backend';
@@ -55,12 +55,8 @@ export const AdminDashboard: React.FC = () => {
 
   const refreshData = () => {
      getProducts().then(setProducts);
-     // Use current user ID for fetching orders (logic inside handles admin role check)
-     if(user) {
-         getUserOrders(user.id).then(setOrders);
-     } else {
-         getUserOrders('admin_1').then(setOrders);
-     }
+     // Use getAllOrders for Admin to ensure we see EVERYTHING
+     getAllOrders().then(setOrders);
      getCategories().then(setCategories);
      getAllUsers().then(setUsers);
   };
