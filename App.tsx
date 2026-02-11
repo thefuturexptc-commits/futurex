@@ -13,6 +13,8 @@ import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Profile } from './pages/Profile';
 import { AdminDashboard } from './pages/AdminDashboard';
+import { OrderSuccess } from './pages/OrderSuccess';
+import { CartDrawer } from './components/CartDrawer';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +24,7 @@ const App: React.FC = () => {
           <BrowserRouter>
             <div className="flex flex-col min-h-screen dark:bg-dark-bg transition-colors duration-300">
               <Navbar />
+              <CartDrawer /> {/* Global Drawer Overlay */}
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Home />} />
@@ -29,6 +32,7 @@ const App: React.FC = () => {
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
+                  <Route path="/order-success" element={<OrderSuccess />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/signup" element={<Signup />} />
                   <Route path="/profile" element={<Profile />} />
@@ -47,4 +51,4 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+ export default App;

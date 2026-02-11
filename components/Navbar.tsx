@@ -7,7 +7,7 @@ import { Button } from './ui/Button';
 
 export const Navbar: React.FC = () => {
   const { user, logout, isAdmin } = useAuth();
-  const { totalItems } = useCart();
+  const { totalItems, openCart } = useCart();
   const { theme, toggleTheme, logoUrl } = useTheme();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -72,14 +72,17 @@ export const Navbar: React.FC = () => {
               )}
             </button>
 
-            <Link to="/cart" className="relative p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-white transition-colors">
+            <button 
+                onClick={openCart}
+                className="relative p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-white transition-colors outline-none"
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
               {totalItems > 0 && (
-                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-white bg-primary-600 rounded-full shadow-md">
+                <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-white bg-primary-600 rounded-full shadow-md animate-bounce-slow">
                   {totalItems}
                 </span>
               )}
-            </Link>
+            </button>
 
             {user ? (
               <div className="relative group">

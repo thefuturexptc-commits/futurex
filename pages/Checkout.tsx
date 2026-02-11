@@ -24,18 +24,18 @@ export const Checkout: React.FC = () => {
     
     setLoading(true);
     try {
-      await createOrder(
+      const order = await createOrder(
         user.id,
         items,
         totalPrice * 1.08,
         { ...address, id: Date.now().toString() }
       );
       clearCart();
-      alert('Order placed successfully!');
-      navigate('/profile');
+      // Redirect to success page instead of alert
+      navigate('/order-success', { state: { orderId: order.id } });
     } catch (error) {
       console.error(error);
-      alert('Failed to place order');
+      alert('Failed to place order. Please try again.');
     } finally {
       setLoading(false);
     }
