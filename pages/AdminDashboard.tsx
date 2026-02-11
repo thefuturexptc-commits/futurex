@@ -20,6 +20,7 @@ export const AdminDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Modal States
   const [showProductModal, setShowProductModal] = useState(false);
@@ -53,12 +54,24 @@ export const AdminDashboard: React.FC = () => {
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminName, setNewAdminName] = useState('');
 
-  const refreshData = () => {
-     getProducts().then(setProducts);
-     // Use getAllOrders for Admin to ensure we see EVERYTHING
-     getAllOrders().then(setOrders);
-     getCategories().then(setCategories);
-     getAllUsers().then(setUsers);
+  const refreshData = async () => {
+     setIsLoading(true);
+     try {
+         const [p, o, c, u] = await Promise.all([
+             getProducts(),
+             getAllOrders(),
+             getCategories(),
+             getAllUsers()
+         ]);
+         setProducts(p);
+         setOrders(o);
+         setCategories(c);
+         setUsers(u);
+     } catch (e) {
+         console.error("Failed to refresh admin data", e);
+     } finally {
+         setIsLoading(false);
+     }
   };
 
   useEffect(() => {
@@ -193,7 +206,15 @@ export const AdminDashboard: React.FC = () => {
     <div className="min-h-screen max-w-7xl mx-auto px-4 py-12">
       <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex items-center gap-4">
+            {isLoading && <span className="text-sm text-primary-500 animate-pulse font-bold">Refreshing...</span>}
+            <Button size="sm" variant="outline" onClick={refreshData}>
+                Refresh Data
+            </Button>
+        </div>
+      </div>
+      
+      <div className="flex flex-wrap gap-2 mb-8">
            {(['products', 'orders', 'categories', 'admins', 'settings'] as const).map(tab => (
                <Button 
                 key={tab} 
@@ -204,7 +225,6 @@ export const AdminDashboard: React.FC = () => {
                    {tab}
                </Button>
            ))}
-        </div>
       </div>
 
       {/* PRODUCTS TAB */}
@@ -259,6 +279,7 @@ export const AdminDashboard: React.FC = () => {
       {/* ORDERS TAB */}
       {activeTab === 'orders' && (
         <div className="space-y-6">
+           {orders.length === 0 && <div className="text-center p-10 text-gray-500">No orders found.</div>}
            {orders.map(order => {
              const orderUser = users.find(u => u.id === order.userId);
              return (
@@ -276,9 +297,18 @@ export const AdminDashboard: React.FC = () => {
                           {/* Customer Details */}
                           <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-white/5 p-4 rounded-lg">
                               <p className="font-semibold text-gray-900 dark:text-gray-200 mb-1 uppercase text-xs tracking-wider">Customer</p>
-                              <p className="font-medium text-base text-gray-900 dark:text-white">{orderUser ? orderUser.name : 'Guest User'}</p>
-                              <p>{orderUser ? orderUser.email : 'No email available'}</p>
-                              <p className="text-xs text-gray-400 mt-1">ID: {order.userId}</p>
+                              {orderUser ? (
+                                <>
+                                  <p className="font-medium text-base text-gray-900 dark:text-white">{orderUser.name}</p>
+                                  <p>{orderUser.email}</p>
+                                  <p className="text-xs text-gray-400 mt-1">ID: {order.userId}</p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="font-medium text-amber-500">User not found (Guest?)</p>
+                                  <p className="text-xs text-gray-400 mt-1">ID: {order.userId}</p>
+                                </>
+                              )}
                           </div>
 
                           {/* Shipping Details */}

@@ -6,6 +6,28 @@ import { db, auth } from './firebaseConfig';
 import { Product, User, Order, Address, WebsiteSettings } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 
+// --- Helper: Data Sanitization (Crucial for Firestore) ---
+const deepSanitize = (obj: any): any => {
+    if (obj === undefined) return null; // Firestore doesn't like undefined
+    if (obj === null) return null;
+    if (typeof obj !== 'object') return obj;
+    
+    if (Array.isArray(obj)) {
+        return obj.map(deepSanitize);
+    }
+    
+    const res: any = {};
+    for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+            const val = obj[key];
+            if (val !== undefined) {
+                res[key] = deepSanitize(val);
+            }
+        }
+    }
+    return res;
+};
+
 // --- Helper: Mock Data Management ---
 const getMockData = <T>(key: string, defaultVal: T): T => {
     try {
@@ -40,11 +62,12 @@ export const seedDatabase = async () => {
         const snapshot = await getDocs(productsColl);
         if (snapshot.empty) {
             for (const p of INITIAL_PRODUCTS) {
-                await setDoc(doc(db, 'products', p.id), p);
+                const cleanP = deepSanitize(p);
+                await setDoc(doc(db, 'products', p.id), cleanP);
             }
         }
     } catch (e) {
-        // Ignore firebase errors in seed
+        console.warn("Seed failed (likely permission or offline):", e);
     }
 };
 
@@ -54,7 +77,7 @@ export const getProducts = async (): Promise<Product[]> => {
   // 1. Get Local
   const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS);
   
-  // 2. Try Firebase (Background Sync concept, but here we just fetch)
+  // 2. Try Firebase 
   try {
       const querySnapshot = await getDocs(collection(db, 'products'));
       if (!querySnapshot.empty) {
@@ -62,12 +85,9 @@ export const getProducts = async (): Promise<Product[]> => {
           querySnapshot.forEach((doc) => {
             fbProducts.push({ ...doc.data(), id: doc.id } as Product);
           });
-          // In a real hybrid app we might merge, but for demo let's prefer FB if available, else Local
           return fbProducts;
       }
-  } catch (e) {
-      // Firebase failed, ignore
-  }
+  } catch (e) { }
   
   return localProducts;
 };
@@ -86,34 +106,38 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
 };
 
 export const addProduct = async (product: Product): Promise<void> => {
+  const cleanProduct = deepSanitize(product);
+  
   // Local
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
-  products.push({ ...product, id: product.id || `p_${Date.now()}` });
+  products.push({ ...cleanProduct, id: cleanProduct.id || `p_${Date.now()}` });
   setMockData('products', products);
 
   // Firebase
   try {
-      if (product.id && product.id.startsWith('p')) {
-         await setDoc(doc(db, 'products', product.id), product);
+      if (cleanProduct.id && cleanProduct.id.startsWith('p')) {
+         await setDoc(doc(db, 'products', cleanProduct.id), cleanProduct);
       } else {
-         await addDoc(collection(db, 'products'), product);
+         await addDoc(collection(db, 'products'), cleanProduct);
       }
   } catch (e) { }
 };
 
 export const updateProduct = async (product: Product): Promise<void> => {
+  const cleanProduct = deepSanitize(product);
+  
   // Local
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
-  const idx = products.findIndex(p => p.id === product.id);
+  const idx = products.findIndex(p => p.id === cleanProduct.id);
   if (idx !== -1) {
-      products[idx] = product;
+      products[idx] = cleanProduct;
       setMockData('products', products);
   }
 
   // Firebase
   try {
-      const docRef = doc(db, 'products', product.id);
-      await updateDoc(docRef, { ...product });
+      const docRef = doc(db, 'products', cleanProduct.id);
+      await updateDoc(docRef, { ...cleanProduct });
   } catch (e) { }
 };
 
@@ -178,10 +202,11 @@ export const registerUser = async (name: string, email: string, password: string
         role: 'user',
         addresses: []
     };
+    const cleanUser = deepSanitize(newUser);
 
     // Local
     const users = getMockData<User[]>('users', []);
-    users.push(newUser);
+    users.push(cleanUser);
     setMockData('users', users);
 
     // Firebase
@@ -189,26 +214,39 @@ export const registerUser = async (name: string, email: string, password: string
         const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const firebaseUser = userCredential.user;
         if (firebaseUser) {
-            newUser.id = firebaseUser.uid; // Update ID to match Firebase
-            await setDoc(doc(db, 'users', firebaseUser.uid), newUser);
+            cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
+            await setDoc(doc(db, 'users', firebaseUser.uid), cleanUser);
         }
     } catch (e) {
         console.warn("Auth failed/unavailable. Using local user.");
     }
     
-    return newUser;
+    return cleanUser;
 };
 
 export const loginUser = async (email: string, password: string): Promise<User> => {
     // 1. Hardcoded Admin (Always works)
     if (email === 'admin@gmail.com' && password === 'admin123') {
         const admin: User = { id: 'admin_1', name: 'Admin User', email, role: 'admin', addresses: [] };
-        // Ensure admin is in local storage for order lookups
+        
+        // Ensure admin is in local storage
         const users = getMockData<User[]>('users', []);
         if(!users.find(u => u.id === 'admin_1')) {
             users.push(admin);
             setMockData('users', users);
         }
+
+        // HACK: Try to sign in anonymously to Firebase so the Admin can read the DB
+        // (If DB rules are "allow read: if request.auth != null")
+        if (!auth.currentUser) {
+            try {
+                await auth.signInAnonymously();
+                console.log("Admin logged in anonymously for DB access");
+            } catch (e) {
+                console.warn("Could not sign in anonymously for Admin DB access", e);
+            }
+        }
+
         return admin;
     }
 
@@ -262,7 +300,7 @@ export const loginWithGoogle = async (): Promise<User> => {
         role: 'user',
         addresses: []
       };
-      await setDoc(userRef, newUser);
+      await setDoc(userRef, deepSanitize(newUser));
       return newUser;
     }
   } catch (error) {
@@ -300,10 +338,10 @@ export const getAllUsers = async (): Promise<User[]> => {
         const fbUsers: User[] = [];
         querySnapshot.forEach((doc) => fbUsers.push(doc.data() as User));
         
-        // Merge without duplicates
-        const combined = [...localUsers];
-        fbUsers.forEach(fbU => {
-            if (!combined.find(u => u.id === fbU.id)) combined.push(fbU);
+        // Merge without duplicates (Prefer Firebase)
+        const combined = [...fbUsers];
+        localUsers.forEach(locU => {
+            if (!combined.find(u => u.id === locU.id)) combined.push(locU);
         });
         return combined;
     } catch(e) {
@@ -314,29 +352,28 @@ export const getAllUsers = async (): Promise<User[]> => {
 // --- Order Service ---
 
 export const createOrder = async (userId: string, items: any[], total: number, address: Address): Promise<Order> => {
-  // Sanitize items (JSON stringify/parse removes undefined or non-serializable data)
-  const cleanItems = JSON.parse(JSON.stringify(items));
-  
   const newOrder: Order = {
     id: `ORD-${Date.now()}`,
     userId,
-    items: cleanItems,
+    items,
     total,
     status: 'Processing',
     date: new Date().toISOString(),
     shippingAddress: address
   };
 
+  const cleanOrder = deepSanitize(newOrder);
+
   // 1. ALWAYS Save to LocalStorage first (Source of truth for Demo)
   const localOrders = getMockData<Order[]>('orders', []);
-  localOrders.push(newOrder);
+  localOrders.push(cleanOrder);
   setMockData('orders', localOrders);
 
   // 2. Try Firebase (Best effort)
   try {
-    console.log("Saving order to Firebase...", newOrder);
-    await setDoc(doc(db, 'orders', newOrder.id), newOrder);
-    console.log("Order saved successfully to Firebase");
+    console.log("Saving order to Firebase...", cleanOrder);
+    await setDoc(doc(db, 'orders', cleanOrder.id), cleanOrder);
+    console.log("Order saved successfully to Firebase!");
     
     // Inventory reduction
     for (const item of items) {
@@ -352,8 +389,7 @@ export const createOrder = async (userId: string, items: any[], total: number, a
         }
     }
   } catch (error) {
-    console.error("FIREBASE SAVE FAILED:", error);
-    // We ignore the error so the user flow continues (Local storage fallback active)
+    console.error("FIREBASE SAVE FAILED (Data might be undefined or Permissions denied):", error);
   }
   
   // Local Inventory Reduction
@@ -364,26 +400,29 @@ export const createOrder = async (userId: string, items: any[], total: number, a
   });
   setMockData('products', products);
 
-  return newOrder;
+  return cleanOrder;
 };
 
 // New: Explicitly fetch all orders for Admin
 export const getAllOrders = async (): Promise<Order[]> => {
-    const localOrders = getMockData<Order[]>('orders', []);
     let fbOrders: Order[] = [];
     
     try {
+        console.log("Fetching all orders from Firebase...");
         const q = query(collection(db, 'orders'));
         const querySnapshot = await getDocs(q);
         querySnapshot.forEach((doc) => fbOrders.push(doc.data() as Order));
+        console.log("Fetched orders from DB:", fbOrders.length);
     } catch (e) {
-        console.error("Error fetching admin orders:", e);
+        console.error("Error fetching admin orders from DB (Check permissions):", e);
     }
 
-    // Merge logic
-    const combined = [...localOrders];
-    fbOrders.forEach(fbO => {
-        if (!combined.find(o => o.id === fbO.id)) combined.push(fbO);
+    const localOrders = getMockData<Order[]>('orders', []);
+    
+    // Merge logic: Add local orders only if they are NOT in Firebase list
+    const combined = [...fbOrders];
+    localOrders.forEach(locO => {
+        if (!combined.find(o => o.id === locO.id)) combined.push(locO);
     });
 
     return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
