@@ -17,11 +17,12 @@ export const Navbar: React.FC = () => {
     navigate('/');
   };
 
+  // Updated to point to specific routes
   const navLinks = [
-    { name: 'Bands', path: '/shop/Smart Bands' },
-    { name: 'Rings', path: '/shop/Smart Rings' },
-    { name: 'Fans', path: '/shop/Smart Fans' },
-    { name: 'Monitoring', path: '/shop/Smart Monitoring' },
+    { name: 'Bands', path: '/smart-bands' },
+    { name: 'Rings', path: '/smart-rings' },
+    { name: 'Fans', path: '/smart-fans' },
+    { name: 'Monitoring', path: '/smart-monitoring' },
   ];
 
   return (

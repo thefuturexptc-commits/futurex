@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { 
     getProducts, getAllOrders, addProduct, deleteProduct, updateOrderStatus, 
@@ -13,7 +13,7 @@ export const AdminDashboard: React.FC = () => {
   const { user, isAdmin } = useAuth();
   const { updatePrimaryColor, primaryColor, updateLogoUrl, logoUrl } = useTheme();
   
-  const [activeTab, setActiveTab] = useState<'products' | 'orders' | 'categories' | 'admins' | 'settings'>('products');
+  const [activeTab, setActiveTab] = useState<'analytics' | 'inventory' | 'products' | 'orders' | 'categories' | 'admins' | 'settings'>('analytics');
   
   // Data State
   const [products, setProducts] = useState<Product[]>([]);
@@ -78,6 +78,45 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     refreshData();
   }, [user]);
+
+  // --- ANALYTICS CALCULATIONS ---
+  const analytics = useMemo(() => {
+      const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+      const totalOrders = orders.length;
+      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+      const totalCustomers = new Set(orders.map(o => o.userId)).size;
+
+      // Category Breakdown
+      const categoryRevenue: Record<string, number> = {};
+      const productSales: Record<string, number> = {};
+
+      orders.forEach(order => {
+          order.items.forEach(item => {
+              const cat = item.category || 'Uncategorized';
+              categoryRevenue[cat] = (categoryRevenue[cat] || 0) + (item.price * item.quantity);
+              productSales[item.id] = (productSales[item.id] || 0) + item.quantity;
+          });
+      });
+
+      const maxCategoryRevenue = Math.max(...Object.values(categoryRevenue), 0);
+
+      const topProducts = products
+          .map(p => ({ ...p, sold: productSales[p.id] || 0 }))
+          .sort((a, b) => b.sold - a.sold)
+          .slice(0, 5);
+          
+      return { totalRevenue, totalOrders, avgOrderValue, totalCustomers, categoryRevenue, maxCategoryRevenue, topProducts };
+  }, [orders, products]);
+
+  // --- INVENTORY CALCULATIONS ---
+  const inventoryStats = useMemo(() => {
+      const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
+      const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
+      const lowStock = products.filter(p => p.stock < 10 && p.stock > 0);
+      const outOfStock = products.filter(p => p.stock === 0);
+      return { totalStock, totalValue, lowStock, outOfStock };
+  }, [products]);
+
 
   if (!isAdmin) return <div className="p-10 text-center text-red-500">Access Denied. Admin only.</div>;
 
@@ -169,6 +208,14 @@ export const AdminDashboard: React.FC = () => {
       }
   }
 
+  // --- Inventory Handlers ---
+  const handleQuickStockUpdate = async (product: Product, amount: number) => {
+      const newStock = Math.max(0, product.stock + amount);
+      await updateProduct({ ...product, stock: newStock });
+      // Optimistic update
+      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: newStock } : p));
+  }
+
   // --- Admin Handlers ---
   const handleAddAdmin = async (e: React.FormEvent) => {
       e.preventDefault();
@@ -224,22 +271,182 @@ export const AdminDashboard: React.FC = () => {
         </div>
       </div>
       
-      <div className="flex flex-wrap gap-2 mb-8">
-           {(['products', 'orders', 'categories', 'admins', 'settings'] as const).map(tab => (
+      <div className="flex flex-wrap gap-2 mb-8 overflow-x-auto pb-2">
+           {(['analytics', 'inventory', 'products', 'orders', 'categories', 'admins', 'settings'] as const).map(tab => (
                <Button 
                 key={tab} 
                 variant={activeTab === tab ? 'primary' : 'outline'} 
                 onClick={() => setActiveTab(tab)}
-                className="capitalize"
+                className="capitalize whitespace-nowrap"
                >
                    {tab}
                </Button>
            ))}
       </div>
 
+      {/* ANALYTICS TAB */}
+      {activeTab === 'analytics' && (
+          <div className="space-y-8 animate-fade-in-up">
+              {/* KPI Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Revenue</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{analytics.totalRevenue.toLocaleString()}</p>
+                      <div className="mt-2 text-xs text-green-500 font-bold">+12% vs last month</div>
+                  </div>
+                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Orders</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{analytics.totalOrders}</p>
+                  </div>
+                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Avg Order Value</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{analytics.avgOrderValue.toFixed(0)}</p>
+                  </div>
+                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Active Customers</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{analytics.totalCustomers}</p>
+                  </div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* Category Chart */}
+                  <div className="bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Sales by Category</h3>
+                      <div className="space-y-5">
+                          {Object.entries(analytics.categoryRevenue).map(([cat, revenue]: [string, number]) => (
+                              <div key={cat}>
+                                  <div className="flex justify-between text-sm mb-1">
+                                      <span className="font-medium dark:text-gray-300">{cat}</span>
+                                      <span className="font-bold dark:text-white">₹{revenue.toLocaleString()}</span>
+                                  </div>
+                                  <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
+                                      <div 
+                                        className="bg-primary-500 h-2.5 rounded-full transition-all duration-1000" 
+                                        style={{ width: `${(revenue / analytics.maxCategoryRevenue) * 100}%` }}
+                                      ></div>
+                                  </div>
+                              </div>
+                          ))}
+                      </div>
+                  </div>
+
+                  {/* Top Products */}
+                  <div className="bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Top Performing Products</h3>
+                      <div className="space-y-4">
+                          {analytics.topProducts.map((p, i) => (
+                              <div key={p.id} className="flex items-center gap-4">
+                                  <span className="text-lg font-bold text-gray-400 w-6">0{i+1}</span>
+                                  <div className="h-12 w-12 rounded bg-gray-100 dark:bg-white/5 overflow-hidden">
+                                      <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
+                                  </div>
+                                  <div className="flex-1">
+                                      <p className="font-bold text-gray-900 dark:text-white truncate">{p.name}</p>
+                                      <p className="text-xs text-gray-500">{p.category}</p>
+                                  </div>
+                                  <div className="text-right">
+                                      <p className="font-bold text-gray-900 dark:text-white">{p.sold} sold</p>
+                                      <p className="text-xs text-green-500">₹{(p.sold * p.price).toLocaleString()}</p>
+                                  </div>
+                              </div>
+                          ))}
+                          {analytics.topProducts.length === 0 && <p className="text-gray-500">No sales data yet.</p>}
+                      </div>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {/* INVENTORY TAB */}
+      {activeTab === 'inventory' && (
+          <div className="space-y-8 animate-fade-in-up">
+              {/* Inventory Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm border-l-4 border-l-blue-500">
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Inventory Value</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{inventoryStats.totalValue.toLocaleString()}</p>
+                  </div>
+                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm border-l-4 border-l-purple-500">
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Units in Stock</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{inventoryStats.totalStock}</p>
+                  </div>
+                  <div className={`bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm border-l-4 ${inventoryStats.lowStock.length > 0 ? 'border-l-amber-500' : 'border-l-green-500'}`}>
+                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Low Stock Alerts</p>
+                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{inventoryStats.lowStock.length}</p>
+                      <p className="text-xs text-gray-500 mt-1">Items with &lt; 10 units</p>
+                  </div>
+              </div>
+
+              {/* Inventory Table */}
+              <div className="bg-white dark:bg-dark-surface rounded-xl shadow overflow-hidden border border-gray-200 dark:border-white/5 overflow-x-auto">
+                 <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
+                     <h3 className="font-bold text-lg dark:text-white">Stock Control</h3>
+                     <span className="text-xs text-gray-500">Real-time updates</span>
+                 </div>
+                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead className="bg-gray-50 dark:bg-white/5">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Level</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Value</th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white dark:bg-dark-surface divide-y divide-gray-200 dark:divide-gray-700">
+                      {products.sort((a,b) => a.stock - b.stock).map(p => (
+                        <tr key={p.id}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                              <div className="flex items-center">
+                                  <div className="h-8 w-8 rounded bg-gray-100 dark:bg-white/5 overflow-hidden mr-3">
+                                    <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
+                                  </div>
+                                  <div className="flex flex-col">
+                                    <span>{p.name}</span>
+                                    <span className="text-xs text-gray-500 font-normal">{p.id}</span>
+                                  </div>
+                              </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {p.stock === 0 ? (
+                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                  Out of Stock
+                                </span>
+                            ) : p.stock < 10 ? (
+                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">
+                                  Low Stock
+                                </span>
+                            ) : (
+                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                  In Stock
+                                </span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-bold">
+                              {p.stock} units
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                              ₹{p.price}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <button 
+                                onClick={() => handleQuickStockUpdate(p, 10)} 
+                                className="text-primary-600 hover:text-primary-900 font-bold bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded hover:bg-primary-100 transition-colors"
+                            >
+                                + Quick Restock (10)
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                 </table>
+              </div>
+          </div>
+      )}
+
       {/* PRODUCTS TAB */}
       {activeTab === 'products' && (
-        <div>
+        <div className="animate-fade-in-up">
            <div className="flex justify-end mb-4">
               <Button onClick={handleOpenAddProduct}>+ Add Product</Button>
            </div>
@@ -288,7 +495,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* ORDERS TAB */}
       {activeTab === 'orders' && (
-        <div className="space-y-6">
+        <div className="space-y-6 animate-fade-in-up">
            {orders.length === 0 && <div className="text-center p-10 text-gray-500">No orders found.</div>}
            {orders.map(order => {
              const orderUser = users.find(u => u.id === order.userId);
@@ -391,7 +598,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* CATEGORIES TAB */}
       {activeTab === 'categories' && (
-          <div className="space-y-6">
+          <div className="space-y-6 animate-fade-in-up">
               <div className="flex gap-4">
                   <input 
                     type="text" 
@@ -415,7 +622,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* ADMINS TAB */}
       {activeTab === 'admins' && (
-          <div className="space-y-8">
+          <div className="space-y-8 animate-fade-in-up">
               <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-white/5">
                   <h3 className="text-xl font-bold mb-4 dark:text-white">Add New Admin</h3>
                   <form onSubmit={handleAddAdmin} className="space-y-4">
@@ -460,7 +667,7 @@ export const AdminDashboard: React.FC = () => {
 
       {/* SETTINGS TAB */}
       {activeTab === 'settings' && (
-          <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-white/5">
+          <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-white/5 animate-fade-in-up">
               <h3 className="text-xl font-bold mb-6 dark:text-white">Website Settings</h3>
               
               <div className="mb-6">

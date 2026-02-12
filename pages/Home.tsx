@@ -19,6 +19,17 @@ export const Home: React.FC = () => {
   const featuredProducts = products.filter(p => p.isFeatured).slice(0, 4);
   const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
 
+  // Helper to get route from category name
+  const getCategoryRoute = (cat: string) => {
+    const map: Record<string, string> = {
+        'Smart Bands': '/smart-bands',
+        'Smart Rings': '/smart-rings',
+        'Smart Fans': '/smart-fans',
+        'Smart Monitoring': '/smart-monitoring'
+    };
+    return map[cat] || '/shop/all';
+  };
+
   return (
     <div className="min-h-screen overflow-hidden">
       {/* Hero Section */}
@@ -63,7 +74,7 @@ export const Home: React.FC = () => {
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center pt-10">
-              <Link to="/shop/Smart Bands">
+              <Link to="/smart-bands">
                  <Button size="lg" className="w-full sm:w-auto h-16 px-12 text-lg rounded-full shadow-2xl shadow-primary-500/30 hover:shadow-primary-500/50 hover:scale-105 transition-all duration-300 font-display tracking-wide">
                      START EXPLORING
                  </Button>
@@ -92,7 +103,7 @@ export const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'].map((cat, idx) => (
-                <Link key={cat} to={`/shop/${cat}`} className="group relative h-80 rounded-[2rem] overflow-hidden cursor-pointer glass-card transition-all duration-500 hover:-translate-y-4 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border-white/50">
+                <Link key={cat} to={getCategoryRoute(cat)} className="group relative h-80 rounded-[2rem] overflow-hidden cursor-pointer glass-card transition-all duration-500 hover:-translate-y-4 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] border-white/50">
                 {/* Image */}
                 <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800">
                     <img 

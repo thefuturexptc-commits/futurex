@@ -1,11 +1,15 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { Navbar } from './components/Navbar';
 import { Home } from './pages/Home';
 import { Shop } from './pages/Shop';
+import { SmartBands } from './pages/SmartBands';
+import { SmartRings } from './pages/SmartRings';
+import { SmartFans } from './pages/SmartFans';
+import { SmartMonitoring } from './pages/SmartMonitoring';
 import { ProductDetail } from './pages/ProductDetail';
 import { Cart } from './pages/Cart';
 import { Checkout } from './pages/Checkout';
@@ -21,14 +25,24 @@ const App: React.FC = () => {
     <ThemeProvider>
       <AuthProvider>
         <CartProvider>
-          <BrowserRouter>
+          <HashRouter>
             <div className="flex flex-col min-h-screen dark:bg-dark-bg transition-colors duration-300">
               <Navbar />
               <CartDrawer /> {/* Global Drawer Overlay */}
               <main className="flex-grow">
                 <Routes>
                   <Route path="/" element={<Home />} />
-                  <Route path="/shop/:category" element={<Shop />} />
+                  
+                  {/* Dedicated Category Routes */}
+                  <Route path="/smart-bands" element={<SmartBands />} />
+                  <Route path="/smart-rings" element={<SmartRings />} />
+                  <Route path="/smart-fans" element={<SmartFans />} />
+                  <Route path="/smart-monitoring" element={<SmartMonitoring />} />
+                  
+                  {/* Legacy/General Shop Route for Search/View All */}
+                  <Route path="/shop/all" element={<Shop />} />
+                  <Route path="/shop/:category" element={<Navigate to="/shop/all" replace />} /> {/* Redirect old category links just in case */}
+
                   <Route path="/product/:id" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
@@ -44,7 +58,7 @@ const App: React.FC = () => {
                 <p>&copy; {new Date().getFullYear()} TheFutureX. Premium Smart Technology.</p>
               </footer>
             </div>
-          </BrowserRouter>
+          </HashRouter>
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>
