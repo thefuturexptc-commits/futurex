@@ -1,22 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { createOrder } from '../services/backend';
+import { createOrder, updateUserAddresses } from '../services/backend';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import { Address } from '../types';
 
 export const Checkout: React.FC = () => {
   const { items, totalPrice, clearCart } = useCart();
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
-  const [address, setAddress] = useState({
+  const [address, setAddress] = useState<Omit<Address, 'id'>>({
     street: '',
     city: '',
     zip: '',
     country: ''
   });
+
+  // Pre-fill address if user has saved addresses
+  useEffect(() => {
+    if (user && user.addresses && user.addresses.length > 0) {
+        // Use the most recently added/updated address (or first one)
+        const defaultAddress = user.addresses[0];
+        setAddress({
+            street: defaultAddress.street,
+            city: defaultAddress.city,
+            zip: defaultAddress.zip,
+            country: defaultAddress.country
+        });
+    }
+  }, [user]);
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,14 +39,32 @@ export const Checkout: React.FC = () => {
     
     setLoading(true);
     try {
+      const addressId = Date.now().toString();
+      const finalAddress: Address = { ...address, id: addressId };
+
+      // 1. Create Order
       const order = await createOrder(
         user.id,
         items,
         totalPrice * 1.08,
-        { ...address, id: Date.now().toString() }
+        finalAddress
       );
+
+      // 2. Check if this address is already saved, if not, save it to profile
+      const existingAddresses = user.addresses || [];
+      const addressExists = existingAddresses.some(
+          a => a.street.toLowerCase() === finalAddress.street.toLowerCase() && 
+               a.zip === finalAddress.zip
+      );
+
+      if (!addressExists) {
+          const newAddresses = [finalAddress, ...existingAddresses];
+          await updateUserAddresses(user.id, newAddresses);
+          updateUser({ ...user, addresses: newAddresses });
+      }
+
       clearCart();
-      // Redirect to success page instead of alert
+      // Redirect to success page
       navigate('/order-success', { state: { orderId: order.id } });
     } catch (error) {
       console.error(error);
@@ -51,7 +84,13 @@ export const Checkout: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         <form onSubmit={handleOrder} className="space-y-6">
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Shipping Address</h2>
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Shipping Address</h2>
+                {user.addresses && user.addresses.length > 0 && (
+                    <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">Auto-filled from profile</span>
+                )}
+            </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Street Address</label>
               <input 
@@ -99,6 +138,7 @@ export const Checkout: React.FC = () => {
           <Button type="submit" size="lg" className="w-full" isLoading={loading}>
             Place Order (₹{(totalPrice * 1.08).toFixed(2)})
           </Button>
+          <p className="text-xs text-gray-500 text-center">Your address will be automatically saved to your profile for future orders.</p>
         </form>
 
         <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-xl h-fit">
@@ -117,7 +157,15 @@ export const Checkout: React.FC = () => {
             ))}
           </div>
           <div className="border-t border-gray-200 dark:border-white/10 mt-6 pt-4 space-y-2">
-             <div className="flex justify-between text-gray-900 dark:text-white font-bold text-lg">
+             <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Subtotal</span>
+                <span>₹{totalPrice.toFixed(2)}</span>
+             </div>
+             <div className="flex justify-between text-gray-600 dark:text-gray-400">
+                <span>Tax (8%)</span>
+                <span>₹{(totalPrice * 0.08).toFixed(2)}</span>
+             </div>
+             <div className="flex justify-between text-gray-900 dark:text-white font-bold text-lg pt-2 border-t border-gray-200 dark:border-white/10">
                 <span>Total</span>
                 <span>₹{(totalPrice * 1.08).toFixed(2)}</span>
              </div>

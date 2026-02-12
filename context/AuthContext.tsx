@@ -5,6 +5,7 @@ interface AuthContextType {
   user: User | null;
   login: (userData: User) => void;
   logout: () => void;
+  updateUser: (userData: User) => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -31,11 +32,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem('aura_active_user');
   };
 
+  // Allow components to update user state (e.g., after adding an address)
+  const updateUser = (userData: User) => {
+      setUser(userData);
+      localStorage.setItem('aura_active_user', JSON.stringify(userData));
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
       login, 
       logout, 
+      updateUser,
       isAuthenticated: !!user,
       isAdmin: user?.role === 'admin'
     }}>

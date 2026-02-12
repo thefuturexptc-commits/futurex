@@ -1,7 +1,13 @@
 import { 
   collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where 
 } from 'firebase/firestore';
-import firebase from 'firebase/compat/app';
+import { 
+  signInAnonymously, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signInWithPopup, 
+  GoogleAuthProvider 
+} from 'firebase/auth';
 import { db, auth } from './firebaseConfig';
 import { Product, User, Order, Address, WebsiteSettings } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
@@ -53,7 +59,7 @@ const ensureFirebaseConnection = async () => {
     if (!auth.currentUser) {
         try {
             console.log("No active Firebase user. Attempting anonymous sign-in for DB access...");
-            await auth.signInAnonymously();
+            await signInAnonymously(auth);
             console.log("Anonymous connection established.");
         } catch (e) {
             console.warn("Anonymous auth failed (Database might be unreachable):", e);
@@ -233,7 +239,7 @@ export const registerUser = async (name: string, email: string, password: string
 
     // Firebase
     try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
         if (firebaseUser) {
             cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
@@ -270,7 +276,7 @@ export const loginUser = async (email: string, password: string): Promise<User> 
 
     // 2. Try Firebase
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
         if (firebaseUser) {
             const docRef = doc(db, 'users', firebaseUser.uid);
@@ -302,8 +308,8 @@ export const loginUser = async (email: string, password: string): Promise<User> 
 
 export const loginWithGoogle = async (): Promise<User> => {
   try {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await auth.signInWithPopup(provider);
+    const provider = new GoogleAuthProvider();
+    const result = await signInWithPopup(auth, provider);
     const firebaseUser = result.user;
     
     if (!firebaseUser) throw new Error("No user returned");
@@ -340,6 +346,27 @@ export const loginWithGoogle = async (): Promise<User> => {
     await ensureFirebaseConnection(); // Ensure connection
     return mockUser;
   }
+};
+
+export const updateUserAddresses = async (userId: string, addresses: Address[]): Promise<void> => {
+    // 1. Update Local Mock
+    const users = getMockData<User[]>('users', []);
+    const userIdx = users.findIndex(u => u.id === userId);
+    if (userIdx !== -1) {
+        users[userIdx].addresses = addresses;
+        setMockData('users', users);
+    }
+
+    // 2. Update Firebase
+    try {
+        await ensureFirebaseConnection();
+        const userRef = doc(db, 'users', userId);
+        
+        // We only update the addresses field
+        await updateDoc(userRef, { addresses: deepSanitize(addresses) });
+    } catch (e) {
+        console.warn("Failed to update user address in Firebase:", e);
+    }
 };
 
 export const addNewAdmin = async (email: string, name: string): Promise<void> => {
