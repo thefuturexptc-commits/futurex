@@ -549,10 +549,13 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   // 3. Filter Local Orders
   const filteredMock = mockOrders.filter(o => o.userId === userId);
 
-  // 4. Merge
-  const combined = [...filteredMock];
-  fbOrders.forEach(fbO => {
-      if (!combined.find(o => o.id === fbO.id)) combined.push(fbO);
+  // 4. Merge - Prioritize Firebase Orders (Source of truth for Status Updates)
+  const combined = [...fbOrders];
+  filteredMock.forEach(localO => {
+      // Only add local order if it doesn't exist in Firebase list
+      if (!combined.find(fbO => fbO.id === localO.id)) {
+          combined.push(localO);
+      }
   });
   
   return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

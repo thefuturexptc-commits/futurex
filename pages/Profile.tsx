@@ -103,7 +103,10 @@ export const Profile: React.FC = () => {
           {/* Left Column: Orders */}
           <div className="lg:col-span-2 space-y-8">
             <div>
-                <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Order History</h2>
+                <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Order History</h2>
+                    <Button variant="outline" size="sm" onClick={() => getUserOrders(user.id).then(setOrders)}>Refresh</Button>
+                </div>
                 {orders.length === 0 ? (
                     <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-sm text-center text-gray-500 border border-gray-200 dark:border-white/5">
                     No orders found.
@@ -120,6 +123,8 @@ export const Profile: React.FC = () => {
                             <div className="mt-2 md:mt-0">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium 
                                 ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 
+                                order.status === 'Shipped' ? 'bg-purple-100 text-purple-800' :
+                                order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
                                 order.status === 'Processing' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>
                                 {order.status}
                             </span>
