@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { 
     getProducts, getAllOrders, addProduct, deleteProduct, updateOrderStatus, 
     updateProduct, getCategories, addCategory, deleteCategory, updateWebsiteSettings, getWebsiteSettings,
-    getAllUsers, addNewAdmin, seedDatabase
+    getAllUsers, addNewAdmin, seedDatabase, uploadFile
 } from '../services/backend';
 import { Product, Order, User } from '../types';
 import { Button } from '../components/ui/Button';
@@ -25,6 +25,7 @@ export const AdminDashboard: React.FC = () => {
   // Modal States
   const [showProductModal, setShowProductModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   // New/Edit Product Form State
   const initialProductState: Partial<Product> = {
@@ -33,7 +34,7 @@ export const AdminDashboard: React.FC = () => {
     category: 'Smart Bands',
     description: '',
     stock: 0,
-    images: [''],
+    images: [],
     videoUrl: '',
     features: [],
     specs: {},
@@ -46,6 +47,10 @@ export const AdminDashboard: React.FC = () => {
   // Helper for specs/features strings
   const [featuresString, setFeaturesString] = useState('');
   const [specsString, setSpecsString] = useState('');
+
+  // File Upload State
+  const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
+  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
 
   // New Category State
   const [newCategory, setNewCategory] = useState('');
@@ -98,10 +103,10 @@ export const AdminDashboard: React.FC = () => {
           });
       });
 
-      const maxCategoryRevenue = Math.max(...Object.values(categoryRevenue), 0);
+      const maxCategoryRevenue = Math.max(...Object.values(categoryRevenue), 1); // Avoid div by zero
 
       const topProducts = products
-          .map(p => ({ ...p, sold: productSales[p.id] || 0 }))
+          .map(p => ({ ...p, sold: (productSales[p.id] || 0) as number }))
           .sort((a, b) => b.sold - a.sold)
           .slice(0, 5);
           
@@ -126,6 +131,8 @@ export const AdminDashboard: React.FC = () => {
       setProductForm(initialProductState);
       setFeaturesString('');
       setSpecsString('');
+      setSelectedImageFiles([]);
+      setSelectedVideoFile(null);
       setIsEditing(false);
       setShowProductModal(true);
   };
@@ -134,49 +141,104 @@ export const AdminDashboard: React.FC = () => {
       setProductForm(product);
       setFeaturesString(product.features?.join('\n') || '');
       setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
+      setSelectedImageFiles([]);
+      setSelectedVideoFile(null);
       setIsEditing(true);
       setShowProductModal(true);
   };
 
+  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files.length > 0) {
+          setSelectedImageFiles(prev => [...prev, ...Array.from(e.target.files || [])]);
+      }
+  };
+
+  const handleRemoveSelectedImage = (index: number) => {
+      setSelectedImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveExistingImage = (url: string) => {
+      setProductForm(prev => ({
+          ...prev,
+          images: prev.images?.filter(img => img !== url) || []
+      }));
+  };
+
+  const handleVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files && e.target.files[0]) {
+          setSelectedVideoFile(e.target.files[0]);
+      }
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Clean up empty strings in arrays
-    const cleanImages = productForm.images?.filter(i => i.trim() !== '') || ['https://picsum.photos/400'];
-    
-    // Parse features
-    const cleanFeatures = featuresString.split('\n').map(f => f.trim()).filter(f => f !== '');
+    setIsUploading(true);
 
-    // Parse specs
-    const cleanSpecs: Record<string, string> = {};
-    specsString.split('\n').forEach(line => {
-        const parts = line.split(':');
-        if(parts.length >= 2) {
-            const key = parts[0].trim();
-            const val = parts.slice(1).join(':').trim();
-            if(key && val) cleanSpecs[key] = val;
+    try {
+        // 1. Upload new images
+        const uploadedImageUrls: string[] = [];
+        for (const file of selectedImageFiles) {
+            const path = `products/${Date.now()}_${file.name}`;
+            const url = await uploadFile(file, path);
+            uploadedImageUrls.push(url);
         }
-    });
 
-    const productData = {
-        ...productForm,
-        images: cleanImages.length ? cleanImages : ['https://picsum.photos/400'],
-        features: cleanFeatures,
-        specs: cleanSpecs
-    } as Product;
+        // 2. Upload video if selected
+        let finalVideoUrl = productForm.videoUrl;
+        if (selectedVideoFile) {
+            const path = `videos/${Date.now()}_${selectedVideoFile.name}`;
+            finalVideoUrl = await uploadFile(selectedVideoFile, path);
+        }
 
-    if (isEditing && productData.id) {
-        await updateProduct(productData);
-    } else {
-        await addProduct({
-          ...productData,
-          id: `p_${Date.now()}`,
-          rating: 0,
-          reviewCount: 0
+        // 3. Combine existing images with new ones
+        const finalImages = [
+            ...(productForm.images || []),
+            ...uploadedImageUrls
+        ];
+
+        // Fallback image if none exist
+        if (finalImages.length === 0) finalImages.push('https://picsum.photos/400');
+
+        // Parse features
+        const cleanFeatures = featuresString.split('\n').map(f => f.trim()).filter(f => f !== '');
+
+        // Parse specs
+        const cleanSpecs: Record<string, string> = {};
+        specsString.split('\n').forEach(line => {
+            const parts = line.split(':');
+            if(parts.length >= 2) {
+                const key = parts[0].trim();
+                const val = parts.slice(1).join(':').trim();
+                if(key && val) cleanSpecs[key] = val;
+            }
         });
+
+        const productData = {
+            ...productForm,
+            images: finalImages,
+            videoUrl: finalVideoUrl,
+            features: cleanFeatures,
+            specs: cleanSpecs
+        } as Product;
+
+        if (isEditing && productData.id) {
+            await updateProduct(productData);
+        } else {
+            await addProduct({
+            ...productData,
+            id: `p_${Date.now()}`,
+            rating: 0,
+            reviewCount: 0
+            });
+        }
+        setShowProductModal(false);
+        refreshData();
+    } catch (error) {
+        console.error("Error saving product:", error);
+        alert("Failed to save product. See console for details.");
+    } finally {
+        setIsUploading(false);
     }
-    setShowProductModal(false);
-    refreshData();
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -313,16 +375,16 @@ export const AdminDashboard: React.FC = () => {
                   <div className="bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Sales by Category</h3>
                       <div className="space-y-5">
-                          {Object.entries(analytics.categoryRevenue).map(([cat, revenue]: [string, number]) => (
+                          {Object.entries(analytics.categoryRevenue).map(([cat, revenue]) => (
                               <div key={cat}>
                                   <div className="flex justify-between text-sm mb-1">
                                       <span className="font-medium dark:text-gray-300">{cat}</span>
-                                      <span className="font-bold dark:text-white">₹{revenue.toLocaleString()}</span>
+                                      <span className="font-bold dark:text-white">₹{(revenue as number).toLocaleString()}</span>
                                   </div>
                                   <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
                                       <div 
                                         className="bg-primary-500 h-2.5 rounded-full transition-all duration-1000" 
-                                        style={{ width: `${(revenue / analytics.maxCategoryRevenue) * 100}%` }}
+                                        style={{ width: `${((revenue as number) / analytics.maxCategoryRevenue) * 100}%` }}
                                       ></div>
                                   </div>
                               </div>
@@ -346,7 +408,7 @@ export const AdminDashboard: React.FC = () => {
                                   </div>
                                   <div className="text-right">
                                       <p className="font-bold text-gray-900 dark:text-white">{p.sold} sold</p>
-                                      <p className="text-xs text-green-500">₹{(p.sold * p.price).toLocaleString()}</p>
+                                      <p className="text-xs text-green-500">₹{((p.sold as number) * p.price).toLocaleString()}</p>
                                   </div>
                               </div>
                           ))}
@@ -394,7 +456,7 @@ export const AdminDashboard: React.FC = () => {
                       </tr>
                     </thead>
                     <tbody className="bg-white dark:bg-dark-surface divide-y divide-gray-200 dark:divide-gray-700">
-                      {products.sort((a,b) => a.stock - b.stock).map(p => (
+                      {[...products].sort((a,b) => a.stock - b.stock).map(p => (
                         <tr key={p.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                               <div className="flex items-center">
@@ -810,29 +872,92 @@ export const AdminDashboard: React.FC = () => {
                    </div>
                </div>
 
-               <div>
-                   <label className="block text-sm font-medium dark:text-gray-300 mb-1">Image URLs (comma separated)</label>
-                   <textarea
-                     placeholder="https://..., https://..." 
-                     className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white text-sm focus:ring-2 focus:ring-primary-500"
-                     value={productForm.images?.join(', ')} 
-                     onChange={e => setProductForm({...productForm, images: e.target.value.split(',').map(s => s.trim())})} 
+               {/* IMAGE UPLOAD SECTION */}
+               <div className="space-y-4">
+                   <label className="block text-sm font-medium dark:text-gray-300">Product Images</label>
+                   
+                   {/* Existing & Preview Images Grid */}
+                   <div className="flex flex-wrap gap-4">
+                       {/* Existing Images */}
+                       {productForm.images?.map((img, idx) => (
+                           <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 group">
+                               <img src={img} alt="" className="w-full h-full object-cover" />
+                               <button
+                                  type="button"
+                                  onClick={() => handleRemoveExistingImage(img)}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                               >
+                                   ×
+                               </button>
+                           </div>
+                       ))}
+                       {/* New Selected Files Preview */}
+                       {selectedImageFiles.map((file, idx) => (
+                           <div key={`new-${idx}`} className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-primary-500 group">
+                               <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover opacity-80" />
+                               <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white text-xs font-bold">New</div>
+                               <button
+                                  type="button"
+                                  onClick={() => handleRemoveSelectedImage(idx)}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                               >
+                                   ×
+                               </button>
+                           </div>
+                       ))}
+                   </div>
+
+                   <input
+                     type="file"
+                     accept="image/*"
+                     multiple
+                     onChange={handleImageFileSelect} 
+                     className="block w-full text-sm text-gray-500 dark:text-gray-400
+                       file:mr-4 file:py-2 file:px-4
+                       file:rounded-full file:border-0
+                       file:text-sm file:font-semibold
+                       file:bg-primary-50 file:text-primary-700
+                       hover:file:bg-primary-100
+                       dark:file:bg-primary-900/20 dark:file:text-primary-400
+                     "
                    />
                </div>
 
-               <div>
-                   <label className="block text-sm font-medium dark:text-gray-300 mb-1">Video URL (YouTube or MP4)</label>
+               {/* VIDEO UPLOAD SECTION */}
+               <div className="space-y-2">
+                   <label className="block text-sm font-medium dark:text-gray-300">Product Video</label>
+                   
+                   {(productForm.videoUrl || selectedVideoFile) && (
+                       <div className="p-2 bg-gray-50 dark:bg-white/5 rounded border border-gray-200 dark:border-white/10 mb-2">
+                           {selectedVideoFile ? (
+                               <span className="text-sm text-green-600 font-medium">Selected: {selectedVideoFile.name}</span>
+                           ) : (
+                               <span className="text-sm text-gray-600 dark:text-gray-400 truncate block">Current: {productForm.videoUrl}</span>
+                           )}
+                       </div>
+                   )}
+
                    <input
-                     placeholder="https://youtube.com/watch?v=..." 
-                     className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white focus:ring-2 focus:ring-primary-500"
-                     value={productForm.videoUrl || ''} 
-                     onChange={e => setProductForm({...productForm, videoUrl: e.target.value})} 
+                     type="file"
+                     accept="video/*"
+                     onChange={handleVideoFileSelect}
+                     className="block w-full text-sm text-gray-500 dark:text-gray-400
+                       file:mr-4 file:py-2 file:px-4
+                       file:rounded-full file:border-0
+                       file:text-sm file:font-semibold
+                       file:bg-purple-50 file:text-purple-700
+                       hover:file:bg-purple-100
+                       dark:file:bg-purple-900/20 dark:file:text-purple-400
+                     " 
                    />
+                   <p className="text-xs text-gray-500">Supported formats: MP4, WebM</p>
                </div>
                
                <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-100 dark:border-white/10">
-                 <Button type="button" variant="outline" onClick={() => setShowProductModal(false)}>Cancel</Button>
-                 <Button type="submit">Save Product</Button>
+                 <Button type="button" variant="outline" onClick={() => setShowProductModal(false)} disabled={isUploading}>Cancel</Button>
+                 <Button type="submit" isLoading={isUploading}>
+                     {isUploading ? 'Uploading & Saving...' : 'Save Product'}
+                 </Button>
                </div>
             </form>
           </div>
