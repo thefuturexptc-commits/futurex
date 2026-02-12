@@ -13,7 +13,8 @@ export const ProductDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
   const { user } = useAuth();
-  const [activeImage, setActiveImage] = useState(0);
+  // Renamed to activeIndex to reflect that it can be an image or video
+  const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
@@ -54,46 +55,113 @@ export const ProductDetail: React.FC = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center dark:text-white">Loading...</div>;
   if (!product) return <div className="min-h-screen flex items-center justify-center dark:text-white">Product not found</div>;
 
+  const hasVideo = !!product.videoUrl;
+  const mediaCount = product.images.length + (hasVideo ? 1 : 0);
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIndex(prev => (prev === mediaCount - 1 ? 0 : prev + 1));
+  };
+
+  const handlePrev = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveIndex(prev => (prev === 0 ? mediaCount - 1 : prev - 1));
+  };
+
   return (
     <div className="min-h-screen max-w-7xl mx-auto px-4 py-12">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
-        {/* Images */}
+        {/* Media Gallery (Images + Video) */}
         <div className="space-y-6">
-          <div className="aspect-square bg-white dark:bg-white/5 rounded-[2rem] overflow-hidden shadow-2xl relative group border border-gray-100 dark:border-white/10">
-            <img src={product.images[activeImage]} alt={product.name} className="w-full h-full object-cover p-8 hover:scale-105 transition-transform duration-500" />
+          <div className="aspect-square bg-white dark:bg-white/5 rounded-[2rem] overflow-hidden shadow-2xl relative group border border-gray-100 dark:border-white/10 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
             
-            {/* Navigation arrows if multiple images */}
-            {product.images.length > 1 && (
+            {/* Main Media Display */}
+            {hasVideo && activeIndex === product.images.length ? (
+                 <div className="w-full h-full bg-black flex items-center justify-center">
+                    {product.videoUrl && product.videoUrl.includes('youtube') ? (
+                         <iframe 
+                            className="w-full h-full"
+                            src={getEmbedUrl(product.videoUrl)} 
+                            title="Product Video" 
+                            frameBorder="0" 
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            allowFullScreen
+                          ></iframe>
+                    ) : (
+                        <video 
+                          className="w-full h-full object-contain" 
+                          controls 
+                          src={product.videoUrl}
+                          autoPlay
+                        >
+                            Your browser does not support the video tag.
+                        </video>
+                    )}
+                 </div>
+            ) : (
+                <img 
+                    src={product.images[activeIndex]} 
+                    alt={product.name} 
+                    className="w-full h-full object-cover p-8 hover:scale-105 transition-transform duration-500" 
+                />
+            )}
+            
+            {/* Navigation arrows */}
+            {mediaCount > 1 && (
                 <>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === 0 ? product.images.length - 1 : prev - 1); }}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  onClick={handlePrev}
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <button 
-                  onClick={(e) => { e.stopPropagation(); setActiveImage(prev => prev === product.images.length - 1 ? 0 : prev + 1); }}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                  onClick={handleNext}
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
                 </>
             )}
           </div>
-          <div className="flex space-x-4 overflow-x-auto pb-2">
+
+          {/* Thumbnails Strip */}
+          <div className="flex space-x-4 overflow-x-auto pb-2 scrollbar-hide">
+            {/* Image Thumbnails */}
             {product.images.map((img, idx) => (
               <button 
                 key={idx}
-                onClick={() => setActiveImage(idx)}
-                className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all ${activeImage === idx ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-transparent bg-gray-100 dark:bg-white/5'}`}
+                onClick={() => setActiveIndex(idx)}
+                className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all relative ${activeIndex === idx ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-transparent bg-gray-100 dark:bg-white/5'}`}
               >
                 <img src={img} alt="" className="w-full h-full object-cover" />
               </button>
             ))}
+
+            {/* Video Thumbnail */}
+            {hasVideo && (
+                <button 
+                  onClick={() => setActiveIndex(product.images.length)}
+                  className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all relative flex items-center justify-center bg-gray-900 ${activeIndex === product.images.length ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-transparent'}`}
+                >
+                   {/* Use first image as background for video thumbnail with overlay */}
+                   <img src={product.images[0]} alt="Video" className="w-full h-full object-cover opacity-50" />
+                   <div className="absolute inset-0 flex items-center justify-center">
+                       <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/20">
+                           <svg className="w-5 h-5 text-white fill-current ml-0.5" viewBox="0 0 24 24">
+                               <path d="M8 5v14l11-7z" />
+                           </svg>
+                       </div>
+                   </div>
+                   <div className="absolute bottom-1 right-2 text-[10px] font-bold text-white bg-black/60 px-1.5 py-0.5 rounded">
+                       VIDEO
+                   </div>
+                </button>
+            )}
           </div>
         </div>
 
-        {/* Info */}
+        {/* Info Column */}
         <div className="flex flex-col pt-4">
            <span className="text-primary-600 dark:text-primary-400 font-bold uppercase tracking-[0.2em] text-sm mb-4 font-display block">{product.category}</span>
            <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6 font-display leading-tight">{product.name}</h1>
@@ -150,35 +218,6 @@ export const ProductDetail: React.FC = () => {
            </div>
         </div>
       </div>
-      
-      {/* Video Section */}
-      {product.videoUrl && (
-          <div className="mt-24">
-              <div className="text-center mb-10">
-                  <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-display">Experience It In Action</h2>
-              </div>
-              <div className="relative pt-[56.25%] bg-black rounded-3xl overflow-hidden shadow-2xl border-4 border-gray-100 dark:border-white/10">
-                  {product.videoUrl.includes('youtube') ? (
-                       <iframe 
-                          className="absolute top-0 left-0 w-full h-full"
-                          src={getEmbedUrl(product.videoUrl)} 
-                          title="Product Video" 
-                          frameBorder="0" 
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                          allowFullScreen
-                        ></iframe>
-                  ) : (
-                      <video 
-                        className="absolute top-0 left-0 w-full h-full" 
-                        controls 
-                        src={product.videoUrl}
-                      >
-                          Your browser does not support the video tag.
-                      </video>
-                  )}
-              </div>
-          </div>
-      )}
     </div>
   );
 };

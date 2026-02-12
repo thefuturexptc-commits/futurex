@@ -66,10 +66,12 @@ const ensureFirebaseConnection = async () => {
     if (!auth.currentUser) {
         try {
             console.log("No active Firebase user. Attempting anonymous sign-in for DB access...");
-            await signInAnonymously(auth);
+            // Set a timeout for connection attempt
+            const timeout = new Promise((_, reject) => setTimeout(() => reject("Auth Timeout"), 3000));
+            await Promise.race([signInAnonymously(auth), timeout]);
             console.log("Anonymous connection established.");
         } catch (e) {
-            console.warn("Anonymous auth failed (Database might be unreachable):", e);
+            console.warn("Anonymous auth failed or timed out (Database might be unreachable):", e);
         }
     }
 };
@@ -103,23 +105,47 @@ export const seedDatabase = async () => {
 // --- Storage Service ---
 
 export const uploadFile = async (file: File, path: string): Promise<string> => {
+    const readFileAsBase64 = (f: File): Promise<string> => {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(f);
+        });
+    };
+
     try {
+        // Create a timeout promise (e.g., 5 seconds)
+        const timeout = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Upload timed out")), 5000)
+        );
+
         // Try Firebase Storage
         const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, file);
+        // Use Promise.race to prevent hanging if Firebase config is invalid
+        const snapshot = await Promise.race([
+            uploadBytes(storageRef, file),
+            timeout
+        ]) as any;
+
         const downloadURL = await getDownloadURL(snapshot.ref);
         return downloadURL;
     } catch (error) {
-        console.error("Firebase Storage Upload Failed:", error);
+        console.error("Firebase Storage Upload Failed or Timed Out:", error);
         
-        // Fallback for Demo/Mock purposes if Firebase Storage isn't configured or fails
-        // In a real app, you would throw the error. 
-        // Here we return a fake placeholder so the UI doesn't break during testing without backend.
-        if (file.type.startsWith('image/')) {
-            return `https://picsum.photos/seed/${Date.now()}/800/800`;
-        } else {
-            return ''; // Return empty string for failed video uploads in mock mode
+        // --- Fallback Protection ---
+        // Firestore documents are limited to 1 MB. 
+        // Base64 encoding increases size by ~33%. 
+        // We set a safe limit of ~500KB for fallback files to avoid crashing the DB save.
+        // If user has valid Cloud Storage configured, this block is skipped.
+        const MAX_FALLBACK_SIZE = 500 * 1024; // 500 KB
+
+        if (file.size > MAX_FALLBACK_SIZE) {
+            alert(`Upload Warning: Cloud Storage is not configured or unreachable.\n\nFile "${file.name}" is too large (${(file.size/1024/1024).toFixed(2)}MB) to save directly to the database in offline mode. \n\nThe product will be saved without this file.`);
+            return ""; // Return empty so the rest of the product can still save
         }
+        
+        // Return Base64 string if small enough
+        return await readFileAsBase64(file);
     }
 };
 
@@ -161,20 +187,29 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
 export const addProduct = async (product: Product): Promise<void> => {
   const cleanProduct = deepSanitize(product);
   
-  // Local
+  // Local - SAVE HERE FIRST (Source of truth for immediate UI update)
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
-  products.push({ ...cleanProduct, id: cleanProduct.id || `p_${Date.now()}` });
+  // Ensure ID
+  const newId = cleanProduct.id || `p_${Date.now()}`;
+  cleanProduct.id = newId;
+  
+  products.push(cleanProduct);
   setMockData('products', products);
 
   // Firebase
   try {
       await ensureFirebaseConnection();
-      if (cleanProduct.id && cleanProduct.id.startsWith('p')) {
-         await setDoc(doc(db, 'products', cleanProduct.id), cleanProduct);
+      if (newId) {
+         await setDoc(doc(db, 'products', newId), cleanProduct);
       } else {
          await addDoc(collection(db, 'products'), cleanProduct);
       }
-  } catch (e) { }
+  } catch (e: any) { 
+      console.warn("Firebase save failed:", e);
+      if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
+          alert("Database Error: Product data size is too large (likely due to offline images/videos). Product saved locally only.");
+      }
+  }
 };
 
 export const updateProduct = async (product: Product): Promise<void> => {
@@ -193,7 +228,12 @@ export const updateProduct = async (product: Product): Promise<void> => {
       await ensureFirebaseConnection();
       const docRef = doc(db, 'products', cleanProduct.id);
       await updateDoc(docRef, { ...cleanProduct });
-  } catch (e) { }
+  } catch (e: any) {
+      console.warn("Firebase update failed:", e);
+      if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
+          alert("Database Error: Product data size is too large. Product updated locally only.");
+      }
+  }
 };
 
 export const deleteProduct = async (id: string): Promise<void> => {

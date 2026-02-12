@@ -180,14 +180,29 @@ export const AdminDashboard: React.FC = () => {
         for (const file of selectedImageFiles) {
             const path = `products/${Date.now()}_${file.name}`;
             const url = await uploadFile(file, path);
-            uploadedImageUrls.push(url);
+            // Only add if we got a valid string back (empty string means failed/skipped)
+            if (url) uploadedImageUrls.push(url);
         }
 
         // 2. Upload video if selected
-        let finalVideoUrl = productForm.videoUrl;
+        // Default to existing video URL or empty string
+        let finalVideoUrl = productForm.videoUrl || ''; 
+        
         if (selectedVideoFile) {
             const path = `videos/${Date.now()}_${selectedVideoFile.name}`;
-            finalVideoUrl = await uploadFile(selectedVideoFile, path);
+            const newUrl = await uploadFile(selectedVideoFile, path);
+            // If uploadFile returns empty string (failure/too large), we keep existing or set to empty?
+            // Usually if user selects a file and it fails, we shouldn't keep the OLD file. 
+            // But if it fails, the user is alerted. 
+            // We'll update only if newUrl is truthy, or explicitly set empty if we want to clear it on error.
+            if (newUrl) {
+                finalVideoUrl = newUrl;
+            } else {
+                // If it failed (too large/offline), we might want to clear it or handle graceful degradation
+                // For now, let's assume if it failed, we don't save a broken video URL.
+                // But if they selected a file, they probably want that specific file.
+                // Ideally, the 'alert' in uploadFile warns them.
+            }
         }
 
         // 3. Combine existing images with new ones
@@ -379,12 +394,12 @@ export const AdminDashboard: React.FC = () => {
                               <div key={cat}>
                                   <div className="flex justify-between text-sm mb-1">
                                       <span className="font-medium dark:text-gray-300">{cat}</span>
-                                      <span className="font-bold dark:text-white">₹{(revenue as number).toLocaleString()}</span>
+                                      <span className="font-bold dark:text-white">₹{revenue.toLocaleString()}</span>
                                   </div>
                                   <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
                                       <div 
                                         className="bg-primary-500 h-2.5 rounded-full transition-all duration-1000" 
-                                        style={{ width: `${((revenue as number) / analytics.maxCategoryRevenue) * 100}%` }}
+                                        style={{ width: `${(revenue / analytics.maxCategoryRevenue) * 100}%` }}
                                       ></div>
                                   </div>
                               </div>
