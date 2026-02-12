@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button';
 export const Profile: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   
   // Address Management State
   const [isEditingAddress, setIsEditingAddress] = useState(false);
@@ -18,10 +19,17 @@ export const Profile: React.FC = () => {
     country: ''
   });
 
+  const fetchOrders = () => {
+      if(!user) return;
+      setLoadingOrders(true);
+      getUserOrders(user.id).then((data) => {
+          setOrders(data);
+          setLoadingOrders(false);
+      }).catch(() => setLoadingOrders(false));
+  };
+
   useEffect(() => {
-    if (user) {
-      getUserOrders(user.id).then(setOrders);
-    }
+    fetchOrders();
   }, [user]);
 
   if (!user) return <div className="p-10 text-center dark:text-white">Please log in.</div>;
@@ -105,7 +113,14 @@ export const Profile: React.FC = () => {
             <div>
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Order History</h2>
-                    <Button variant="outline" size="sm" onClick={() => getUserOrders(user.id).then(setOrders)}>Refresh</Button>
+                    <Button variant="outline" size="sm" onClick={fetchOrders} disabled={loadingOrders}>
+                        {loadingOrders ? (
+                             <svg className="animate-spin h-4 w-4 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                             </svg>
+                        ) : 'Refresh'}
+                    </Button>
                 </div>
                 {orders.length === 0 ? (
                     <div className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-sm text-center text-gray-500 border border-gray-200 dark:border-white/5">

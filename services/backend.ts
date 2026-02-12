@@ -516,7 +516,8 @@ export const getAllOrders = async (): Promise<Order[]> => {
         console.log("Fetching all orders from Firebase...");
         const q = query(collection(db, 'orders'));
         const querySnapshot = await getDocs(q);
-        querySnapshot.forEach((doc) => fbOrders.push(doc.data() as Order));
+        // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
+        querySnapshot.forEach((doc) => fbOrders.push({ ...(doc.data() as Order), id: doc.id }));
         console.log("Fetched orders from DB:", fbOrders.length);
     } catch (e) {
         console.error("Error fetching admin orders from DB (Check permissions):", e);
@@ -543,8 +544,11 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
       await ensureFirebaseConnection();
       const q = query(collection(db, 'orders'), where('userId', '==', userId));
       const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => fbOrders.push(doc.data() as Order));
-  } catch (e) { }
+      // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
+      querySnapshot.forEach((doc) => fbOrders.push({ ...(doc.data() as Order), id: doc.id }));
+  } catch (e) { 
+      console.warn("Failed to fetch user orders from Firebase", e);
+  }
 
   // 3. Filter Local Orders
   const filteredMock = mockOrders.filter(o => o.userId === userId);
