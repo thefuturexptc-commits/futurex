@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate, BrowserRouter } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -25,7 +25,7 @@ const App: React.FC = () => {
     <ThemeProvider>
       <AuthProvider>
         <CartProvider>
-          <HashRouter>
+          <BrowserRouter>
             <div className="flex flex-col min-h-screen dark:bg-dark-bg transition-colors duration-300">
               <Navbar />
               <CartDrawer /> {/* Global Drawer Overlay */}
@@ -58,7 +58,7 @@ const App: React.FC = () => {
                 <p>&copy; {new Date().getFullYear()} TheFutureX. Premium Smart Technology.</p>
               </footer>
             </div>
-          </HashRouter>
+          </BrowserRouter>
         </CartProvider>
       </AuthProvider>
     </ThemeProvider>
