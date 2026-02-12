@@ -162,8 +162,7 @@ export const Checkout: React.FC = () => {
                 <span>₹{totalPrice.toFixed(2)}</span>
              </div>
              <div className="flex justify-between text-gray-600 dark:text-gray-400">
-                <span>Tax (8%)</span>
-                <span>₹{(totalPrice * 0.08).toFixed(2)}</span>
+                <span>₹{totalPrice.toFixed(2)}</span>
              </div>
              <div className="flex justify-between text-gray-900 dark:text-white font-bold text-lg pt-2 border-t border-gray-200 dark:border-white/10">
                 <span>Total</span>
