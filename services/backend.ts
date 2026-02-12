@@ -6,9 +6,11 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signInWithPopup, 
-  GoogleAuthProvider 
+  GoogleAuthProvider,
+  getAuth as getAuthFromApp
 } from 'firebase/auth';
-import { db, auth } from './firebaseConfig';
+import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
+import { db, auth, app as mainApp } from './firebaseConfig';
 import { Product, User, Order, Address, WebsiteSettings } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 
@@ -202,8 +204,32 @@ export const addCategory = async (category: string): Promise<void> => {
 
   try {
       await ensureFirebaseConnection();
-      await addDoc(collection(db, 'categories'), { name: category });
-  } catch (e) { }
+      
+      const catCol = collection(db, 'categories');
+      const snapshot = await getDocs(catCol);
+
+      // CRITICAL: If DB is empty, seed defaults first so we don't lose the "previous" ones.
+      if (snapshot.empty) {
+          const defaults = ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'];
+          for (const def of defaults) {
+              if (def !== category) { 
+                  await addDoc(catCol, { name: def });
+              }
+          }
+      }
+      
+      // Check if this specific category already exists in DB to avoid duplicates
+      let exists = false;
+      snapshot.forEach(doc => {
+          if (doc.data().name === category) exists = true;
+      });
+
+      if (!exists) {
+          await addDoc(catCol, { name: category });
+      }
+  } catch (e) { 
+      console.error("Error adding category:", e);
+  }
 };
 
 export const deleteCategory = async (category: string): Promise<void> => {
@@ -369,7 +395,7 @@ export const updateUserAddresses = async (userId: string, addresses: Address[]):
     }
 };
 
-export const addNewAdmin = async (email: string, name: string): Promise<void> => {
+export const addNewAdmin = async (email: string, name: string, password: string): Promise<void> => {
     // Local
     const users = getMockData<User[]>('users', []);
     users.push({ id: `admin_${Date.now()}`, name, email, role: 'admin', addresses: [] });
@@ -377,8 +403,31 @@ export const addNewAdmin = async (email: string, name: string): Promise<void> =>
 
     try {
         await ensureFirebaseConnection();
-        await addDoc(collection(db, 'invites'), { email, name, role: 'admin', created: new Date() });
-    } catch(e) { }
+        
+        // Create in Firebase Auth using secondary app to avoid logging out current admin
+        // We use the options from the main app to initialize the secondary one
+        const secondaryApp = initializeApp(mainApp.options, "SecondaryApp");
+        const secondaryAuth = getAuthFromApp(secondaryApp);
+        
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const uid = userCredential.user.uid;
+        
+        // Save user document
+        await setDoc(doc(db, 'users', uid), { 
+            id: uid,
+            email, 
+            name, 
+            role: 'admin', 
+            addresses: [] 
+        });
+
+        // Cleanup
+        await deleteApp(secondaryApp);
+
+    } catch(e) { 
+        console.error("Error adding admin to Firebase:", e);
+        throw e;
+    }
 };
 
 export const getAllUsers = async (): Promise<User[]> => {

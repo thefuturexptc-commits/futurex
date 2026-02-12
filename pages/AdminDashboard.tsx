@@ -53,6 +53,7 @@ export const AdminDashboard: React.FC = () => {
   // New Admin State
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminName, setNewAdminName] = useState('');
+  const [newAdminPassword, setNewAdminPassword] = useState('');
 
   const refreshData = async () => {
      setIsLoading(true);
@@ -171,11 +172,20 @@ export const AdminDashboard: React.FC = () => {
   // --- Admin Handlers ---
   const handleAddAdmin = async (e: React.FormEvent) => {
       e.preventDefault();
-      await addNewAdmin(newAdminEmail, newAdminName);
-      setNewAdminName('');
-      setNewAdminEmail('');
-      refreshData();
-      alert('Admin added. They can login with their email/password.');
+      if(newAdminPassword.length < 6) {
+          alert('Password must be at least 6 characters');
+          return;
+      }
+      try {
+        await addNewAdmin(newAdminEmail, newAdminName, newAdminPassword);
+        setNewAdminName('');
+        setNewAdminEmail('');
+        setNewAdminPassword('');
+        refreshData();
+        alert('Admin added successfully. They can login with their email/password.');
+      } catch (err: any) {
+        alert('Error adding admin: ' + err.message);
+      }
   }
 
   // --- Settings Handlers ---
@@ -289,8 +299,8 @@ export const AdminDashboard: React.FC = () => {
                       <div className="flex items-center gap-3">
                           <h3 className="font-bold text-lg text-gray-900 dark:text-white">{order.id}</h3>
                           <span className="text-xs text-gray-400 px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-full">
-                            {new Date(order.date).toLocaleDateString()} at {new Date(order.date).toLocaleTimeString()}
-                          </span>
+                            {new Date(order.date).toLocaleDateString()}
+                            </span>
                       </div>
                       
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -409,7 +419,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-white/5">
                   <h3 className="text-xl font-bold mb-4 dark:text-white">Add New Admin</h3>
                   <form onSubmit={handleAddAdmin} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <input 
                              type="text" placeholder="Name" required
                              value={newAdminName} onChange={e => setNewAdminName(e.target.value)}
@@ -419,6 +429,12 @@ export const AdminDashboard: React.FC = () => {
                              type="email" placeholder="Email" required
                              value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)}
                              className="p-2 border rounded dark:bg-white/5 dark:text-white dark:border-white/10"
+                          />
+                          <input 
+                             type="password" placeholder="Password (min 6 chars)" required
+                             value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)}
+                             className="p-2 border rounded dark:bg-white/5 dark:text-white dark:border-white/10"
+                             minLength={6}
                           />
                       </div>
                       <Button type="submit">Create Admin</Button>

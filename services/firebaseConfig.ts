@@ -18,7 +18,8 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase (using compat for Auth to resolve type issues)
-const app = firebase.initializeApp(firebaseConfig);
+// We export 'app' so other services can access the config/options
+export const app = firebase.initializeApp(firebaseConfig);
 
 export const auth = firebase.auth();
 export const db = getFirestore(app);
