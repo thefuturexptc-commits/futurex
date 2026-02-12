@@ -399,7 +399,7 @@ export const AdminDashboard: React.FC = () => {
                                   <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
                                       <div 
                                         className="bg-primary-500 h-2.5 rounded-full transition-all duration-1000" 
-                                        style={{ width: `${(revenue / analytics.maxCategoryRevenue) * 100}%` }}
+                                        style={{ width: `${((revenue as number) / analytics.maxCategoryRevenue) * 100}%` }}
                                       ></div>
                                   </div>
                               </div>
