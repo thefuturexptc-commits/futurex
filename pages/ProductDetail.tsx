@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
 import { getProductById } from '../services/backend';
@@ -13,8 +13,12 @@ export const ProductDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
   const { user } = useAuth();
+  
   // Renamed to activeIndex to reflect that it can be an image or video
   const [activeIndex, setActiveIndex] = useState(0);
+  
+  // Ref for video element to control playback
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (id) {
@@ -24,6 +28,25 @@ export const ProductDetail: React.FC = () => {
       });
     }
   }, [id]);
+
+  // Effect to manage video playback based on visibility
+  useEffect(() => {
+      if (product && videoRef.current) {
+          const videoIndex = product.images.length;
+          if (activeIndex === videoIndex) {
+              // Video is active: Play it
+              const playPromise = videoRef.current.play();
+              if (playPromise !== undefined) {
+                  playPromise.catch(error => {
+                      console.log("Autoplay prevented:", error);
+                  });
+              }
+          } else {
+              // Video is hidden: Pause it
+              videoRef.current.pause();
+          }
+      }
+  }, [activeIndex, product]);
 
   const handleBuyNow = () => {
     if (!product) return;
@@ -57,6 +80,7 @@ export const ProductDetail: React.FC = () => {
 
   const hasVideo = !!product.videoUrl;
   const mediaCount = product.images.length + (hasVideo ? 1 : 0);
+  const isYoutube = product.videoUrl && (product.videoUrl.includes('youtube') || product.videoUrl.includes('youtu.be'));
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -75,35 +99,48 @@ export const ProductDetail: React.FC = () => {
         <div className="space-y-6">
           <div className="aspect-square bg-white dark:bg-white/5 rounded-[2rem] overflow-hidden shadow-2xl relative group border border-gray-100 dark:border-white/10 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
             
-            {/* Main Media Display */}
-            {hasVideo && activeIndex === product.images.length ? (
-                 <div className="w-full h-full bg-black flex items-center justify-center">
-                    {product.videoUrl && product.videoUrl.includes('youtube') ? (
-                         <iframe 
-                            className="w-full h-full"
-                            src={getEmbedUrl(product.videoUrl)} 
-                            title="Product Video" 
-                            frameBorder="0" 
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                            allowFullScreen
-                          ></iframe>
+            {/* Image Layer - Visible when not viewing video */}
+            <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeIndex < product.images.length ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+                {activeIndex < product.images.length && (
+                    <img 
+                        src={product.images[activeIndex]} 
+                        alt={product.name} 
+                        className="w-full h-full object-cover p-8 hover:scale-105 transition-transform duration-500" 
+                    />
+                )}
+            </div>
+
+            {/* Video Layer - Always mounted for uploaded videos to allow buffering */}
+            {hasVideo && (
+                <div className={`absolute inset-0 w-full h-full bg-black flex items-center justify-center transition-opacity duration-300 ${activeIndex === product.images.length ? 'opacity-100 z-20' : 'opacity-0 z-[-1] pointer-events-none'}`}>
+                    {isYoutube ? (
+                         // Iframes reload when hidden/shown, so we conditionally render them to save resources when not active
+                         activeIndex === product.images.length && (
+                            <iframe 
+                                className="w-full h-full"
+                                src={getEmbedUrl(product.videoUrl!)} 
+                                title="Product Video" 
+                                frameBorder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowFullScreen
+                            ></iframe>
+                         )
                     ) : (
+                        // Native Video - Kept in DOM with preload="auto" for instant play
                         <video 
+                          ref={videoRef}
                           className="w-full h-full object-contain" 
-                          controls 
+                          controls={activeIndex === product.images.length}
                           src={product.videoUrl}
-                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          preload="auto"
                         >
                             Your browser does not support the video tag.
                         </video>
                     )}
-                 </div>
-            ) : (
-                <img 
-                    src={product.images[activeIndex]} 
-                    alt={product.name} 
-                    className="w-full h-full object-cover p-8 hover:scale-105 transition-transform duration-500" 
-                />
+                </div>
             )}
             
             {/* Navigation arrows */}
@@ -111,13 +148,13 @@ export const ProductDetail: React.FC = () => {
                 <>
                 <button 
                   onClick={handlePrev}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-30"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <button 
                   onClick={handleNext}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-10"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-30"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>
@@ -145,7 +182,7 @@ export const ProductDetail: React.FC = () => {
                   className={`flex-shrink-0 w-24 h-24 rounded-2xl overflow-hidden border-2 transition-all relative flex items-center justify-center bg-gray-900 ${activeIndex === product.images.length ? 'border-primary-500 ring-2 ring-primary-500/20' : 'border-transparent'}`}
                 >
                    {/* Use first image as background for video thumbnail with overlay */}
-                   <img src={product.images[0]} alt="Video" className="w-full h-full object-cover opacity-50" />
+                   <img src={product.images[0] || 'https://picsum.photos/400'} alt="Video" className="w-full h-full object-cover opacity-50" />
                    <div className="absolute inset-0 flex items-center justify-center">
                        <div className="w-10 h-10 rounded-full bg-white/30 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/20">
                            <svg className="w-5 h-5 text-white fill-current ml-0.5" viewBox="0 0 24 24">
