@@ -17,7 +17,10 @@ export const ProductDetail: React.FC = () => {
   // Renamed to activeIndex to reflect that it can be an image or video
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Error state and Fallback state
   const [videoError, setVideoError] = useState(false);
+  const [useIframeFallback, setUseIframeFallback] = useState(false);
   
   // Ref for video element to control playback
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,12 +34,18 @@ export const ProductDetail: React.FC = () => {
     }
   }, [id]);
 
+  // Reset states when product changes
+  useEffect(() => {
+      setVideoError(false);
+      setUseIframeFallback(false);
+  }, [product]);
+
   // Effect to manage video playback based on visibility
   useEffect(() => {
-      // We only attempt to play/pause if the product has a video and it's not a YouTube embed
-      const isNativeVideo = product?.videoUrl && !product.videoUrl.includes('youtube') && !product.videoUrl.includes('youtu.be');
+      // Check if we should try to play the native video
+      const shouldPlayNative = product?.videoUrl && !useIframeFallback && !videoError;
       
-      if (isNativeVideo && videoRef.current) {
+      if (shouldPlayNative && videoRef.current) {
           const videoIndex = product!.images.length;
           
           if (activeIndex === videoIndex) {
@@ -46,7 +55,8 @@ export const ProductDetail: React.FC = () => {
                   playPromise.then(() => {
                       setIsPlaying(true);
                   }).catch(error => {
-                      console.log("Autoplay prevented or failed:", error);
+                      // Autoplay often fails if not muted, or if user hasn't interacted. This is normal.
+                      console.log("Autoplay prevented/paused:", error);
                       setIsPlaying(false);
                   });
               }
@@ -56,11 +66,11 @@ export const ProductDetail: React.FC = () => {
               setIsPlaying(false);
           }
       }
-  }, [activeIndex, product]);
+  }, [activeIndex, product, videoError, useIframeFallback]);
 
   const handleManualPlay = () => {
       if (videoRef.current) {
-          videoRef.current.play();
+          videoRef.current.play().catch(e => console.error("Play failed", e));
           setIsPlaying(true);
       }
   };
@@ -83,12 +93,34 @@ export const ProductDetail: React.FC = () => {
       if(product) addToCart(product);
   }
 
-  // Simple helper to check if video is a YouTube link
+  // Robust helper to convert various URL formats to embeddable versions
   const getEmbedUrl = (url: string) => {
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-          const videoId = url.split('v=')[1] || url.split('/').pop();
-          return `https://www.youtube.com/embed/${videoId}`;
+      if (!url) return '';
+      
+      // YouTube Standard
+      if (url.includes('youtube.com/watch?v=')) {
+          const videoId = url.split('v=')[1]?.split('&')[0];
+          return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&rel=0`;
+      } 
+      // YouTube Short
+      else if (url.includes('youtu.be/')) {
+          const videoId = url.split('youtu.be/')[1]?.split('?')[0];
+          return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&rel=0`;
       }
+      // YouTube Shorts URL
+      else if (url.includes('youtube.com/shorts/')) {
+          const videoId = url.split('shorts/')[1]?.split('?')[0];
+          return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&rel=0`;
+      }
+      // Vimeo
+      else if (url.includes('vimeo.com/')) {
+          // Extract ID (handles vimeo.com/123456)
+          const match = url.match(/vimeo\.com\/(\d+)/);
+          if (match && match[1]) {
+             return `https://player.vimeo.com/video/${match[1]}?autoplay=1&muted=1&loop=1&background=1`;
+          }
+      }
+      
       return url;
   }
 
@@ -97,7 +129,16 @@ export const ProductDetail: React.FC = () => {
 
   const hasVideo = !!product.videoUrl;
   const mediaCount = product.images.length + (hasVideo ? 1 : 0);
-  const isYoutube = product.videoUrl && (product.videoUrl.includes('youtube') || product.videoUrl.includes('youtu.be'));
+  
+  // Initial check: is it obviously an external link?
+  const isObviousEmbed = product.videoUrl && (
+      product.videoUrl.includes('youtube') || 
+      product.videoUrl.includes('youtu.be') || 
+      product.videoUrl.includes('vimeo')
+  );
+
+  // Determine if we show Iframe or Native Video
+  const showIframe = isObviousEmbed || useIframeFallback;
 
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -129,19 +170,12 @@ export const ProductDetail: React.FC = () => {
             </div>
 
             {/* Video Layer */}
-            {/* 
-                Stacked Logic:
-                - Active: z-30 (Above everything)
-                - Inactive: z-1 (Behind Image, but kept in DOM for buffering)
-                - We use 'invisible' for inactive to prevent interaction but keep layout/buffering if possible, 
-                  or just z-index hiding.
-            */}
             {hasVideo && (
                 <div 
                     className={`absolute inset-0 w-full h-full bg-black flex items-center justify-center transition-all duration-300
                     ${activeIndex === product.images.length ? 'opacity-100 z-30 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}
                 >
-                    {isYoutube ? (
+                    {showIframe ? (
                          activeIndex === product.images.length && (
                             <iframe 
                                 className="w-full h-full"
@@ -154,46 +188,85 @@ export const ProductDetail: React.FC = () => {
                          )
                     ) : (
                         <div className="relative w-full h-full">
-                            <video 
-                                ref={videoRef}
-                                className="w-full h-full object-contain" 
-                                controls={activeIndex === product.images.length}
-                                src={product.videoUrl}
-                                muted
-                                loop
-                                playsInline
-                                preload="auto"
-                                poster={product.images[0]}
-                                onPlay={() => setIsPlaying(true)}
-                                onPause={() => setIsPlaying(false)}
-                                onError={(e) => {
-                                    console.error("Video Error:", e);
-                                    setVideoError(true);
-                                }}
-                            >
-                                Your browser does not support the video tag.
-                            </video>
-                            
-                            {/* Manual Play Button Overlay - Appears if video is active but paused (e.g. autoplay blocked) */}
-                            {activeIndex === product.images.length && !isPlaying && !videoError && (
-                                <div 
-                                    className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer z-40 group/play"
-                                    onClick={handleManualPlay}
+                            {videoError ? (
+                                /* Fallback View when Video Fails (Final Error State) */
+                                <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-gray-100 dark:bg-gray-800 z-50 p-6 text-center">
+                                     {product.images[0] && (
+                                         <img src={product.images[0]} className="absolute inset-0 w-full h-full object-cover opacity-20 blur-sm" alt="" />
+                                     )}
+                                     <div className="relative z-10 flex flex-col items-center p-6 bg-white/90 dark:bg-black/80 backdrop-blur rounded-2xl shadow-xl border border-red-100 dark:border-red-900/30">
+                                         <svg className="w-12 h-12 text-red-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                         <p className="font-bold text-gray-900 dark:text-white text-lg">
+                                             {product.videoUrl?.startsWith('blob:') ? "Session Video Expired" : "Video Unavailable"}
+                                         </p>
+                                         <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 max-w-[200px]">
+                                             {product.videoUrl?.startsWith('blob:') 
+                                                ? "This temporary video was lost on refresh. Please re-upload it in Admin."
+                                                : "The video link could not be loaded."
+                                             }
+                                         </p>
+                                         {!product.videoUrl?.startsWith('blob:') && (
+                                             <a 
+                                                href={product.videoUrl} 
+                                                target="_blank" 
+                                                rel="noreferrer"
+                                                className="mt-4 text-xs text-primary-500 hover:underline"
+                                             >
+                                                 Try Direct Link
+                                             </a>
+                                         )}
+                                     </div>
+                                </div>
+                            ) : (
+                                <>
+                                <video 
+                                    ref={videoRef}
+                                    key={product.videoUrl} // Forces re-render if URL changes
+                                    className="w-full h-full object-contain" 
+                                    controls={activeIndex === product.images.length}
+                                    src={product.videoUrl}
+                                    muted
+                                    loop
+                                    playsInline
+                                    preload="metadata"
+                                    poster={product.images[0]}
+                                    // Error Handler
+                                    onError={(e) => {
+                                        console.error("Video Tag Error Event:", e.currentTarget.error);
+                                        // If it's a blob, it's definitely expired/dead.
+                                        if (product.videoUrl?.startsWith('blob:')) {
+                                            setVideoError(true);
+                                        } 
+                                        // If it looks like a YouTube/Vimeo link that was pasted as a direct URL, try iframe
+                                        else if (product.videoUrl?.includes('youtube') || product.videoUrl?.includes('vimeo')) {
+                                            console.warn("Attempting iframe fallback for video...");
+                                            setUseIframeFallback(true);
+                                        }
+                                        // Otherwise, it's likely a CORS or 403 error on a direct file
+                                        else {
+                                            setVideoError(true);
+                                        }
+                                    }}
+                                    onPlay={() => setIsPlaying(true)}
+                                    onPause={() => setIsPlaying(false)}
                                 >
-                                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover/play:scale-110 transition-transform">
-                                        <svg className="w-10 h-10 text-white fill-current ml-1" viewBox="0 0 24 24">
-                                            <path d="M8 5v14l11-7z" />
-                                        </svg>
+                                    Your browser does not support the video tag.
+                                </video>
+                                
+                                {/* Manual Play Button Overlay */}
+                                {activeIndex === product.images.length && !isPlaying && !videoError && !useIframeFallback && (
+                                    <div 
+                                        className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer z-40 group/play"
+                                        onClick={handleManualPlay}
+                                    >
+                                        <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover/play:scale-110 transition-transform shadow-xl border border-white/30">
+                                            <svg className="w-10 h-10 text-white fill-current ml-1" viewBox="0 0 24 24">
+                                                <path d="M8 5v14l11-7z" />
+                                            </svg>
+                                        </div>
                                     </div>
-                                </div>
-                            )}
-
-                             {/* Error Message */}
-                             {videoError && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white z-50">
-                                    <svg className="w-10 h-10 text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    <p>Video failed to load.</p>
-                                </div>
+                                )}
+                                </>
                             )}
                         </div>
                     )}

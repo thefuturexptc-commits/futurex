@@ -193,6 +193,9 @@ export const AdminDashboard: React.FC = () => {
             const newUrl = await uploadFile(selectedVideoFile, path);
             if (newUrl) {
                 finalVideoUrl = newUrl;
+                if (newUrl.startsWith('blob:')) {
+                    alert("⚠️ WARNING: Video upload failed to persist (Network/Size Limit). \n\nUsing a TEMPORARY SESSION URL. \n\nThis video will disappear when you refresh the page. \n\nRECOMMENDED: Upload your video to YouTube and paste the URL instead.");
+                }
             }
         }
 
@@ -381,7 +384,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Sales by Category</h3>
                       <div className="space-y-5">
-                          {Object.entries(analytics.categoryRevenue).map(([cat, revenue]) => (
+                          {Object.entries(analytics.categoryRevenue).map(([cat, revenue]: [string, number]) => (
                               <div key={cat}>
                                   <div className="flex justify-between text-sm mb-1">
                                       <span className="font-medium dark:text-gray-300">{cat}</span>
@@ -390,7 +393,7 @@ export const AdminDashboard: React.FC = () => {
                                   <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
                                       <div 
                                         className="bg-primary-500 h-2.5 rounded-full transition-all duration-1000" 
-                                        style={{ width: `${((revenue as number) / analytics.maxCategoryRevenue) * 100}%` }}
+                                        style={{ width: `${(revenue / analytics.maxCategoryRevenue) * 100}%` }}
                                       ></div>
                                   </div>
                               </div>
@@ -929,7 +932,7 @@ export const AdminDashboard: React.FC = () => {
                    />
                </div>
 
-               {/* VIDEO SECTION */}
+               {/* VIDEO UPLOAD SECTION */}
                <div className="space-y-2">
                    <label className="block text-sm font-medium dark:text-gray-300">Product Video</label>
                    
@@ -942,6 +945,15 @@ export const AdminDashboard: React.FC = () => {
                             value={productForm.videoUrl || ''}
                             onChange={(e) => setProductForm({...productForm, videoUrl: e.target.value})}
                         />
+                        {productForm.videoUrl && (
+                             <button
+                                type="button" 
+                                onClick={() => setProductForm({...productForm, videoUrl: ''})}
+                                className="px-3 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm font-bold"
+                             >
+                                 Clear
+                             </button>
+                        )}
                    </div>
 
                    {/* Option 2: Upload */}
@@ -955,8 +967,24 @@ export const AdminDashboard: React.FC = () => {
                    </div>
 
                    {(productForm.videoUrl || selectedVideoFile) && !selectedVideoFile && productForm.videoUrl?.startsWith('http') && (
-                       <div className="p-2 bg-gray-50 dark:bg-white/5 rounded border border-gray-200 dark:border-white/10 mb-2">
-                            <span className="text-sm text-gray-600 dark:text-gray-400 truncate block">Current: {productForm.videoUrl}</span>
+                       <div className="p-3 bg-gray-50 dark:bg-white/5 rounded border border-gray-200 dark:border-white/10 mb-2">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm font-bold text-gray-700 dark:text-gray-200">Current Video:</span>
+                                {productForm.videoUrl?.startsWith('blob:') && (
+                                    <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded animate-pulse">⚠️ Temporary Session URL</span>
+                                )}
+                            </div>
+                            <video 
+                                src={productForm.videoUrl} 
+                                className="w-full h-32 object-cover rounded bg-black" 
+                                controls 
+                            />
+                            <p className="text-xs text-gray-500 mt-1 truncate">{productForm.videoUrl}</p>
+                            {productForm.videoUrl?.startsWith('blob:') && (
+                                <p className="text-xs text-red-500 font-bold mt-2">
+                                    Warning: This video will vanish if you refresh the page. Please upload to YouTube for permanence.
+                                </p>
+                            )}
                        </div>
                    )}
 
@@ -974,7 +1002,7 @@ export const AdminDashboard: React.FC = () => {
                      " 
                    />
                    {selectedVideoFile && <p className="text-sm text-green-600 font-medium mt-1">File selected: {selectedVideoFile.name}</p>}
-                   <p className="text-xs text-gray-500 mt-1">Supported formats: MP4, WebM</p>
+                   <p className="text-xs text-gray-500 mt-1">Supported formats: MP4, WebM. (Note: Large files may fail to persist without a paid backend)</p>
                </div>
                
                <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-100 dark:border-white/10">

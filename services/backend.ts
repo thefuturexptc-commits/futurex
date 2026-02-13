@@ -114,9 +114,9 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
     };
 
     try {
-        // Create a timeout promise (e.g., 5 seconds)
+        // Create a timeout promise (15 seconds) - Increased from 5s to avoid false positives on slow connections
         const timeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Upload timed out")), 5000)
+            setTimeout(() => reject(new Error("Upload timed out")), 15000)
         );
 
         // Try Firebase Storage

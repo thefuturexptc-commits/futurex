@@ -1,12 +1,11 @@
+
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
+import { getAuth } from 'firebase/auth';
 
 // Replace these with your actual Firebase project configuration
 // or ensure these environment variables are set in your .env file
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDx62Wa4HSx97I-91AqC3poaMzcNrpfKAc",
   authDomain: "futurexweb-ae46b.firebaseapp.com",
@@ -17,11 +16,11 @@ const firebaseConfig = {
   measurementId: "G-JD32TH0PJS"
 };
 
-// Initialize Firebase (using compat for Auth to resolve type issues)
+// Initialize Firebase (using modular SDK)
 // We export 'app' so other services can access the config/options
-export const app = firebase.initializeApp(firebaseConfig);
+export const app = initializeApp(firebaseConfig);
 
-export const auth = firebase.auth();
+export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
