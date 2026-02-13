@@ -16,6 +16,8 @@ export const ProductDetail: React.FC = () => {
   
   // Renamed to activeIndex to reflect that it can be an image or video
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   
   // Ref for video element to control playback
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -31,22 +33,37 @@ export const ProductDetail: React.FC = () => {
 
   // Effect to manage video playback based on visibility
   useEffect(() => {
-      if (product && videoRef.current) {
-          const videoIndex = product.images.length;
+      // We only attempt to play/pause if the product has a video and it's not a YouTube embed
+      const isNativeVideo = product?.videoUrl && !product.videoUrl.includes('youtube') && !product.videoUrl.includes('youtu.be');
+      
+      if (isNativeVideo && videoRef.current) {
+          const videoIndex = product!.images.length;
+          
           if (activeIndex === videoIndex) {
               // Video is active: Play it
               const playPromise = videoRef.current.play();
               if (playPromise !== undefined) {
-                  playPromise.catch(error => {
-                      console.log("Autoplay prevented:", error);
+                  playPromise.then(() => {
+                      setIsPlaying(true);
+                  }).catch(error => {
+                      console.log("Autoplay prevented or failed:", error);
+                      setIsPlaying(false);
                   });
               }
           } else {
               // Video is hidden: Pause it
               videoRef.current.pause();
+              setIsPlaying(false);
           }
       }
   }, [activeIndex, product]);
+
+  const handleManualPlay = () => {
+      if (videoRef.current) {
+          videoRef.current.play();
+          setIsPlaying(true);
+      }
+  };
 
   const handleBuyNow = () => {
     if (!product) return;
@@ -97,10 +114,11 @@ export const ProductDetail: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20">
         {/* Media Gallery (Images + Video) */}
         <div className="space-y-6">
-          <div className="aspect-square bg-white dark:bg-white/5 rounded-[2rem] overflow-hidden shadow-2xl relative group border border-gray-100 dark:border-white/10 flex items-center justify-center bg-gray-100 dark:bg-gray-900">
+          <div className="aspect-square bg-white dark:bg-white/5 rounded-[2rem] overflow-hidden shadow-2xl relative group border border-gray-100 dark:border-white/10 flex items-center justify-center bg-gray-100 dark:bg-gray-900 z-0">
             
-            {/* Image Layer - Visible when not viewing video */}
-            <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 ${activeIndex < product.images.length ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
+            {/* Image Layer */}
+            {/* When active, Image is z-10. When inactive, z-0 and opacity-0 */}
+            <div className={`absolute inset-0 w-full h-full transition-opacity duration-300 pointer-events-none ${activeIndex < product.images.length ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                 {activeIndex < product.images.length && (
                     <img 
                         src={product.images[activeIndex]} 
@@ -110,11 +128,20 @@ export const ProductDetail: React.FC = () => {
                 )}
             </div>
 
-            {/* Video Layer - Always mounted for uploaded videos to allow buffering */}
+            {/* Video Layer */}
+            {/* 
+                Stacked Logic:
+                - Active: z-30 (Above everything)
+                - Inactive: z-1 (Behind Image, but kept in DOM for buffering)
+                - We use 'invisible' for inactive to prevent interaction but keep layout/buffering if possible, 
+                  or just z-index hiding.
+            */}
             {hasVideo && (
-                <div className={`absolute inset-0 w-full h-full bg-black flex items-center justify-center transition-opacity duration-300 ${activeIndex === product.images.length ? 'opacity-100 z-20' : 'opacity-0 z-[-1] pointer-events-none'}`}>
+                <div 
+                    className={`absolute inset-0 w-full h-full bg-black flex items-center justify-center transition-all duration-300
+                    ${activeIndex === product.images.length ? 'opacity-100 z-30 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'}`}
+                >
                     {isYoutube ? (
-                         // Iframes reload when hidden/shown, so we conditionally render them to save resources when not active
                          activeIndex === product.images.length && (
                             <iframe 
                                 className="w-full h-full"
@@ -126,35 +153,65 @@ export const ProductDetail: React.FC = () => {
                             ></iframe>
                          )
                     ) : (
-                        // Native Video - Kept in DOM with preload="auto" for instant play
-                        <video 
-                          ref={videoRef}
-                          className="w-full h-full object-contain" 
-                          controls={activeIndex === product.images.length}
-                          src={product.videoUrl}
-                          muted
-                          loop
-                          playsInline
-                          preload="auto"
-                        >
-                            Your browser does not support the video tag.
-                        </video>
+                        <div className="relative w-full h-full">
+                            <video 
+                                ref={videoRef}
+                                className="w-full h-full object-contain" 
+                                controls={activeIndex === product.images.length}
+                                src={product.videoUrl}
+                                muted
+                                loop
+                                playsInline
+                                preload="auto"
+                                poster={product.images[0]}
+                                onPlay={() => setIsPlaying(true)}
+                                onPause={() => setIsPlaying(false)}
+                                onError={(e) => {
+                                    console.error("Video Error:", e);
+                                    setVideoError(true);
+                                }}
+                            >
+                                Your browser does not support the video tag.
+                            </video>
+                            
+                            {/* Manual Play Button Overlay - Appears if video is active but paused (e.g. autoplay blocked) */}
+                            {activeIndex === product.images.length && !isPlaying && !videoError && (
+                                <div 
+                                    className="absolute inset-0 flex items-center justify-center bg-black/20 cursor-pointer z-40 group/play"
+                                    onClick={handleManualPlay}
+                                >
+                                    <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center group-hover/play:scale-110 transition-transform">
+                                        <svg className="w-10 h-10 text-white fill-current ml-1" viewBox="0 0 24 24">
+                                            <path d="M8 5v14l11-7z" />
+                                        </svg>
+                                    </div>
+                                </div>
+                            )}
+
+                             {/* Error Message */}
+                             {videoError && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900 text-white z-50">
+                                    <svg className="w-10 h-10 text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    <p>Video failed to load.</p>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
             )}
             
-            {/* Navigation arrows */}
+            {/* Navigation arrows - z-index 40 to stay above video */}
             {mediaCount > 1 && (
                 <>
                 <button 
                   onClick={handlePrev}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-30"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-40"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
                 </button>
                 <button 
                   onClick={handleNext}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-30"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 dark:bg-black/50 hover:bg-white dark:hover:bg-black/70 text-gray-800 dark:text-white p-3 rounded-full backdrop-blur-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-40"
                 >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
                 </button>

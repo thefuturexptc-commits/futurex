@@ -191,17 +191,8 @@ export const AdminDashboard: React.FC = () => {
         if (selectedVideoFile) {
             const path = `videos/${Date.now()}_${selectedVideoFile.name}`;
             const newUrl = await uploadFile(selectedVideoFile, path);
-            // If uploadFile returns empty string (failure/too large), we keep existing or set to empty?
-            // Usually if user selects a file and it fails, we shouldn't keep the OLD file. 
-            // But if it fails, the user is alerted. 
-            // We'll update only if newUrl is truthy, or explicitly set empty if we want to clear it on error.
             if (newUrl) {
                 finalVideoUrl = newUrl;
-            } else {
-                // If it failed (too large/offline), we might want to clear it or handle graceful degradation
-                // For now, let's assume if it failed, we don't save a broken video URL.
-                // But if they selected a file, they probably want that specific file.
-                // Ideally, the 'alert' in uploadFile warns them.
             }
         }
 
@@ -394,7 +385,7 @@ export const AdminDashboard: React.FC = () => {
                               <div key={cat}>
                                   <div className="flex justify-between text-sm mb-1">
                                       <span className="font-medium dark:text-gray-300">{cat}</span>
-                                      <span className="font-bold dark:text-white">₹{(revenue as number).toLocaleString()}</span>
+                                      <span className="font-bold dark:text-white">₹{revenue.toLocaleString()}</span>
                                   </div>
                                   <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
                                       <div 
@@ -938,17 +929,34 @@ export const AdminDashboard: React.FC = () => {
                    />
                </div>
 
-               {/* VIDEO UPLOAD SECTION */}
+               {/* VIDEO SECTION */}
                <div className="space-y-2">
                    <label className="block text-sm font-medium dark:text-gray-300">Product Video</label>
                    
-                   {(productForm.videoUrl || selectedVideoFile) && (
+                   {/* Option 1: Manual URL */}
+                   <div className="flex gap-2 mb-2">
+                        <input 
+                            type="text"
+                            placeholder="Paste YouTube or Direct Video URL (Optional)"
+                            className="flex-1 p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white"
+                            value={productForm.videoUrl || ''}
+                            onChange={(e) => setProductForm({...productForm, videoUrl: e.target.value})}
+                        />
+                   </div>
+
+                   {/* Option 2: Upload */}
+                   <div className="relative my-4">
+                        <div className="absolute inset-0 flex items-center">
+                            <div className="w-full border-t border-gray-200 dark:border-white/10"></div>
+                        </div>
+                        <div className="relative flex justify-center text-sm">
+                            <span className="px-2 bg-white dark:bg-dark-surface text-gray-500 font-medium">OR Upload File</span>
+                        </div>
+                   </div>
+
+                   {(productForm.videoUrl || selectedVideoFile) && !selectedVideoFile && productForm.videoUrl?.startsWith('http') && (
                        <div className="p-2 bg-gray-50 dark:bg-white/5 rounded border border-gray-200 dark:border-white/10 mb-2">
-                           {selectedVideoFile ? (
-                               <span className="text-sm text-green-600 font-medium">Selected: {selectedVideoFile.name}</span>
-                           ) : (
-                               <span className="text-sm text-gray-600 dark:text-gray-400 truncate block">Current: {productForm.videoUrl}</span>
-                           )}
+                            <span className="text-sm text-gray-600 dark:text-gray-400 truncate block">Current: {productForm.videoUrl}</span>
                        </div>
                    )}
 
@@ -965,7 +973,8 @@ export const AdminDashboard: React.FC = () => {
                        dark:file:bg-purple-900/20 dark:file:text-purple-400
                      " 
                    />
-                   <p className="text-xs text-gray-500">Supported formats: MP4, WebM</p>
+                   {selectedVideoFile && <p className="text-sm text-green-600 font-medium mt-1">File selected: {selectedVideoFile.name}</p>}
+                   <p className="text-xs text-gray-500 mt-1">Supported formats: MP4, WebM</p>
                </div>
                
                <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-100 dark:border-white/10">
