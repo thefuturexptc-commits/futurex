@@ -136,7 +136,7 @@ export const Checkout: React.FC = () => {
           </div>
           
           <Button type="submit" size="lg" className="w-full" isLoading={loading}>
-            Place Order (₹{(totalPrice * 1.08).toFixed(2)})
+            Place Order (₹{totalPrice.toFixed(2)})
           </Button>
           <p className="text-xs text-gray-500 text-center">Your address will be automatically saved to your profile for future orders.</p>
         </form>
