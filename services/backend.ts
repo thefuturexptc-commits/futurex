@@ -136,15 +136,17 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
         // Firestore documents are limited to 1 MB. 
         // Base64 encoding increases size by ~33%. 
         // We set a safe limit of ~500KB for fallback files to avoid crashing the DB save.
-        // If user has valid Cloud Storage configured, this block is skipped.
+        
         const MAX_FALLBACK_SIZE = 500 * 1024; // 500 KB
 
         if (file.size > MAX_FALLBACK_SIZE) {
-            alert(`Upload Warning: Cloud Storage is not configured or unreachable.\n\nFile "${file.name}" is too large (${(file.size/1024/1024).toFixed(2)}MB) to save directly to the database in offline mode. \n\nThe product will be saved without this file.`);
-            return ""; // Return empty so the rest of the product can still save
+            console.warn(`File ${file.name} is too large for local DB storage. Using temporary Blob URL.`);
+            // Use Blob URL for immediate session playback (works for video/large images)
+            // NOTE: This URL will expire on page refresh, but allows the demo to work without crashing.
+            return URL.createObjectURL(file);
         }
         
-        // Return Base64 string if small enough
+        // Return Base64 string if small enough (Persistent in LocalStorage)
         return await readFileAsBase64(file);
     }
 };

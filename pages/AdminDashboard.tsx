@@ -394,7 +394,7 @@ export const AdminDashboard: React.FC = () => {
                               <div key={cat}>
                                   <div className="flex justify-between text-sm mb-1">
                                       <span className="font-medium dark:text-gray-300">{cat}</span>
-                                      <span className="font-bold dark:text-white">₹{revenue.toLocaleString()}</span>
+                                      <span className="font-bold dark:text-white">₹{(revenue as number).toLocaleString()}</span>
                                   </div>
                                   <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
                                       <div 
@@ -411,7 +411,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Top Performing Products</h3>
                       <div className="space-y-4">
-                          {analytics.topProducts.map((p, i) => (
+                          {analytics.topProducts.map((p: any, i) => (
                               <div key={p.id} className="flex items-center gap-4">
                                   <span className="text-lg font-bold text-gray-400 w-6">0{i+1}</span>
                                   <div className="h-12 w-12 rounded bg-gray-100 dark:bg-white/5 overflow-hidden">
@@ -423,7 +423,7 @@ export const AdminDashboard: React.FC = () => {
                                   </div>
                                   <div className="text-right">
                                       <p className="font-bold text-gray-900 dark:text-white">{p.sold} sold</p>
-                                      <p className="text-xs text-green-500">₹{((p.sold as number) * p.price).toLocaleString()}</p>
+                                      <p className="text-xs text-green-500">₹{(p.sold * p.price).toLocaleString()}</p>
                                   </div>
                               </div>
                           ))}
