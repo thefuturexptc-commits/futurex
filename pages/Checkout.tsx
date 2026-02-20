@@ -58,32 +58,45 @@ export const Checkout: React.FC = () => {
       }
 
       // ✅ ONLINE PAYMENT FLOW
-      const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        amount: Math.round(totalPrice * 100),
-        currency: "INR",
-        name: "FutureX",
-        description: "Order Payment",
-        handler: async function () {
-          const order = await createOrder(
-            user.id,
-            items,
-            totalPrice,
-            finalAddress
-          );
+     const options = {
+  key: import.meta.env.VITE_RAZORPAY_KEY_ID,
 
-          await saveAddressIfNeeded(finalAddress);
-          clearCart();
-          navigate('/order-success', { state: { orderId: order.id } });
-        },
-        prefill: {
-          name: user.name,
-          email: user.email
-        },
-        theme: {
-          color: "#6366f1"
-        }
-      };
+  // ✅ safer amount conversion
+  amount: Number((totalPrice * 100).toFixed(0)),
+
+  currency: "INR",
+  name: "FutureX",
+  description: "Order Payment",
+
+  handler: async function (response: any) {
+    const order = await createOrder(
+      user.id,
+      items,
+      totalPrice,
+      finalAddress
+    );
+
+    await saveAddressIfNeeded(finalAddress);
+    clearCart();
+    navigate('/order-success', { state: { orderId: order.id } });
+  },
+
+  modal: {
+    ondismiss: function () {
+      setLoading(false);
+      alert("Payment cancelled");
+    }
+  },
+
+  prefill: {
+    name: user.name,
+    email: user.email
+  },
+
+  theme: {
+    color: "#6366f1"
+  }
+};
 
       const rzp = new (window as any).Razorpay(options);
       rzp.open();
