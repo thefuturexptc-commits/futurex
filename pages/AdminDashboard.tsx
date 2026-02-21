@@ -1,4 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react'
+import StarterKit from '@tiptap/starter-kit'
+import { RichTextEditor } from '../components/RichTextEditor'
 import { useAuth } from '../context/AuthContext';
 import { 
     getProducts, getAllOrders, addProduct, deleteProduct, updateOrderStatus, 
@@ -43,6 +46,24 @@ export const AdminDashboard: React.FC = () => {
     isBestSeller: false
   };
   const [productForm, setProductForm] = useState<Partial<Product>>(initialProductState);
+  // ------------------ TIPTAP EDITOR ------------------
+const editor = useEditor({
+  extensions: [StarterKit],
+  content: '',
+  onUpdate: ({ editor }) => {
+    setProductForm(prev => ({
+      ...prev,
+      description: editor.getHTML(),
+    }));
+  },
+});
+
+// Sync editor when modal opens or product changes
+useEffect(() => {
+  if (editor && showProductModal) {
+    editor.commands.setContent(productForm.description || '');
+  }
+}, [productForm.description, showProductModal, editor]);
   
   // Helper for specs/features strings
   const [featuresString, setFeaturesString] = useState('');
@@ -800,15 +821,19 @@ export const AdminDashboard: React.FC = () => {
                    </div>
                </div>
                
-               <div>
-                   <label className="block text-sm font-medium dark:text-gray-300 mb-1">Description</label>
-                   <textarea 
-                     placeholder="Detailed description..."
-                     className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white h-24 focus:ring-2 focus:ring-primary-500"
-                     value={productForm.description} onChange={e => setProductForm({...productForm, description: e.target.value})}
-                     required
-                   />
-               </div>
+             <div>
+<div>
+<RichTextEditor
+  value={productForm.description || ''}
+  onChange={(html) =>
+    setProductForm(prev => ({
+      ...prev,
+      description: html,
+    }))
+  }
+/>
+</div>
+</div>
 
                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                    <div>
