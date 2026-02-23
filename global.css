@@ -1,0 +1,120 @@
+/* ========================= */
+/* TIPTAP EDITOR BASE STYLES */
+/* ========================= */
+
+.tiptap {
+  line-height: 1.6;
+  font-size: 15px;
+  color: #111;
+}
+
+/* Paragraph spacing */
+.tiptap p {
+  margin: 0.5rem 0;
+}
+
+/* ================= */
+/* HEADINGS */
+/* ================= */
+
+.tiptap h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 1rem 0 0.5rem;
+}
+
+.tiptap h2 {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0.9rem 0 0.5rem;
+}
+
+.tiptap h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0.8rem 0 0.4rem;
+}
+
+/* ================= */
+/* LISTS */
+/* ================= */
+
+.tiptap ul {
+  list-style-type: disc;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.tiptap ol {
+  list-style-type: decimal;
+  padding-left: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.tiptap li {
+  margin: 0.25rem 0;
+}
+
+/* Nested list spacing */
+.tiptap li > ul,
+.tiptap li > ol {
+  margin-top: 0.25rem;
+}
+
+/* ================= */
+/* BLOCKQUOTE */
+/* ================= */
+
+.tiptap blockquote {
+  border-left: 4px solid #999;
+  padding-left: 1rem;
+  margin: 0.8rem 0;
+  font-style: italic;
+  color: #555;
+  background: #f8f8f8;
+}
+
+/* ================= */
+/* STRIKE */
+/* ================= */
+
+.tiptap s,
+.tiptap strike {
+  text-decoration: line-through;
+}
+
+/* ================= */
+/* BOLD & ITALIC */
+/* ================= */
+
+.tiptap strong {
+  font-weight: 700;
+}
+
+.tiptap em {
+  font-style: italic;
+}
+
+/* ================= */
+/* HORIZONTAL RULE */
+/* ================= */
+
+.tiptap hr {
+  border: none;
+  border-top: 2px solid #ddd;
+  margin: 1rem 0;
+}
+
+/* ================= */
+/* DARK MODE SUPPORT */
+/* ================= */
+
+.dark .tiptap {
+  color: #e5e5e5;
+}
+
+.dark .tiptap blockquote {
+  background: rgba(255, 255, 255, 0.05);
+  border-left: 4px solid #666;
+  color: #ccc;
+}
