@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -37,18 +37,26 @@
               }
             },
             animation: {
-              'fade-in-up': 'fadeInUp 0.8s ease-out forwards',
-              'fade-in': 'fadeIn 1s ease-out forwards',
+              'fade-in-up': 'fadeInUp 0.45s ease-out forwards',
+              'card-reveal': 'cardReveal 0.55s ease-out forwards',
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
               'float': 'float 6s ease-in-out infinite',
-              'float-fast': 'float 4s ease-in-out infinite',
+              'float-fast': 'float 6s ease-in-out infinite',
+              'float-slow': 'float 12s ease-in-out infinite',
               'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
               'spin-slow': 'spin 15s linear infinite',
               'bounce-slow': 'bounce 3s infinite',
+              'gradient-x': 'gradientX 7s ease-in-out infinite',
+              'modal-pop': 'modalPop 0.3s ease-out forwards',
             },
             keyframes: {
               fadeInUp: {
                 '0%': { opacity: '0', transform: 'translateY(20px)' },
                 '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              cardReveal: {
+                '0%': { opacity: '0', transform: 'translateY(14px) scale(0.95)' },
+                '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
               },
               fadeIn: {
                 '0%': { opacity: '0' },
@@ -57,7 +65,15 @@
               float: {
                 '0%, 100%': { transform: 'translateY(0)' },
                 '50%': { transform: 'translateY(-20px)' },
-              }
+              },
+              gradientX: {
+                '0%, 100%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+              },
+              modalPop: {
+                '0%': { opacity: '0', transform: 'translateY(18px) scale(0.95)' },
+                '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+              },
             }
           }
         }
@@ -89,8 +105,8 @@
       /* Advanced Glassmorphism */
       .glass-card {
         background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
         border: 1px solid rgba(255, 255, 255, 0.4);
         box-shadow: 
           0 4px 6px -1px rgba(0, 0, 0, 0.02), 
@@ -103,17 +119,41 @@
         border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
       }
-      
+
       .glass-nav {
          background: rgba(255, 255, 255, 0.8);
-         backdrop-filter: blur(20px);
-         -webkit-backdrop-filter: blur(20px);
+         backdrop-filter: blur(10px);
+         -webkit-backdrop-filter: blur(10px);
          border-bottom: 1px solid rgba(0, 0, 0, 0.05);
       }
 
       .dark .glass-nav {
          background: rgba(5, 5, 5, 0.8);
          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Global form contrast fixes for dropdowns/inputs */
+      select {
+        background: #ffffff;
+        color: #111827;
+        border-color: #d1d5db;
+      }
+      .dark select {
+        background: #1f2937;
+        color: #ffffff;
+        border-color: #4b5563;
+      }
+      select option {
+        background: #ffffff;
+        color: #111827;
+      }
+      .dark select option {
+        background: #1f2937;
+        color: #ffffff;
+      }
+
+      img[data-brand-logo="true"] {
+        max-width: 180px;
       }
 
       /* Tech Background Pattern - Light Mode Optimized */
@@ -164,6 +204,40 @@
       ::-webkit-scrollbar-thumb:hover {
         background: rgb(var(--color-primary-500));
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      @keyframes homeCardReveal {
+        0% { opacity: 0; transform: translateY(14px) scale(0.97); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+      }
+
+      @keyframes homeCardDrift {
+        0%, 100% { transform: translateX(0); }
+        50% { transform: translateX(8px); }
+      }
+
+      .home-product-slide {
+        animation:
+          homeCardReveal 0.55s ease-out var(--reveal-delay, 0ms) forwards,
+          homeCardDrift 4.5s ease-in-out calc(var(--reveal-delay, 0ms) + 650ms) infinite;
+      }
+
+      .animate-fade-in-up,
+      .animate-fade-in,
+      .animate-float,
+      .animate-float-fast,
+      .animate-float-slow,
+      .home-product-slide {
+        will-change: transform, opacity;
+      }
     </style>
   <script type="importmap">
 {
@@ -178,7 +252,7 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-gray-50 text-gray-900 dark:bg-dark-bg dark:text-gray-100 transition-colors duration-500 selection:bg-primary-500 selection:text-white">
+  <body class="bg-dark-bg text-gray-100 selection:bg-primary-500 selection:text-white">
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>

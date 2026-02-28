@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getUserOrders, updateUserAddresses } from '../services/backend';
+import { getUserOrders, updateUserAddresses, verifyIndianPincode } from '../services/backend';
 import { Order, Address } from '../types';
 import { Button } from '../components/ui/Button';
 
@@ -12,6 +12,8 @@ export const Profile: React.FC = () => {
   // Address Management State
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [verifyingPin, setVerifyingPin] = useState(false);
+  const [pinMessage, setPinMessage] = useState('');
   const [addressForm, setAddressForm] = useState<Omit<Address, 'id'>>({
     street: '',
     city: '',
@@ -45,12 +47,31 @@ export const Profile: React.FC = () => {
       });
       setEditingId(addr.id);
       setIsEditingAddress(true);
+      setPinMessage('');
   };
 
   const handleAddNewAddress = () => {
       setAddressForm({ street: '', city: '', zip: '', country: '' });
       setEditingId(null);
       setIsEditingAddress(true);
+      setPinMessage('');
+  };
+
+  const handleVerifyPincode = async () => {
+      setPinMessage('');
+      if (!/^\d{6}$/.test(addressForm.zip)) {
+          setPinMessage('Enter valid 6-digit pincode');
+          return;
+      }
+      setVerifyingPin(true);
+      const pinData = await verifyIndianPincode(addressForm.zip);
+      setVerifyingPin(false);
+      if (!pinData) {
+          setPinMessage('Pincode not found');
+          return;
+      }
+      setAddressForm(prev => ({ ...prev, city: pinData.city, country: pinData.country }));
+      setPinMessage(`Verified: ${pinData.city}, ${pinData.country}`);
   };
 
   const handleDeleteAddress = async (id: string) => {
@@ -192,7 +213,7 @@ export const Profile: React.FC = () => {
                         <div className="grid grid-cols-2 gap-2">
                             <input 
                                 placeholder="Zip" required
-                                value={addressForm.zip} onChange={e => setAddressForm({...addressForm, zip: e.target.value})}
+                                value={addressForm.zip} onChange={e => setAddressForm({...addressForm, zip: e.target.value.replace(/\D/g, '').slice(0, 6)})}
                                 className="w-full p-2 border rounded text-sm dark:bg-white/5 dark:border-white/10 dark:text-white"
                             />
                             <input 
@@ -201,6 +222,12 @@ export const Profile: React.FC = () => {
                                 className="w-full p-2 border rounded text-sm dark:bg-white/5 dark:border-white/10 dark:text-white"
                             />
                         </div>
+                        <div className="flex gap-2 pt-2">
+                            <Button type="button" size="sm" variant="outline" className="flex-1" onClick={handleVerifyPincode} disabled={verifyingPin}>
+                              {verifyingPin ? 'Verifying...' : 'Verify Pincode'}
+                            </Button>
+                        </div>
+                        {pinMessage && <p className={`text-xs ${pinMessage.startsWith('Verified') ? 'text-green-600' : 'text-red-500'}`}>{pinMessage}</p>}
                         <div className="flex gap-2 pt-2">
                             <Button type="submit" size="sm" className="flex-1">Save</Button>
                             <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setIsEditingAddress(false)}>Cancel</Button>

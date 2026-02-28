@@ -1,5 +1,5 @@
 import { 
-  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where 
+  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
@@ -7,6 +7,9 @@ import {
   signInWithEmailAndPassword, 
   signInWithPopup, 
   GoogleAuthProvider,
+  RecaptchaVerifier,
+  signInWithPhoneNumber,
+  ConfirmationResult,
   getAuth as getAuthFromApp
 } from 'firebase/auth';
 import { 
@@ -16,7 +19,7 @@ import {
 } from 'firebase/storage';
 import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
-import { Product, User, Order, Address, WebsiteSettings } from '../types';
+import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 
 // 🔒 ADDED: Production Safe URL Validator
@@ -58,21 +61,132 @@ const deepSanitize = (obj: any): any => {
 };
 
 // --- Helper: Mock Data Management ---
+const memoryStore = new Map<string, unknown>();
+
 const getMockData = <T>(key: string, defaultVal: T): T => {
-    try {
-        const stored = localStorage.getItem(`mock_${key}`);
-        return stored ? JSON.parse(stored) : defaultVal;
-    } catch (e) {
-        return defaultVal;
-    }
+    if (!memoryStore.has(key)) return defaultVal;
+    return memoryStore.get(key) as T;
 };
 
 const setMockData = (key: string, data: any) => {
-    try {
-        localStorage.setItem(`mock_${key}`, JSON.stringify(data));
-    } catch (e) {
-        console.error("Local storage error", e);
-    }
+    memoryStore.set(key, data);
+};
+
+const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => reject(new Error('Request timed out')), timeoutMs);
+  });
+  return Promise.race([promise, timeoutPromise]);
+};
+
+const DEFAULT_ADMIN_PERMISSIONS: UserPermissions = {
+  analytics: true,
+  products: true,
+  orders: true,
+  inventory: true,
+  categories: true,
+  admins: false,
+  settings: false
+};
+
+const DEFAULT_SUPERADMIN_PERMISSIONS: UserPermissions = {
+  analytics: true,
+  products: true,
+  orders: true,
+  inventory: true,
+  categories: true,
+  admins: true,
+  settings: true
+};
+
+const SUPERADMIN_EMAIL = 'thefuturex.ptc@gmail.com';
+
+const applyRoleByEmail = (user: User): User => {
+  const normalizedEmail = (user.email || '').trim().toLowerCase();
+  if (normalizedEmail === SUPERADMIN_EMAIL) {
+    return {
+      ...user,
+      email: SUPERADMIN_EMAIL,
+      role: 'superadmin',
+      permissions: { ...DEFAULT_SUPERADMIN_PERMISSIONS, ...(user.permissions || {}) },
+    };
+  }
+  if (user.role === 'admin') {
+    return {
+      ...user,
+      permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(user.permissions || {}) },
+    };
+  }
+  return user;
+};
+
+let recaptchaVerifier: RecaptchaVerifier | null = null;
+let phoneConfirmationResult: ConfirmationResult | null = null;
+
+const normalizeProductColors = (product: Product): Product => {
+  const rawColors = Array.isArray(product.colors) ? product.colors : [];
+  const mappedColors: ProductColor[] = rawColors
+    .map((color: any) => {
+      if (typeof color === 'string') {
+        return {
+          name: color,
+          hex: '#6b7280',
+          images: [...(product.images || [])],
+          stock: Number(product.stock || 0),
+          reservedStock: 0,
+          sold: 0
+        };
+      }
+
+      return {
+        name: String(color?.name || 'Default'),
+        hex: String(color?.hex || '#6b7280'),
+        images: Array.isArray(color?.images) && color.images.length > 0 ? color.images : [...(product.images || [])],
+        stock: Number(color?.stock ?? product.stock ?? 0),
+        reservedStock: Number(color?.reservedStock || 0),
+        sold: Number(color?.sold || 0)
+      };
+    })
+    .filter((c) => c.name.trim() !== '');
+
+  if (mappedColors.length === 0) {
+    return { ...product, colors: [] };
+  }
+
+  const aggregateStock = mappedColors.reduce((sum, c) => sum + Number(c.stock || 0), 0);
+  const aggregateReserved = mappedColors.reduce((sum, c) => sum + Number(c.reservedStock || 0), 0);
+  const aggregateSold = mappedColors.reduce((sum, c) => sum + Number(c.sold || 0), 0);
+
+  return {
+    ...product,
+    colors: mappedColors,
+    stock: aggregateStock,
+    reservedStock: aggregateReserved,
+    sold: aggregateSold,
+    inStock: aggregateStock - aggregateReserved > 0
+  };
+};
+
+const upsertSuperAdmin = (users: User[]): User[] => {
+  const hasSuperAdmin = users.some(
+    (u) => u.role === 'superadmin' || (u.email || '').trim().toLowerCase() === SUPERADMIN_EMAIL
+  );
+  if (hasSuperAdmin) {
+    return users.map((u) => applyRoleByEmail(u));
+  }
+
+  const superAdmin: User = {
+    id: 'superadmin_1',
+    name: 'Super Admin',
+    email: SUPERADMIN_EMAIL,
+    password: 'superadmin123',
+    role: 'superadmin',
+    phone: '9999999999',
+    addresses: [],
+    permissions: { ...DEFAULT_SUPERADMIN_PERMISSIONS }
+  };
+
+  return [superAdmin, ...users];
 };
 
 // --- Helper: Ensure Firebase Connection (Fix for Normal Users) ---
@@ -81,34 +195,74 @@ const setMockData = (key: string, data: any) => {
 const ensureFirebaseConnection = async () => {
     if (!auth.currentUser) {
         try {
-            console.log("No active Firebase user. Attempting anonymous sign-in for DB access...");
             // Set a timeout for connection attempt
             const timeout = new Promise((_, reject) => setTimeout(() => reject("Auth Timeout"), 3000));
             await Promise.race([signInAnonymously(auth), timeout]);
-            console.log("Anonymous connection established.");
         } catch (e) {
             console.warn("Anonymous auth failed or timed out (Database might be unreachable):", e);
         }
     }
 };
 
+export const addAuditLog = async (entry: {
+  action: string;
+  actor: string;
+  details?: string;
+}): Promise<void> => {
+  await addDoc(collection(db, 'admin_audit_logs'), {
+    ...entry,
+    timestamp: new Date().toISOString(),
+  });
+};
+
+export const getAuditLogs = async (): Promise<Array<{
+  id: string;
+  action: string;
+  actor: string;
+  details?: string;
+  timestamp: string;
+}>> => {
+  const q = query(
+    collection(db, 'admin_audit_logs'),
+    orderBy('timestamp', 'desc'),
+    limit(30)
+  );
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map((auditDoc) => {
+    const data = auditDoc.data() as {
+      action?: string;
+      actor?: string;
+      details?: string;
+      timestamp?: string;
+    };
+    return {
+      id: auditDoc.id,
+      action: data.action || '',
+      actor: data.actor || 'Unknown',
+      details: data.details,
+      timestamp: data.timestamp || new Date(0).toISOString(),
+    };
+  });
+};
+
 // --- Helper: Seed Database ---
 export const seedDatabase = async () => {
-    console.log("Seeding database...");
     
     // Ensure we have products in local storage
     const currentProducts = getMockData<Product[]>('products', []);
     if (currentProducts.length === 0) {
-        setMockData('products', INITIAL_PRODUCTS);
+        setMockData('products', INITIAL_PRODUCTS.map(normalizeProductColors));
     }
     setMockData('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
+    const seededUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+    setMockData('users', seededUsers);
     
     try {
         await ensureFirebaseConnection();
         const productsColl = collection(db, 'products');
         const snapshot = await getDocs(productsColl);
         if (snapshot.empty) {
-            for (const p of INITIAL_PRODUCTS) {
+            for (const p of INITIAL_PRODUCTS.map(normalizeProductColors)) {
                 const cleanP = deepSanitize(p);
                 await setDoc(doc(db, 'products', p.id), cleanP);
             }
@@ -175,40 +329,41 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
 // --- Products Service ---
 
 export const getProducts = async (): Promise<Product[]> => {
-  // 1. Get Local
-  const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS);
-  
-  // 2. Try Firebase 
-  try {
-      // Don't force auth for reading public products, but try if available
-      const querySnapshot = await getDocs(collection(db, 'products'));
-      if (!querySnapshot.empty) {
-          const fbProducts: Product[] = [];
-          querySnapshot.forEach((doc) => {
-            fbProducts.push({ ...doc.data(), id: doc.id } as Product);
-          });
-          return fbProducts;
-      }
-  } catch (e) { }
-  
-  return localProducts;
+  await ensureFirebaseConnection();
+  const querySnapshot = await withTimeout(getDocs(collection(db, 'products')), 3200);
+  const fbProducts: Product[] = [];
+  querySnapshot.forEach((snapshotDoc) => {
+    fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
+  });
+  return fbProducts.map(normalizeProductColors);
 };
 
 export const getProductById = async (id: string): Promise<Product | undefined> => {
+  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  const localFound = products.find((p) => p.id === id);
+  if (localFound) return normalizeProductColors(localFound);
+
   try {
       const docRef = doc(db, 'products', id);
-      const docSnap = await getDoc(docRef);
+      const docSnap = await withTimeout(getDoc(docRef), 4500);
       if (docSnap.exists()) {
-        return { ...docSnap.data(), id: docSnap.id } as Product;
+        const remoteProduct = normalizeProductColors({ ...(docSnap.data() as Product), id: docSnap.id });
+        const nextProducts = [remoteProduct, ...products.filter((p) => p.id !== id)];
+        setMockData('products', nextProducts);
+        return remoteProduct;
       }
   } catch (e) { }
 
-  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
-  return products.find(p => p.id === id);
+  try {
+      const allProducts = await getProducts();
+      return allProducts.find((p) => p.id === id);
+  } catch (e) {
+      return undefined;
+  }
 };
 
 export const addProduct = async (product: Product): Promise<void> => {
-  const cleanProduct = deepSanitize(product);
+  const cleanProduct = deepSanitize(normalizeProductColors(product));
   
   // Local - SAVE HERE FIRST (Source of truth for immediate UI update)
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
@@ -249,7 +404,7 @@ export const addProduct = async (product: Product): Promise<void> => {
 };
 
 export const updateProduct = async (product: Product): Promise<void> => {
-  const cleanProduct = deepSanitize(product);
+  const cleanProduct = deepSanitize(normalizeProductColors(product));
   
   // Local
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
@@ -292,17 +447,11 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
 // --- Category Service ---
 export const getCategories = async (): Promise<string[]> => {
-  // Local
-  const localCats = getMockData<string[]>('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
-  
-  try {
-      const querySnapshot = await getDocs(collection(db, 'categories'));
-      const cats: string[] = [];
-      querySnapshot.forEach(doc => cats.push(doc.data().name));
-      if (cats.length > 0) return cats;
-  } catch (e) { }
-  
-  return localCats;
+  await ensureFirebaseConnection();
+  const querySnapshot = await withTimeout(getDocs(collection(db, 'categories')), 1200);
+  const cats: string[] = [];
+  querySnapshot.forEach((categoryDoc) => cats.push(categoryDoc.data().name));
+  return cats;
 };
 
 export const addCategory = async (category: string): Promise<void> => {
@@ -358,18 +507,27 @@ export const deleteCategory = async (category: string): Promise<void> => {
 
 // --- Auth Service ---
 
-export const registerUser = async (name: string, email: string, password: string): Promise<User> => {
+export const registerUser = async (email: string, password: string, phone: string): Promise<User> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = normalizeIndianPhone(phone);
+    const users = upsertSuperAdmin(getMockData<User[]>('users', []));
+    if (users.some(u => u.email.toLowerCase() === normalizedEmail)) {
+        throw new Error('Email already registered');
+    }
+
     const newUser: User = {
         id: `user_${Date.now()}`,
-        name,
-        email,
+        name: normalizedEmail.split('@')[0] || 'User',
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        password,
         role: 'user',
-        addresses: []
+        addresses: [],
+        permissions: {}
     };
     const cleanUser = deepSanitize(newUser);
 
     // Local
-    const users = getMockData<User[]>('users', []);
     users.push(cleanUser);
     setMockData('users', users);
 
@@ -394,38 +552,36 @@ export const registerUser = async (name: string, email: string, password: string
     return cleanUser;
 };
 
-export const loginUser = async (email: string, password: string): Promise<User> => {
-    // 1. Hardcoded Admin (Always works)
-    if (email === 'admin@gmail.com' && password === 'admin123') {
-        const admin: User = { id: 'admin_1', name: 'Admin User', email, role: 'admin', addresses: [] };
-        
-        // Ensure admin is in local storage
-        const users = getMockData<User[]>('users', []);
-        if(!users.find(u => u.id === 'admin_1')) {
-            users.push(admin);
-            setMockData('users', users);
-        }
-
-        await ensureFirebaseConnection();
-        return admin;
-    }
+export const loginUser = async (email: string, password: string, phone?: string): Promise<User> => {
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedPhone = phone ? normalizeIndianPhone(phone) : undefined;
+    const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+    setMockData('users', localUsers);
 
     // 2. Try Firebase
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
         const firebaseUser = userCredential.user;
         if (firebaseUser) {
             const docRef = doc(db, 'users', firebaseUser.uid);
             const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) return docSnap.data() as User;
+            if (docSnap.exists()) {
+                const remoteUser = docSnap.data() as User;
+                const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
+                if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
+                    throw new Error('Phone number does not match this account');
+                }
+                return applyRoleByEmail(remoteUser);
+            }
             // Return basic info if doc missing
-            return {
+            return applyRoleByEmail({
                 id: firebaseUser.uid,
                 name: firebaseUser.displayName || 'User',
                 email: firebaseUser.email || '',
                 role: 'user',
-                addresses: []
-            };
+                addresses: [],
+                permissions: {}
+            });
         }
     } catch (e) {
         // Fallback to Local
@@ -433,10 +589,19 @@ export const loginUser = async (email: string, password: string): Promise<User> 
 
     // 3. Local Check
     const users = getMockData<User[]>('users', []);
-    const found = users.find(u => u.email === email);
+    const found = users.find(u => {
+      if (u.email.toLowerCase() !== normalizedEmail) return false;
+      if (u.password && u.password !== password) return false;
+      if (!normalizedPhone || !u.phone) return true;
+      try {
+        return normalizeIndianPhone(u.phone) === normalizedPhone;
+      } catch {
+        return false;
+      }
+    });
     if (found) {
         await ensureFirebaseConnection(); // Ensure connection for local users too
-        return found;
+        return applyRoleByEmail(found);
     }
 
     throw new Error("Invalid credentials");
@@ -454,17 +619,19 @@ export const loginWithGoogle = async (): Promise<User> => {
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-      return userSnap.data() as User;
+      return applyRoleByEmail(userSnap.data() as User);
     } else {
       const newUser: User = {
         id: firebaseUser.uid,
         name: firebaseUser.displayName || 'User',
         email: firebaseUser.email || '',
         role: 'user',
-        addresses: []
+        addresses: [],
+        permissions: {}
       };
-      await setDoc(userRef, deepSanitize(newUser));
-      return newUser;
+      const normalizedUser = applyRoleByEmail(newUser);
+      await setDoc(userRef, deepSanitize(normalizedUser));
+      return normalizedUser;
     }
   } catch (error) {
     // Simulate google login for demo
@@ -473,7 +640,8 @@ export const loginWithGoogle = async (): Promise<User> => {
         name: 'Demo Google User',
         email: 'demo@gmail.com',
         role: 'user',
-        addresses: []
+        addresses: [],
+        permissions: {}
     };
     const users = getMockData<User[]>('users', []);
     users.push(mockUser);
@@ -482,6 +650,156 @@ export const loginWithGoogle = async (): Promise<User> => {
     await ensureFirebaseConnection(); // Ensure connection
     return mockUser;
   }
+};
+
+const normalizeIndianPhone = (input: string): string => {
+  const cleaned = input.replace(/\D/g, '');
+
+  if (cleaned.length === 10) {
+    return `+91${cleaned}`;
+  }
+
+  if (cleaned.length === 12 && cleaned.startsWith('91')) {
+    return `+${cleaned}`;
+  }
+
+  if (cleaned.length === 11 && cleaned.startsWith('0')) {
+    return `+91${cleaned.slice(1)}`;
+  }
+
+  throw new Error('Invalid Indian phone number');
+};
+
+const getIndianNationalPhone = (input: string): string => normalizeIndianPhone(input).slice(3);
+
+const mapPhoneAuthError = (error: unknown): string => {
+  const code = (error as { code?: string })?.code || '';
+  const rawMessage = (error as { message?: string })?.message || '';
+  switch (code) {
+    case 'auth/invalid-phone-number':
+      return 'Invalid phone number format. Use a valid 10-digit Indian number.';
+    case 'auth/too-many-requests':
+      return 'Too many attempts. Please try again later.';
+    case 'auth/invalid-verification-code':
+      return 'Invalid verification code. Please enter the correct OTP.';
+    case 'auth/operation-not-allowed':
+      return 'Phone auth is not enabled in Firebase Console.';
+    case 'auth/app-not-authorized':
+      return 'This domain is not authorized for Firebase auth.';
+    case 'auth/captcha-check-failed':
+      return 'reCAPTCHA check failed. Refresh page and try again.';
+    case 'auth/network-request-failed':
+      return 'Network error while contacting Firebase.';
+    case 'auth/web-storage-unsupported':
+      return 'Browser does not support required web storage for auth.';
+    default:
+      if (code) return `Phone authentication failed (${code}).`;
+      if (rawMessage) return `Phone authentication failed: ${rawMessage}`;
+      return 'Phone authentication failed. Please try again.';
+  }
+};
+
+export const resetPhoneOtpFlow = () => {
+  phoneConfirmationResult = null;
+  if (recaptchaVerifier) {
+    recaptchaVerifier.clear();
+    recaptchaVerifier = null;
+  }
+  if (typeof window !== 'undefined') {
+    (window as any).recaptchaVerifier = null;
+  }
+};
+
+const ensureRecaptchaVerifier = async (containerId: string): Promise<RecaptchaVerifier> => {
+  if (recaptchaVerifier) {
+    return recaptchaVerifier;
+  }
+
+  if (!document.getElementById(containerId)) {
+    throw new Error(`reCAPTCHA container not found: #${containerId}`);
+  }
+
+  recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
+    size: 'invisible',
+    callback: () => {},
+  });
+
+  await recaptchaVerifier.render();
+
+  return recaptchaVerifier;
+};
+
+export const initPhoneRecaptcha = async (recaptchaContainerId: string): Promise<void> => {
+  await ensureRecaptchaVerifier(recaptchaContainerId);
+};
+
+export const sendPhoneOtp = async (phone: string, recaptchaContainerId: string): Promise<void> => {
+  const formattedPhone = normalizeIndianPhone(phone);
+
+  try {
+    const appVerifier = await ensureRecaptchaVerifier(recaptchaContainerId);
+    phoneConfirmationResult = await signInWithPhoneNumber(
+      auth,
+      formattedPhone,
+      appVerifier
+    );
+  } catch (error) {
+    throw new Error(mapPhoneAuthError(error));
+  }
+};
+
+export const verifyPhoneOtp = async (code: string): Promise<void> => {
+  if (!phoneConfirmationResult) {
+    throw new Error('Please send OTP first');
+  }
+  if (!/^\d{6}$/.test(code)) {
+    throw new Error('Invalid OTP');
+  }
+  try {
+    await phoneConfirmationResult.confirm(code);
+    phoneConfirmationResult = null;
+  } catch (error) {
+    throw new Error(mapPhoneAuthError(error));
+  }
+};
+
+export const loginWithPhoneOtp = async (phone: string): Promise<User> => {
+  const normalizedPhone = normalizeIndianPhone(phone);
+  const nationalPhone = getIndianNationalPhone(phone);
+
+  try {
+    const q = query(collection(db, 'users'), where('phone', '==', normalizedPhone));
+    const querySnapshot = await getDocs(q);
+    if (!querySnapshot.empty) {
+      const userDoc = querySnapshot.docs[0];
+      return userDoc.data() as User;
+    }
+
+    const qLegacy = query(collection(db, 'users'), where('phone', '==', nationalPhone));
+    const queryLegacySnapshot = await getDocs(qLegacy);
+    if (!queryLegacySnapshot.empty) {
+      const userDoc = queryLegacySnapshot.docs[0];
+      return userDoc.data() as User;
+    }
+  } catch {
+    // fallback below
+  }
+
+  const users = getMockData<User[]>('users', []);
+  const found = users.find((u) => {
+    if (!u.phone) return false;
+    try {
+      return normalizeIndianPhone(u.phone) === normalizedPhone || getIndianNationalPhone(u.phone) === nationalPhone;
+    } catch {
+      return false;
+    }
+  });
+  if (!found) {
+    throw new Error('No account found for this phone number');
+  }
+
+  await ensureFirebaseConnection();
+  return found;
 };
 
 export const updateUserAddresses = async (userId: string, addresses: Address[]): Promise<void> => {
@@ -505,10 +823,21 @@ export const updateUserAddresses = async (userId: string, addresses: Address[]):
     }
 };
 
-export const addNewAdmin = async (email: string, name: string, password: string): Promise<void> => {
+export const addNewAdmin = async (email: string, name: string, password: string, permissions?: UserPermissions): Promise<void> => {
     // Local
-    const users = getMockData<User[]>('users', []);
-    users.push({ id: `admin_${Date.now()}`, name, email, role: 'admin', addresses: [] });
+    const users = upsertSuperAdmin(getMockData<User[]>('users', []));
+    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+        throw new Error('User with this email already exists');
+    }
+    users.push({
+      id: `admin_${Date.now()}`,
+      name,
+      email,
+      password,
+      role: 'admin',
+      addresses: [],
+      permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) }
+    });
     setMockData('users', users);
 
     try {
@@ -527,8 +856,10 @@ export const addNewAdmin = async (email: string, name: string, password: string)
             id: uid,
             email, 
             name, 
+            password,
             role: 'admin', 
-            addresses: [] 
+            addresses: [],
+            permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) }
         });
 
         // Cleanup
@@ -540,24 +871,50 @@ export const addNewAdmin = async (email: string, name: string, password: string)
     }
 };
 
-export const getAllUsers = async (): Promise<User[]> => {
-    const localUsers = getMockData<User[]>('users', []);
-    
+export const deleteAdmin = async (adminId: string): Promise<void> => {
+  const users = getMockData<User[]>('users', []);
+  const found = users.find((u) => u.id === adminId);
+  if (found?.role === 'superadmin') {
+    throw new Error('Superadmin cannot be deleted.');
+  }
+  const updatedUsers = users.map((user) =>
+      user.id === adminId ? { ...user, role: 'user' as const, permissions: {} } : user
+  );
+    setMockData('users', updatedUsers);
+
     try {
-        // We try to fetch from DB, but don't force auth here as it's a read op often done by admin
-        const querySnapshot = await getDocs(collection(db, 'users'));
-        const fbUsers: User[] = [];
-        querySnapshot.forEach((doc) => fbUsers.push(doc.data() as User));
-        
-        // Merge without duplicates (Prefer Firebase)
-        const combined = [...fbUsers];
-        localUsers.forEach(locU => {
-            if (!combined.find(u => u.id === locU.id)) combined.push(locU);
-        });
-        return combined;
-    } catch(e) {
-        return localUsers;
+        await ensureFirebaseConnection();
+        const userRef = doc(db, 'users', adminId);
+        await updateDoc(userRef, { role: 'user', permissions: {} });
+    } catch (e) {
+        console.warn("Failed to demote admin in Firebase:", e);
     }
+};
+
+export const getAllUsers = async (): Promise<User[]> => {
+    await ensureFirebaseConnection();
+    const querySnapshot = await withTimeout(getDocs(collection(db, 'users')), 1500);
+    const fbUsers: User[] = [];
+    querySnapshot.forEach((userDoc) => fbUsers.push(userDoc.data() as User));
+    return fbUsers;
+};
+
+export const verifyIndianPincode = async (
+  pincode: string
+): Promise<{ city: string; country: string } | null> => {
+  if (!/^\d{6}$/.test(pincode)) return null;
+  try {
+    const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+    const data = await response.json();
+    if (!Array.isArray(data) || !data[0] || data[0].Status !== 'Success' || !data[0].PostOffice?.length) {
+      return null;
+    }
+    const office = data[0].PostOffice[0];
+    const city = office.District || office.Name;
+    return { city, country: 'India' };
+  } catch {
+    return null;
+  }
 };
 
 // --- Order Service ---
@@ -585,18 +942,29 @@ export const createOrder = async (userId: string, items: any[], total: number, a
     // CRITICAL: Ensure we have a session (anonymous or real) before writing
     await ensureFirebaseConnection();
     
-    console.log("Saving order to Firebase...", cleanOrder);
     await setDoc(doc(db, 'orders', cleanOrder.id), cleanOrder);
-    console.log("Order saved successfully to Firebase!");
     
-    // Inventory reduction
+    // Reserve inventory by selected color
     for (const item of items) {
         try {
             const pRef = doc(db, 'products', item.id);
             const pSnap = await getDoc(pRef);
             if(pSnap.exists()) {
-                const currentStock = pSnap.data().stock;
-                await updateDoc(pRef, { stock: Math.max(0, currentStock - item.quantity) });
+                const product = normalizeProductColors({ ...(pSnap.data() as Product), id: pSnap.id });
+                const colorName = item.selectedColorName;
+                const qty = Number(item.quantity || 0);
+                const colors = [...(product.colors || [])];
+                if (qty > 0 && colorName && colors.length) {
+                  const colorIdx = colors.findIndex((c) => c.name === colorName);
+                  if (colorIdx >= 0) {
+                    colors[colorIdx] = {
+                      ...colors[colorIdx],
+                      reservedStock: Number(colors[colorIdx].reservedStock || 0) + qty
+                    };
+                  }
+                }
+                const nextProduct = normalizeProductColors({ ...product, colors });
+                await updateDoc(pRef, deepSanitize(nextProduct));
             }
         } catch(invError) {
             console.warn("Failed to update inventory for item", item.id, invError);
@@ -606,11 +974,20 @@ export const createOrder = async (userId: string, items: any[], total: number, a
     console.error("FIREBASE SAVE FAILED (Data might be undefined or Permissions denied):", error);
   }
   
-  // Local Inventory Reduction
+  // Local inventory reserve
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
   items.forEach(item => {
       const p = products.find(prod => prod.id === item.id);
-      if (p) p.stock = Math.max(0, p.stock - item.quantity);
+      if (p) {
+        const product = normalizeProductColors(p);
+        const colors = [...(product.colors || [])];
+        const colorIdx = colors.findIndex((c) => c.name === item.selectedColorName);
+        const qty = Number(item.quantity || 0);
+        if (colorIdx >= 0 && qty > 0) {
+          colors[colorIdx] = { ...colors[colorIdx], reservedStock: Number(colors[colorIdx].reservedStock || 0) + qty };
+        }
+        Object.assign(p, normalizeProductColors({ ...product, colors }));
+      }
   });
   setMockData('products', products);
 
@@ -619,29 +996,12 @@ export const createOrder = async (userId: string, items: any[], total: number, a
 
 // New: Explicitly fetch all orders for Admin
 export const getAllOrders = async (): Promise<Order[]> => {
-    let fbOrders: Order[] = [];
-    
-    try {
-        await ensureFirebaseConnection();
-        console.log("Fetching all orders from Firebase...");
-        const q = query(collection(db, 'orders'));
-        const querySnapshot = await getDocs(q);
-        // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
-        querySnapshot.forEach((doc) => fbOrders.push({ ...(doc.data() as Order), id: doc.id }));
-        console.log("Fetched orders from DB:", fbOrders.length);
-    } catch (e) {
-        console.error("Error fetching admin orders from DB (Check permissions):", e);
-    }
-
-    const localOrders = getMockData<Order[]>('orders', []);
-    
-    // Merge logic: Add local orders only if they are NOT in Firebase list
-    const combined = [...fbOrders];
-    localOrders.forEach(locO => {
-        if (!combined.find(o => o.id === locO.id)) combined.push(locO);
-    });
-
-    return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    await ensureFirebaseConnection();
+    const ordersQuery = query(collection(db, 'orders'));
+    const querySnapshot = await getDocs(ordersQuery);
+    const fbOrders: Order[] = [];
+    querySnapshot.forEach((orderDoc) => fbOrders.push({ ...(orderDoc.data() as Order), id: orderDoc.id }));
+    return fbOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
@@ -679,16 +1039,88 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
   // Local
   const orders = getMockData<Order[]>('orders', []);
   const order = orders.find(o => o.id === orderId);
+  const previousStatus = order?.status;
   if (order) {
       order.status = status;
       setMockData('orders', orders);
   }
+
+  const applyInventoryTransition = (products: Product[], targetOrder?: Order) => {
+    if (!targetOrder || previousStatus === status) return products;
+    return products.map((raw) => {
+      let product = normalizeProductColors(raw);
+      const matches = targetOrder.items.filter((item) => item.id === product.id);
+      if (!matches.length || !product.colors?.length) return product;
+
+      let colors = [...product.colors];
+      for (const item of matches) {
+        const qty = Number(item.quantity || 0);
+        if (!qty) continue;
+        const idx = colors.findIndex((c) => c.name === item.selectedColorName);
+        if (idx < 0) continue;
+        const color = colors[idx];
+        const reserved = Number(color.reservedStock || 0);
+        const sold = Number(color.sold || 0);
+        const stock = Number(color.stock || 0);
+
+        if (status === 'Delivered') {
+          colors[idx] = {
+            ...color,
+            reservedStock: Math.max(0, reserved - qty),
+            sold: sold + qty,
+            stock: Math.max(0, stock - qty)
+          };
+        } else if (status === 'Cancelled') {
+          colors[idx] = { ...color, reservedStock: Math.max(0, reserved - qty) };
+        } else if (status === 'Processing' && previousStatus === 'Cancelled') {
+          colors[idx] = { ...color, reservedStock: reserved + qty };
+        }
+      }
+      return normalizeProductColors({ ...product, colors });
+    });
+  };
+
+  const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  const updatedLocalProducts = applyInventoryTransition(localProducts, order);
+  setMockData('products', updatedLocalProducts);
 
   // Firebase
   try {
       await ensureFirebaseConnection();
       const orderRef = doc(db, 'orders', orderId);
       await updateDoc(orderRef, { status });
+
+      if (order) {
+        for (const item of order.items) {
+          const pRef = doc(db, 'products', item.id);
+          const pSnap = await getDoc(pRef);
+          if (!pSnap.exists()) continue;
+          const product = normalizeProductColors({ ...(pSnap.data() as Product), id: pSnap.id });
+          const colors = [...(product.colors || [])];
+          const idx = colors.findIndex((c) => c.name === item.selectedColorName);
+          const qty = Number(item.quantity || 0);
+          if (idx < 0 || qty <= 0) continue;
+          const color = colors[idx];
+          const reserved = Number(color.reservedStock || 0);
+          const sold = Number(color.sold || 0);
+          const stock = Number(color.stock || 0);
+
+          if (status === 'Delivered') {
+            colors[idx] = {
+              ...color,
+              reservedStock: Math.max(0, reserved - qty),
+              sold: sold + qty,
+              stock: Math.max(0, stock - qty)
+            };
+          } else if (status === 'Cancelled') {
+            colors[idx] = { ...color, reservedStock: Math.max(0, reserved - qty) };
+          } else if (status === 'Processing' && previousStatus === 'Cancelled') {
+            colors[idx] = { ...color, reservedStock: reserved + qty };
+          }
+          const nextProduct = normalizeProductColors({ ...product, colors });
+          await updateDoc(pRef, deepSanitize(nextProduct));
+        }
+      }
   } catch (e) { }
 };
 

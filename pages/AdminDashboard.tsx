@@ -1,1045 +1,911 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import { RichTextEditor } from '../components/RichTextEditor'
+
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { RichTextEditor } from '../components/RichTextEditor';
 import { useAuth } from '../context/AuthContext';
-import { 
-    getProducts, getAllOrders, addProduct, deleteProduct, updateOrderStatus, 
-    updateProduct, getCategories, addCategory, deleteCategory, updateWebsiteSettings, getWebsiteSettings,
-    getAllUsers, addNewAdmin, seedDatabase, uploadFile
+import {
+  addCategory,
+  addAuditLog,
+  addNewAdmin,
+  addProduct,
+  deleteAdmin,
+  deleteCategory,
+  deleteProduct,
+  getAllOrders,
+  getAllUsers,
+  getAuditLogs,
+  getCategories,
+  getProducts,
+  seedDatabase,
+  updateOrderStatus,
+  updateProduct,
+  updateWebsiteSettings,
+  uploadFile,
 } from '../services/backend';
-import { Product, Order, User } from '../types';
+import { Order, Product, ProductColor, ProductVariation, User, UserPermissions } from '../types';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
+import { ConfirmModal } from '../components/admin/common/ConfirmModal';
+import { AnalyticsRange, AdminAuditEntry } from '../components/admin/types';
+import { AnalyticsTab } from '../components/admin/tabs/AnalyticsTab';
+import { InventoryTab } from '../components/admin/tabs/InventoryTab';
+import { ProductsTab } from '../components/admin/tabs/ProductsTab';
+import { OrdersTab } from '../components/admin/tabs/OrdersTab';
+import { CategoriesTab } from '../components/admin/tabs/CategoriesTab';
+import { AdminsTab } from '../components/admin/tabs/AdminsTab';
+import { SettingsTab } from '../components/admin/tabs/SettingsTab';
+
+type TabKey = 'analytics' | 'inventory' | 'products' | 'orders' | 'categories' | 'admins' | 'settings';
+
+interface ConfirmState {
+  open: boolean;
+  title: string;
+  message: string;
+  confirmLabel?: string;
+  onConfirm: () => Promise<void> | void;
+}
+
+const inputClass =
+  'w-full p-2 border border-gray-300 bg-white text-gray-900 rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
 
 export const AdminDashboard: React.FC = () => {
-  const { user, isAdmin } = useAuth();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
+  const isSuperAdmin = user?.role === 'superadmin';
   const { updatePrimaryColor, primaryColor, updateLogoUrl, logoUrl } = useTheme();
-  
-  const [activeTab, setActiveTab] = useState<'analytics' | 'inventory' | 'products' | 'orders' | 'categories' | 'admins' | 'settings'>('analytics');
-  
-  // Data State
+
+  const [activeTab, setActiveTab] = useState<TabKey>('analytics');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // Modal States
+  const [dataError, setDataError] = useState('');
+  const [auditError, setAuditError] = useState('');
+  const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>('30d');
+
   const [showProductModal, setShowProductModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // New/Edit Product Form State
   const initialProductState: Partial<Product> = {
     name: '',
-    price: 0,
     category: 'Smart Bands',
     description: '',
+    mrp: 0,
+    salePrice: 0,
+    price: 0,
     stock: 0,
+    reservedStock: 0,
+    sold: 0,
+    weight: '',
+    bandType: '',
+    colors: [],
+    inStock: true,
     images: [],
     videoUrl: '',
     features: [],
     specs: {},
     warranty: '',
     isFeatured: false,
-    isBestSeller: false
+    isBestSeller: false,
+    variations: [],
   };
-  const [productForm, setProductForm] = useState<Partial<Product>>(initialProductState);
-  // ------------------ TIPTAP EDITOR ------------------
-const editor = useEditor({
-  extensions: [StarterKit],
-  content: '',
-  onUpdate: ({ editor }) => {
-    setProductForm(prev => ({
-      ...prev,
-      description: editor.getHTML(),
-    }));
-  },
-});
 
-// Sync editor when modal opens or product changes
-useEffect(() => {
-  if (editor && showProductModal) {
-    editor.commands.setContent(productForm.description || '');
-  }
-}, [productForm.description, showProductModal, editor]);
-  
-  // Helper for specs/features strings
+  const [productForm, setProductForm] = useState<Partial<Product>>(initialProductState);
   const [featuresString, setFeaturesString] = useState('');
   const [specsString, setSpecsString] = useState('');
-
-  // File Upload State
+  const [variations, setVariations] = useState<ProductVariation[]>([]);
+  const [colorBlocks, setColorBlocks] = useState<ProductColor[]>([]);
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
+  const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
 
-  // New Category State
   const [newCategory, setNewCategory] = useState('');
-
-  // New Admin State
   const [newAdminEmail, setNewAdminEmail] = useState('');
   const [newAdminName, setNewAdminName] = useState('');
   const [newAdminPassword, setNewAdminPassword] = useState('');
+  const [newAdminPermissions, setNewAdminPermissions] = useState<UserPermissions>({
+    analytics: true,
+    products: true,
+    orders: true,
+    inventory: true,
+    categories: true,
+    admins: false,
+    settings: false,
+  });
 
-  const refreshData = async () => {
-     setIsLoading(true);
-     try {
-         const [p, o, c, u] = await Promise.all([
-             getProducts(),
-             getAllOrders(),
-             getCategories(),
-             getAllUsers()
-         ]);
-         setProducts(p);
-         setOrders(o);
-         setCategories(c);
-         setUsers(u);
-     } catch (e) {
-         console.error("Failed to refresh admin data", e);
-     } finally {
-         setIsLoading(false);
-     }
-  };
+  const [auditLog, setAuditLog] = useState<AdminAuditEntry[]>([]);
+  const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+
+  const pushAudit = useCallback(
+    async (action: string, details?: string) => {
+      const entry = {
+        action,
+        actor: user?.email || user?.name || 'Unknown',
+        details,
+      };
+      try {
+        await addAuditLog(entry);
+        const logs = await getAuditLogs();
+        setAuditLog(logs as AdminAuditEntry[]);
+        setAuditError('');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Audit log write failed';
+        setAuditError(message);
+        setAuditLog((prev) => [
+          {
+            id: `audit_${Date.now()}`,
+            action: entry.action,
+            actor: entry.actor,
+            details: entry.details,
+            timestamp: new Date().toISOString(),
+          },
+          ...prev,
+        ].slice(0, 30));
+      }
+    },
+    [user]
+  );
+
+  const hasTabAccess = useCallback(
+    (tab: TabKey) => {
+      const tabRequirements: Record<TabKey, keyof UserPermissions | null> = {
+        analytics: 'analytics',
+        inventory: 'inventory',
+        products: 'products',
+        orders: 'orders',
+        categories: 'categories',
+        admins: 'admins',
+        settings: 'settings',
+      };
+      if (isSuperAdmin) return true;
+      if (tab === 'admins') return false;
+      const required = tabRequirements[tab];
+      return required ? Boolean(user?.permissions?.[required]) : false;
+    },
+    [isSuperAdmin, user?.permissions]
+  );
+
+  const tabs: Array<{ key: TabKey; label: string }> = [
+    { key: 'analytics', label: 'Analytics' },
+    { key: 'inventory', label: 'Inventory' },
+    { key: 'products', label: 'Products' },
+    { key: 'orders', label: 'Orders' },
+    { key: 'categories', label: 'Categories' },
+    { key: 'admins', label: 'Admins' },
+    { key: 'settings', label: 'Settings' },
+  ];
+
+  const availableTabs = useMemo(() => tabs.filter((tab) => hasTabAccess(tab.key)).map((tab) => tab.key), [hasTabAccess]);
+
+  const refreshData = useCallback(async () => {
+    setIsLoading(true);
+    setDataError('');
+    const results = await Promise.allSettled([getProducts(), getAllOrders(), getCategories(), getAllUsers()]);
+    const [productsResult, ordersResult, categoriesResult, usersResult] = results;
+
+    const errors: string[] = [];
+
+    if (productsResult.status === 'fulfilled') {
+      setProducts(productsResult.value);
+    } else {
+      errors.push(`Products: ${productsResult.reason?.message || 'Failed to load'}`);
+    }
+
+    if (ordersResult.status === 'fulfilled') {
+      setOrders(ordersResult.value);
+    } else {
+      errors.push(`Orders: ${ordersResult.reason?.message || 'Failed to load'}`);
+    }
+
+    if (categoriesResult.status === 'fulfilled') {
+      setCategories(categoriesResult.value);
+    } else {
+      errors.push(`Categories: ${categoriesResult.reason?.message || 'Failed to load'}`);
+    }
+
+    if (usersResult.status === 'fulfilled') {
+      setUsers(usersResult.value);
+    } else {
+      errors.push(`Users: ${usersResult.reason?.message || 'Failed to load'}`);
+    }
+
+    if (errors.length > 0) {
+      setDataError(errors.join(' | '));
+    }
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
     refreshData();
-  }, [user]);
+  }, [refreshData, user]);
 
-  // --- ANALYTICS CALCULATIONS ---
-  const analytics = useMemo(() => {
-      const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-      const totalOrders = orders.length;
-      const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
-      const totalCustomers = new Set(orders.map(o => o.userId)).size;
+  useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        const logs = await getAuditLogs();
+        setAuditLog(logs as AdminAuditEntry[]);
+        setAuditError('');
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Failed to load audit logs.';
+        setAuditError(message);
+      }
+    };
+    loadLogs();
+  }, []);
 
-      // Category Breakdown
-      const categoryRevenue: Record<string, number> = {};
-      const productSales: Record<string, number> = {};
-
-      orders.forEach(order => {
-          order.items.forEach(item => {
-              const cat = item.category || 'Uncategorized';
-              categoryRevenue[cat] = (categoryRevenue[cat] || 0) + (item.price * item.quantity);
-              productSales[item.id] = (productSales[item.id] || 0) + item.quantity;
-          });
-      });
-
-      const maxCategoryRevenue = Math.max(...Object.values(categoryRevenue), 1); // Avoid div by zero
-
-      const topProducts = products
-          .map(p => ({ ...p, sold: (productSales[p.id] || 0) as number }))
-          .sort((a, b) => b.sold - a.sold)
-          .slice(0, 5);
-          
-      return { totalRevenue, totalOrders, avgOrderValue, totalCustomers, categoryRevenue, maxCategoryRevenue, topProducts };
-  }, [orders, products]);
-
-  // --- INVENTORY CALCULATIONS ---
-  const inventoryStats = useMemo(() => {
-      const totalStock = products.reduce((sum, p) => sum + p.stock, 0);
-      const totalValue = products.reduce((sum, p) => sum + (p.price * p.stock), 0);
-      const lowStock = products.filter(p => p.stock < 10 && p.stock > 0);
-      const outOfStock = products.filter(p => p.stock === 0);
-      return { totalStock, totalValue, lowStock, outOfStock };
-  }, [products]);
-
+  useEffect(() => {
+    if (!availableTabs.includes(activeTab)) {
+      setActiveTab(availableTabs[0] || 'analytics');
+    }
+  }, [activeTab, availableTabs]);
 
   if (!isAdmin) return <div className="p-10 text-center text-red-500">Access Denied. Admin only.</div>;
 
-  // --- Product Handlers ---
-
   const handleOpenAddProduct = () => {
-      setProductForm(initialProductState);
-      setFeaturesString('');
-      setSpecsString('');
-      setSelectedImageFiles([]);
-      setSelectedVideoFile(null);
-      setIsEditing(false);
-      setShowProductModal(true);
+    setProductForm(initialProductState);
+    setFeaturesString('');
+    setSpecsString('');
+    setVariations([]);
+    setColorBlocks([]);
+    setSelectedImageFiles([]);
+    setSelectedVideoFile(null);
+    setIsEditing(false);
+    setShowProductModal(true);
   };
 
   const handleEditProduct = (product: Product) => {
-      setProductForm(product);
-      setFeaturesString(product.features?.join('\n') || '');
-      setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
-      setSelectedImageFiles([]);
-      setSelectedVideoFile(null);
-      setIsEditing(true);
-      setShowProductModal(true);
+    const reservedStock = Number(product.reservedStock || 0);
+    const stock = Number(product.stock || 0);
+    setProductForm({
+      ...product,
+      mrp: product.mrp ?? product.price,
+      salePrice: product.salePrice ?? product.price,
+      reservedStock,
+      sold: Number(product.sold || 0),
+      weight: product.weight || '',
+      bandType: product.bandType || '',
+      colors: product.colors || [],
+      inStock: product.inStock ?? stock - reservedStock > 0,
+    });
+    setFeaturesString(product.features?.join('\n') || '');
+    setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
+    setVariations(product.variations || []);
+    setColorBlocks(product.colors || []);
+    setSelectedImageFiles([]);
+    setSelectedVideoFile(null);
+    setIsEditing(true);
+    setShowProductModal(true);
+  };
+
+  const handleAddVariation = () => {
+    setVariations((prev) => [...prev, { id: `v_${Date.now()}`, size: '', weight: '', color: '', price: 0, stock: 0 }]);
+  };
+
+  const handleRemoveVariation = (id: string) => {
+    setVariations((prev) => prev.filter((v) => v.id !== id));
+  };
+
+  const handleVariationChange = <K extends keyof ProductVariation>(id: string, field: K, value: ProductVariation[K]) => {
+    setVariations((prev) => prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
+  };
+
+  const addColorBlock = () => {
+    setColorBlocks((prev) => [
+      ...prev,
+      { name: '', hex: '#6b7280', images: [...(productForm.images || [])], stock: 0, reservedStock: 0, sold: 0 },
+    ]);
+  };
+
+  const removeColorBlock = (index: number) => {
+    setColorBlocks((prev) => prev.filter((_, idx) => idx !== index));
+  };
+
+  const updateColorBlock = (index: number, field: keyof ProductColor, value: unknown) => {
+    setColorBlocks((prev) => prev.map((c, idx) => (idx === index ? { ...c, [field]: value } : c)));
   };
 
   const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files.length > 0) {
-          setSelectedImageFiles(prev => [...prev, ...Array.from(e.target.files || [])]);
-      }
-  };
-
-  const handleRemoveSelectedImage = (index: number) => {
-      setSelectedImageFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const handleRemoveExistingImage = (url: string) => {
-      setProductForm(prev => ({
-          ...prev,
-          images: prev.images?.filter(img => img !== url) || []
-      }));
+    if (e.target.files && e.target.files.length > 0) {
+      const incoming = Array.from(e.target.files);
+      setSelectedImageFiles((prev) => {
+        const seen = new Set(prev.map((f) => `${f.name}_${f.size}_${f.lastModified}`));
+        const next = [...prev];
+        incoming.forEach((file) => {
+          const key = `${file.name}_${file.size}_${file.lastModified}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            next.push(file);
+          }
+        });
+        return next;
+      });
+      // Reset so selecting the same file again still fires onChange.
+      e.target.value = '';
+    }
   };
 
   const handleVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (e.target.files && e.target.files[0]) {
-          setSelectedVideoFile(e.target.files[0]);
-      }
+    if (e.target.files && e.target.files[0]) setSelectedVideoFile(e.target.files[0]);
   };
 
+  const reorderExistingImages = (fromIndex: number, toIndex: number) => {
+    setProductForm((prev) => {
+      const arr = [...(prev.images || [])];
+      const [moved] = arr.splice(fromIndex, 1);
+      arr.splice(toIndex, 0, moved);
+      return { ...prev, images: arr };
+    });
+  };
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsUploading(true);
-
     try {
-        // 1. Upload new images
-        const uploadedImageUrls: string[] = [];
-        for (const file of selectedImageFiles) {
-            const path = `products/${Date.now()}_${file.name}`;
-            const url = await uploadFile(file, path);
-            // Only add if we got a valid string back (empty string means failed/skipped)
-            if (url) uploadedImageUrls.push(url);
+      const uploadedImageUrls: string[] = [];
+      for (const file of selectedImageFiles) {
+        const path = `products/${Date.now()}_${file.name}`;
+        const url = await uploadFile(file, path);
+        if (url) uploadedImageUrls.push(url);
+      }
+
+      let finalVideoUrl = productForm.videoUrl || '';
+      if (selectedVideoFile) {
+        const path = `videos/${Date.now()}_${selectedVideoFile.name}`;
+        const newUrl = await uploadFile(selectedVideoFile, path);
+        if (newUrl) finalVideoUrl = newUrl;
+      }
+
+      const finalImages = [...(productForm.images || []), ...uploadedImageUrls];
+      if (finalImages.length === 0) finalImages.push('https://picsum.photos/400');
+
+      const cleanFeatures = featuresString
+        .split('\n')
+        .map((f) => f.trim())
+        .filter((f) => f !== '');
+
+      const cleanSpecs: Record<string, string> = {};
+      specsString.split('\n').forEach((line) => {
+        const parts = line.split(':');
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          const val = parts.slice(1).join(':').trim();
+          if (key && val) cleanSpecs[key] = val;
         }
+      });
 
-        // 2. Upload video if selected
-        // Default to existing video URL or empty string
-        let finalVideoUrl = productForm.videoUrl || ''; 
-        
-        if (selectedVideoFile) {
-            const path = `videos/${Date.now()}_${selectedVideoFile.name}`;
-            const newUrl = await uploadFile(selectedVideoFile, path);
-            if (newUrl) {
-                finalVideoUrl = newUrl;
-                if (newUrl.startsWith('blob:')) {
-                    alert("⚠️ WARNING: Video upload failed to persist (Network/Size Limit). \n\nUsing a TEMPORARY SESSION URL. \n\nThis video will disappear when you refresh the page. \n\nRECOMMENDED: Upload your video to YouTube and paste the URL instead.");
-                }
-            }
-        }
+      const sanitizedColors = colorBlocks
+        .filter((c) => c.name.trim() !== '')
+        .map((c) => ({
+          ...c,
+          images: c.images?.length ? c.images : finalImages,
+          stock: Number(c.stock || 0),
+          reservedStock: Number(c.reservedStock || 0),
+          sold: Number(c.sold || 0),
+        }));
 
-        // 3. Combine existing images with new ones
-        const finalImages = [
-            ...(productForm.images || []),
-            ...uploadedImageUrls
-        ];
+      const aggregateStock = sanitizedColors.reduce((sum, c) => sum + c.stock, 0);
+      const aggregateReserved = sanitizedColors.reduce((sum, c) => sum + c.reservedStock, 0);
+      const aggregateSold = sanitizedColors.reduce((sum, c) => sum + c.sold, 0);
 
-        // Fallback image if none exist
-        if (finalImages.length === 0) finalImages.push('https://picsum.photos/400');
+      const productData = {
+        ...productForm,
+        mrp: Number(productForm.mrp || 0),
+        salePrice: Number(productForm.salePrice || 0),
+        price: Number(productForm.salePrice || productForm.price || 0),
+        stock: sanitizedColors.length ? aggregateStock : Number(productForm.stock || 0),
+        reservedStock: sanitizedColors.length ? aggregateReserved : Number(productForm.reservedStock || 0),
+        sold: sanitizedColors.length ? aggregateSold : Number(productForm.sold || 0),
+        inStock: sanitizedColors.length
+          ? aggregateStock - aggregateReserved > 0
+          : Number(productForm.stock || 0) - Number(productForm.reservedStock || 0) > 0,
+        weight: productForm.weight || '',
+        bandType: (productForm.category || '').toLowerCase() === 'smart bands' ? productForm.bandType || '' : '',
+        colors: sanitizedColors,
+        variations,
+        images: finalImages,
+        videoUrl: finalVideoUrl,
+        features: cleanFeatures,
+        specs: cleanSpecs,
+      } as Product;
 
-        // Parse features
-        const cleanFeatures = featuresString.split('\n').map(f => f.trim()).filter(f => f !== '');
+      if (isEditing && productData.id) {
+        await updateProduct(productData);
+        pushAudit('Product Updated', `${productData.name} (${productData.id})`);
+      } else {
+        await addProduct({ ...productData, id: `p_${Date.now()}`, rating: 0, reviewCount: 0 });
+        pushAudit('Product Created', productData.name);
+      }
 
-        // Parse specs
-        const cleanSpecs: Record<string, string> = {};
-        specsString.split('\n').forEach(line => {
-            const parts = line.split(':');
-            if(parts.length >= 2) {
-                const key = parts[0].trim();
-                const val = parts.slice(1).join(':').trim();
-                if(key && val) cleanSpecs[key] = val;
-            }
-        });
-
-        const productData = {
-            ...productForm,
-            images: finalImages,
-            videoUrl: finalVideoUrl,
-            features: cleanFeatures,
-            specs: cleanSpecs
-        } as Product;
-
-        if (isEditing && productData.id) {
-            await updateProduct(productData);
-        } else {
-            await addProduct({
-            ...productData,
-            id: `p_${Date.now()}`,
-            rating: 0,
-            reviewCount: 0
-            });
-        }
-        setShowProductModal(false);
-        refreshData();
+      setShowProductModal(false);
+      await refreshData();
     } catch (error) {
-        console.error("Error saving product:", error);
-        alert("Failed to save product. See console for details.");
+      void error;
+      alert('Failed to save product. Please retry.');
     } finally {
-        setIsUploading(false);
+      setIsUploading(false);
     }
   };
 
-  const handleDeleteProduct = async (id: string) => {
-    if(window.confirm('Are you sure?')) {
-        await deleteProduct(id);
-        refreshData();
-    }
+  const handleDeleteProduct = (product: Product) => {
+    setConfirmState({
+      open: true,
+      title: 'Delete Product',
+      message: `Delete ${product.name}? This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteProduct(product.id);
+        pushAudit('Product Deleted', `${product.name} (${product.id})`);
+        await refreshData();
+      },
+    });
   };
 
-  // --- Order Handlers ---
   const handleStatusUpdate = async (orderId: string, status: Order['status']) => {
     await updateOrderStatus(orderId, status);
-    refreshData();
+    pushAudit('Order Status Updated', `${orderId} -> ${status}`);
+    await refreshData();
   };
 
-  // --- Category Handlers ---
   const handleAddCategory = async () => {
-      if(newCategory) {
-          await addCategory(newCategory);
-          setNewCategory('');
-          refreshData();
-      }
-  }
-
-  const handleDeleteCategory = async (cat: string) => {
-      if(window.confirm(`Delete category ${cat}?`)) {
-          await deleteCategory(cat);
-          refreshData();
-      }
-  }
-
-  // --- Inventory Handlers ---
-  const handleQuickStockUpdate = async (product: Product, amount: number) => {
-      const newStock = Math.max(0, product.stock + amount);
-      await updateProduct({ ...product, stock: newStock });
-      // Optimistic update
-      setProducts(prev => prev.map(p => p.id === product.id ? { ...p, stock: newStock } : p));
-  }
-
-  // --- Admin Handlers ---
-  const handleAddAdmin = async (e: React.FormEvent) => {
-      e.preventDefault();
-      if(newAdminPassword.length < 6) {
-          alert('Password must be at least 6 characters');
-          return;
-      }
-      try {
-        await addNewAdmin(newAdminEmail, newAdminName, newAdminPassword);
-        setNewAdminName('');
-        setNewAdminEmail('');
-        setNewAdminPassword('');
-        refreshData();
-        alert('Admin added successfully. They can login with their email/password.');
-      } catch (err: any) {
-        alert('Error adding admin: ' + err.message);
-      }
-  }
-
-  // --- Settings Handlers ---
-  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const color = e.target.value;
-      updatePrimaryColor(color);
-      updateWebsiteSettings({ primaryColor: color, logoUrl });
+    if (!newCategory.trim()) return;
+    await addCategory(newCategory.trim());
+    pushAudit('Category Added', newCategory.trim());
+    setNewCategory('');
+    await refreshData();
   };
-  
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const url = e.target.value;
-      updateLogoUrl(url);
-  }
-  
-  const saveSettings = async () => {
-      await updateWebsiteSettings({ primaryColor, logoUrl });
-      alert("Settings Saved!");
-  }
 
-  const handleSeed = async () => {
-      if(confirm("This will populate the database with default products if empty. Continue?")) {
-          await seedDatabase();
-          refreshData();
-      }
-  }
+  const handleDeleteCategory = (cat: string) => {
+    setConfirmState({
+      open: true,
+      title: 'Delete Category',
+      message: `Delete category ${cat}?`,
+      confirmLabel: 'Delete',
+      onConfirm: async () => {
+        await deleteCategory(cat);
+        pushAudit('Category Deleted', cat);
+        await refreshData();
+      },
+    });
+  };
+
+  const handleQuickStockUpdate = async (product: Product, amount: number) => {
+    const newStock = Math.max(0, product.stock + amount);
+    const availableAfterUpdate = newStock - (product.reservedStock || 0);
+    await updateProduct({ ...product, stock: newStock, inStock: availableAfterUpdate > 0 });
+    pushAudit('Stock Updated', `${product.name}: +${amount}`);
+    await refreshData();
+  };
+
+  const handleBulkStockUpdate = async (amount: number, productIds: string[]) => {
+    await Promise.all(
+      products
+        .filter((p) => productIds.includes(p.id))
+        .map((p) => {
+          const newStock = Math.max(0, p.stock + amount);
+          const available = newStock - (p.reservedStock || 0);
+          return updateProduct({ ...p, stock: newStock, inStock: available > 0 });
+        })
+    );
+    pushAudit('Bulk Stock Updated', `${productIds.length} products, amount ${amount}`);
+    await refreshData();
+  };
+
+  const handleAddAdmin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isSuperAdmin) {
+      alert('Only superadmin can create admins.');
+      return;
+    }
+    if (newAdminPassword.length < 6) {
+      alert('Password must be at least 6 characters');
+      return;
+    }
+    try {
+      await addNewAdmin(newAdminEmail, newAdminName, newAdminPassword, newAdminPermissions);
+      pushAudit('Admin Added', newAdminEmail);
+      setNewAdminName('');
+      setNewAdminEmail('');
+      setNewAdminPassword('');
+      setNewAdminPermissions({
+        analytics: true,
+        products: true,
+        orders: true,
+        inventory: true,
+        categories: true,
+        admins: false,
+        settings: false,
+      });
+      await refreshData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Error adding admin: ${msg}`);
+    }
+  };
+
+  const handleDeleteAdmin = (adminId: string) => {
+    if (!isSuperAdmin) {
+      alert('Only superadmin can delete admins.');
+      return;
+    }
+    if (adminId === user?.id) {
+      alert('You cannot remove yourself.');
+      return;
+    }
+    const admin = users.find((u) => u.id === adminId);
+    setConfirmState({
+      open: true,
+      title: 'Remove Admin',
+      message: `Remove ${admin?.email || adminId}?`,
+      confirmLabel: 'Remove',
+      onConfirm: async () => {
+        await deleteAdmin(adminId);
+        pushAudit('Admin Removed', admin?.email || adminId);
+        await refreshData();
+      },
+    });
+  };
+
+  const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const color = e.target.value;
+    updatePrimaryColor(color);
+    updateWebsiteSettings({ primaryColor: color, logoUrl });
+  };
+
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
+    updateLogoUrl(url);
+  };
+
+  const saveSettings = async () => {
+    await updateWebsiteSettings({ primaryColor, logoUrl });
+    pushAudit('Settings Updated');
+    alert('Settings Saved');
+  };
+
+  const handleSeed = () => {
+    setConfirmState({
+      open: true,
+      title: 'Seed Database',
+      message: 'Populate the database with default products if empty?',
+      confirmLabel: 'Seed',
+      onConfirm: async () => {
+        await seedDatabase();
+        pushAudit('Database Seeded');
+        await refreshData();
+      },
+    });
+  };
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-4 py-12">
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Admin Dashboard</h1>
-        <div className="flex items-center gap-4">
-            {isLoading && <span className="text-sm text-primary-500 animate-pulse font-bold">Refreshing...</span>}
-            <Button size="sm" variant="outline" onClick={refreshData}>
-                Refresh Data
-            </Button>
+    <div className="min-h-screen max-w-7xl mx-auto px-4 py-10 text-gray-900 dark:text-white">
+      <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enterprise control center for products, orders, and growth analytics</p>
         </div>
-      </div>
-      
-      <div className="flex flex-wrap gap-2 mb-8 overflow-x-auto pb-2">
-           {(['analytics', 'inventory', 'products', 'orders', 'categories', 'admins', 'settings'] as const).map(tab => (
-               <Button 
-                key={tab} 
-                variant={activeTab === tab ? 'primary' : 'outline'} 
-                onClick={() => setActiveTab(tab)}
-                className="capitalize whitespace-nowrap"
-               >
-                   {tab}
-               </Button>
-           ))}
+        <Button size="sm" variant="outline" onClick={refreshData}>Refresh Data</Button>
       </div>
 
-      {/* ANALYTICS TAB */}
+      {dataError && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+          Data load error: {dataError}
+        </div>
+      )}
+      {auditError && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+          Audit log warning: {auditError}
+        </div>
+      )}
+
+      <div className="mb-8 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-dark-surface p-2 flex flex-wrap gap-2">
+        {tabs.map((tab) => {
+          const allowed = hasTabAccess(tab.key);
+          return (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => allowed && setActiveTab(tab.key)}
+              disabled={!allowed}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${
+                activeTab === tab.key
+                  ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/20'
+                  : allowed
+                  ? 'bg-transparent text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-100 dark:hover:bg-white/10'
+                  : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-transparent cursor-not-allowed'
+              }`}
+            >
+              {tab.label} {!allowed ? 'Locked' : ''}
+            </button>
+          );
+        })}
+      </div>
+
       {activeTab === 'analytics' && (
-          <div className="space-y-8 animate-fade-in-up">
-              {/* KPI Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
-                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Revenue</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{analytics.totalRevenue.toLocaleString()}</p>
-                      <div className="mt-2 text-xs text-green-500 font-bold">+12% vs last month</div>
-                  </div>
-                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
-                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Orders</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{analytics.totalOrders}</p>
-                  </div>
-                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
-                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Avg Order Value</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{analytics.avgOrderValue.toFixed(0)}</p>
-                  </div>
-                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
-                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Active Customers</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{analytics.totalCustomers}</p>
-                  </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                  {/* Category Chart */}
-                  <div className="bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Sales by Category</h3>
-                      <div className="space-y-5">
-                          {Object.entries(analytics.categoryRevenue).map(([cat, revenue]: [string, number]) => (
-                              <div key={cat}>
-                                  <div className="flex justify-between text-sm mb-1">
-                                      <span className="font-medium dark:text-gray-300">{cat}</span>
-                                      <span className="font-bold dark:text-white">₹{revenue.toLocaleString()}</span>
-                                  </div>
-                                  <div className="w-full bg-gray-100 dark:bg-white/10 rounded-full h-2.5">
-                                      <div 
-                                        className="bg-primary-500 h-2.5 rounded-full transition-all duration-1000" 
-                                        style={{ width: `${(revenue / analytics.maxCategoryRevenue) * 100}%` }}
-                                      ></div>
-                                  </div>
-                              </div>
-                          ))}
-                      </div>
-                  </div>
-
-                  {/* Top Products */}
-                  <div className="bg-white dark:bg-dark-surface p-8 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm">
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Top Performing Products</h3>
-                      <div className="space-y-4">
-                          {analytics.topProducts.map((p: any, i) => (
-                              <div key={p.id} className="flex items-center gap-4">
-                                  <span className="text-lg font-bold text-gray-400 w-6">0{i+1}</span>
-                                  <div className="h-12 w-12 rounded bg-gray-100 dark:bg-white/5 overflow-hidden">
-                                      <img src={p.images[0]} alt="" className="w-full h-full object-cover" />
-                                  </div>
-                                  <div className="flex-1">
-                                      <p className="font-bold text-gray-900 dark:text-white truncate">{p.name}</p>
-                                      <p className="text-xs text-gray-500">{p.category}</p>
-                                  </div>
-                                  <div className="text-right">
-                                      <p className="font-bold text-gray-900 dark:text-white">{p.sold} sold</p>
-                                      <p className="text-xs text-green-500">₹{(p.sold * p.price).toLocaleString()}</p>
-                                  </div>
-                              </div>
-                          ))}
-                          {analytics.topProducts.length === 0 && <p className="text-gray-500">No sales data yet.</p>}
-                      </div>
-                  </div>
-              </div>
-          </div>
+        <AnalyticsTab products={products} orders={orders} range={analyticsRange} onRangeChange={setAnalyticsRange} />
       )}
-
-      {/* INVENTORY TAB */}
       {activeTab === 'inventory' && (
-          <div className="space-y-8 animate-fade-in-up">
-              {/* Inventory Stats */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm border-l-4 border-l-blue-500">
-                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Inventory Value</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">₹{inventoryStats.totalValue.toLocaleString()}</p>
-                  </div>
-                  <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm border-l-4 border-l-purple-500">
-                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Total Units in Stock</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{inventoryStats.totalStock}</p>
-                  </div>
-                  <div className={`bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-100 dark:border-white/5 shadow-sm border-l-4 ${inventoryStats.lowStock.length > 0 ? 'border-l-amber-500' : 'border-l-green-500'}`}>
-                      <p className="text-sm text-gray-500 font-bold uppercase tracking-wider">Low Stock Alerts</p>
-                      <p className="text-3xl font-bold text-gray-900 dark:text-white mt-2">{inventoryStats.lowStock.length}</p>
-                      <p className="text-xs text-gray-500 mt-1">Items with &lt; 10 units</p>
-                  </div>
-              </div>
-
-              {/* Inventory Table */}
-              <div className="bg-white dark:bg-dark-surface rounded-xl shadow overflow-hidden border border-gray-200 dark:border-white/5 overflow-x-auto">
-                 <div className="px-6 py-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
-                     <h3 className="font-bold text-lg dark:text-white">Stock Control</h3>
-                     <span className="text-xs text-gray-500">Real-time updates</span>
-                 </div>
-                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead className="bg-gray-50 dark:bg-white/5">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Level</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Value</th>
-                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white dark:bg-dark-surface divide-y divide-gray-200 dark:divide-gray-700">
-                      {[...products].sort((a,b) => a.stock - b.stock).map(p => (
-                        <tr key={p.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                              <div className="flex items-center">
-                                  <div className="h-8 w-8 rounded bg-gray-100 dark:bg-white/5 overflow-hidden mr-3">
-                                    <img src={p.images[0]} alt="" className="h-full w-full object-cover" />
-                                  </div>
-                                  <div className="flex flex-col">
-                                    <span>{p.name}</span>
-                                    <span className="text-xs text-gray-500 font-normal">{p.id}</span>
-                                  </div>
-                              </div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {p.stock === 0 ? (
-                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                  Out of Stock
-                                </span>
-                            ) : p.stock < 10 ? (
-                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-amber-100 text-amber-800">
-                                  Low Stock
-                                </span>
-                            ) : (
-                                <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                  In Stock
-                                </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-bold">
-                              {p.stock} units
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                              ₹{p.price}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            <button 
-                                onClick={() => handleQuickStockUpdate(p, 10)} 
-                                className="text-primary-600 hover:text-primary-900 font-bold bg-primary-50 dark:bg-primary-900/20 px-3 py-1 rounded hover:bg-primary-100 transition-colors"
-                            >
-                                + Quick Restock (10)
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                 </table>
-              </div>
-          </div>
+        <InventoryTab
+          products={products}
+          isLoading={isLoading}
+          onQuickStockUpdate={handleQuickStockUpdate}
+          onBulkStockUpdate={handleBulkStockUpdate}
+        />
       )}
-
-      {/* PRODUCTS TAB */}
       {activeTab === 'products' && (
-        <div className="animate-fade-in-up">
-           <div className="flex justify-end mb-4">
-              <Button onClick={handleOpenAddProduct}>+ Add Product</Button>
-           </div>
-           <div className="bg-white dark:bg-dark-surface rounded-xl shadow overflow-hidden border border-gray-200 dark:border-white/5 overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-white/5">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price (₹)</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-dark-surface divide-y divide-gray-200 dark:divide-gray-700">
-                  {products.map(p => (
-                    <tr key={p.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
-                          <div className="flex items-center">
-                              <img src={p.images[0]} alt="" className="h-10 w-10 rounded mr-3 object-cover" />
-                              <div className="flex flex-col">
-                                <span>{p.name}</span>
-                                <span className="text-xs text-gray-500">{p.category}</span>
-                              </div>
-                          </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        <div className="flex flex-col gap-1">
-                          {p.isBestSeller && <span className="text-xs bg-primary-900 text-primary-200 px-2 py-0.5 rounded w-fit">Best Seller</span>}
-                          {p.isFeatured && <span className="text-xs bg-purple-900 text-purple-200 px-2 py-0.5 rounded w-fit">New Arrival</span>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">₹{p.price}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{p.stock}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <button onClick={() => handleEditProduct(p)} className="text-primary-600 hover:text-primary-900">Edit</button>
-                        <button onClick={() => handleDeleteProduct(p.id)} className="text-red-600 hover:text-red-900">Delete</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-           </div>
-        </div>
+        <ProductsTab
+          products={products}
+          categories={categories}
+          isLoading={isLoading}
+          onAdd={handleOpenAddProduct}
+          onEdit={handleEditProduct}
+          onDelete={handleDeleteProduct}
+        />
       )}
-
-      {/* ORDERS TAB */}
       {activeTab === 'orders' && (
-        <div className="space-y-6 animate-fade-in-up">
-           {orders.length === 0 && <div className="text-center p-10 text-gray-500">No orders found.</div>}
-           {orders.map(order => {
-             const orderUser = users.find(u => u.id === order.userId);
-             return (
-               <div key={order.id} className="bg-white dark:bg-dark-surface p-6 rounded-xl shadow-sm border border-gray-200 dark:border-white/5">
-                 <div className="flex flex-col md:flex-row justify-between md:items-start mb-6">
-                    <div className="space-y-3 flex-1">
-                      <div className="flex items-center gap-3">
-                          <h3 className="font-bold text-lg text-gray-900 dark:text-white">{order.id}</h3>
-                          <span className="text-xs text-gray-400 px-2 py-1 bg-gray-100 dark:bg-white/5 rounded-full">
-                            {new Date(order.date).toLocaleDateString()}
-                            </span>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Customer Details */}
-                          <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-white/5 p-4 rounded-lg">
-                              <p className="font-semibold text-gray-900 dark:text-gray-200 mb-1 uppercase text-xs tracking-wider">Customer</p>
-                              {orderUser ? (
-                                <>
-                                  <p className="font-medium text-base text-gray-900 dark:text-white">{orderUser.name}</p>
-                                  <p>{orderUser.email}</p>
-                                  <p className="text-xs text-gray-400 mt-1">ID: {order.userId}</p>
-                                </>
-                              ) : (
-                                <>
-                                  <p className="font-medium text-amber-500">User not found (Guest?)</p>
-                                  <p className="text-xs text-gray-400 mt-1">ID: {order.userId}</p>
-                                </>
-                              )}
-                          </div>
-
-                          {/* Shipping Details */}
-                          <div className="text-sm text-gray-600 dark:text-gray-400 bg-gray-50 dark:bg-white/5 p-4 rounded-lg">
-                              <p className="font-semibold text-gray-900 dark:text-gray-200 mb-1 uppercase text-xs tracking-wider">Shipping To</p>
-                              {order.shippingAddress ? (
-                                  <>
-                                    <p className="font-medium text-gray-900 dark:text-white">{order.shippingAddress.street}</p>
-                                    <p>{order.shippingAddress.city}, {order.shippingAddress.zip}</p>
-                                    <p>{order.shippingAddress.country}</p>
-                                  </>
-                              ) : (
-                                  <p className="text-amber-500">Address missing</p>
-                              )}
-                          </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col items-end gap-4 mt-6 md:mt-0 md:ml-6 min-w-[200px]">
-                       <div className="text-right">
-                          <p className="text-sm text-gray-500 uppercase tracking-wide">Total Amount</p>
-                          <p className="text-3xl font-bold text-gray-900 dark:text-white">₹{order.total.toFixed(2)}</p>
-                       </div>
-                       <div className="w-full">
-                           <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Order Status</label>
-                           <select 
-                             value={order.status} 
-                             onChange={(e) => handleStatusUpdate(order.id, e.target.value as any)}
-                             className={`w-full text-sm border-transparent rounded-lg shadow-sm p-2.5 font-bold focus:ring-2 focus:ring-primary-500 outline-none cursor-pointer
-                               ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' : 
-                                 order.status === 'Processing' ? 'bg-blue-100 text-blue-800' : 
-                                 order.status === 'Shipped' ? 'bg-purple-100 text-purple-800' : 
-                                 order.status === 'Cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}
-                             `}
-                           >
-                             <option value="Processing">Processing</option>
-                             <option value="Shipped">Shipped</option>
-                             <option value="Delivered">Delivered</option>
-                             <option value="Cancelled">Cancelled</option>
-                           </select>
-                       </div>
-                    </div>
-                 </div>
-                 
-                 {/* Order Items */}
-                 <div className="border-t border-gray-100 dark:border-white/5 pt-4 mt-2">
-                    <p className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-3">Items Ordered</p>
-                    <div className="space-y-3">
-                        {order.items.map((item, idx) => (
-                            <div key={idx} className="flex justify-between items-center text-sm p-2 hover:bg-gray-50 dark:hover:bg-white/5 rounded-lg transition-colors">
-                                <div className="flex items-center gap-3">
-                                    <div className="h-12 w-12 rounded-lg bg-gray-100 dark:bg-white/5 overflow-hidden border border-gray-200 dark:border-white/10">
-                                        <img src={item.images[0]} alt="" className="h-full w-full object-cover" />
-                                    </div>
-                                    <div>
-                                        <span className="font-bold text-gray-900 dark:text-white block">{item.name}</span>
-                                        <span className="text-gray-500">Qty: {item.quantity}</span>
-                                    </div>
-                                </div>
-                                <span className="font-medium text-gray-900 dark:text-white">₹{(item.price * item.quantity).toFixed(2)}</span>
-                            </div>
-                        ))}
-                    </div>
-                 </div>
-               </div>
-             );
-           })}
-        </div>
+        <OrdersTab orders={orders} users={users} isLoading={isLoading} onStatusUpdate={handleStatusUpdate} />
       )}
-
-      {/* CATEGORIES TAB */}
       {activeTab === 'categories' && (
-          <div className="space-y-6 animate-fade-in-up">
-              <div className="flex gap-4">
-                  <input 
-                    type="text" 
-                    value={newCategory} 
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="New Category Name"
-                    className="p-2 border rounded dark:bg-white/5 dark:text-white dark:border-white/10 flex-1"
-                  />
-                  <Button onClick={handleAddCategory}>Add Category</Button>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {categories.map(cat => (
-                      <div key={cat} className="flex justify-between items-center bg-white dark:bg-dark-surface p-4 rounded-lg border border-gray-200 dark:border-white/5">
-                          <span className="font-medium dark:text-white">{cat}</span>
-                          <button onClick={() => handleDeleteCategory(cat)} className="text-red-500 hover:text-red-700">Delete</button>
-                      </div>
-                  ))}
-              </div>
-          </div>
+        <CategoriesTab
+          categories={categories}
+          newCategory={newCategory}
+          setNewCategory={setNewCategory}
+          onAddCategory={handleAddCategory}
+          onDeleteCategory={handleDeleteCategory}
+        />
+      )}
+      {activeTab === 'admins' && (
+        <AdminsTab
+          users={users}
+          isSuperAdmin={isSuperAdmin}
+          currentUserId={user?.id}
+          newAdminName={newAdminName}
+          setNewAdminName={setNewAdminName}
+          newAdminEmail={newAdminEmail}
+          setNewAdminEmail={setNewAdminEmail}
+          newAdminPassword={newAdminPassword}
+          setNewAdminPassword={setNewAdminPassword}
+          newAdminPermissions={newAdminPermissions}
+          setNewAdminPermissions={setNewAdminPermissions}
+          onAddAdmin={handleAddAdmin}
+          onDeleteAdmin={handleDeleteAdmin}
+        />
+      )}
+      {activeTab === 'settings' && (
+        <SettingsTab
+          primaryColor={primaryColor}
+          logoUrl={logoUrl}
+          onColorChange={handleColorChange}
+          onLogoChange={handleLogoChange}
+          onSave={saveSettings}
+          onSeed={handleSeed}
+        />
       )}
 
-      {/* ADMINS TAB */}
-      {activeTab === 'admins' && (
-          <div className="space-y-8 animate-fade-in-up">
-              <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-white/5">
-                  <h3 className="text-xl font-bold mb-4 dark:text-white">Add New Admin</h3>
-                  <form onSubmit={handleAddAdmin} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                          <input 
-                             type="text" placeholder="Name" required
-                             value={newAdminName} onChange={e => setNewAdminName(e.target.value)}
-                             className="p-2 border rounded dark:bg-white/5 dark:text-white dark:border-white/10"
-                          />
-                          <input 
-                             type="email" placeholder="Email" required
-                             value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)}
-                             className="p-2 border rounded dark:bg-white/5 dark:text-white dark:border-white/10"
-                          />
-                          <input 
-                             type="password" placeholder="Password (min 6 chars)" required
-                             value={newAdminPassword} onChange={e => setNewAdminPassword(e.target.value)}
-                             className="p-2 border rounded dark:bg-white/5 dark:text-white dark:border-white/10"
-                             minLength={6}
-                          />
-                      </div>
-                      <Button type="submit">Create Admin</Button>
-                  </form>
+      <div className="mt-10 bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-white/10 p-5">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Admin Audit Log</h3>
+        <div className="space-y-2 max-h-48 overflow-y-auto">
+          {auditLog.map((log) => (
+            <div key={log.id} className="text-sm text-gray-600 dark:text-gray-300 border-b border-gray-100 dark:border-white/10 pb-2">
+              <p className="font-semibold text-gray-900 dark:text-white">{log.action}</p>
+              <p>{log.details || 'No details'}</p>
+              <p className="text-xs text-gray-500">{new Date(log.timestamp).toLocaleString()} by {log.actor}</p>
+            </div>
+          ))}
+          {auditLog.length === 0 && <p className="text-sm text-gray-500">No admin actions recorded yet.</p>}
+        </div>
+      </div>
+      {showProductModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="w-full max-w-3xl max-h-[90vh] rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-white/10 p-6 overflow-hidden flex flex-col">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4 shrink-0">{isEditing ? 'Edit Product' : 'Add Product'}</h2>
+            <form onSubmit={handleSaveProduct} className="space-y-4 overflow-y-auto pr-2">
+              <div className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Basic Product Details</h3>
+                {isEditing && (
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Product ID</label>
+                    <input
+                      className={inputClass}
+                      value={productForm.id || ''}
+                      readOnly
+                    />
+                  </div>
+                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Product Name</label>
+                  <input className={inputClass} placeholder="e.g. Aura Band X1" value={productForm.name || ''} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} required />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Category</label>
+                  <select className={inputClass} value={productForm.category || ''} onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}>
+                    <option value="">e.g. Smart Bands</option>
+                    {categories.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Sale Price</label>
+                  <input type="number" className={inputClass} placeholder="e.g. 149" value={productForm.salePrice ?? 0} onChange={(e) => setProductForm({ ...productForm, salePrice: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">MRP</label>
+                  <input type="number" className={inputClass} placeholder="e.g. 199" value={productForm.mrp ?? 0} onChange={(e) => setProductForm({ ...productForm, mrp: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Stock</label>
+                  <input type="number" className={inputClass} placeholder="e.g. 50" value={productForm.stock ?? 0} onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Weight</label>
+                  <input className={inputClass} placeholder="e.g. 24g" value={productForm.weight || ''} onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })} />
+                </div>
+              </div>
+
+              {(productForm.category || '').toLowerCase() === 'smart bands' && (
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Band Type</label>
+                  <select className={inputClass} value={productForm.bandType || ''} onChange={(e) => setProductForm({ ...productForm, bandType: e.target.value })}>
+                    <option value="">e.g. Sport Loop</option>
+                    <option value="Smart Bracelet">Smart Bracelet</option>
+                    <option value="Classic Strap">Classic Strap</option>
+                    <option value="Sport Loop">Sport Loop</option>
+                    <option value="Metal Chain">Metal Chain</option>
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">e.g. Fitness band with ECG + sleep tracking.</p>
+                <RichTextEditor value={productForm.description || ''} onChange={(html) => setProductForm((prev) => ({ ...prev, description: html }))} />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Warranty</label>
+                  <input className={inputClass} placeholder="e.g. 1 Year Manufacturer Warranty" value={productForm.warranty || ''} onChange={(e) => setProductForm({ ...productForm, warranty: e.target.value })} />
+                </div>
+                <div className="flex items-end gap-4 pb-2">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" checked={Boolean(productForm.isBestSeller)} onChange={(e) => setProductForm({ ...productForm, isBestSeller: e.target.checked })} />
+                    Best Seller
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="checkbox" checked={Boolean(productForm.isFeatured)} onChange={(e) => setProductForm({ ...productForm, isFeatured: e.target.checked })} />
+                    New Arrival
+                  </label>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <textarea className={`${inputClass} h-28`} placeholder="e.g. Battery: 14 days" value={specsString} onChange={(e) => setSpecsString(e.target.value)} />
+                <textarea className={`${inputClass} h-28`} placeholder="e.g. Sleep Tracking" value={featuresString} onChange={(e) => setFeaturesString(e.target.value)} />
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Color Variants</label>
+                  <Button type="button" size="sm" variant="outline" onClick={addColorBlock}>+ Add Color</Button>
+                </div>
+                {colorBlocks.map((color, idx) => (
+                  <div key={idx} className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                    <input className={inputClass} placeholder="e.g. Midnight Black" value={color.name} onChange={(e) => updateColorBlock(idx, 'name', e.target.value)} />
+                    <input className={inputClass} placeholder="e.g. #111111" value={color.hex} onChange={(e) => updateColorBlock(idx, 'hex', e.target.value)} />
+                    <input type="number" className={inputClass} placeholder="e.g. 30" value={color.stock} onChange={(e) => updateColorBlock(idx, 'stock', Number(e.target.value))} />
+                    <input type="number" className={inputClass} placeholder="e.g. 2" value={color.reservedStock} onChange={(e) => updateColorBlock(idx, 'reservedStock', Number(e.target.value))} />
+                    <div className="flex items-center gap-2">
+                      <input type="number" className={inputClass} placeholder="e.g. 18" value={color.sold} onChange={(e) => updateColorBlock(idx, 'sold', Number(e.target.value))} />
+                      <Button type="button" size="sm" variant="danger" onClick={() => removeColorBlock(idx)}>X</Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Product Variations</label>
+                  <Button type="button" size="sm" variant="outline" onClick={handleAddVariation}>+ Add Variation</Button>
+                </div>
+                {variations.map((v) => (
+                  <div key={v.id} className="grid grid-cols-1 md:grid-cols-6 gap-2">
+                    <input className={inputClass} placeholder="e.g. Size 7" value={v.size || ''} onChange={(e) => handleVariationChange(v.id, 'size', e.target.value)} />
+                    <input className={inputClass} placeholder="e.g. 18g" value={v.weight || ''} onChange={(e) => handleVariationChange(v.id, 'weight', e.target.value)} />
+                    <input className={inputClass} placeholder="e.g. Matte Black" value={v.color || ''} onChange={(e) => handleVariationChange(v.id, 'color', e.target.value)} />
+                    <input type="number" className={inputClass} placeholder="e.g. 1299" value={v.price || 0} onChange={(e) => handleVariationChange(v.id, 'price', Number(e.target.value))} />
+                    <input type="number" className={inputClass} placeholder="e.g. 20" value={v.stock} onChange={(e) => handleVariationChange(v.id, 'stock', Number(e.target.value))} />
+                    <Button type="button" size="sm" variant="danger" onClick={() => handleRemoveVariation(v.id)}>Remove</Button>
+                  </div>
+                ))}
               </div>
 
               <div>
-                  <h3 className="text-xl font-bold mb-4 dark:text-white">Current Admins</h3>
-                  <div className="space-y-2">
-                      {users.filter(u => u.role === 'admin').map(admin => (
-                          <div key={admin.id} className="bg-gray-50 dark:bg-white/5 p-4 rounded flex justify-between">
-                              <div>
-                                  <div className="font-bold dark:text-white">{admin.name}</div>
-                                  <div className="text-sm text-gray-500">{admin.email}</div>
-                              </div>
-                              <span className="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs h-fit">Admin</span>
-                          </div>
-                      ))}
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Current Images (drag to reorder)</label>
+                <div className="flex flex-wrap gap-3">
+                  {(productForm.images || []).map((img, idx) => (
+                    <div
+                      key={`${img}_${idx}`}
+                      draggable
+                      onDragStart={() => setDragImageIndex(idx)}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={() => {
+                        if (dragImageIndex === null || dragImageIndex === idx) return;
+                        reorderExistingImages(dragImageIndex, idx);
+                        setDragImageIndex(null);
+                      }}
+                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10"
+                    >
+                      <img src={img} alt="" className="w-full h-full object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => setProductForm((prev) => ({ ...prev, images: (prev.images || []).filter((_, i) => i !== idx) }))}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs"
+                      >
+                        x
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input type="file" accept="image/*" multiple onChange={handleImageFileSelect} className="block w-full text-sm text-gray-500 dark:text-gray-300" />
+                <input type="file" accept="video/*" onChange={handleVideoFileSelect} className="block w-full text-sm text-gray-500 dark:text-gray-300" />
+              </div>
+              {selectedImageFiles.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    New images selected: {selectedImageFiles.length}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {selectedImageFiles.map((file, idx) => (
+                      <div
+                        key={`${file.name}_${file.size}_${file.lastModified}_${idx}`}
+                        className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-white/10 px-2 py-1 text-xs text-gray-700 dark:text-gray-300"
+                      >
+                        <span className="max-w-[180px] truncate">{file.name}</span>
+                        <button
+                          type="button"
+                          className="text-red-600 dark:text-red-400"
+                          onClick={() =>
+                            setSelectedImageFiles((prev) =>
+                              prev.filter((_, fileIdx) => fileIdx !== idx)
+                            )
+                          }
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ))}
                   </div>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-3 sticky bottom-0 bg-white dark:bg-dark-surface">
+                <Button type="button" variant="outline" onClick={() => setShowProductModal(false)} disabled={isUploading}>Cancel</Button>
+                <Button type="submit" isLoading={isUploading}>{isUploading ? 'Saving...' : 'Save Product'}</Button>
               </div>
-          </div>
-      )}
-
-      {/* SETTINGS TAB */}
-      {activeTab === 'settings' && (
-          <div className="bg-white dark:bg-dark-surface p-6 rounded-xl border border-gray-200 dark:border-white/5 animate-fade-in-up">
-              <h3 className="text-xl font-bold mb-6 dark:text-white">Website Settings</h3>
-              
-              <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Theme Primary Color</label>
-                  <div className="flex items-center gap-4">
-                      <input 
-                        type="color" 
-                        value={primaryColor}
-                        onChange={handleColorChange}
-                        className="h-12 w-24 p-1 rounded cursor-pointer"
-                      />
-                      <span className="dark:text-white">{primaryColor}</span>
-                  </div>
-              </div>
-
-              <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Logo URL</label>
-                  <input 
-                    type="text" 
-                    value={logoUrl} 
-                    onChange={handleLogoChange}
-                    placeholder="https://example.com/logo.png"
-                    className="w-full p-2 border rounded dark:bg-white/5 dark:text-white dark:border-white/10"
-                  />
-                  <p className="text-sm text-gray-500 mt-2">Enter a direct image URL to replace the text logo.</p>
-              </div>
-
-              <div className="flex space-x-4">
-                   <Button onClick={saveSettings}>Save Settings</Button>
-                   <Button variant="secondary" onClick={handleSeed}>Seed Database (Reset)</Button>
-              </div>
-          </div>
-      )}
-
-      {/* Add/Edit Product Modal */}
-      {showProductModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md overflow-y-auto py-10">
-          <div className="bg-white dark:bg-dark-surface border dark:border-white/10 p-8 rounded-2xl w-full max-w-2xl max-h-full overflow-y-auto shadow-2xl">
-            <h2 className="text-2xl font-bold mb-6 dark:text-white">{isEditing ? 'Edit Product' : 'Add Product'}</h2>
-            <form onSubmit={handleSaveProduct} className="space-y-5">
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div>
-                       <label className="block text-sm font-medium dark:text-gray-300 mb-1">Product Name</label>
-                       <input 
-                         placeholder="Name" 
-                         className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white focus:ring-2 focus:ring-primary-500"
-                         value={productForm.name} onChange={e => setProductForm({...productForm, name: e.target.value})} 
-                         required
-                       />
-                   </div>
-                   <div>
-                       <label className="block text-sm font-medium dark:text-gray-300 mb-1">Price (₹)</label>
-                       <input 
-                         placeholder="Price in Rupees" type="number"
-                         className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white focus:ring-2 focus:ring-primary-500"
-                         value={productForm.price} onChange={e => setProductForm({...productForm, price: Number(e.target.value)})}
-                         required 
-                       />
-                   </div>
-               </div>
-               
-             <div>
-<div>
-<RichTextEditor
-  value={productForm.description || ''}
-  onChange={(html) =>
-    setProductForm(prev => ({
-      ...prev,
-      description: html,
-    }))
-  }
-/>
-</div>
-</div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div>
-                       <label className="block text-sm font-medium dark:text-gray-300 mb-1">Category</label>
-                       <select 
-                         className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white focus:ring-2 focus:ring-primary-500"
-                         value={productForm.category} onChange={e => setProductForm({...productForm, category: e.target.value})}
-                       >
-                         {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                       </select>
-                   </div>
-                   <div>
-                       <label className="block text-sm font-medium dark:text-gray-300 mb-1">Stock Quantity</label>
-                       <input 
-                         placeholder="Units" type="number"
-                         className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white focus:ring-2 focus:ring-primary-500"
-                         value={productForm.stock} onChange={e => setProductForm({...productForm, stock: Number(e.target.value)})}
-                         required 
-                       />
-                   </div>
-               </div>
-               
-               {/* New Toggles for Admin */}
-               <div className="flex gap-6 py-2 bg-gray-50 dark:bg-white/5 p-4 rounded-lg">
-                   <label className="flex items-center space-x-2 cursor-pointer">
-                       <input 
-                         type="checkbox" 
-                         checked={productForm.isBestSeller}
-                         onChange={e => setProductForm({...productForm, isBestSeller: e.target.checked})}
-                         className="w-5 h-5 text-primary-600 rounded focus:ring-primary-500"
-                       />
-                       <span className="text-gray-900 dark:text-white font-medium">Mark as Best Seller</span>
-                   </label>
-                   <label className="flex items-center space-x-2 cursor-pointer">
-                       <input 
-                         type="checkbox" 
-                         checked={productForm.isFeatured}
-                         onChange={e => setProductForm({...productForm, isFeatured: e.target.checked})}
-                         className="w-5 h-5 text-purple-600 rounded focus:ring-purple-500"
-                       />
-                       <span className="text-gray-900 dark:text-white font-medium">Mark as New Arrival</span>
-                   </label>
-               </div>
-
-               <div>
-                   <label className="block text-sm font-medium dark:text-gray-300 mb-1">Warranty Info</label>
-                   <input 
-                     placeholder="e.g. 1 Year Manufacturer Warranty"
-                     className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white focus:ring-2 focus:ring-primary-500"
-                     value={productForm.warranty} onChange={e => setProductForm({...productForm, warranty: e.target.value})}
-                   />
-               </div>
-
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                   <div>
-                       <label className="block text-sm font-medium dark:text-gray-300 mb-1">Features (One per line)</label>
-                       <textarea 
-                         placeholder="Feature 1&#10;Feature 2&#10;Feature 3"
-                         className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white h-32 focus:ring-2 focus:ring-primary-500"
-                         value={featuresString} onChange={e => setFeaturesString(e.target.value)}
-                       />
-                   </div>
-                   <div>
-                       <label className="block text-sm font-medium dark:text-gray-300 mb-1">Specs (Format: Key: Value)</label>
-                       <textarea 
-                         placeholder="Weight: 10g&#10;Battery: 24h&#10;Material: Plastic"
-                         className="w-full p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white h-32 focus:ring-2 focus:ring-primary-500"
-                         value={specsString} onChange={e => setSpecsString(e.target.value)}
-                       />
-                   </div>
-               </div>
-
-               {/* IMAGE UPLOAD SECTION */}
-               <div className="space-y-4">
-                   <label className="block text-sm font-medium dark:text-gray-300">Product Images</label>
-                   
-                   {/* Existing & Preview Images Grid */}
-                   <div className="flex flex-wrap gap-4">
-                       {/* Existing Images */}
-                       {productForm.images?.map((img, idx) => (
-                           <div key={idx} className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10 group">
-                               <img src={img} alt="" className="w-full h-full object-cover" />
-                               <button
-                                  type="button"
-                                  onClick={() => handleRemoveExistingImage(img)}
-                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-                               >
-                                   ×
-                               </button>
-                           </div>
-                       ))}
-                       {/* New Selected Files Preview */}
-                       {selectedImageFiles.map((file, idx) => (
-                           <div key={`new-${idx}`} className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-primary-500 group">
-                               <img src={URL.createObjectURL(file)} alt="" className="w-full h-full object-cover opacity-80" />
-                               <div className="absolute inset-0 flex items-center justify-center bg-black/30 text-white text-xs font-bold">New</div>
-                               <button
-                                  type="button"
-                                  onClick={() => handleRemoveSelectedImage(idx)}
-                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
-                               >
-                                   ×
-                               </button>
-                           </div>
-                       ))}
-                   </div>
-
-                   <input
-                     type="file"
-                     accept="image/*"
-                     multiple
-                     onChange={handleImageFileSelect} 
-                     className="block w-full text-sm text-gray-500 dark:text-gray-400
-                       file:mr-4 file:py-2 file:px-4
-                       file:rounded-full file:border-0
-                       file:text-sm file:font-semibold
-                       file:bg-primary-50 file:text-primary-700
-                       hover:file:bg-primary-100
-                       dark:file:bg-primary-900/20 dark:file:text-primary-400
-                     "
-                   />
-               </div>
-
-               {/* VIDEO UPLOAD SECTION */}
-               <div className="space-y-2">
-                   <label className="block text-sm font-medium dark:text-gray-300">Product Video</label>
-                   
-                   {/* Option 1: Manual URL */}
-                   <div className="flex gap-2 mb-2">
-                        <input 
-                            type="text"
-                            placeholder="Paste YouTube or Direct Video URL (Optional)"
-                            className="flex-1 p-2 border rounded dark:bg-white/5 dark:border-white/10 dark:text-white"
-                            value={productForm.videoUrl || ''}
-                            onChange={(e) => setProductForm({...productForm, videoUrl: e.target.value})}
-                        />
-                        {productForm.videoUrl && (
-                             <button
-                                type="button" 
-                                onClick={() => setProductForm({...productForm, videoUrl: ''})}
-                                className="px-3 py-2 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm font-bold"
-                             >
-                                 Clear
-                             </button>
-                        )}
-                   </div>
-
-                   {/* Option 2: Upload */}
-                   <div className="relative my-4">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-gray-200 dark:border-white/10"></div>
-                        </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-white dark:bg-dark-surface text-gray-500 font-medium">OR Upload File</span>
-                        </div>
-                   </div>
-
-                   {(productForm.videoUrl || selectedVideoFile) && !selectedVideoFile && productForm.videoUrl?.startsWith('http') && (
-                       <div className="p-3 bg-gray-50 dark:bg-white/5 rounded border border-gray-200 dark:border-white/10 mb-2">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm font-bold text-gray-700 dark:text-gray-200">Current Video:</span>
-                                {productForm.videoUrl?.startsWith('blob:') && (
-                                    <span className="text-xs font-bold text-amber-800 bg-amber-100 px-2 py-1 rounded animate-pulse">⚠️ Temporary Session URL</span>
-                                )}
-                            </div>
-                            <video 
-                                src={productForm.videoUrl} 
-                                className="w-full h-32 object-cover rounded bg-black" 
-                                controls 
-                            />
-                            <p className="text-xs text-gray-500 mt-1 truncate">{productForm.videoUrl}</p>
-                            {productForm.videoUrl?.startsWith('blob:') && (
-                                <p className="text-xs text-red-500 font-bold mt-2">
-                                    Warning: This video will vanish if you refresh the page. Please upload to YouTube for permanence.
-                                </p>
-                            )}
-                       </div>
-                   )}
-
-                   <input
-                     type="file"
-                     accept="video/*"
-                     onChange={handleVideoFileSelect}
-                     className="block w-full text-sm text-gray-500 dark:text-gray-400
-                       file:mr-4 file:py-2 file:px-4
-                       file:rounded-full file:border-0
-                       file:text-sm file:font-semibold
-                       file:bg-purple-50 file:text-purple-700
-                       hover:file:bg-purple-100
-                       dark:file:bg-purple-900/20 dark:file:text-purple-400
-                     " 
-                   />
-                   {selectedVideoFile && <p className="text-sm text-green-600 font-medium mt-1">File selected: {selectedVideoFile.name}</p>}
-                   <p className="text-xs text-gray-500 mt-1">Supported formats: MP4, WebM. (Note: Large files may fail to persist without a paid backend)</p>
-               </div>
-               
-               <div className="flex justify-end space-x-2 mt-4 pt-4 border-t border-gray-100 dark:border-white/10">
-                 <Button type="button" variant="outline" onClick={() => setShowProductModal(false)} disabled={isUploading}>Cancel</Button>
-                 <Button type="submit" isLoading={isUploading}>
-                     {isUploading ? 'Uploading & Saving...' : 'Save Product'}
-                 </Button>
-               </div>
             </form>
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        open={Boolean(confirmState?.open)}
+        title={confirmState?.title || ''}
+        message={confirmState?.message || ''}
+        confirmLabel={confirmState?.confirmLabel || 'Confirm'}
+        onCancel={() => setConfirmState(null)}
+        onConfirm={async () => {
+          if (!confirmState) return;
+          await confirmState.onConfirm();
+          setConfirmState(null);
+        }}
+      />
     </div>
   );
 };

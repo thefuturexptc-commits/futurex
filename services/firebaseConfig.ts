@@ -29,3 +29,7 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 
 export default app;
+
+console.log("🔥 PROJECT ID:", app.options.projectId);
+console.log("🔥 AUTH DOMAIN:", app.options.authDomain);
+console.log("🔥 API KEY:", app.options.apiKey);

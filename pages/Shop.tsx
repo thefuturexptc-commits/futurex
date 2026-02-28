@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Product } from '../types';
 import { getProducts } from '../services/backend';
@@ -6,11 +6,18 @@ import { ProductCard } from '../components/ProductCard';
 
 export const Shop: React.FC = () => {
   const { category } = useParams<{ category: string }>();
+  const normalizedRouteCategory = (category || 'all').trim().toLowerCase();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('featured');
   const [searchQuery, setSearchQuery] = useState('');
+  const shopScrollerRef = useRef<HTMLDivElement | null>(null);
+  const handleHorizontalWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    event.currentTarget.scrollLeft += event.deltaY;
+    event.preventDefault();
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -22,10 +29,13 @@ export const Shop: React.FC = () => {
 
   useEffect(() => {
     let result = [...products];
+    const getEffectivePrice = (p: Product) => Number(p.salePrice || p.price || 0);
     
     // 1. Filter by Category
-    if (category && category !== 'all') {
-      result = result.filter(p => p.category === category);
+    if (normalizedRouteCategory !== 'all') {
+      result = result.filter(
+        (p) => (p.category || '').trim().toLowerCase() === normalizedRouteCategory
+      );
     }
 
     // 2. Filter by Search Query
@@ -39,11 +49,11 @@ export const Shop: React.FC = () => {
 
     // 3. Sort
     if (sortBy === 'low-high') {
-      result.sort((a, b) => a.price - b.price);
+      result.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
     } else if (sortBy === 'high-low') {
-      result.sort((a, b) => b.price - a.price);
+      result.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
     } else if (sortBy === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
+      result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === 'a-z') {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else if (sortBy === 'z-a') {
@@ -54,7 +64,33 @@ export const Shop: React.FC = () => {
     }
 
     setFilteredProducts(result);
-  }, [category, products, sortBy, searchQuery]);
+  }, [normalizedRouteCategory, products, sortBy, searchQuery]);
+
+  useEffect(() => {
+    if (loading || filteredProducts.length < 2) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const scroller = shopScrollerRef.current;
+    if (!scroller) return;
+
+    let rafId = 0;
+    let lastTs = 0;
+    const speedPxPerMs = 0.5;
+    const tick = (ts: number) => {
+      const current = shopScrollerRef.current;
+      if (!current) return;
+      if (!lastTs) lastTs = ts;
+      const delta = ts - lastTs;
+      lastTs = ts;
+      const maxScroll = current.scrollWidth - current.clientWidth;
+      if (maxScroll > 0) {
+        current.scrollLeft += delta * speedPxPerMs;
+        if (current.scrollLeft >= maxScroll) current.scrollLeft = 0;
+      }
+      rafId = window.requestAnimationFrame(tick);
+    };
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [loading, filteredProducts.length]);
 
   return (
     <div className="min-h-screen pt-10 pb-20 px-4 max-w-7xl mx-auto">
@@ -67,7 +103,7 @@ export const Shop: React.FC = () => {
                 {category === 'all' ? 'Catalogue' : 'Collection'}
             </span>
             <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white capitalize font-display">
-            {category === 'all' ? 'All Products' : category}
+            {normalizedRouteCategory === 'all' ? 'All Products' : category}
             </h1>
         </div>
 
@@ -96,7 +132,7 @@ export const Shop: React.FC = () => {
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="block w-full md:w-48 pl-2 pr-8 py-2 text-sm border-none focus:outline-none focus:ring-0 rounded-lg bg-transparent text-gray-900 dark:text-white font-bold font-display cursor-pointer"
+                className="block w-full md:w-48 pl-2 pr-8 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 font-bold font-display cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="featured">New & Featured</option>
                 <option value="rating">Top Rated</option>
@@ -117,9 +153,15 @@ export const Shop: React.FC = () => {
            </div>
         </div>
       ) : filteredProducts.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-          {filteredProducts.map(p => (
-            <ProductCard key={p.id} product={p} />
+        <div
+          ref={shopScrollerRef}
+          onWheel={handleHorizontalWheel}
+          className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing"
+        >
+          {filteredProducts.map((p) => (
+            <div key={p.id} className="w-[74vw] sm:w-[46vw] lg:w-[29vw] xl:w-[26vw] min-w-[240px] max-w-[360px] shrink-0 snap-start">
+              <ProductCard product={p} compact imageAspectClassName="aspect-[4/3]" />
+            </div>
           ))}
         </div>
       ) : (

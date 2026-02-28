@@ -3,16 +3,18 @@ import { useCart } from '../context/CartContext';
 import { Button } from './ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useAuthModal } from '../context/AuthModalContext';
 
 export const CartDrawer: React.FC = () => {
   const { isCartOpen, closeCart, items, removeFromCart, updateQuantity, totalPrice } = useCart();
   const { user } = useAuth();
+  const { openLogin } = useAuthModal();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
     closeCart();
     if (!user) {
-      navigate('/login');
+      openLogin('/checkout');
     } else {
       navigate('/checkout');
     }
@@ -24,7 +26,7 @@ export const CartDrawer: React.FC = () => {
     <div className="fixed inset-0 z-[60] overflow-hidden">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+        className="absolute inset-0 bg-black/60 transition-opacity" 
         onClick={closeCart}
       ></div>
 

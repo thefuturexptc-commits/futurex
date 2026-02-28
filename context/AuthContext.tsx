@@ -3,23 +3,27 @@ import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
+  isAuthReady: boolean;
   login: (userData: User) => void;
   logout: () => void;
   updateUser: (userData: User) => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  isSuperAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('aura_active_user');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
+    setIsAuthReady(true);
   }, []);
 
   const login = (userData: User) => {
@@ -41,11 +45,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   return (
     <AuthContext.Provider value={{ 
       user, 
+      isAuthReady,
       login, 
       logout, 
       updateUser,
       isAuthenticated: !!user,
-      isAdmin: user?.role === 'admin'
+      isAdmin: user?.role === 'admin' || user?.role === 'superadmin',
+      isSuperAdmin: user?.role === 'superadmin'
     }}>
       {children}
     </AuthContext.Provider>

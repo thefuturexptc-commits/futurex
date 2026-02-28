@@ -3,15 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { Button } from '../components/ui/Button';
 import { useAuth } from '../context/AuthContext';
+import { useAuthModal } from '../context/AuthModalContext';
 
 export const Cart: React.FC = () => {
   const { items, removeFromCart, updateQuantity, totalPrice } = useCart();
   const { user } = useAuth();
+  const { openLogin } = useAuthModal();
   const navigate = useNavigate();
 
   const handleCheckout = () => {
     if (!user) {
-      navigate('/login');
+      openLogin('/checkout');
     } else {
       navigate('/checkout');
     }

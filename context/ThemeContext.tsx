@@ -14,8 +14,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Explicitly default to 'light'
-  const [theme, setTheme] = useState<Theme>('light');
+  const theme: Theme = 'dark';
   const [primaryColor, setPrimaryColor] = useState('#0ea5e9');
   const [logoUrl, setLogoUrl] = useState('');
 
@@ -28,26 +27,17 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('aura_theme') as Theme;
-    if (savedTheme) {
-        setTheme(savedTheme);
-    } else {
-        setTheme('light');
-    }
+    const root = window.document.documentElement;
+    root.classList.remove('light');
+    root.classList.add('dark');
+    localStorage.setItem('aura_theme', 'dark');
 
     // Load settings from Backend (Mock or Real)
     getWebsiteSettings().then(settings => {
         setPrimaryColor(settings.primaryColor);
         if(settings.logoUrl) setLogoUrl(settings.logoUrl);
-    }).catch(err => console.log("Waiting for backend connection..."));
+    }).catch(() => {});
   }, []);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('aura_theme', theme);
-  }, [theme]);
 
   // Apply CSS Variables for Color
   useEffect(() => {
@@ -60,9 +50,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--color-primary-50', '240 249 255'); 
   }, [primaryColor]);
 
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  };
+  const toggleTheme = () => {};
 
   const updatePrimaryColor = (color: string) => {
       setPrimaryColor(color);
@@ -82,7 +70,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    return {
+      theme: 'dark' as Theme,
+      toggleTheme: () => {},
+      primaryColor: '#0ea5e9',
+      updatePrimaryColor: () => {},
+      logoUrl: '',
+      updateLogoUrl: () => {}
+    };
   }
   return context;
 };

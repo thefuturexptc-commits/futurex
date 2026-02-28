@@ -31,10 +31,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const addToCart = (product: Product, quantity = 1) => {
     setItems(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      const existing = prev.find(item =>
+        item.id === product.id &&
+        (item.selectedColorName || '') === (product.selectedColorName || '') &&
+        Number(item.price) === Number(product.price)
+      );
       if (existing) {
         return prev.map(item => 
-          item.id === product.id 
+          item.id === existing.id &&
+          (item.selectedColorName || '') === (existing.selectedColorName || '') &&
+          Number(item.price) === Number(existing.price)
             ? { ...item, quantity: item.quantity + quantity } 
             : item
         );

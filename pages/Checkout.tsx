@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { createOrder, updateUserAddresses } from '../services/backend';
+import { createOrder, updateUserAddresses, verifyIndianPincode } from '../services/backend';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Address } from '../types';
@@ -11,6 +11,8 @@ export const Checkout: React.FC = () => {
   const { user, updateUser } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [verifyingPin, setVerifyingPin] = useState(false);
+  const [pinMessage, setPinMessage] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
 
   const [address, setAddress] = useState<Omit<Address, 'id'>>({
@@ -31,6 +33,23 @@ export const Checkout: React.FC = () => {
       });
     }
   }, [user]);
+
+  const handleVerifyPincode = async () => {
+    setPinMessage('');
+    if (!/^\d{6}$/.test(address.zip)) {
+      setPinMessage('Enter valid 6-digit pincode');
+      return;
+    }
+    setVerifyingPin(true);
+    const pinData = await verifyIndianPincode(address.zip);
+    setVerifyingPin(false);
+    if (!pinData) {
+      setPinMessage('Pincode not found');
+      return;
+    }
+    setAddress(prev => ({ ...prev, city: pinData.city, country: pinData.country }));
+    setPinMessage(`Verified: ${pinData.city}, ${pinData.country}`);
+  };
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +121,7 @@ export const Checkout: React.FC = () => {
       rzp.open();
 
     } catch (error) {
-      console.error(error);
+      void error;
       alert('Payment failed. Please try again.');
     } finally {
       setLoading(false);
@@ -154,12 +173,18 @@ export const Checkout: React.FC = () => {
                 className="mt-1 block w-full rounded-md border-gray-300 dark:bg-white/5 dark:text-white p-2"
               />
 
-              <input required type="text" placeholder="Zip Code"
-                value={address.zip}
-                onChange={(e) => setAddress({ ...address, zip: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 dark:bg-white/5 dark:text-white p-2"
-              />
+              <div className="space-y-2">
+                <input required type="text" placeholder="Zip Code"
+                  value={address.zip}
+                  onChange={(e) => setAddress({ ...address, zip: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                  className="mt-1 block w-full rounded-md border-gray-300 dark:bg-white/5 dark:text-white p-2"
+                />
+                <Button type="button" size="sm" variant="outline" onClick={handleVerifyPincode} disabled={verifyingPin}>
+                  {verifyingPin ? 'Verifying...' : 'Verify Pincode'}
+                </Button>
+              </div>
             </div>
+            {pinMessage && <p className={`text-xs ${pinMessage.startsWith('Verified') ? 'text-green-600' : 'text-red-500'}`}>{pinMessage}</p>}
 
             <input required type="text" placeholder="Country"
               value={address.country}

@@ -10,7 +10,17 @@ export default defineConfig(({ mode }) => {
         host: '0.0.0.0',
       },
       plugins: [react()],
-          resolve: {
+      build: {
+        rollupOptions: {
+          output: {
+            manualChunks: {
+              router: ['react-router-dom'],
+              firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+            },
+          },
+        },
+      },
+      resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
         }

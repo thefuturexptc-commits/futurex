@@ -1,76 +1,106 @@
-import React from 'react';
-import { Product } from '../types';
-import { Button } from './ui/Button';
-import { useCart } from '../context/CartContext';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Product } from '../types';
+import { useCart } from '../context/CartContext';
+import { Button } from './ui/Button';
 
 interface ProductCardProps {
   product: Product;
+  compact?: boolean;
+  imageAspectClassName?: string;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = false, imageAspectClassName }) => {
   const { addToCart } = useCart();
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+
+  const salePrice = Number(product.salePrice || product.price || 0);
+  const mrp = Number(product.mrp || product.price || 0);
+  const savings = Math.max(0, mrp - salePrice);
+  const percent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
+
+  const selectedColorStock = useMemo(() => {
+    const firstColor = product.colors?.[0];
+    if (!firstColor) return Number(product.stock || 0) - Number(product.reservedStock || 0);
+    return Number(firstColor.stock || 0) - Number(firstColor.reservedStock || 0);
+  }, [product.colors, product.stock, product.reservedStock]);
+  const canAdd = selectedColorStock > 0;
+
+  const defaultImage = useMemo(() => {
+    return product.colors?.[0]?.images?.[0] || product.images?.[0] || 'https://picsum.photos/400';
+  }, [product.colors, product.images]);
 
   return (
-    <div className="group relative glass-card rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] bg-white/80 dark:bg-transparent border border-white/50 dark:border-white/5">
-      {/* Image Container */}
-      <Link to={`/product/${product.id}`} className="block relative aspect-[4/5] overflow-hidden bg-gray-100 dark:bg-white/5">
-        <img 
-          src={product.images[0]} 
+    <div className="group relative rounded-[2rem] overflow-hidden text-white transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:scale-[1.03] bg-dark-surface border border-white/10">
+      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-white/5 ${imageAspectClassName || (compact ? 'aspect-[5/6]' : 'aspect-[4/5]')}`}>
+        <img
+          src={previewImage || defaultImage}
           alt={product.name}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out mix-blend-multiply dark:mix-blend-normal"
+          loading="lazy"
+          width={640}
+          height={800}
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-all duration-300 ease-out"
         />
-        
-        {/* Overlay Gradient on Hover */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-
-        {/* Badges */}
-        <div className="absolute top-4 left-4 flex flex-col gap-2 z-10">
-            {product.isFeatured && (
-            <span className="bg-white/90 dark:bg-purple-600/90 backdrop-blur text-purple-700 dark:text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm font-display">
-                New
-            </span>
-            )}
-            {product.isBestSeller && (
-            <span className="bg-white/90 dark:bg-primary-500/90 backdrop-blur text-primary-700 dark:text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider shadow-sm font-display">
-                Hot
-            </span>
-            )}
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Link>
-      
-      {/* Content */}
-      <div className="p-6 relative">
-        <div className="mb-3 flex justify-between items-start">
-          <span className="text-[10px] font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest font-display bg-primary-50 dark:bg-primary-900/20 px-2 py-1 rounded-md">{product.category}</span>
-          <div className="flex items-center gap-1 text-amber-500 text-xs font-bold px-2 py-0.5">
-              <span>★</span> {product.rating}
+
+      <div className={compact ? 'p-4' : 'p-6'}>
+        <div className={compact ? 'mb-2 flex justify-between items-start' : 'mb-3 flex justify-between items-start'}>
+          <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest bg-primary-900/20 px-2 py-1 rounded-md">{product.category}</span>
+          <div className="flex items-center gap-1 text-amber-400 text-xs font-bold px-2 py-0.5">
+            <span>*</span> {product.rating || 0}
           </div>
         </div>
-        
+
         <Link to={`/product/${product.id}`}>
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2 leading-tight group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors font-display">
+          <h3 className={`${compact ? 'text-lg mb-1' : 'text-xl mb-2'} font-bold text-white leading-tight group-hover:text-primary-300 transition-colors font-display`}>
             {product.name}
           </h3>
         </Link>
-        
-        <div className="flex items-center justify-between mt-5">
-          <div className="flex flex-col">
-              <span className="text-2xl font-bold text-gray-900 dark:text-white font-display">₹{product.price}</span>
+
+        {!!product.colors?.length && (
+          <div className={compact ? 'flex items-center gap-2 mt-2' : 'flex items-center gap-2 mt-3'}>
+            {product.colors.slice(0, 5).map((color) => (
+              <button
+                key={`${product.id}_${color.name}`}
+                type="button"
+                className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} rounded-full border border-white/30 hover:scale-110 transition-transform`}
+                style={{ backgroundColor: color.hex }}
+                onMouseEnter={() => setPreviewImage(color.images?.[0] || null)}
+                onMouseLeave={() => setPreviewImage(null)}
+                aria-label={color.name}
+              />
+            ))}
           </div>
-          <Button 
-            size="sm" 
-            variant="outline" 
+        )}
+
+        <div className={compact ? 'flex items-center justify-between mt-3' : 'flex items-center justify-between mt-5'}>
+          <div className="flex flex-col">
+            <span className={`${compact ? 'text-xl' : 'text-2xl'} font-bold text-white font-display`}>Rs {salePrice}</span>
+            <div className="flex items-center gap-2">
+              <span className="line-through text-xs text-gray-400">Rs {mrp}</span>
+              {percent > 0 && <span className="text-xs text-green-500 font-semibold">{percent}% off</span>}
+            </div>
+            <span className={`text-xs font-semibold mt-1 ${canAdd ? 'text-green-500' : 'text-red-500'}`}>
+              {canAdd ? 'In Stock' : 'Out of Stock'}
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
             onClick={(e) => {
-                e.preventDefault(); 
-                addToCart(product);
+              e.preventDefault();
+              addToCart(product);
             }}
-            className="rounded-full w-10 h-10 p-0 flex items-center justify-center border-gray-200 dark:border-white/20 hover:border-primary-500 hover:bg-primary-500 hover:text-white dark:hover:border-primary-500 transition-all duration-300 shadow-sm"
+            disabled={!canAdd}
+            className={`${compact ? 'w-9 h-9' : 'w-10 h-10'} rounded-full p-0 flex items-center justify-center border-white/20 hover:border-primary-500 hover:bg-primary-500 hover:text-white transition-all duration-300 shadow-sm`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
           </Button>
         </div>
       </div>
     </div>
   );
 };
+
+export const ProductCard = React.memo(ProductCardComponent);

@@ -1,17 +1,34 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { registerUser, loginWithGoogle } from '../services/backend';
+import { initPhoneRecaptcha, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
 import { Button } from '../components/ui/Button';
 
 export const Signup: React.FC = () => {
-  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || '/profile';
+  const isValidIndianPhoneInput = (value: string): boolean => {
+    const digits = value.replace(/\D/g, '');
+    return /^\d{10}$/.test(digits) || /^91\d{10}$/.test(digits) || /^0\d{10}$/.test(digits);
+  };
+  useEffect(() => {
+    initPhoneRecaptcha('recaptcha-container').catch(() => {
+      // Errors are handled in sendPhoneOtp.
+    });
+    return () => resetPhoneOtpFlow();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,11 +40,21 @@ export const Signup: React.FC = () => {
         setLoading(false);
         return;
     }
+    if (!isValidIndianPhoneInput(phone)) {
+      setError("Enter a valid Indian number (10-digit or +91 format)");
+      setLoading(false);
+      return;
+    }
+    if (!otpVerified) {
+      setError("Please verify OTP before creating account");
+      setLoading(false);
+      return;
+    }
 
     try {
-      const user = await registerUser(name, email, password);
+      const user = await registerUser(email, password, phone);
       login(user);
-      navigate('/profile');
+      navigate(redirectPath);
     } catch (error: any) {
       setError(error.message || 'Registration failed');
     } finally {
@@ -35,49 +62,56 @@ export const Signup: React.FC = () => {
     }
   };
 
-  const handleGoogleSignup = async () => {
-    setLoading(true);
+  const handleSendOtp = async () => {
+    if (!isValidIndianPhoneInput(phone)) {
+      setError("Enter a valid Indian number (10-digit or +91 format)");
+      return;
+    }
     setError('');
+    setOtpSending(true);
     try {
-      // Google Login handles both login and signup flows on the backend (creates doc if missing)
-      const user = await loginWithGoogle();
-      login(user);
-      navigate('/profile');
+      await sendPhoneOtp(phone, 'recaptcha-container');
+      setOtp('');
+      setOtpSent(true);
+      setOtpVerified(false);
     } catch (error: any) {
-      console.error(error);
-      setError(error.message || 'Google Sign-up failed. Please try again.');
+      setError(error?.message || 'Failed to send OTP. Check phone auth setup and try again.');
     } finally {
-      setLoading(false);
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    if (!otpSent) {
+      setError("Send OTP first");
+      return;
+    }
+    setError('');
+    setOtpVerifying(true);
+    try {
+      await verifyPhoneOtp(otp);
+      setOtpVerified(true);
+    } catch (error: any) {
+      setOtpVerified(false);
+      setError(error?.message || "Invalid OTP");
+    } finally {
+      setOtpVerifying(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-dark-bg">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-dark-surface p-8 rounded-2xl shadow-xl border border-gray-200 dark:border-white/5">
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_45%,_#eef2ff_100%)] dark:bg-[radial-gradient(circle_at_top,_#111827_0%,_#020617_60%,_#000000_100%)]">
+      <div className="max-w-md w-full space-y-8 bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-cyan-100 dark:border-cyan-900/40">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Create Account
-          </h2>
+          <p className="text-center text-xs tracking-[0.25em] font-bold text-cyan-600 dark:text-cyan-300 uppercase">Identity Registration</p>
+          <h2 className="mt-3 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Create Account</h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Join the future of wearable technology
+            Verify phone via OTP and activate your access
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && <div className="text-red-500 text-sm text-center bg-red-100 p-2 rounded">{error}</div>}
           <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
-                placeholder="John Doe"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-              />
-            </div>
             <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
               <input
@@ -90,6 +124,45 @@ export const Signup: React.FC = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
+            </div>
+            <div>
+              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone Number</label>
+              <div className="flex gap-2">
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
+                  placeholder="+91XXXXXXXXXX or 10-digit"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                <Button type="button" size="sm" variant="outline" onClick={handleSendOtp} disabled={otpSending}>
+                  {otpSending ? 'Sending...' : 'Send SMS OTP (Live)'}
+                </Button>
+              </div>
+            </div>
+            <div>
+              <label htmlFor="otp" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">OTP</label>
+              <div className="flex gap-2">
+                <input
+                  id="otp"
+                  name="otp"
+                  type="text"
+                  required
+                  maxLength={6}
+                  className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
+                  placeholder="Enter 6-digit OTP"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                />
+                <Button type="button" size="sm" variant="outline" onClick={handleVerifyOtp} disabled={otpVerifying || !otpSent}>
+                  {otpVerifying ? 'Verifying...' : 'Verify'}
+                </Button>
+              </div>
+              <div id="recaptcha-container" className="min-h-[78px]" />
+              {otpVerified && <p className="text-green-600 text-xs mt-1 font-semibold">OTP verified successfully</p>}
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
@@ -107,29 +180,11 @@ export const Signup: React.FC = () => {
           </div>
 
           <div>
-            <Button type="submit" className="w-full" isLoading={loading}>Sign Up</Button>
+            <Button type="submit" className="w-full rounded-xl" isLoading={loading} disabled={!otpVerified}>Create Account</Button>
           </div>
-          
-          <div className="flex flex-col space-y-3 mt-4">
-             <button 
-               type="button" 
-               onClick={handleGoogleSignup}
-               disabled={loading}
-               className="w-full flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-transparent dark:text-white dark:border-gray-600 dark:hover:bg-white/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-             >
-               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
-                  <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"></path>
-                  <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"></path>
-                  <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"></path>
-                  <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"></path>
-               </svg>
-               {loading ? 'Connecting...' : 'Sign up with Google'}
-             </button>
-          </div>
-
           <div className="text-center mt-4">
             <span className="text-gray-600 dark:text-gray-400 text-sm">Already have an account? </span>
-            <Link to="/login" className="text-primary-600 hover:text-primary-500 text-sm font-medium">Log in</Link>
+            <Link to={`/login?redirect=${encodeURIComponent(redirectPath)}`} className="text-primary-600 hover:text-primary-500 text-sm font-medium">Log in</Link>
           </div>
         </form>
       </div>

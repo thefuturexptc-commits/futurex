@@ -3,18 +3,29 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
 
-export const Navbar: React.FC = () => {
+const NavbarComponent: React.FC = () => {
   const { user, logout, isAdmin } = useAuth();
   const { totalItems, openCart } = useCart();
-  const { theme, toggleTheme, logoUrl } = useTheme();
+  const { logoUrl } = useTheme();
+  const { openLogin } = useAuthModal();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const openAuthPopup = (path: string) => {
+    if (user) {
+      navigate(path);
+      return;
+    }
+    openLogin(path);
+    setMobileMenuOpen(false);
   };
 
   // Updated to point to specific routes
@@ -32,7 +43,12 @@ export const Navbar: React.FC = () => {
           {/* Logo */}
           <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
             {logoUrl ? (
-                <img src={logoUrl} alt="TheFutureX" className="h-10 w-auto object-contain" />
+                <img
+                  src={logoUrl}
+                  alt="TheFutureX"
+                  data-brand-logo="true"
+                  className="h-10 w-auto object-contain transition-all duration-300 brightness-0 invert contrast-200 drop-shadow-[0_0_8px_rgba(255,255,255,0.45)]"
+                />
             ) : (
                 <>
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-300 font-display">X</div>
@@ -45,34 +61,19 @@ export const Navbar: React.FC = () => {
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navLinks.map((link) => (
-                <Link
+                <button
                   key={link.name}
-                  to={link.path}
+                  onClick={() => openAuthPopup(link.path)}
                   className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-semibold tracking-wide uppercase transition-colors font-display"
                 >
                   {link.name}
-                </Link>
+                </button>
               ))}
             </div>
           </div>
 
           {/* Right Icons */}
           <div className="flex items-center space-x-6">
-            <button 
-                onClick={toggleTheme} 
-                className="p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-white transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-white/10"
-            >
-              {theme === 'dark' ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
-              ) : (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-                  </svg>
-              )}
-            </button>
-
             <button 
                 onClick={openCart}
                 className="relative p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-white transition-colors outline-none"
@@ -106,9 +107,16 @@ export const Navbar: React.FC = () => {
               </div>
             ) : (
               <div className="hidden sm:flex space-x-2">
-                 <Link to="/login">
-                   <Button variant="outline" size="sm" className="rounded-full px-6 border-gray-300 dark:border-gray-600">Login</Button>
-                 </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-full px-6 border-gray-300 dark:border-gray-600"
+                  onClick={() => {
+                    openLogin('/profile');
+                  }}
+                >
+                  Login
+                </Button>
               </div>
             )}
             
@@ -130,23 +138,28 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white/95 dark:bg-dark-surface/95 backdrop-blur-xl border-b border-gray-200 dark:border-white/10 absolute w-full z-50">
+        <div className="md:hidden bg-white/95 dark:bg-dark-surface/95 border-b border-gray-200 dark:border-white/10 absolute w-full z-50">
           <div className="px-4 pt-4 pb-6 space-y-2">
             {navLinks.map((link) => (
-              <Link
+              <button
                 key={link.name}
-                to={link.path}
+                type="button"
                 className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 block px-3 py-3 rounded-lg text-base font-bold font-display uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-white/5"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => openAuthPopup(link.path)}
               >
                 {link.name}
-              </Link>
+              </button>
             ))}
             {!user && (
                 <div className="pt-4 mt-4 border-t border-gray-100 dark:border-white/5">
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                        <Button className="w-full justify-center">Login</Button>
-                    </Link>
+                    <Button
+                      className="w-full justify-center"
+                      onClick={() => {
+                        openLogin('/profile');
+                      }}
+                    >
+                      Login
+                    </Button>
                 </div>
             )}
           </div>
@@ -155,3 +168,5 @@ export const Navbar: React.FC = () => {
     </nav>
   );
 };
+
+export const Navbar = React.memo(NavbarComponent);

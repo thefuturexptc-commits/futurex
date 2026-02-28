@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Product } from '../types';
 import { getProducts } from '../services/backend';
 import { ProductCard } from './ProductCard';
@@ -17,54 +17,130 @@ interface CategoryTemplateProps {
   heroImage: string; // URL for the hero image
   accentColor: string; // text-color class for accents
   features: Feature[];
+  autoSlideModels?: boolean;
+  modelCardClassName?: string;
+  modelCardSkeletonClassName?: string;
+  modelCardImageAspectClassName?: string;
 }
 
-export const CategoryTemplate: React.FC<CategoryTemplateProps> = ({ 
+const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({ 
   category, 
   title, 
   subtitle, 
   heroGradient,
   heroImage,
   accentColor,
-  features
+  features,
+  autoSlideModels = true,
+  modelCardClassName,
+  modelCardSkeletonClassName,
+  modelCardImageAspectClassName
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState('featured');
+  const [isDraggingModels, setIsDraggingModels] = useState(false);
+  const modelsScrollerRef = useRef<HTMLDivElement | null>(null);
+  const pauseAutoSlideRef = useRef(false);
+  const dragStartXRef = useRef(0);
+  const dragStartScrollLeftRef = useRef(0);
+  const handleHorizontalWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
+    if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+    event.currentTarget.scrollLeft += event.deltaY;
+    event.preventDefault();
+  }, []);
+
+  const handleModelsMouseDown = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    const scroller = modelsScrollerRef.current;
+    if (!scroller) return;
+    setIsDraggingModels(true);
+    pauseAutoSlideRef.current = true;
+    dragStartXRef.current = event.clientX;
+    dragStartScrollLeftRef.current = scroller.scrollLeft;
+  }, []);
+
+  const handleModelsMouseMove = useCallback((event: React.MouseEvent<HTMLDivElement>) => {
+    if (!isDraggingModels) return;
+    const scroller = modelsScrollerRef.current;
+    if (!scroller) return;
+    const deltaX = event.clientX - dragStartXRef.current;
+    scroller.scrollLeft = dragStartScrollLeftRef.current - deltaX;
+  }, [isDraggingModels]);
+
+  const stopModelsDragging = useCallback(() => {
+    if (!isDraggingModels) return;
+    setIsDraggingModels(false);
+    pauseAutoSlideRef.current = false;
+  }, [isDraggingModels]);
 
   useEffect(() => {
     setLoading(true);
     getProducts().then(data => {
-      const categoryProducts = data.filter(p => p.category === category);
+      const normalizedCategory = category.trim().toLowerCase();
+      const categoryProducts = data.filter(
+        (p) => (p.category || '').trim().toLowerCase() === normalizedCategory
+      );
       setProducts(categoryProducts);
       setLoading(false);
     });
   }, [category]);
 
-  useEffect(() => {
-    let result = [...products];
-    
+  const filteredProducts = useMemo(() => {
+    const result = [...products];
+    const getEffectivePrice = (p: Product) => Number(p.salePrice || p.price || 0);
     if (sortBy === 'low-high') {
-      result.sort((a, b) => a.price - b.price);
+      result.sort((a, b) => getEffectivePrice(a) - getEffectivePrice(b));
     } else if (sortBy === 'high-low') {
-      result.sort((a, b) => b.price - a.price);
+      result.sort((a, b) => getEffectivePrice(b) - getEffectivePrice(a));
     } else if (sortBy === 'rating') {
-      result.sort((a, b) => b.rating - a.rating);
+      result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
     } else if (sortBy === 'a-z') {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else {
       result.sort((a, b) => (a.isFeatured === b.isFeatured) ? 0 : a.isFeatured ? -1 : 1);
     }
-
-    setFilteredProducts(result);
+    return result;
   }, [products, sortBy]);
 
+  useEffect(() => {
+    if (!autoSlideModels || loading || filteredProducts.length < 2) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!modelsScrollerRef.current) return;
+
+    let rafId = 0;
+    let lastTs = 0;
+    const speedPxPerMs = 0.05;
+
+    const tick = (ts: number) => {
+      const scroller = modelsScrollerRef.current;
+      if (!scroller) return;
+      if (!lastTs) lastTs = ts;
+      const delta = Math.min(ts - lastTs, 32);
+      lastTs = ts;
+
+      const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+      if (maxScroll > 0 && !pauseAutoSlideRef.current && !document.hidden) {
+        const resetPoint = Math.min(scroller.scrollWidth / 2, maxScroll);
+        scroller.scrollLeft += delta * speedPxPerMs;
+        if (scroller.scrollLeft >= resetPoint) scroller.scrollLeft = 0;
+      }
+
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [autoSlideModels, loading, filteredProducts.length]);
+
+  const modelCardBaseClass = modelCardClassName || 'w-[74vw] sm:w-[46vw] lg:w-[29vw] xl:w-[26vw] min-w-[240px] max-w-[360px]';
+  const modelSkeletonBaseClass = modelCardSkeletonClassName || 'h-72';
+  const modelImageAspectClass = modelCardImageAspectClassName || 'aspect-[4/3]';
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg transition-colors duration-500">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-white transition-colors duration-500">
       
       {/* Immersive Hero Section */}
-      <div className={`relative ${heroGradient} min-h-[60vh] flex items-center overflow-hidden`}>
+      <div className={`relative ${heroGradient} min-h-[60vh] flex items-center overflow-hidden text-white`}>
         {/* Abstract Background Patterns */}
         <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
         <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/20 to-transparent"></div>
@@ -91,6 +167,9 @@ export const CategoryTemplate: React.FC<CategoryTemplateProps> = ({
                      <img 
                         src={heroImage} 
                         alt={category} 
+                        loading="lazy"
+                        width={960}
+                        height={960}
                         className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
                      />
                 </div>
@@ -101,7 +180,7 @@ export const CategoryTemplate: React.FC<CategoryTemplateProps> = ({
       </div>
 
       {/* Feature Highlights Strip (Overlapping Hero) */}
-      <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-20 text-gray-900 dark:text-white">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {features.map((feature, idx) => (
                   <div key={idx} className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10 hover:-translate-y-2 transition-transform duration-300">
@@ -109,18 +188,18 @@ export const CategoryTemplate: React.FC<CategoryTemplateProps> = ({
                           {feature.icon}
                       </div>
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white font-display mb-2">{feature.title}</h3>
-                      <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">{feature.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{feature.description}</p>
                   </div>
               ))}
           </div>
       </div>
 
       {/* Product Section */}
-      <div className="max-w-7xl mx-auto px-4 py-24">
+      <div className="max-w-7xl mx-auto px-4 py-24 text-gray-900 dark:text-white">
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-gray-200 dark:border-white/10 pb-6">
             <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-display">Available Models</h2>
-                <p className="text-gray-500 dark:text-gray-400 mt-2">Explore the latest generation of {category}.</p>
+                <p className="text-gray-600 dark:text-gray-300 mt-2">Explore the latest generation of {category}.</p>
             </div>
             
             <div className="flex items-center gap-4">
@@ -129,7 +208,7 @@ export const CategoryTemplate: React.FC<CategoryTemplateProps> = ({
                   <select 
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="appearance-none bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white py-2.5 pl-4 pr-10 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[160px]"
+                    className="appearance-none bg-white text-gray-900 border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 py-2.5 pl-4 pr-10 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[160px]"
                   >
                     <option value="featured">Featured</option>
                     <option value="rating">Top Rated</option>
@@ -144,15 +223,28 @@ export const CategoryTemplate: React.FC<CategoryTemplateProps> = ({
         </div>
 
         {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div onWheel={handleHorizontalWheel} className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing">
                 {[1,2,3,4].map(i => (
-                    <div key={i} className="bg-white dark:bg-white/5 rounded-[2rem] h-96 animate-pulse"></div>
+                    <div key={i} className={`bg-white dark:bg-white/5 rounded-[2rem] ${modelSkeletonBaseClass} ${modelCardBaseClass} shrink-0 animate-pulse snap-start`}></div>
                 ))}
             </div>
         ) : filteredProducts.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {filteredProducts.map(p => (
-                    <ProductCard key={p.id} product={p} />
+            <div
+              ref={modelsScrollerRef}
+              onWheel={handleHorizontalWheel}
+              onMouseDown={handleModelsMouseDown}
+              onMouseMove={handleModelsMouseMove}
+              onMouseUp={stopModelsDragging}
+              onMouseLeave={() => {
+                stopModelsDragging();
+                pauseAutoSlideRef.current = false;
+              }}
+              className={`flex gap-6 overflow-x-auto pb-2 select-none ${isDraggingModels ? 'cursor-grabbing' : 'cursor-grab'}`}
+            >
+                {[...filteredProducts, ...filteredProducts].map((p, index) => (
+                  <div key={`${p.id}_${index}`} className={`${modelCardBaseClass} shrink-0 snap-start`}>
+                    <ProductCard product={p} compact imageAspectClassName={modelImageAspectClass} />
+                  </div>
                 ))}
             </div>
         ) : (
@@ -166,3 +258,5 @@ export const CategoryTemplate: React.FC<CategoryTemplateProps> = ({
     </div>
   );
 };
+
+export const CategoryTemplate = React.memo(CategoryTemplateComponent);

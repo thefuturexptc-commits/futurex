@@ -1,32 +1,88 @@
+export interface ProductVariation {
+  id: string;
+  size?: string;
+  weight?: string;
+  color?: string;
+  price: number;
+  stock: number;
+}
+
+export interface ProductColor {
+  name: string;
+  hex: string;
+  images: string[];
+  stock: number;
+  reservedStock: number;
+  sold: number;
+}
+
 export interface Product {
   id: string;
   name: string;
-  price: number;
-  description: string;
   category: string;
+  description: string;
+  mrp: number;
+  salePrice: number;
+  price: number;
+  stock: number;
+  reservedStock: number;
+  sold: number;
+  weight?: string;
+  bandType?: string;
+  colors?: ProductColor[];
+  inStock: boolean;
   images: string[];
+  isFeatured?: boolean;
+  isBestSeller?: boolean;
+  variations?: ProductVariation[];
+  rating?: number;
+  reviewCount?: number;
+
+  // Compatibility fields currently used in non-admin pages.
   videoUrl?: string;
   features: string[];
   specs: Record<string, string>;
-  stock: number;
-  isFeatured?: boolean;
-  isBestSeller?: boolean;
-  rating: number;
-  reviewCount: number;
   warranty?: string;
+  quantity?: number;
+  selectedColorName?: string;
+  selectedColorHex?: string;
 }
+
+export const AVAILABLE_COLORS = [
+  { name: "Black", value: "#000000" },
+  { name: "White", value: "#FFFFFF" },
+  { name: "Silver", value: "#C0C0C0" },
+  { name: "Gold", value: "#D4AF37" },
+  { name: "Blue", value: "#2563EB" },
+  { name: "Pink", value: "#EC4899" },
+  { name: "Green", value: "#10B981" }
+];
 
 export interface CartItem extends Product {
   quantity: number;
+}
+
+export type UserRole = "superadmin" | "admin" | "user";
+
+export interface UserPermissions {
+  analytics?: boolean;
+  products?: boolean;
+  orders?: boolean;
+  inventory?: boolean;
+  categories?: boolean;
+  admins?: boolean;
+  settings?: boolean;
 }
 
 export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'user' | 'admin';
+  password?: string;
+  role: UserRole;
+  addresses?: Address[];
   phone?: string;
-  addresses: Address[];
+  permissions?: UserPermissions;
 }
 
 export interface Address {
@@ -42,7 +98,7 @@ export interface Order {
   userId: string;
   items: CartItem[];
   total: number;
-  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Returned';
   date: string;
   shippingAddress: Address;
 }
