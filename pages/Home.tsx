@@ -5,7 +5,6 @@ import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
 import { getProducts, seedDatabase } from '../services/backend';
 import { useAuth } from '../context/AuthContext';
-import { useAuthModal } from '../context/AuthModalContext';
 import ringHomeImage from '../assets/images/mainring.jpg';
 import bandHomeImage from '../assets/images/mainband.png';
 import fanHomeImage from '../assets/images/mainfan.png';
@@ -17,7 +16,6 @@ export const Home: React.FC = () => {
   const [loadError, setLoadError] = useState('');
   const [seeding, setSeeding] = useState(false);
   const { user } = useAuth();
-  const { openLogin } = useAuthModal();
   const navigate = useNavigate();
   const bestSellerScrollerRef = useRef<HTMLDivElement | null>(null);
   const featuredScrollerRef = useRef<HTMLDivElement | null>(null);
@@ -60,21 +58,13 @@ export const Home: React.FC = () => {
   const bestSellersForSlider = bestSellers.length > 0 ? [...bestSellers, ...bestSellers] : bestSellers;
   const featuredProductsForSlider = featuredProducts.length > 0 ? [...featuredProducts, ...featuredProducts] : featuredProducts;
 
-  const handleProtectedAction = (path: string) => {
-    if (user) {
-      navigate(path);
-      return;
-    }
-    openLogin(path);
-  };
-
-  const handleProtectedViewAll = () => {
-    handleProtectedAction('/shop/all');
+  const handleShopNavigation = (path: string) => {
+    navigate(path);
   };
 
   const handleProtectedCategoryClick = (event: MouseEvent<HTMLAnchorElement>, categoryPath: string) => {
     event.preventDefault();
-    handleProtectedAction(categoryPath);
+    handleShopNavigation(categoryPath);
   };
   
   const handleHorizontalWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
@@ -263,10 +253,10 @@ export const Home: React.FC = () => {
 
             {/* Buttons */}
             <div className="flex flex-col sm:flex-row gap-6 justify-center pt-10">
-              <Button onClick={() => handleProtectedAction('/smart-bands')} size="lg" className="w-full sm:w-auto h-16 px-12 text-lg rounded-full shadow-2xl shadow-primary-500/30 hover:shadow-primary-500/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] hover:scale-105 transition-all duration-300 font-display tracking-wide">
+              <Button onClick={() => handleShopNavigation('/smart-bands')} size="lg" className="w-full sm:w-auto h-16 px-12 text-lg rounded-full shadow-2xl shadow-primary-500/30 hover:shadow-primary-500/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] hover:scale-105 transition-all duration-300 font-display tracking-wide">
                      START EXPLORING
               </Button>
-              <Button onClick={handleProtectedViewAll} variant="outline" size="lg" className="w-full sm:w-auto h-16 px-12 text-lg rounded-full border-gray-900/10 dark:border-white/20 bg-white/40 dark:bg-black/20 backdrop-blur-md hover:bg-white dark:hover:bg-white/10 hover:border-gray-900 dark:hover:border-white hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] transition-all duration-300 font-display tracking-wide">
+              <Button onClick={() => handleShopNavigation('/shop/all')} variant="outline" size="lg" className="w-full sm:w-auto h-16 px-12 text-lg rounded-full border-gray-900/10 dark:border-white/20 bg-white/40 dark:bg-black/20 backdrop-blur-md hover:bg-white dark:hover:bg-white/10 hover:border-gray-900 dark:hover:border-white hover:shadow-[0_0_25px_rgba(236,72,153,0.5)] transition-all duration-300 font-display tracking-wide">
                      VIEW COLLECTION
               </Button>
             </div>
@@ -334,7 +324,7 @@ export const Home: React.FC = () => {
                 <span className="text-primary-600 dark:text-primary-400 font-bold tracking-widest uppercase text-xs font-display mb-2 block">Customer Favorites</span>
                 <h2 className="text-6xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
             </div>
-            <button onClick={handleProtectedViewAll} className="group flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors font-display tracking-wide">
+            <button onClick={() => handleShopNavigation('/shop/all')} className="group flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors font-display tracking-wide">
               VIEW ALL 
               <span className="group-hover:translate-x-1 transition-transform">{'->'}</span>
             </button>
@@ -414,7 +404,7 @@ export const Home: React.FC = () => {
                 </div>
               )}
               <div className="mt-10 flex justify-center">
-                <Button onClick={handleProtectedViewAll} variant="outline" className="rounded-full px-8 py-3">
+                <Button onClick={() => handleShopNavigation('/shop/all')} variant="outline" className="rounded-full px-8 py-3">
                   View All New Arrivals
                 </Button>
               </div>
@@ -493,7 +483,7 @@ export const Home: React.FC = () => {
                         placeholder="Enter your email" 
                         className="flex-1 px-6 py-4 rounded-full border border-gray-300 bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-inner"
                     />
-                    <Button onClick={() => (user ? navigate('/profile') : handleProtectedAction('/shop/all'))} className="rounded-full px-10 py-4 font-display tracking-wide shadow-lg shadow-primary-500/20 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)]">SUBSCRIBE</Button>
+                    <Button onClick={() => (user ? navigate('/profile') : navigate('/shop/all'))} className="rounded-full px-10 py-4 font-display tracking-wide shadow-lg shadow-primary-500/20 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)]">SUBSCRIBE</Button>
                 </div>
              </div>
         </div>

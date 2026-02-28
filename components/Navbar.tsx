@@ -3,14 +3,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
+import defaultBrandLogo from '../assets/images/thefuturex-logo.png';
 
 const NavbarComponent: React.FC = () => {
   const { user, logout, isAdmin } = useAuth();
   const { totalItems, openCart } = useCart();
   const { logoUrl } = useTheme();
-  const { openLogin } = useAuthModal();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -19,12 +18,8 @@ const NavbarComponent: React.FC = () => {
     navigate('/');
   };
 
-  const openAuthPopup = (path: string) => {
-    if (user) {
-      navigate(path);
-      return;
-    }
-    openLogin(path);
+  const openCategory = (path: string) => {
+    navigate(path);
     setMobileMenuOpen(false);
   };
 
@@ -47,13 +42,14 @@ const NavbarComponent: React.FC = () => {
                   src={logoUrl}
                   alt="TheFutureX"
                   data-brand-logo="true"
-                  className="h-10 w-auto object-contain transition-all duration-300 brightness-0 invert contrast-200 drop-shadow-[0_0_8px_rgba(255,255,255,0.45)]"
+                  className="h-16 w-auto object-contain transition-all duration-300 brightness-0 invert contrast-200 drop-shadow-[0_0_8px_rgba(255,255,255,0.45)]"
                 />
             ) : (
-                <>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-primary-500/20 group-hover:scale-110 transition-transform duration-300 font-display">X</div>
-                <span className="font-bold text-2xl tracking-tighter text-gray-900 dark:text-white font-display">TheFutureX</span>
-                </>
+                <img
+                  src={defaultBrandLogo}
+                  alt="TheFutureX"
+                  className="h-11 sm:h-12 w-auto object-contain rounded-md bg-black px-2 py-1 transition-transform duration-300 group-hover:scale-[1.02]"
+                />
             )}
           </Link>
 
@@ -63,7 +59,7 @@ const NavbarComponent: React.FC = () => {
               {navLinks.map((link) => (
                 <button
                   key={link.name}
-                  onClick={() => openAuthPopup(link.path)}
+                  onClick={() => openCategory(link.path)}
                   className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 text-sm font-semibold tracking-wide uppercase transition-colors font-display"
                 >
                   {link.name}
@@ -112,7 +108,7 @@ const NavbarComponent: React.FC = () => {
                   size="sm"
                   className="rounded-full px-6 border-gray-300 dark:border-gray-600"
                   onClick={() => {
-                    openLogin('/profile');
+                    navigate('/login');
                   }}
                 >
                   Login
@@ -145,7 +141,7 @@ const NavbarComponent: React.FC = () => {
                 key={link.name}
                 type="button"
                 className="text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 block px-3 py-3 rounded-lg text-base font-bold font-display uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-white/5"
-                onClick={() => openAuthPopup(link.path)}
+                onClick={() => openCategory(link.path)}
               >
                 {link.name}
               </button>
@@ -155,7 +151,7 @@ const NavbarComponent: React.FC = () => {
                     <Button
                       className="w-full justify-center"
                       onClick={() => {
-                        openLogin('/profile');
+                        navigate('/login');
                       }}
                     >
                       Login

@@ -79,6 +79,21 @@ const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T
   return Promise.race([promise, timeoutPromise]);
 };
 
+const isAbortLikeError = (error: unknown): boolean => {
+  if (!error) return false;
+  if (error instanceof DOMException && error.name === 'AbortError') return true;
+  if (error instanceof Error) {
+    const text = `${error.name} ${error.message}`.toLowerCase();
+    return text.includes('abort');
+  }
+  const message = String(error).toLowerCase();
+  return message.includes('abort');
+};
+
+const PRODUCTS_CACHE_TTL_MS = 15000;
+let productsCache: { data: Product[]; ts: number } | null = null;
+let productsInFlight: Promise<Product[]> | null = null;
+
 const DEFAULT_ADMIN_PERMISSIONS: UserPermissions = {
   analytics: true,
   products: true,
@@ -122,6 +137,8 @@ const applyRoleByEmail = (user: User): User => {
 
 let recaptchaVerifier: RecaptchaVerifier | null = null;
 let phoneConfirmationResult: ConfirmationResult | null = null;
+let anonymousAuthAttempted = false;
+let anonymousAuthBlocked = false;
 
 const normalizeProductColors = (product: Product): Product => {
   const rawColors = Array.isArray(product.colors) ? product.colors : [];
@@ -193,15 +210,22 @@ const upsertSuperAdmin = (users: User[]): User[] => {
 // If a user is "Local" (failed auth) or Admin, they might not have a Firebase Session.
 // We force an anonymous sign-in so they can still read/write to Firestore if rules allow.
 const ensureFirebaseConnection = async () => {
-    if (!auth.currentUser) {
-        try {
-            // Set a timeout for connection attempt
-            const timeout = new Promise((_, reject) => setTimeout(() => reject("Auth Timeout"), 3000));
-            await Promise.race([signInAnonymously(auth), timeout]);
-        } catch (e) {
-            console.warn("Anonymous auth failed or timed out (Database might be unreachable):", e);
-        }
+  if (auth.currentUser || anonymousAuthBlocked || anonymousAuthAttempted) return;
+  anonymousAuthAttempted = true;
+  try {
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 3000));
+    await Promise.race([signInAnonymously(auth), timeout]);
+  } catch (e: unknown) {
+    const code = (e as { code?: string })?.code || '';
+    const message = e instanceof Error ? e.message : String(e || '');
+    const lowered = `${code} ${message}`.toLowerCase();
+    if (lowered.includes('admin-restricted-operation')) {
+      // Anonymous sign-in is disabled in Firebase; avoid retry spam.
+      anonymousAuthBlocked = true;
+      return;
     }
+    console.warn('Anonymous auth failed or timed out (Database might be unreachable):', e);
+  }
 };
 
 export const addAuditLog = async (entry: {
@@ -329,13 +353,39 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
 // --- Products Service ---
 
 export const getProducts = async (): Promise<Product[]> => {
-  await ensureFirebaseConnection();
-  const querySnapshot = await withTimeout(getDocs(collection(db, 'products')), 3200);
-  const fbProducts: Product[] = [];
-  querySnapshot.forEach((snapshotDoc) => {
-    fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
-  });
-  return fbProducts.map(normalizeProductColors);
+  const now = Date.now();
+  if (productsCache && now - productsCache.ts < PRODUCTS_CACHE_TTL_MS) {
+    return [...productsCache.data];
+  }
+
+  if (productsInFlight) {
+    return productsInFlight.then((data) => [...data]);
+  }
+
+  productsInFlight = (async () => {
+    try {
+      await ensureFirebaseConnection();
+      const querySnapshot = await withTimeout(getDocs(collection(db, 'products')), 6000);
+      const fbProducts: Product[] = [];
+      querySnapshot.forEach((snapshotDoc) => {
+        fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
+      });
+      const normalized = fbProducts.map(normalizeProductColors);
+      productsCache = { data: normalized, ts: Date.now() };
+      return normalized;
+    } catch (error) {
+      if (isAbortLikeError(error)) {
+        const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS).map(normalizeProductColors);
+        productsCache = { data: localProducts, ts: Date.now() };
+        return localProducts;
+      }
+      throw error;
+    } finally {
+      productsInFlight = null;
+    }
+  })();
+
+  return productsInFlight.then((data) => [...data]);
 };
 
 export const getProductById = async (id: string): Promise<Product | undefined> => {

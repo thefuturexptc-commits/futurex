@@ -38,6 +38,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [isDraggingModels, setIsDraggingModels] = useState(false);
   const modelsScrollerRef = useRef<HTMLDivElement | null>(null);
@@ -74,15 +75,32 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
   }, [isDraggingModels]);
 
   useEffect(() => {
+    let cancelled = false;
     setLoading(true);
-    getProducts().then(data => {
-      const normalizedCategory = category.trim().toLowerCase();
-      const categoryProducts = data.filter(
-        (p) => (p.category || '').trim().toLowerCase() === normalizedCategory
-      );
-      setProducts(categoryProducts);
-      setLoading(false);
-    });
+    setLoadError('');
+    getProducts()
+      .then((data) => {
+        if (cancelled) return;
+        const normalizedCategory = category.trim().toLowerCase();
+        const categoryProducts = data.filter(
+          (p) => (p.category || '').trim().toLowerCase() === normalizedCategory
+        );
+        setProducts(categoryProducts);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        const message = error instanceof Error ? error.message : 'Unable to load products right now.';
+        setLoadError(message);
+        setProducts([]);
+      })
+      .finally(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [category]);
 
   const filteredProducts = useMemo(() => {
@@ -196,6 +214,11 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
 
       {/* Product Section */}
       <div className="max-w-7xl mx-auto px-4 py-24 text-gray-900 dark:text-white">
+        {loadError && (
+          <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+            {loadError}
+          </div>
+        )}
         <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-gray-200 dark:border-white/10 pb-6">
             <div>
                 <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-display">Available Models</h2>

@@ -44,6 +44,18 @@ interface ConfirmState {
   onConfirm: () => Promise<void> | void;
 }
 
+interface AdminVariantCard {
+  variantId: string;
+  color: string;
+  colorHex: string;
+  size: string;
+  stock: number;
+  priceOverride: number | null;
+  images: string[];
+  selectedFiles: File[];
+  dragImageIndex: number | null;
+}
+
 const inputClass =
   'w-full p-2 border border-gray-300 bg-white text-gray-900 rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
 
@@ -97,8 +109,10 @@ export const AdminDashboard: React.FC = () => {
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [colorBlocks, setColorBlocks] = useState<ProductColor[]>([]);
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
-  const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
+  const [hasVariants, setHasVariants] = useState(false);
+  const [shortDescription, setShortDescription] = useState('');
+  const [variantCards, setVariantCards] = useState<AdminVariantCard[]>([]);
 
   const [newCategory, setNewCategory] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -240,16 +254,27 @@ export const AdminDashboard: React.FC = () => {
     }
   }, [activeTab, availableTabs]);
 
+  useEffect(() => {
+    if (hasVariants) {
+      setSelectedImageFiles([]);
+      setProductForm((prev) => ({ ...prev, images: [], stock: 0, reservedStock: 0, sold: 0 }));
+    } else {
+      setVariantCards([]);
+    }
+  }, [hasVariants]);
+
   if (!isAdmin) return <div className="p-10 text-center text-red-500">Access Denied. Admin only.</div>;
 
   const handleOpenAddProduct = () => {
     setProductForm(initialProductState);
+    setShortDescription('');
     setFeaturesString('');
     setSpecsString('');
     setVariations([]);
     setColorBlocks([]);
     setSelectedImageFiles([]);
-    setSelectedVideoFile(null);
+    setHasVariants(false);
+    setVariantCards([]);
     setIsEditing(false);
     setShowProductModal(true);
   };
@@ -257,6 +282,25 @@ export const AdminDashboard: React.FC = () => {
   const handleEditProduct = (product: Product) => {
     const reservedStock = Number(product.reservedStock || 0);
     const stock = Number(product.stock || 0);
+    const editingHasVariants = Boolean((product.colors && product.colors.length > 0) || (product.variations && product.variations.length > 0));
+    const variantCount = Math.max(product.colors?.length || 0, product.variations?.length || 0);
+    const builtCards: AdminVariantCard[] = Array.from({ length: variantCount }).map((_, index) => {
+      const color = product.colors?.[index];
+      const variation = product.variations?.[index];
+      const basePrice = Number(product.salePrice ?? product.price ?? 0);
+      const priceOverride = variation && Number(variation.price || 0) !== basePrice ? Number(variation.price || 0) : null;
+      return {
+        variantId: variation?.id || `v_${Date.now()}_${index}`,
+        color: color?.name || variation?.color || '',
+        colorHex: color?.hex || '#6b7280',
+        size: variation?.size || '',
+        stock: Number(color?.stock ?? variation?.stock ?? 0),
+        priceOverride,
+        images: color?.images || [],
+        selectedFiles: [],
+        dragImageIndex: null,
+      };
+    });
     setProductForm({
       ...product,
       mrp: product.mrp ?? product.price,
@@ -268,12 +312,14 @@ export const AdminDashboard: React.FC = () => {
       colors: product.colors || [],
       inStock: product.inStock ?? stock - reservedStock > 0,
     });
+    setShortDescription(((product as unknown as { shortDescription?: string }).shortDescription || '').toString());
     setFeaturesString(product.features?.join('\n') || '');
     setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
     setVariations(product.variations || []);
     setColorBlocks(product.colors || []);
     setSelectedImageFiles([]);
-    setSelectedVideoFile(null);
+    setHasVariants(editingHasVariants);
+    setVariantCards(builtCards);
     setIsEditing(true);
     setShowProductModal(true);
   };
@@ -282,12 +328,88 @@ export const AdminDashboard: React.FC = () => {
     setVariations((prev) => [...prev, { id: `v_${Date.now()}`, size: '', weight: '', color: '', price: 0, stock: 0 }]);
   };
 
+  const createVariantCard = (): AdminVariantCard => ({
+    variantId: `v_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    color: '',
+    colorHex: '#6b7280',
+    size: '',
+    stock: 0,
+    priceOverride: null,
+    images: [],
+    selectedFiles: [],
+    dragImageIndex: null,
+  });
+
   const handleRemoveVariation = (id: string) => {
     setVariations((prev) => prev.filter((v) => v.id !== id));
   };
 
   const handleVariationChange = <K extends keyof ProductVariation>(id: string, field: K, value: ProductVariation[K]) => {
     setVariations((prev) => prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
+  };
+
+  const addVariantCard = () => {
+    setVariantCards((prev) => [...prev, createVariantCard()]);
+  };
+
+  const removeVariantCard = (variantId: string) => {
+    setVariantCards((prev) => prev.filter((variant) => variant.variantId !== variantId));
+  };
+
+  const updateVariantCard = (variantId: string, patch: Partial<AdminVariantCard>) => {
+    setVariantCards((prev) => prev.map((variant) => (variant.variantId === variantId ? { ...variant, ...patch } : variant)));
+  };
+
+  const addVariantFiles = (variantId: string, files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    const incoming = Array.from(files);
+    setVariantCards((prev) =>
+      prev.map((variant) => {
+        if (variant.variantId !== variantId) return variant;
+        const seen = new Set(variant.selectedFiles.map((f) => `${f.name}_${f.size}_${f.lastModified}`));
+        const next = [...variant.selectedFiles];
+        incoming.forEach((file) => {
+          const key = `${file.name}_${file.size}_${file.lastModified}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            next.push(file);
+          }
+        });
+        return { ...variant, selectedFiles: next };
+      })
+    );
+  };
+
+  const removeVariantExistingImage = (variantId: string, imageIndex: number) => {
+    setVariantCards((prev) =>
+      prev.map((variant) =>
+        variant.variantId === variantId
+          ? { ...variant, images: variant.images.filter((_, idx) => idx !== imageIndex) }
+          : variant
+      )
+    );
+  };
+
+  const removeVariantSelectedFile = (variantId: string, fileIndex: number) => {
+    setVariantCards((prev) =>
+      prev.map((variant) =>
+        variant.variantId === variantId
+          ? { ...variant, selectedFiles: variant.selectedFiles.filter((_, idx) => idx !== fileIndex) }
+          : variant
+      )
+    );
+  };
+
+  const reorderVariantImage = (variantId: string, fromIndex: number, toIndex: number) => {
+    setVariantCards((prev) =>
+      prev.map((variant) => {
+        if (variant.variantId !== variantId) return variant;
+        const next = [...variant.images];
+        const [moved] = next.splice(fromIndex, 1);
+        next.splice(toIndex, 0, moved);
+        return { ...variant, images: next };
+      })
+    );
   };
 
   const addColorBlock = () => {
@@ -325,10 +447,6 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
-  const handleVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) setSelectedVideoFile(e.target.files[0]);
-  };
-
   const reorderExistingImages = (fromIndex: number, toIndex: number) => {
     setProductForm((prev) => {
       const arr = [...(prev.images || [])];
@@ -348,15 +466,10 @@ export const AdminDashboard: React.FC = () => {
         if (url) uploadedImageUrls.push(url);
       }
 
-      let finalVideoUrl = productForm.videoUrl || '';
-      if (selectedVideoFile) {
-        const path = `videos/${Date.now()}_${selectedVideoFile.name}`;
-        const newUrl = await uploadFile(selectedVideoFile, path);
-        if (newUrl) finalVideoUrl = newUrl;
-      }
+      const finalVideoUrl = productForm.videoUrl || '';
 
       const finalImages = [...(productForm.images || []), ...uploadedImageUrls];
-      if (finalImages.length === 0) finalImages.push('https://picsum.photos/400');
+      if (!hasVariants && finalImages.length === 0) finalImages.push('https://picsum.photos/400');
 
       const cleanFeatures = featuresString
         .split('\n')
@@ -373,39 +486,74 @@ export const AdminDashboard: React.FC = () => {
         }
       });
 
-      const sanitizedColors = colorBlocks
-        .filter((c) => c.name.trim() !== '')
-        .map((c) => ({
-          ...c,
-          images: c.images?.length ? c.images : finalImages,
-          stock: Number(c.stock || 0),
-          reservedStock: Number(c.reservedStock || 0),
-          sold: Number(c.sold || 0),
-        }));
+      const normalizedVariantCards = await Promise.all(
+        variantCards.map(async (variant, idx) => {
+          const uploadedVariantUrls: string[] = [];
+          for (const file of variant.selectedFiles) {
+            const path = `products/variants/${Date.now()}_${variant.variantId}_${file.name}`;
+            const url = await uploadFile(file, path);
+            if (url) uploadedVariantUrls.push(url);
+          }
+          const mergedImages = [...variant.images, ...uploadedVariantUrls];
+          return {
+            ...variant,
+            stock: Number(variant.stock || 0),
+            priceOverride: variant.priceOverride == null ? null : Number(variant.priceOverride || 0),
+            images: mergedImages.length ? mergedImages : ['https://picsum.photos/400'],
+            label: variant.color.trim() || variant.size.trim() || `Variant ${idx + 1}`,
+          };
+        })
+      );
 
-      const aggregateStock = sanitizedColors.reduce((sum, c) => sum + c.stock, 0);
-      const aggregateReserved = sanitizedColors.reduce((sum, c) => sum + c.reservedStock, 0);
-      const aggregateSold = sanitizedColors.reduce((sum, c) => sum + c.sold, 0);
+      const sanitizedColors = hasVariants
+        ? normalizedVariantCards.map((variant) => ({
+            name: variant.label,
+            hex: variant.colorHex || '#6b7280',
+            images: variant.images,
+            stock: Number(variant.stock || 0),
+            reservedStock: 0,
+            sold: 0,
+          }))
+        : [];
+
+      const mappedVariations = hasVariants
+        ? normalizedVariantCards.map((variant) => ({
+            id: variant.variantId,
+            size: variant.size || '',
+            weight: productForm.weight || '',
+            color: variant.color || '',
+            price: Number(variant.priceOverride ?? productForm.salePrice ?? productForm.price ?? 0),
+            stock: Number(variant.stock || 0),
+          }))
+        : [];
+
+      const aggregateStock = hasVariants
+        ? normalizedVariantCards.reduce((sum, variant) => sum + Number(variant.stock || 0), 0)
+        : Number(productForm.stock || 0);
+      const aggregateReserved = hasVariants ? 0 : Number(productForm.reservedStock || 0);
+      const aggregateSold = hasVariants ? 0 : Number(productForm.sold || 0);
+      const variantDisplayImages = hasVariants
+        ? normalizedVariantCards.flatMap((variant) => variant.images).slice(0, 12)
+        : finalImages;
 
       const productData = {
         ...productForm,
         mrp: Number(productForm.mrp || 0),
         salePrice: Number(productForm.salePrice || 0),
         price: Number(productForm.salePrice || productForm.price || 0),
-        stock: sanitizedColors.length ? aggregateStock : Number(productForm.stock || 0),
-        reservedStock: sanitizedColors.length ? aggregateReserved : Number(productForm.reservedStock || 0),
-        sold: sanitizedColors.length ? aggregateSold : Number(productForm.sold || 0),
-        inStock: sanitizedColors.length
-          ? aggregateStock - aggregateReserved > 0
-          : Number(productForm.stock || 0) - Number(productForm.reservedStock || 0) > 0,
+        stock: aggregateStock,
+        reservedStock: aggregateReserved,
+        sold: aggregateSold,
+        inStock: aggregateStock - aggregateReserved > 0,
         weight: productForm.weight || '',
         bandType: (productForm.category || '').toLowerCase() === 'smart bands' ? productForm.bandType || '' : '',
         colors: sanitizedColors,
-        variations,
-        images: finalImages,
+        variations: mappedVariations,
+        images: variantDisplayImages,
         videoUrl: finalVideoUrl,
         features: cleanFeatures,
         specs: cleanSpecs,
+        ...(shortDescription ? { shortDescription } : {}),
       } as Product;
 
       if (isEditing && productData.id) {
@@ -699,78 +847,60 @@ export const AdminDashboard: React.FC = () => {
           <div className="w-full max-w-3xl max-h-[92dvh] rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-white/10 p-4 sm:p-6 overflow-hidden flex flex-col">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 shrink-0">{isEditing ? 'Edit Product' : 'Add Product'}</h2>
             <form onSubmit={handleSaveProduct} className="space-y-4 overflow-y-auto pr-2">
-              <div className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5">
-                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Basic Product Details</h3>
+              <section className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5 space-y-4">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Basic Product Details</h3>
                 {isEditing && (
-                  <div className="mb-3">
+                  <div>
                     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Product ID</label>
-                    <input
-                      className={inputClass}
-                      value={productForm.id || ''}
-                      readOnly
-                    />
+                    <input className={inputClass} value={productForm.id || ''} readOnly />
                   </div>
                 )}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Product Name</label>
-                  <input className={inputClass} placeholder="e.g. Aura Band X1" value={productForm.name || ''} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} required />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Product Name</label>
+                    <input className={inputClass} value={productForm.name || ''} onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} required />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Category</label>
+                    <select className={inputClass} value={productForm.category || ''} onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}>
+                      <option value="">Select category</option>
+                      {categories.map((c) => (
+                        <option key={c} value={c}>{c}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">MRP</label>
+                    <input type="number" className={inputClass} value={productForm.mrp ?? 0} onChange={(e) => setProductForm({ ...productForm, mrp: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Sale Price</label>
+                    <input type="number" className={inputClass} value={productForm.salePrice ?? 0} onChange={(e) => setProductForm({ ...productForm, salePrice: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Weight</label>
+                    <input className={inputClass} value={productForm.weight || ''} onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Warranty</label>
+                    <input className={inputClass} value={productForm.warranty || ''} onChange={(e) => setProductForm({ ...productForm, warranty: e.target.value })} />
+                  </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Category</label>
-                  <select className={inputClass} value={productForm.category || ''} onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}>
-                    <option value="">e.g. Smart Bands</option>
-                    {categories.map((c) => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Sale Price</label>
-                  <input type="number" className={inputClass} placeholder="e.g. 149" value={productForm.salePrice ?? 0} onChange={(e) => setProductForm({ ...productForm, salePrice: Number(e.target.value) })} />
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Band Type (Optional)</label>
+                  <input className={inputClass} value={productForm.bandType || ''} onChange={(e) => setProductForm({ ...productForm, bandType: e.target.value })} placeholder="e.g. Sport Loop" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">MRP</label>
-                  <input type="number" className={inputClass} placeholder="e.g. 199" value={productForm.mrp ?? 0} onChange={(e) => setProductForm({ ...productForm, mrp: Number(e.target.value) })} />
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Short Description</label>
+                  <input className={inputClass} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Stock</label>
-                  <input type="number" className={inputClass} placeholder="e.g. 50" value={productForm.stock ?? 0} onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })} />
+                  <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Full Description</label>
+                  <RichTextEditor value={productForm.description || ''} onChange={(html) => setProductForm((prev) => ({ ...prev, description: html }))} />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Weight</label>
-                  <input className={inputClass} placeholder="e.g. 24g" value={productForm.weight || ''} onChange={(e) => setProductForm({ ...productForm, weight: e.target.value })} />
-                </div>
-              </div>
-
-              {(productForm.category || '').toLowerCase() === 'smart bands' && (
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Band Type</label>
-                  <select className={inputClass} value={productForm.bandType || ''} onChange={(e) => setProductForm({ ...productForm, bandType: e.target.value })}>
-                    <option value="">e.g. Sport Loop</option>
-                    <option value="Smart Bracelet">Smart Bracelet</option>
-                    <option value="Classic Strap">Classic Strap</option>
-                    <option value="Sport Loop">Sport Loop</option>
-                    <option value="Metal Chain">Metal Chain</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">e.g. Fitness band with ECG + sleep tracking.</p>
-                <RichTextEditor value={productForm.description || ''} onChange={(html) => setProductForm((prev) => ({ ...prev, description: html }))} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Warranty</label>
-                  <input className={inputClass} placeholder="e.g. 1 Year Manufacturer Warranty" value={productForm.warranty || ''} onChange={(e) => setProductForm({ ...productForm, warranty: e.target.value })} />
-                </div>
-                <div className="flex items-end gap-4 pb-2">
+                <div className="flex flex-wrap gap-6">
                   <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
                     <input type="checkbox" checked={Boolean(productForm.isBestSeller)} onChange={(e) => setProductForm({ ...productForm, isBestSeller: e.target.checked })} />
                     Best Seller
@@ -780,110 +910,169 @@ export const AdminDashboard: React.FC = () => {
                     New Arrival
                   </label>
                 </div>
-              </div>
+              </section>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <textarea className={`${inputClass} h-28`} placeholder="e.g. Battery: 14 days" value={specsString} onChange={(e) => setSpecsString(e.target.value)} />
-                <textarea className={`${inputClass} h-28`} placeholder="e.g. Sleep Tracking" value={featuresString} onChange={(e) => setFeaturesString(e.target.value)} />
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Color Variants</label>
-                  <Button type="button" size="sm" variant="outline" onClick={addColorBlock}>+ Add Color</Button>
+              <section className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5 space-y-3">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Product Type</h3>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="radio" name="productType" checked={!hasVariants} onChange={() => setHasVariants(false)} />
+                    Simple Product (No Color / No Size)
+                  </label>
+                  <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <input type="radio" name="productType" checked={hasVariants} onChange={() => setHasVariants(true)} />
+                    Variant Product (With Color / Size)
+                  </label>
                 </div>
-                {colorBlocks.map((color, idx) => (
-                  <div key={idx} className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                    <input className={inputClass} placeholder="e.g. Midnight Black" value={color.name} onChange={(e) => updateColorBlock(idx, 'name', e.target.value)} />
-                    <input className={inputClass} placeholder="e.g. #111111" value={color.hex} onChange={(e) => updateColorBlock(idx, 'hex', e.target.value)} />
-                    <input type="number" className={inputClass} placeholder="e.g. 30" value={color.stock} onChange={(e) => updateColorBlock(idx, 'stock', Number(e.target.value))} />
-                    <input type="number" className={inputClass} placeholder="e.g. 2" value={color.reservedStock} onChange={(e) => updateColorBlock(idx, 'reservedStock', Number(e.target.value))} />
-                    <div className="flex items-center gap-2">
-                      <input type="number" className={inputClass} placeholder="e.g. 18" value={color.sold} onChange={(e) => updateColorBlock(idx, 'sold', Number(e.target.value))} />
-                      <Button type="button" size="sm" variant="danger" onClick={() => removeColorBlock(idx)}>X</Button>
+              </section>
+
+              {!hasVariants && (
+                <section className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Simple Inventory</h3>
+                  <div className="max-w-xs">
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Total Stock</label>
+                    <input type="number" className={inputClass} value={productForm.stock ?? 0} onChange={(e) => setProductForm({ ...productForm, stock: Number(e.target.value) })} />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Current Images (drag to reorder)</label>
+                    <div className="flex flex-wrap gap-3">
+                      {(productForm.images || []).map((img, idx) => (
+                        <div
+                          key={`${img}_${idx}`}
+                          draggable
+                          onDragStart={() => setDragImageIndex(idx)}
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={() => {
+                            if (dragImageIndex === null || dragImageIndex === idx) return;
+                            reorderExistingImages(dragImageIndex, idx);
+                            setDragImageIndex(null);
+                          }}
+                          className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10"
+                        >
+                          <img src={img} alt="" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setProductForm((prev) => ({ ...prev, images: (prev.images || []).filter((_, i) => i !== idx) }))}
+                            className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs"
+                          >
+                            x
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <input type="file" accept="image/*" multiple onChange={handleImageFileSelect} className="block w-full text-sm text-gray-500 dark:text-gray-300" />
+                  {selectedImageFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">New images selected: {selectedImageFiles.length}</p>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedImageFiles.map((file, idx) => (
+                          <div key={`${file.name}_${file.size}_${file.lastModified}_${idx}`} className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-white/10 px-2 py-1 text-xs text-gray-700 dark:text-gray-300">
+                            <span className="max-w-[180px] truncate">{file.name}</span>
+                            <button type="button" className="text-red-600 dark:text-red-400" onClick={() => setSelectedImageFiles((prev) => prev.filter((_, fileIdx) => fileIdx !== idx))}>
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </section>
+              )}
 
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Product Variations</label>
-                  <Button type="button" size="sm" variant="outline" onClick={handleAddVariation}>+ Add Variation</Button>
-                </div>
-                {variations.map((v) => (
-                  <div key={v.id} className="grid grid-cols-1 md:grid-cols-6 gap-2">
-                    <input className={inputClass} placeholder="e.g. Size 7" value={v.size || ''} onChange={(e) => handleVariationChange(v.id, 'size', e.target.value)} />
-                    <input className={inputClass} placeholder="e.g. 18g" value={v.weight || ''} onChange={(e) => handleVariationChange(v.id, 'weight', e.target.value)} />
-                    <input className={inputClass} placeholder="e.g. Matte Black" value={v.color || ''} onChange={(e) => handleVariationChange(v.id, 'color', e.target.value)} />
-                    <input type="number" className={inputClass} placeholder="e.g. 1299" value={v.price || 0} onChange={(e) => handleVariationChange(v.id, 'price', Number(e.target.value))} />
-                    <input type="number" className={inputClass} placeholder="e.g. 20" value={v.stock} onChange={(e) => handleVariationChange(v.id, 'stock', Number(e.target.value))} />
-                    <Button type="button" size="sm" variant="danger" onClick={() => handleRemoveVariation(v.id)}>Remove</Button>
+              {hasVariants && (
+                <section className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Product Variants</h3>
+                    <Button type="button" size="sm" variant="outline" onClick={addVariantCard}>+ Add Variant</Button>
                   </div>
-                ))}
-              </div>
+                  {variantCards.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">No variants added yet.</p>}
+                  {variantCards.map((variant, idx) => (
+                    <div key={variant.variantId} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-gray-900 dark:text-white">Variant #{idx + 1}</p>
+                        <Button type="button" size="sm" variant="danger" onClick={() => removeVariantCard(variant.variantId)}>Delete Variant</Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
+                        <div className="lg:col-span-2">
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Color Name (Optional)</label>
+                          <input className={inputClass} value={variant.color} onChange={(e) => updateVariantCard(variant.variantId, { color: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Color Hex</label>
+                          <input type="color" className="h-10 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800" value={variant.colorHex} onChange={(e) => updateVariantCard(variant.variantId, { colorHex: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Size (Optional)</label>
+                          <input className={inputClass} value={variant.size} onChange={(e) => updateVariantCard(variant.variantId, { size: e.target.value })} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Stock</label>
+                          <input type="number" className={inputClass} value={variant.stock} onChange={(e) => updateVariantCard(variant.variantId, { stock: Number(e.target.value) })} />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Price Override</label>
+                          <input type="number" className={inputClass} value={variant.priceOverride ?? ''} onChange={(e) => updateVariantCard(variant.variantId, { priceOverride: e.target.value === '' ? null : Number(e.target.value) })} />
+                        </div>
+                      </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Current Images (drag to reorder)</label>
-                <div className="flex flex-wrap gap-3">
-                  {(productForm.images || []).map((img, idx) => (
-                    <div
-                      key={`${img}_${idx}`}
-                      draggable
-                      onDragStart={() => setDragImageIndex(idx)}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={() => {
-                        if (dragImageIndex === null || dragImageIndex === idx) return;
-                        reorderExistingImages(dragImageIndex, idx);
-                        setDragImageIndex(null);
-                      }}
-                      className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10"
-                    >
-                      <img src={img} alt="" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => setProductForm((prev) => ({ ...prev, images: (prev.images || []).filter((_, i) => i !== idx) }))}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs"
-                      >
-                        x
-                      </button>
+                      <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Current Variant Images (drag to reorder)</label>
+                        <div className="flex flex-wrap gap-3">
+                          {variant.images.map((img, imageIdx) => (
+                            <div
+                              key={`${img}_${imageIdx}`}
+                              draggable
+                              onDragStart={() => updateVariantCard(variant.variantId, { dragImageIndex: imageIdx })}
+                              onDragOver={(e) => e.preventDefault()}
+                              onDrop={() => {
+                                if (variant.dragImageIndex === null || variant.dragImageIndex === imageIdx) return;
+                                reorderVariantImage(variant.variantId, variant.dragImageIndex, imageIdx);
+                                updateVariantCard(variant.variantId, { dragImageIndex: null });
+                              }}
+                              className="relative w-24 h-24 rounded-lg overflow-hidden border border-gray-200 dark:border-white/10"
+                            >
+                              <img src={img} alt="" className="w-full h-full object-cover" />
+                              <button type="button" onClick={() => removeVariantExistingImage(variant.variantId, imageIdx)} className="absolute top-1 right-1 bg-red-600 text-white rounded-full w-5 h-5 text-xs">x</button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        className="block w-full text-sm text-gray-500 dark:text-gray-300"
+                        onChange={(e) => {
+                          addVariantFiles(variant.variantId, e.target.files);
+                          e.target.value = '';
+                        }}
+                      />
+                      {variant.selectedFiles.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {variant.selectedFiles.map((file, fileIdx) => (
+                            <div key={`${variant.variantId}_${file.name}_${fileIdx}`} className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-white/10 px-2 py-1 text-xs text-gray-700 dark:text-gray-300">
+                              <span className="max-w-[180px] truncate">{file.name}</span>
+                              <button type="button" className="text-red-600 dark:text-red-400" onClick={() => removeVariantSelectedFile(variant.variantId, fileIdx)}>Remove</button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="file" accept="image/*" multiple onChange={handleImageFileSelect} className="block w-full text-sm text-gray-500 dark:text-gray-300" />
-                <input type="file" accept="video/*" onChange={handleVideoFileSelect} className="block w-full text-sm text-gray-500 dark:text-gray-300" />
-              </div>
-              {selectedImageFiles.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm text-gray-700 dark:text-gray-300">
-                    New images selected: {selectedImageFiles.length}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedImageFiles.map((file, idx) => (
-                      <div
-                        key={`${file.name}_${file.size}_${file.lastModified}_${idx}`}
-                        className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-white/10 px-2 py-1 text-xs text-gray-700 dark:text-gray-300"
-                      >
-                        <span className="max-w-[180px] truncate">{file.name}</span>
-                        <button
-                          type="button"
-                          className="text-red-600 dark:text-red-400"
-                          onClick={() =>
-                            setSelectedImageFiles((prev) =>
-                              prev.filter((_, fileIdx) => fileIdx !== idx)
-                            )
-                          }
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                </section>
               )}
+
+              <section className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Optional Product Video</h3>
+                <input
+                  className={inputClass}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  value={productForm.videoUrl || ''}
+                  onChange={(e) => setProductForm((prev) => ({ ...prev, videoUrl: e.target.value }))}
+                />
+              </section>
 
               <div className="flex justify-end gap-2 pt-3 sticky bottom-0 bg-white dark:bg-dark-surface">
                 <Button type="button" variant="outline" onClick={() => setShowProductModal(false)} disabled={isUploading}>Cancel</Button>

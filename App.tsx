@@ -21,6 +21,7 @@ const Profile = React.lazy(() => import('./pages/Profile').then(module => ({ def
 const OrderSuccess = React.lazy(() => import('./pages/OrderSuccess').then(module => ({ default: module.OrderSuccess })));
 const ProductDetail = React.lazy(() => import('./pages/ProductDetail').then(module => ({ default: module.ProductDetail })));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
+const AdminEditProductPage = React.lazy(() => import('./pages/AdminEditProductPage').then(module => ({ default: module.AdminEditProductPage })));
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Signup = React.lazy(() => import('./pages/Signup').then(module => ({ default: module.Signup })));
 
@@ -35,17 +36,16 @@ const ScrollToTop: React.FC = () => {
 const RedirectOnRefresh: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const hasCheckedRef = useRef(false);
 
   useEffect(() => {
-    if (hasCheckedRef.current) return;
-    hasCheckedRef.current = true;
     const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
     const isReload = navEntry?.type === 'reload';
     if (isReload && location.pathname !== '/') {
       navigate('/', { replace: true });
     }
-  }, [location.pathname, navigate]);
+    // Run only once on app boot so normal in-app navigation is not redirected.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return null;
 };
@@ -108,16 +108,16 @@ const App: React.FC = () => {
                     <Route path="/" element={<Home />} />
                     
                     {/* Dedicated Category Routes */}
-                    <Route path="/smart-bands" element={<RequireAuth><SmartBands /></RequireAuth>} />
-                    <Route path="/smart-rings" element={<RequireAuth><SmartRings /></RequireAuth>} />
-                    <Route path="/smart-fans" element={<RequireAuth><SmartFans /></RequireAuth>} />
-                    <Route path="/smart-monitoring" element={<RequireAuth><SmartMonitoring /></RequireAuth>} />
+                    <Route path="/smart-bands" element={<SmartBands />} />
+                    <Route path="/smart-rings" element={<SmartRings />} />
+                    <Route path="/smart-fans" element={<SmartFans />} />
+                    <Route path="/smart-monitoring" element={<SmartMonitoring />} />
                     
                     {/* Legacy/General Shop Route for Search/View All */}
-                    <Route path="/shop/all" element={<RequireAuth><Shop /></RequireAuth>} />
+                    <Route path="/shop/all" element={<Shop />} />
                     <Route path="/shop/:category" element={<Navigate to="/shop/all" replace />} /> {/* Redirect old category links just in case */}
 
-                    <Route path="/product/:id" element={<RequireAuth><ProductDetail /></RequireAuth>} />
+                    <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
                     <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
                     <Route path="/order-success" element={<RequireAuth><OrderSuccess /></RequireAuth>} />
@@ -125,6 +125,7 @@ const App: React.FC = () => {
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
                     <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
+                    <Route path="/admin/edit-product" element={<RequireAuth><AdminEditProductPage /></RequireAuth>} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>

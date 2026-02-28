@@ -13,6 +13,7 @@ export const Shop: React.FC = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [searchQuery, setSearchQuery] = useState('');
   const shopScrollerRef = useRef<HTMLDivElement | null>(null);
+  const [isAutoScrollPaused, setIsAutoScrollPaused] = useState(false);
   const handleHorizontalWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
     event.currentTarget.scrollLeft += event.deltaY;
@@ -66,31 +67,34 @@ export const Shop: React.FC = () => {
     setFilteredProducts(result);
   }, [normalizedRouteCategory, products, sortBy, searchQuery]);
 
+  const movingProducts = filteredProducts.length > 1 ? [...filteredProducts, ...filteredProducts] : filteredProducts;
+
   useEffect(() => {
-    if (loading || filteredProducts.length < 2) return;
+    if (loading || filteredProducts.length < 2 || isAutoScrollPaused) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const scroller = shopScrollerRef.current;
     if (!scroller) return;
 
     let rafId = 0;
     let lastTs = 0;
-    const speedPxPerMs = 0.5;
+    const speedPxPerMs = 0.08;
     const tick = (ts: number) => {
       const current = shopScrollerRef.current;
       if (!current) return;
       if (!lastTs) lastTs = ts;
-      const delta = ts - lastTs;
+      const delta = Math.min(ts - lastTs, 32);
       lastTs = ts;
       const maxScroll = current.scrollWidth - current.clientWidth;
       if (maxScroll > 0) {
+        const resetPoint = Math.min(current.scrollWidth / 2, maxScroll);
         current.scrollLeft += delta * speedPxPerMs;
-        if (current.scrollLeft >= maxScroll) current.scrollLeft = 0;
+        if (current.scrollLeft >= resetPoint) current.scrollLeft = 0;
       }
       rafId = window.requestAnimationFrame(tick);
     };
     rafId = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(rafId);
-  }, [loading, filteredProducts.length]);
+  }, [loading, filteredProducts.length, isAutoScrollPaused]);
 
   return (
     <div className="min-h-screen pt-10 pb-20 px-4 max-w-7xl mx-auto">
@@ -156,10 +160,18 @@ export const Shop: React.FC = () => {
         <div
           ref={shopScrollerRef}
           onWheel={handleHorizontalWheel}
-          className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing"
+          onMouseEnter={() => setIsAutoScrollPaused(true)}
+          onMouseLeave={() => setIsAutoScrollPaused(false)}
+          onTouchStart={() => setIsAutoScrollPaused(true)}
+          onTouchEnd={() => setIsAutoScrollPaused(false)}
+          className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing scroll-smooth"
         >
-          {filteredProducts.map((p) => (
-            <div key={p.id} className="w-[74vw] sm:w-[46vw] lg:w-[29vw] xl:w-[26vw] min-w-[240px] max-w-[360px] shrink-0 snap-start">
+          {movingProducts.map((p, idx) => (
+            <div
+              key={`${p.id}_${idx}`}
+              className="w-[74vw] sm:w-[46vw] lg:w-[29vw] xl:w-[26vw] min-w-[240px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide"
+              style={{ ['--reveal-delay' as '--reveal-delay']: `${Math.min(idx, 7) * 80}ms` }}
+            >
               <ProductCard product={p} compact imageAspectClassName="aspect-[4/3]" />
             </div>
           ))}
