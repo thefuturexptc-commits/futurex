@@ -213,7 +213,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, range, onRange
           <span>Green line: Number of orders</span>
         </div>
         <div className="rounded-lg border border-gray-200 dark:border-white/10 p-3 overflow-x-auto">
-          <svg viewBox="0 0 700 180" className="w-full min-w-[560px] h-44">
+          <svg viewBox="0 0 700 180" className="w-full h-44">
             <polyline
               points={orderLinePoints}
               fill="none"

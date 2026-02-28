@@ -97,6 +97,18 @@
       body {
         font-family: 'Outfit', sans-serif;
       }
+      html, body, #root {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      img, video {
+        max-width: 100%;
+        height: auto;
+      }
 
       h1, h2, h3, h4, h5, h6, .font-display {
         font-family: 'Space Grotesk', sans-serif;

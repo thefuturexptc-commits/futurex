@@ -211,7 +211,7 @@ export const Home: React.FC = () => {
         </div>
       )}
       {/* Hero Section */}
-      <section className="relative h-[90vh] min-h-[700px] flex items-center justify-center overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="relative h-[90vh] min-h-[560px] sm:min-h-[700px] flex items-center justify-center overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
         
         {/* Dynamic Background */}
         <div className="absolute inset-0 bg-gray-50 dark:bg-dark-bg transition-colors duration-500">
@@ -242,7 +242,7 @@ export const Home: React.FC = () => {
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-7xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.95] font-display">
+            <h1 className="text-4xl sm:text-6xl md:text-8xl lg:text-9xl font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.95] font-display">
               WEAR THE <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-[length:200%_200%] animate-gradient-x animate-pulse-slow">
                 FUTURE
@@ -250,7 +250,7 @@ export const Home: React.FC = () => {
             </h1>
 
             {/* Subtext */}
-            <p className="text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
+            <p className="text-base sm:text-xl md:text-2xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
               Advanced biometrics. Seamless connectivity. Designed for the visionaries of tomorrow.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 tracking-wide">
