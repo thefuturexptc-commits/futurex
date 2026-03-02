@@ -127,6 +127,23 @@ const DEFAULT_SUPERADMIN_PERMISSIONS: UserPermissions = {
 };
 
 const SUPERADMIN_EMAIL = 'thefuturex.ptc@gmail.com';
+const DEFAULT_FOOTER_SECTIONS: NonNullable<WebsiteSettings['footerSections']> = [
+  { title: 'COMPANY', items: ['About Us', 'Contact'] },
+  { title: 'SUPPORT', items: ['Shipping', 'Returns', 'FAQ', 'Track Order'] },
+  { title: 'LEGAL', items: ['Privacy', 'Terms', 'Refund', 'Cookies'] },
+];
+const DEFAULT_PAGE_CONTENT: NonNullable<WebsiteSettings['pageContent']> = {
+  'about-us': 'Write your About Us content from Admin Settings.',
+  contact: 'Add your contact details from Admin Settings.',
+  shipping: 'Add your shipping policy details from Admin Settings.',
+  returns: 'Add your return policy details from Admin Settings.',
+  faq: 'Add frequently asked questions from Admin Settings.',
+  'track-order': 'Add order tracking instructions from Admin Settings.',
+  privacy: 'Add your privacy policy from Admin Settings.',
+  terms: 'Add your terms and conditions from Admin Settings.',
+  refund: 'Add your refund policy from Admin Settings.',
+  cookies: 'Add your cookie policy from Admin Settings.',
+};
 
 const applyRoleByEmail = (user: User): User => {
   const normalizedEmail = (user.email || '').trim().toLowerCase();
@@ -1514,14 +1531,25 @@ export const updateSupportChatSession = async (
 
 export const getWebsiteSettings = async (): Promise<WebsiteSettings> => {
     // Local
-    const localSettings = getMockData<WebsiteSettings>('settings', { primaryColor: '#0ea5e9', logoUrl: '' });
+    const localSettings = getMockData<WebsiteSettings>('settings', {
+      primaryColor: '#0ea5e9',
+      logoUrl: '',
+      footerSections: DEFAULT_FOOTER_SECTIONS,
+      pageContent: DEFAULT_PAGE_CONTENT
+    });
     
     // Firebase
     try {
         const docRef = doc(db, 'settings', 'general');
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-            return docSnap.data() as WebsiteSettings;
+            const data = docSnap.data() as WebsiteSettings;
+            return {
+              primaryColor: data.primaryColor || '#0ea5e9',
+              logoUrl: data.logoUrl || '',
+              footerSections: data.footerSections?.length ? data.footerSections : DEFAULT_FOOTER_SECTIONS,
+              pageContent: data.pageContent || DEFAULT_PAGE_CONTENT
+            };
         }
     } catch(e) { }
     

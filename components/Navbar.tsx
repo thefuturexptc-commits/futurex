@@ -36,7 +36,7 @@ const NavbarComponent: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* ✅ Navbar height responsive */}
-        <div className="flex items-center justify-between h-20 sm:h-24 lg:h-28">
+        <div className="flex items-center justify-between h-16 sm:h-20 lg:h-24">
           
           {/* ✅ Bigger Responsive Logo */}
           <Link to="/" className="flex-shrink-0 flex items-center gap-3 group">
@@ -44,9 +44,9 @@ const NavbarComponent: React.FC = () => {
               src={logoUrl || defaultBrandLogo}
               alt="TheFutureX"
               className="
-                h-16 sm:h-20 md:h-24 lg:h-28
+                h-10 sm:h-14 md:h-16 lg:h-20
                 w-auto
-                max-w-[200px] sm:max-w-[240px] md:max-w-[280px]
+                max-w-[140px] sm:max-w-[180px] md:max-w-[220px]
                 object-contain
                 transition-transform duration-300
                 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)]
@@ -71,7 +71,7 @@ const NavbarComponent: React.FC = () => {
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-2 sm:space-x-4">
             
             {/* Cart */}
             <button 

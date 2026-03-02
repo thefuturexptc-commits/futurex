@@ -412,6 +412,10 @@ export const SupportAssistant: React.FC = () => {
     const intent = keywordIntent(text);
     const available = Math.max(0, Number(product.stock || 0) - Number(product.reservedStock || 0));
     const chunks: string[] = [`${product.name} (${product.category})`];
+    const topSpecs = Object.entries(product.specs || {}).slice(0, 4);
+    const topFeatures = (product.features || []).slice(0, 3);
+    const specsSummary = topSpecs.map(([k, v]) => `${k}: ${v}`).join(' | ');
+    const featureSummary = topFeatures.join(' | ');
 
     if (intent.price) chunks.push(`Price: ${formatCurrency(product.salePrice || product.price)}${product.mrp ? ` (MRP ${formatCurrency(product.mrp)})` : ''}`);
     if (intent.stock) chunks.push(`Stock: ${available > 0 ? `${available} available` : 'Out of stock'}`);
@@ -420,6 +424,8 @@ export const SupportAssistant: React.FC = () => {
     if (intent.battery) chunks.push(`Battery: ${findSpecSnippet(product, /battery|mah|backup|hours|days/i) || 'Battery details are not listed.'}`);
     if (intent.water) chunks.push(`Water Resistance: ${findSpecSnippet(product, /water|waterproof|resistance|atm|ip\d+/i) || 'Water resistance details are not listed.'}`);
     if (intent.specs) chunks.push(`Specs: ${Object.entries(product.specs || {}).slice(0, 3).map(([k, v]) => `${k}: ${v}`).join(' | ') || 'Specs not available.'}`);
+    if (specsSummary) chunks.push(`Key Specifications: ${specsSummary}`);
+    if (featureSummary) chunks.push(`Key Features: ${featureSummary}`);
 
     if (chunks.length === 1) {
       chunks.push(`Price: ${formatCurrency(product.salePrice || product.price)}`);

@@ -161,6 +161,13 @@ export const ProductDetail: React.FC = () => {
     return deduped.map((url) => ({ url, type: isVideoUrl(url) ? 'video' : 'image' as const }));
   }, [selectedVariant, isVideoUrl]);
 
+  const carouselImages = useMemo(() => {
+    if (!product) return ['https://picsum.photos/700'];
+    const merged = [...(selectedVariant?.images || []), ...(product.images || [])].filter(Boolean);
+    const deduped = Array.from(new Set(merged));
+    return deduped.length ? deduped : ['https://picsum.photos/700'];
+  }, [product, selectedVariant]);
+
   const pickPreferredSize = useCallback((variant?: DisplayVariant) => {
     if (!variant) return '';
     return variant.sizes.find((entry) => Number(entry.stock || 0) > 0)?.size || variant.sizes[0]?.size || '';
@@ -350,20 +357,17 @@ export const ProductDetail: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           <div className="space-y-4">
             <ProductImageCarousel
-              images={
-                mediaItems.filter((media) => media.type === 'image').map((media) => media.url).length
-                  ? mediaItems.filter((media) => media.type === 'image').map((media) => media.url)
-                  : [product.images?.[0] || 'https://picsum.photos/700']
-              }
+              key={`${selectedVariant?.colorName || 'default'}_${carouselImages.length}`}
+              images={carouselImages}
               alt={product.name}
             />
-            {selectedVariant?.images?.length ? (
+            {carouselImages.length ? (
               <div className="grid grid-cols-5 gap-2">
-                {selectedVariant.images.map((imageUrl, imageIdx) => (
+                {carouselImages.map((imageUrl, imageIdx) => (
                   <img
-                    key={`${selectedVariant.colorName}_${imageIdx}`}
+                    key={`${selectedVariant?.colorName || 'default'}_${imageIdx}`}
                     src={imageUrl}
-                    alt={`${product.name} ${selectedVariant.colorName} ${imageIdx + 1}`}
+                    alt={`${product.name} ${selectedVariant?.colorName || 'Default'} ${imageIdx + 1}`}
                     className="h-16 w-full rounded-lg object-cover border border-gray-200 dark:border-white/10"
                   />
                 ))}

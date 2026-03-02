@@ -9,6 +9,7 @@ import { CartDrawer } from './components/CartDrawer';
 import { LoginModal } from './components/LoginModal';
 import { SupportAssistant } from './components/SupportAssistant';
 import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
+import { SiteFooter } from './components/SiteFooter';
 
 const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Shop = React.lazy(() => import('./pages/Shop').then(module => ({ default: module.Shop })));
@@ -25,6 +26,7 @@ const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard').then(mo
 const AdminEditProductPage = React.lazy(() => import('./pages/AdminEditProductPage').then(module => ({ default: module.AdminEditProductPage })));
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Signup = React.lazy(() => import('./pages/Signup').then(module => ({ default: module.Signup })));
+const InfoPage = React.lazy(() => import('./pages/InfoPage').then(module => ({ default: module.InfoPage })));
 
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
@@ -106,6 +108,7 @@ const App: React.FC = () => {
                     <Route path="/order-success" element={<RequireAuth><OrderSuccess /></RequireAuth>} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
+                    <Route path="/info/:slug" element={<InfoPage />} />
                     <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
                     <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
                     <Route path="/admin/edit-product" element={<RequireAuth><AdminEditProductPage /></RequireAuth>} />
@@ -114,9 +117,7 @@ const App: React.FC = () => {
                   </Suspense>
                 </main>
                 <SupportAssistant />
-                <footer className="bg-dark-surface border-t border-white/10 py-8 text-center text-gray-400 text-sm">
-                  <p>&copy; {new Date().getFullYear()} TheFutureX. Premium Smart Technology.</p>
-                </footer>
+                <SiteFooter />
               </div>
             </AuthModalProvider>
           </BrowserRouter>

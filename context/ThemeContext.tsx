@@ -2,6 +2,24 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Theme } from '../types';
 import { getWebsiteSettings } from '../services/backend';
 
+const DEFAULT_FOOTER_SECTIONS = [
+  { title: 'COMPANY', items: ['About Us', 'Contact'] },
+  { title: 'SUPPORT', items: ['Shipping', 'Returns', 'FAQ', 'Track Order'] },
+  { title: 'LEGAL', items: ['Privacy', 'Terms', 'Refund', 'Cookies'] },
+];
+const DEFAULT_PAGE_CONTENT: Record<string, string> = {
+  'about-us': 'Write your About Us content from Admin Settings.',
+  contact: 'Add your contact details from Admin Settings.',
+  shipping: 'Add your shipping policy details from Admin Settings.',
+  returns: 'Add your return policy details from Admin Settings.',
+  faq: 'Add frequently asked questions from Admin Settings.',
+  'track-order': 'Add order tracking instructions from Admin Settings.',
+  privacy: 'Add your privacy policy from Admin Settings.',
+  terms: 'Add your terms and conditions from Admin Settings.',
+  refund: 'Add your refund policy from Admin Settings.',
+  cookies: 'Add your cookie policy from Admin Settings.',
+};
+
 interface ThemeContextType {
   theme: Theme;
   toggleTheme: () => void;
@@ -9,6 +27,10 @@ interface ThemeContextType {
   updatePrimaryColor: (color: string) => void;
   logoUrl: string;
   updateLogoUrl: (url: string) => void;
+  footerSections: Array<{ title: string; items: string[] }>;
+  updateFooterSections: (sections: Array<{ title: string; items: string[] }>) => void;
+  pageContent: Record<string, string>;
+  updatePageContent: (content: Record<string, string>) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -17,6 +39,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const theme: Theme = 'dark';
   const [primaryColor, setPrimaryColor] = useState('#0ea5e9');
   const [logoUrl, setLogoUrl] = useState('');
+  const [footerSections, setFooterSections] = useState(DEFAULT_FOOTER_SECTIONS);
+  const [pageContent, setPageContent] = useState<Record<string, string>>(DEFAULT_PAGE_CONTENT);
 
   // Helper inside component to avoid HMR export issues
   const hexToRgb = (hex: string) => {
@@ -36,6 +60,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     getWebsiteSettings().then(settings => {
         setPrimaryColor(settings.primaryColor);
         if(settings.logoUrl) setLogoUrl(settings.logoUrl);
+        if (settings.footerSections?.length) setFooterSections(settings.footerSections);
+        if (settings.pageContent) setPageContent(settings.pageContent);
     }).catch(() => {});
   }, []);
 
@@ -60,8 +86,16 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setLogoUrl(url);
   };
 
+  const updateFooterSections = (sections: Array<{ title: string; items: string[] }>) => {
+      setFooterSections(sections);
+  };
+
+  const updatePageContent = (content: Record<string, string>) => {
+      setPageContent(content);
+  };
+
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, primaryColor, updatePrimaryColor, logoUrl, updateLogoUrl }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, primaryColor, updatePrimaryColor, logoUrl, updateLogoUrl, footerSections, updateFooterSections, pageContent, updatePageContent }}>
       {children}
     </ThemeContext.Provider>
   );
@@ -76,7 +110,11 @@ export const useTheme = () => {
       primaryColor: '#0ea5e9',
       updatePrimaryColor: () => {},
       logoUrl: '',
-      updateLogoUrl: () => {}
+      updateLogoUrl: () => {},
+      footerSections: DEFAULT_FOOTER_SECTIONS,
+      updateFooterSections: () => {},
+      pageContent: DEFAULT_PAGE_CONTENT,
+      updatePageContent: () => {}
     };
   }
   return context;

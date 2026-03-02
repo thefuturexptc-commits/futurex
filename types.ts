@@ -173,6 +173,11 @@ export interface Order {
 export interface WebsiteSettings {
   primaryColor: string; // Hex code
   logoUrl?: string; // URL for the custom brand logo
+  footerSections?: Array<{
+    title: string;
+    items: string[];
+  }>;
+  pageContent?: Record<string, string>;
 }
 
 export type Theme = 'light' | 'dark';

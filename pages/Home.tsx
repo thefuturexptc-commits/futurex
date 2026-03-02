@@ -200,7 +200,7 @@ export const Home: React.FC = () => {
         </div>
       )}
       {/* Hero Section */}
-      <section className="relative h-[78vh] min-h-[500px] sm:min-h-[620px] flex items-center justify-center overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="relative min-h-[460px] sm:min-h-[620px] py-16 sm:py-20 flex items-center justify-center overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
         
         {/* Dynamic Background */}
         <div className="absolute inset-0 bg-gray-50 dark:bg-dark-bg transition-colors duration-500">
@@ -218,20 +218,20 @@ export const Home: React.FC = () => {
 
         {/* Hero Content */}
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <div className="animate-fade-in-up space-y-6 max-w-5xl mx-auto">
+          <div className="animate-fade-in-up space-y-5 sm:space-y-6 max-w-5xl mx-auto">
             
             {/* Tech Badge */}
-            <div className="flex justify-center mb-8">
-                <div className="glass-card px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-3 shadow-lg">
+            <div className="flex justify-center mb-6 sm:mb-8">
+                <div className="glass-card px-4 sm:px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-2 sm:gap-3 shadow-lg">
                    <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
-                   <span className="text-xs font-bold tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display">
+                   <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display">
                       Future Ready - Series X
                    </span>
                 </div>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.95] font-display">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.95] font-display">
               WEAR THE <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-[length:200%_200%] animate-gradient-x animate-pulse-slow">
                 FUTURE
@@ -242,7 +242,7 @@ export const Home: React.FC = () => {
             <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
               Advanced biometrics. Seamless connectivity. Designed for the visionaries of tomorrow.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-4 md:gap-8 text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 tracking-wide">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 text-xs sm:text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 tracking-wide">
               <span className="animate-fade-in-up">14 Days Battery</span>
               <span className="hidden md:inline text-primary-500">&bull;</span>
               <span className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>50m Water Proof</span>
@@ -264,15 +264,15 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Floating Category Cards - Overlapping Hero */}
-      <section className="relative z-20 pt-2 pb-14 px-4 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="relative z-20 pt-2 pb-12 sm:pb-14 px-4 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'].map((cat, idx) => (
                 <Link
                   key={cat}
                   to={getCategoryRoute(cat)}
                   onClick={(event) => handleProtectedCategoryClick(event, getCategoryRoute(cat))}
-                  className="group relative h-80 rounded-[2rem] overflow-hidden cursor-pointer glass-card transition-all transition-shadow duration-500 hover:-translate-y-4 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_40px_rgba(236,72,153,0.4)] border-white/50"
+                  className="group relative h-64 sm:h-72 lg:h-80 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden cursor-pointer glass-card transition-all transition-shadow duration-500 hover:-translate-y-2 sm:hover:-translate-y-4 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_40px_rgba(236,72,153,0.4)] border-white/50"
                 >
                 {/* Image */}
                 <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800">
@@ -289,11 +289,11 @@ export const Home: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/10 to-transparent dark:from-black/95 dark:via-black/10 dark:to-transparent opacity-100 transition-opacity"></div>
                 
                 {/* Content */}
-                <div className="absolute bottom-0 left-0 w-full p-8">
+                <div className="absolute bottom-0 left-0 w-full p-5 sm:p-8">
                     <div className="flex justify-between items-end">
                         <div>
                             <p className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest mb-2 font-display">Series 0{idx + 1}</p>
-                            <h3 className="text-3xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight font-display">{cat}</h3>
+                            <h3 className="text-2xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight font-display">{cat}</h3>
                         </div>
                         <div className="w-12 h-12 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shadow-lg transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                             <svg className="w-5 h-5 text-gray-900 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
@@ -307,7 +307,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Best Sellers Section */}
-      <section className="py-16 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-12 sm:py-16 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
@@ -331,7 +331,7 @@ export const Home: React.FC = () => {
               <div
                 ref={bestSellerScrollerRef}
                 onWheel={handleHorizontalWheel}
-                className="flex gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
+                className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
               >
                 {bestSellersForSlider.map((product, idx) => (
                   <div
@@ -349,14 +349,14 @@ export const Home: React.FC = () => {
       </section>
       
       {/* Featured / New Arrivals Section */}
-      <section className="py-16 bg-gray-50 dark:bg-dark-surface/40 relative border-y border-gray-200 dark:border-white/5 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-12 sm:py-16 bg-gray-50 dark:bg-dark-surface/40 relative border-y border-gray-200 dark:border-white/5 text-gray-900 dark:text-white animate-fade-in-up">
           <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none"></div>
           <div className="max-w-7xl mx-auto px-4 relative z-10">
               <div className="text-center mb-10">
                  <span className="inline-block py-1.5 px-4 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold tracking-widest uppercase mb-4 shadow-sm border border-purple-200/50 dark:border-purple-700/30 font-display">
                     Just Dropped
                  </span>
-                 <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">New Arrivals</h2>
+                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">New Arrivals</h2>
                  <p className="mt-4 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light text-lg">
                     Cutting-edge technology designed to seamlessly integrate into your lifestyle.
                  </p>
@@ -373,7 +373,7 @@ export const Home: React.FC = () => {
                   <div
                     ref={featuredScrollerRef}
                     onWheel={handleHorizontalWheel}
-                    className="flex gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
+                    className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
                   >
                     {featuredProductsForSlider.map((product, idx) => (
                       <div
@@ -401,10 +401,10 @@ export const Home: React.FC = () => {
           </div>
       </section>
 
-      <section className="py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-12 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Why Choose TheFutureX?</h2>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Why Choose TheFutureX?</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10">
@@ -432,11 +432,11 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-16 px-4 bg-gray-50 dark:bg-dark-surface/40 border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-12 sm:py-16 px-4 bg-gray-50 dark:bg-dark-surface/40 border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className="text-xs uppercase tracking-[0.3em] text-primary-600 font-bold">Live Offers</p>
-            <h2 className="text-4xl font-bold text-gray-900 dark:text-white font-display mt-2">Deals & Benefits</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-display mt-2">Deals & Benefits</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {dealsToShow.map((offer, idx) => (
@@ -457,13 +457,13 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Newsletter / CTA */}
-      <section className="py-20 px-4 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-14 sm:py-20 px-4 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
         {/* Background blobs for this section */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-primary-100/30 to-purple-100/30 dark:from-primary-900/10 dark:to-purple-900/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-        <div className="max-w-4xl mx-auto glass-card rounded-[3rem] p-10 md:p-20 text-center relative border border-white/60 dark:border-white/10 shadow-2xl">
+        <div className="max-w-4xl mx-auto glass-card rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 md:p-20 text-center relative border border-white/60 dark:border-white/10 shadow-2xl">
              <div className="relative z-10">
-                <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 font-display">Join the Revolution.</h2>
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 font-display">Join the Revolution.</h2>
                 <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-lg mx-auto leading-relaxed">
                     Be the first to experience the next generation of wearable tech. Exclusive drops for members.
                 </p>

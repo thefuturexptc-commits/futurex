@@ -61,22 +61,22 @@ export const Shop: React.FC = () => {
   }, [normalizedRouteCategory, products, sortBy, searchQuery]);
 
   return (
-    <div className="min-h-screen pt-10 pb-20 px-4 max-w-7xl mx-auto">
+    <div className="min-h-screen pt-6 sm:pt-10 pb-16 sm:pb-20 px-4 max-w-7xl mx-auto">
       {/* Header & Controls */}
-      <div className="flex flex-col gap-8 mb-12 animate-fade-in-up">
+      <div className="flex flex-col gap-6 sm:gap-8 mb-8 sm:mb-12 animate-fade-in-up">
         
         {/* Title */}
         <div className="text-center md:text-left">
             <span className="text-xs font-bold tracking-[0.2em] uppercase text-gray-500 dark:text-gray-400 font-display mb-2 block">
                 {category === 'all' ? 'Catalogue' : 'Collection'}
             </span>
-            <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white capitalize font-display">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 dark:text-white capitalize font-display break-words">
             {normalizedRouteCategory === 'all' ? 'All Products' : category}
             </h1>
         </div>
 
         {/* Search and Sort Toolbar */}
-        <div className="flex flex-col md:flex-row gap-4 p-2 rounded-2xl glass-card items-center border border-gray-100 dark:border-white/10 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-3 sm:gap-4 p-2 rounded-2xl glass-card items-stretch md:items-center border border-gray-100 dark:border-white/10 shadow-sm">
             
             {/* Search Bar */}
             <div className="relative flex-1 w-full">
@@ -95,7 +95,7 @@ export const Shop: React.FC = () => {
             </div>
 
             {/* Sort Dropdown */}
-            <div className="flex items-center space-x-3 w-full md:w-auto px-4 border-l border-gray-200 dark:border-white/10">
+            <div className="flex items-center space-x-3 w-full md:w-auto px-1 sm:px-2 md:px-4 pt-1 md:pt-0 border-t md:border-t-0 md:border-l border-gray-200 dark:border-white/10">
               <label className="text-xs font-bold text-gray-500 dark:text-gray-400 whitespace-nowrap uppercase tracking-wider font-display">Sort by</label>
               <select 
                 value={sortBy}

@@ -66,7 +66,7 @@ export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
   const isSuperAdmin = user?.role === 'superadmin';
-  const { updatePrimaryColor, primaryColor, updateLogoUrl, logoUrl } = useTheme();
+  const { updatePrimaryColor, primaryColor, updateLogoUrl, logoUrl, footerSections, updateFooterSections, pageContent, updatePageContent } = useTheme();
 
   const [activeTab, setActiveTab] = useState<TabKey>('analytics');
   const [products, setProducts] = useState<Product[]>([]);
@@ -763,7 +763,7 @@ export const AdminDashboard: React.FC = () => {
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const color = e.target.value;
     updatePrimaryColor(color);
-    updateWebsiteSettings({ primaryColor: color, logoUrl });
+    updateWebsiteSettings({ primaryColor: color, logoUrl, footerSections, pageContent });
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -772,7 +772,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const saveSettings = async () => {
-    await updateWebsiteSettings({ primaryColor, logoUrl });
+    await updateWebsiteSettings({ primaryColor, logoUrl, footerSections, pageContent });
     pushAudit('Settings Updated');
     alert('Settings Saved');
   };
@@ -896,8 +896,12 @@ export const AdminDashboard: React.FC = () => {
         <SettingsTab
           primaryColor={primaryColor}
           logoUrl={logoUrl}
+          footerSections={footerSections}
+          pageContent={pageContent}
           onColorChange={handleColorChange}
           onLogoChange={handleLogoChange}
+          onFooterSectionsChange={updateFooterSections}
+          onPageContentChange={updatePageContent}
           onSave={saveSettings}
           onSeed={handleSeed}
         />
