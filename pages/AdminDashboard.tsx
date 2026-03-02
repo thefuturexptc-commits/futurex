@@ -61,6 +61,7 @@ const inputClass =
   'w-full p-2 border border-gray-300 bg-white text-gray-900 rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
 const createProductId = () => `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 const createVariantSizeRow = () => ({ id: `sz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, size: '', stock: 0 });
+const ADMIN_ACTIVE_TAB_KEY = 'aura_admin_active_tab';
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -68,7 +69,11 @@ export const AdminDashboard: React.FC = () => {
   const isSuperAdmin = user?.role === 'superadmin';
   const { updatePrimaryColor, primaryColor, updateLogoUrl, logoUrl, footerSections, updateFooterSections, pageContent, updatePageContent } = useTheme();
 
-  const [activeTab, setActiveTab] = useState<TabKey>('analytics');
+  const [activeTab, setActiveTab] = useState<TabKey>(() => {
+    if (typeof window === 'undefined') return 'analytics';
+    const stored = window.localStorage.getItem(ADMIN_ACTIVE_TAB_KEY) as TabKey | null;
+    return stored || 'analytics';
+  });
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
@@ -261,6 +266,11 @@ export const AdminDashboard: React.FC = () => {
       setActiveTab(availableTabs[0] || 'analytics');
     }
   }, [activeTab, availableTabs]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem(ADMIN_ACTIVE_TAB_KEY, activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     if (hasVariants) {
@@ -792,14 +802,14 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-4 py-10 text-gray-900 dark:text-white bg-gradient-to-b from-rose-50/50 via-amber-50/40 to-sky-50/50 dark:from-transparent dark:via-transparent dark:to-transparent">
+    <div className="min-h-screen max-w-7xl mx-auto px-3 sm:px-4 py-6 sm:py-10 text-gray-900 dark:text-white bg-gradient-to-b from-rose-50/50 via-amber-50/40 to-sky-50/50 dark:from-transparent dark:via-transparent dark:to-transparent">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Admin Dashboard</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Admin Dashboard</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enterprise control center for products, orders, and growth analytics</p>
           <p className="text-xs font-semibold uppercase tracking-widest text-rose-600 dark:text-rose-300 mt-2">Holi Launch Theme</p>
         </div>
-        <Button size="sm" variant="outline" onClick={refreshData}>Refresh Data</Button>
+        <Button size="sm" variant="outline" className="w-full sm:w-auto" onClick={refreshData}>Refresh Data</Button>
       </div>
 
       {dataError && (
@@ -813,27 +823,29 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      <div className="mb-8 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-dark-surface p-2 flex flex-wrap gap-2">
-        {tabs.map((tab) => {
-          const allowed = hasTabAccess(tab.key);
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => allowed && setActiveTab(tab.key)}
-              disabled={!allowed}
-              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${
-                activeTab === tab.key
-                  ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/20'
-                  : allowed
-                  ? 'bg-transparent text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-100 dark:hover:bg-white/10'
-                  : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-transparent cursor-not-allowed'
-              }`}
-            >
-              {tab.label} {!allowed ? 'Locked' : ''}
-            </button>
-          );
-        })}
+      <div className="mb-8 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-dark-surface p-2 overflow-x-auto">
+        <div className="flex min-w-max gap-2">
+          {tabs.map((tab) => {
+            const allowed = hasTabAccess(tab.key);
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => allowed && setActiveTab(tab.key)}
+                disabled={!allowed}
+                className={`px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold whitespace-nowrap transition-all border ${
+                  activeTab === tab.key
+                    ? 'bg-primary-600 text-white border-primary-500 shadow-lg shadow-primary-500/20'
+                    : allowed
+                    ? 'bg-transparent text-gray-700 dark:text-gray-300 border-transparent hover:bg-gray-100 dark:hover:bg-white/10'
+                    : 'bg-gray-100 dark:bg-white/5 text-gray-400 border-transparent cursor-not-allowed'
+                }`}
+              >
+                {tab.label} {!allowed ? 'Locked' : ''}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {activeTab === 'analytics' && (

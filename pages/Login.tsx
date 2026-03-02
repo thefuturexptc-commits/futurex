@@ -54,7 +54,7 @@ export const Login: React.FC = () => {
           <p className="text-center text-xs tracking-[0.25em] font-bold text-cyan-600 dark:text-cyan-300 uppercase">Secure Access</p>
           <h2 className="mt-3 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Login</h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Continue with Email + Password or Google
+            Login with Email + Password or Google
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -99,7 +99,7 @@ export const Login: React.FC = () => {
 
           <div>
             <Button type="submit" className="w-full rounded-xl" isLoading={loading}>
-              Continue with Email
+              Login
             </Button>
           </div>
 

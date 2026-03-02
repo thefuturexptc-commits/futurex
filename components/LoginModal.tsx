@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loginUser, loginWithGoogle, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
+import { isPhoneRegistered, loginUser, loginWithGoogle, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -20,6 +20,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -47,6 +48,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       setOtpSending(false);
       setOtpVerifying(false);
       setError('');
+      setShowPassword(false);
       resetPhoneOtpFlow();
     }
   }, [isOpen]);
@@ -75,6 +77,11 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
     setError('');
     setOtpSending(true);
     try {
+      const alreadyRegistered = await isPhoneRegistered(phone);
+      if (alreadyRegistered) {
+        setError('This phone number is already registered. Please log in.');
+        return;
+      }
       await sendPhoneOtp(phone, 'recaptcha-container');
       setOtp('');
       setOtpSent(true);
@@ -83,6 +90,38 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       setError(error?.message || 'Failed to send OTP. Check phone auth setup and try again.');
     } finally {
       setOtpSending(false);
+    }
+  };
+
+  const performRegistration = async (skipOtpCheck = false) => {
+    if (!email.trim() || !password.trim()) {
+      setError('Enter email and password');
+      return;
+    }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+    if (!isValidIndianPhoneInput(phone)) {
+      setError('Enter a valid Indian number (10-digit or +91 format)');
+      return;
+    }
+    if (!skipOtpCheck && !otpVerified) {
+      setError('Please verify OTP first');
+      return;
+    }
+
+    setError('');
+    setLoading(true);
+    try {
+      const user = await registerUser(email.trim(), password, phone);
+      login(user);
+      onClose();
+      navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/');
+    } catch {
+      setError('Registration failed. Email or phone may already exist.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -96,6 +135,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
     try {
       await verifyPhoneOtp(otp);
       setOtpVerified(true);
+      await performRegistration(true);
     } catch (error: any) {
       setOtpVerified(false);
       setError(error?.message || 'Invalid OTP');
@@ -141,35 +181,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError('Enter email and password');
-      return;
-    }
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-    if (!isValidIndianPhoneInput(phone)) {
-      setError('Enter a valid Indian number (10-digit or +91 format)');
-      return;
-    }
-    if (!otpVerified) {
-      setError('Please verify OTP first');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-    try {
-      const user = await registerUser(email.trim(), password, phone);
-      login(user);
-      onClose();
-      navigate(redirectPath);
-    } catch {
-      setError('Registration failed. Email or phone may already exist.');
-    } finally {
-      setLoading(false);
-    }
+    await performRegistration();
   };
 
   return (
@@ -199,12 +211,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
 
         <h3 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">{mode === 'login' ? 'Login' : 'Register'}</h3>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          {mode === 'login' ? 'Continue with Email + Password or Google.' : 'Register with Google or Email + Password + Phone OTP.'}
+          {mode === 'login' ? 'Continue with Email + Password or Google.' : 'Register with Email + Password + Phone OTP.'}
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit}>
           {error && <p className="text-sm text-red-500 bg-red-100 rounded-md p-2">{error}</p>}
-          {(mode === 'login' || mode === 'register') && (
+          {mode === 'login' && (
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -227,14 +239,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
           )}
 
           {(mode === 'register' || mode === 'login') && (
-            <input
-              type="password"
-              required
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-3 border rounded-lg dark:bg-white/5 dark:border-white/10 dark:text-white"
-            />
+            <div className="flex gap-2">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                placeholder="e.g. Future@123"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full p-3 border rounded-lg dark:bg-white/5 dark:border-white/10 dark:text-white"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                className="px-4 rounded-lg border border-gray-300 dark:border-white/20 text-sm font-semibold"
+              >
+                {showPassword ? 'Hide' : 'Show'}
+              </button>
+            </div>
           )}
 
           {mode === 'register' && (

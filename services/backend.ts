@@ -64,14 +64,38 @@ const deepSanitize = (obj: any): any => {
 
 // --- Helper: Mock Data Management ---
 const memoryStore = new Map<string, unknown>();
+const MOCK_STORAGE_PREFIX = 'aura_mock_';
+
+const readFromLocalStorage = <T>(key: string): T | null => {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(`${MOCK_STORAGE_PREFIX}${key}`);
+    if (!raw) return null;
+    return JSON.parse(raw) as T;
+  } catch {
+    return null;
+  }
+};
 
 const getMockData = <T>(key: string, defaultVal: T): T => {
-    if (!memoryStore.has(key)) return defaultVal;
-    return memoryStore.get(key) as T;
+    if (memoryStore.has(key)) return memoryStore.get(key) as T;
+    const stored = readFromLocalStorage<T>(key);
+    if (stored !== null) {
+      memoryStore.set(key, stored);
+      return stored;
+    }
+    return defaultVal;
 };
 
 const setMockData = (key: string, data: any) => {
     memoryStore.set(key, data);
+    if (typeof window !== 'undefined') {
+      try {
+        window.localStorage.setItem(`${MOCK_STORAGE_PREFIX}${key}`, JSON.stringify(data));
+      } catch {
+        // Ignore storage quota / private mode failures and keep in-memory fallback.
+      }
+    }
 };
 
 const withTimeout = async <T>(promise: Promise<T>, timeoutMs: number): Promise<T> => {
@@ -539,7 +563,7 @@ export const getProducts = async (): Promise<Product[]> => {
       productsCache = { data: normalized, ts: Date.now() };
       return normalized;
     } catch (error) {
-      if (isAbortLikeError(error)) {
+      if (isAbortLikeError(error) || isPermissionDeniedError(error)) {
         const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS).map(normalizeProductColors);
         productsCache = { data: localProducts, ts: Date.now() };
         return localProducts;
@@ -662,11 +686,22 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
 // --- Category Service ---
 export const getCategories = async (): Promise<string[]> => {
-  await ensureFirebaseConnection();
-  const querySnapshot = await withTimeout(getDocs(collection(db, 'categories')), 1200);
-  const cats: string[] = [];
-  querySnapshot.forEach((categoryDoc) => cats.push(categoryDoc.data().name));
-  return cats;
+  const localCats = getMockData<string[]>('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
+  try {
+    await ensureFirebaseConnection();
+    const querySnapshot = await withTimeout(getDocs(collection(db, 'categories')), 1200);
+    const cats: string[] = [];
+    querySnapshot.forEach((categoryDoc) => cats.push(categoryDoc.data().name));
+    if (cats.length > 0) {
+      setMockData('categories', cats);
+      return cats;
+    }
+  } catch (error) {
+    if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
+      console.warn('Failed to fetch categories from Firebase:', error);
+    }
+  }
+  return localCats;
 };
 
 export const addCategory = async (category: string): Promise<void> => {
@@ -725,9 +760,36 @@ export const deleteCategory = async (category: string): Promise<void> => {
 export const registerUser = async (email: string, password: string, phone: string): Promise<User> => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhone = normalizeIndianPhone(phone);
+    const nationalPhone = getIndianNationalPhone(phone);
     const users = upsertSuperAdmin(getMockData<User[]>('users', []));
     if (users.some(u => u.email.toLowerCase() === normalizedEmail)) {
         throw new Error('Email already registered');
+    }
+    const duplicateLocalPhone = users.some((u) => {
+      if (!u.phone) return false;
+      try {
+        return normalizeIndianPhone(u.phone) === normalizedPhone || getIndianNationalPhone(u.phone) === nationalPhone;
+      } catch {
+        return false;
+      }
+    });
+    if (duplicateLocalPhone) {
+      throw new Error('Phone number already registered');
+    }
+
+    try {
+      const qPhone = query(collection(db, 'users'), where('phone', '==', normalizedPhone));
+      const phoneSnap = await getDocs(qPhone);
+      if (!phoneSnap.empty) throw new Error('Phone number already registered');
+
+      const qLegacyPhone = query(collection(db, 'users'), where('phone', '==', nationalPhone));
+      const legacyPhoneSnap = await getDocs(qLegacyPhone);
+      if (!legacyPhoneSnap.empty) throw new Error('Phone number already registered');
+    } catch (error) {
+      if (error instanceof Error && error.message === 'Phone number already registered') {
+        throw error;
+      }
+      // If Firestore read fails due network/permissions, continue with local checks.
     }
 
     const newUser: User = {
@@ -742,19 +804,25 @@ export const registerUser = async (email: string, password: string, phone: strin
     };
     const cleanUser = deepSanitize(newUser);
 
-    // Local
-    users.push(cleanUser);
-    setMockData('users', users);
-
     // Firebase
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
         const firebaseUser = userCredential.user;
         if (firebaseUser) {
             cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
             await setDoc(doc(db, 'users', firebaseUser.uid), cleanUser);
         }
-    } catch (e) {
+    } catch (e: any) {
+        const code = e?.code || '';
+        if (code === 'auth/email-already-in-use') {
+          throw new Error('Email already registered');
+        }
+        if (code === 'auth/invalid-email') {
+          throw new Error('Invalid email address');
+        }
+        if (code === 'auth/weak-password') {
+          throw new Error('Password is too weak');
+        }
         console.warn("Auth failed/unavailable. Using local user fallback.");
         // CRITICAL: Force anonymous connection so this 'local' user can still write orders to DB
         await ensureFirebaseConnection();
@@ -763,8 +831,42 @@ export const registerUser = async (email: string, password: string, phone: strin
            await setDoc(doc(db, 'users', cleanUser.id), cleanUser);
         } catch(dbErr) { console.error("Could not save local user to DB", dbErr); }
     }
+
+    // Local cache/store persistence
+    users.push(cleanUser);
+    setMockData('users', users);
     
     return cleanUser;
+};
+
+export const isPhoneRegistered = async (phone: string): Promise<boolean> => {
+  const normalizedPhone = normalizeIndianPhone(phone);
+  const nationalPhone = getIndianNationalPhone(phone);
+
+  const users = upsertSuperAdmin(getMockData<User[]>('users', []));
+  const existsLocal = users.some((u) => {
+    if (!u.phone) return false;
+    try {
+      return normalizeIndianPhone(u.phone) === normalizedPhone || getIndianNationalPhone(u.phone) === nationalPhone;
+    } catch {
+      return false;
+    }
+  });
+  if (existsLocal) return true;
+
+  try {
+    const qPhone = query(collection(db, 'users'), where('phone', '==', normalizedPhone));
+    const phoneSnap = await getDocs(qPhone);
+    if (!phoneSnap.empty) return true;
+
+    const qLegacyPhone = query(collection(db, 'users'), where('phone', '==', nationalPhone));
+    const legacyPhoneSnap = await getDocs(qLegacyPhone);
+    if (!legacyPhoneSnap.empty) return true;
+  } catch {
+    // Ignore remote read failures and rely on local fallback.
+  }
+
+  return false;
 };
 
 export const loginUser = async (email: string, password: string, phone?: string): Promise<User> => {
