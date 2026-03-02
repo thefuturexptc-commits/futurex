@@ -60,6 +60,7 @@ interface AdminVariantCard {
 
 const inputClass =
   'w-full p-2 border border-gray-300 bg-white text-gray-900 rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
+const createProductId = () => `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -563,7 +564,7 @@ export const AdminDashboard: React.FC = () => {
         await updateProduct(productData);
         pushAudit('Product Updated', `${productData.name} (${productData.id})`);
       } else {
-        await addProduct({ ...productData, id: `p_${Date.now()}`, rating: 0, reviewCount: 0 });
+        await addProduct({ ...productData, id: createProductId(), rating: 0, reviewCount: 0 });
         pushAudit('Product Created', productData.name);
       }
 
@@ -906,6 +907,26 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Full Description</label>
                   <RichTextEditor value={productForm.description || ''} onChange={(html) => setProductForm((prev) => ({ ...prev, description: html }))} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Key Features</label>
+                    <textarea
+                      className={`${inputClass} min-h-[120px]`}
+                      value={featuresString}
+                      onChange={(e) => setFeaturesString(e.target.value)}
+                      placeholder={'Add one feature per line\nExample: IP68 Waterproof'}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Specifications (Key: Value)</label>
+                    <textarea
+                      className={`${inputClass} min-h-[120px]`}
+                      value={specsString}
+                      onChange={(e) => setSpecsString(e.target.value)}
+                      placeholder={'Battery: 60mAh\nWater Resistance: IP68'}
+                    />
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-6">
                   <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
