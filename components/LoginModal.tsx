@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { initPhoneRecaptcha, loginUser, loginWithGoogle, loginWithPhoneOtp, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
+import { loginUser, loginWithGoogle, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -11,7 +11,6 @@ interface LoginModalProps {
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirectPath = '/profile' }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
-  const [loginMethod, setLoginMethod] = useState<'email' | 'otp'>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -37,17 +36,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
   }, [isOpen]);
 
   useEffect(() => {
-    if (isOpen) {
-      initPhoneRecaptcha('recaptcha-container').catch(() => {
-        // Errors are handled in sendPhoneOtp.
-      });
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
     if (!isOpen) {
       setMode('login');
-      setLoginMethod('email');
       setEmail('');
       setPassword('');
       setPhone('');
@@ -61,9 +51,23 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    if (!isOpen || !(otpSent && !otpVerified)) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'OTP verification in progress.';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [isOpen, otpSent, otpVerified]);
+
   if (!isOpen) return null;
 
   const handleSendOtp = async () => {
+    if (otpSent && !otpVerified) {
+      setError('OTP already sent. Please verify it first.');
+      return;
+    }
     if (!isValidIndianPhoneInput(phone)) {
       setError('Enter a valid Indian number (10-digit or +91 format)');
       return;
@@ -117,39 +121,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (loginMethod === 'email') {
-      if (!email.trim() || !password.trim()) {
-        setError('Enter email and password');
-        return;
-      }
-      setError('');
-      setLoading(true);
-      try {
-        const user = await loginUser(email.trim(), password);
-        login(user);
-        onClose();
-        navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : redirectPath);
-      } catch {
-        setError('Invalid email or password');
-      } finally {
-        setLoading(false);
-      }
-      return;
-    }
-
-    if (!otpVerified) {
-      setError('Please verify OTP first');
+    if (!email.trim() || !password.trim()) {
+      setError('Enter email and password');
       return;
     }
     setError('');
     setLoading(true);
     try {
-      const user = await loginWithPhoneOtp(phone);
+      const user = await loginUser(email.trim(), password);
       login(user);
       onClose();
       navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : redirectPath);
     } catch {
-      setError('No account found for this phone number');
+      setError('Invalid email or password');
     } finally {
       setLoading(false);
     }
@@ -215,27 +199,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
 
         <h3 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">{mode === 'login' ? 'Login' : 'Register'}</h3>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          {mode === 'login' ? 'Continue with Email + Password, Phone OTP, or Google.' : 'Register with Email + Password + Phone OTP.'}
+          {mode === 'login' ? 'Continue with Email + Password or Google.' : 'Register with Email + Password + Phone OTP.'}
         </p>
-
-        {mode === 'login' && (
-          <div className="mt-4 grid grid-cols-2 gap-2 bg-gray-100 dark:bg-white/10 p-1 rounded-xl">
-            <button
-              type="button"
-              onClick={() => { setLoginMethod('email'); setError(''); }}
-              className={`py-2 rounded-lg text-sm font-semibold transition-colors ${loginMethod === 'email' ? 'bg-white dark:bg-dark-surface text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
-            >
-              Email
-            </button>
-            <button
-              type="button"
-              onClick={() => { setLoginMethod('otp'); setError(''); }}
-              className={`py-2 rounded-lg text-sm font-semibold transition-colors ${loginMethod === 'otp' ? 'bg-white dark:bg-dark-surface text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
-            >
-              Phone OTP
-            </button>
-          </div>
-        )}
 
         <form className="mt-6 space-y-4" onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit}>
           {error && <p className="text-sm text-red-500 bg-red-100 rounded-md p-2">{error}</p>}
@@ -250,7 +215,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
             </button>
           )}
 
-          {(mode === 'register' || (mode === 'login' && loginMethod === 'email')) && (
+          {(mode === 'register' || mode === 'login') && (
             <input
               type="email"
               required
@@ -261,7 +226,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
             />
           )}
 
-          {(mode === 'register' || (mode === 'login' && loginMethod === 'email')) && (
+          {(mode === 'register' || mode === 'login') && (
             <input
               type="password"
               required
@@ -272,14 +237,19 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
             />
           )}
 
-          {(mode === 'register' || (mode === 'login' && loginMethod === 'otp')) && (
+          {mode === 'register' && (
             <>
               <input
                 type="tel"
                 required
                 placeholder="+91XXXXXXXXXX or 10-digit"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  setOtpSent(false);
+                  setOtpVerified(false);
+                  setOtp('');
+                }}
                 className="w-full p-3 border rounded-lg dark:bg-white/5 dark:border-white/10 dark:text-white"
               />
               <div className="flex gap-2">
@@ -307,7 +277,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
                 disabled={otpSending}
                 className="w-full rounded-xl border border-gray-300 dark:border-white/20 py-2 font-semibold text-gray-900 dark:text-white transition-all duration-300 hover:bg-gray-50 dark:hover:bg-white/5 disabled:opacity-60"
               >
-                {otpSending ? 'Sending OTP...' : 'Send SMS OTP (Live)'}
+                {otpSending ? 'Sending OTP...' : otpSent && !otpVerified ? 'OTP Sent' : 'Send SMS OTP (Live)'}
               </button>
               <div id="recaptcha-container" className="min-h-[78px]" />
               {otpVerified && <p className="text-xs text-green-600 font-semibold">OTP verified successfully</p>}
@@ -318,14 +288,13 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
             type="submit"
             disabled={
               loading ||
-              (mode === 'login' && loginMethod === 'otp' && !otpVerified) ||
               (mode === 'register' && !otpVerified)
             }
             className="w-full rounded-xl bg-primary-600 text-white py-3 font-semibold transition-all duration-300 hover:bg-primary-700 disabled:opacity-60"
           >
             {loading
               ? (mode === 'login' ? 'Logging in...' : 'Registering...')
-              : (mode === 'login' ? (loginMethod === 'email' ? 'Login with Email' : 'Login with OTP') : 'Register')}
+              : (mode === 'login' ? 'Login with Email' : 'Register')}
           </button>
         </form>
       </div>

@@ -25,6 +25,7 @@ const NavbarComponent: React.FC = () => {
 
   // Updated to point to specific routes
   const navLinks = [
+    { name: 'Home', path: '/' },
     { name: 'Bands', path: '/smart-bands' },
     { name: 'Rings', path: '/smart-rings' },
     { name: 'Fans', path: '/smart-fans' },

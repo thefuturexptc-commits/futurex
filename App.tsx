@@ -1,5 +1,5 @@
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Routes, Route, Navigate, BrowserRouter, useLocation, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -7,6 +7,7 @@ import { useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { CartDrawer } from './components/CartDrawer';
 import { LoginModal } from './components/LoginModal';
+import { SupportAssistant } from './components/SupportAssistant';
 import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
 
 const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
@@ -30,23 +31,6 @@ const ScrollToTop: React.FC = () => {
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [pathname]);
-  return null;
-};
-
-const RedirectOnRefresh: React.FC = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const navEntry = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined;
-    const isReload = navEntry?.type === 'reload';
-    if (isReload && location.pathname !== '/') {
-      navigate('/', { replace: true });
-    }
-    // Run only once on app boot so normal in-app navigation is not redirected.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   return null;
 };
 
@@ -93,8 +77,7 @@ const App: React.FC = () => {
           <BrowserRouter>
             <AuthModalProvider value={{ openLogin }}>
               <ScrollToTop />
-              <RedirectOnRefresh />
-              <div className="flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300">
+              <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />
                 <CartDrawer /> {/* Global Drawer Overlay */}
                 <LoginModal
@@ -130,6 +113,7 @@ const App: React.FC = () => {
                     </Routes>
                   </Suspense>
                 </main>
+                <SupportAssistant />
                 <footer className="bg-dark-surface border-t border-white/10 py-8 text-center text-gray-400 text-sm">
                   <p>&copy; {new Date().getFullYear()} TheFutureX. Premium Smart Technology.</p>
                 </footer>

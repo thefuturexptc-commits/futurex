@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { initPhoneRecaptcha, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
+import { registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
 import { Button } from '../components/ui/Button';
 
 export const Signup: React.FC = () => {
@@ -24,11 +24,18 @@ export const Signup: React.FC = () => {
     return /^\d{10}$/.test(digits) || /^91\d{10}$/.test(digits) || /^0\d{10}$/.test(digits);
   };
   useEffect(() => {
-    initPhoneRecaptcha('recaptcha-container').catch(() => {
-      // Errors are handled in sendPhoneOtp.
-    });
     return () => resetPhoneOtpFlow();
   }, []);
+
+  useEffect(() => {
+    if (!(otpSent && !otpVerified)) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = 'OTP verification in progress.';
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [otpSent, otpVerified]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,6 +70,10 @@ export const Signup: React.FC = () => {
   };
 
   const handleSendOtp = async () => {
+    if (otpSent && !otpVerified) {
+      setError('OTP already sent. Please verify it first.');
+      return;
+    }
     if (!isValidIndianPhoneInput(phone)) {
       setError("Enter a valid Indian number (10-digit or +91 format)");
       return;
@@ -136,10 +147,15 @@ export const Signup: React.FC = () => {
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
                   placeholder="+91XXXXXXXXXX or 10-digit"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    setOtpSent(false);
+                    setOtpVerified(false);
+                    setOtp('');
+                  }}
                 />
                 <Button type="button" size="sm" variant="outline" onClick={handleSendOtp} disabled={otpSending}>
-                  {otpSending ? 'Sending...' : 'Send SMS OTP (Live)'}
+                  {otpSending ? 'Sending...' : otpSent && !otpVerified ? 'OTP Sent' : 'Send SMS OTP (Live)'}
                 </Button>
               </div>
             </div>

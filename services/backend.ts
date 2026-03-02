@@ -9,6 +9,8 @@ import {
   GoogleAuthProvider,
   RecaptchaVerifier,
   signInWithPhoneNumber,
+  signInWithCredential,
+  PhoneAuthProvider,
   ConfirmationResult,
   getAuth as getAuthFromApp
 } from 'firebase/auth';
@@ -19,7 +21,7 @@ import {
 } from 'firebase/storage';
 import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
-import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings } from '../types';
+import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 
 // 🔒 ADDED: Production Safe URL Validator
@@ -100,6 +102,7 @@ const DEFAULT_ADMIN_PERMISSIONS: UserPermissions = {
   orders: true,
   inventory: true,
   categories: true,
+  support: true,
   admins: false,
   settings: false
 };
@@ -110,6 +113,7 @@ const DEFAULT_SUPERADMIN_PERMISSIONS: UserPermissions = {
   orders: true,
   inventory: true,
   categories: true,
+  support: true,
   admins: true,
   settings: true
 };
@@ -137,6 +141,8 @@ const applyRoleByEmail = (user: User): User => {
 
 let recaptchaVerifier: RecaptchaVerifier | null = null;
 let phoneConfirmationResult: ConfirmationResult | null = null;
+let phoneVerificationId: string | null = null;
+let recaptchaContainerInUse: string | null = null;
 let anonymousAuthAttempted = false;
 let anonymousAuthBlocked = false;
 
@@ -738,6 +744,16 @@ const mapPhoneAuthError = (error: unknown): string => {
       return 'This domain is not authorized for Firebase auth.';
     case 'auth/captcha-check-failed':
       return 'reCAPTCHA check failed. Refresh page and try again.';
+    case 'auth/invalid-app-credential':
+      return 'OTP session expired or invalid. Please resend OTP and try again.';
+    case 'auth/invalid-auth-event':
+      return 'Authentication session is invalid. Please resend OTP and try again.';
+    case 'auth/missing-app-credential':
+      return 'Missing app verification. Please resend OTP.';
+    case 'auth/code-expired':
+      return 'OTP expired. Please resend OTP and try again.';
+    case 'auth/invalid-verification-id':
+      return 'OTP session expired or invalid. Please resend OTP and try again.';
     case 'auth/network-request-failed':
       return 'Network error while contacting Firebase.';
     case 'auth/web-storage-unsupported':
@@ -751,21 +767,36 @@ const mapPhoneAuthError = (error: unknown): string => {
 
 export const resetPhoneOtpFlow = () => {
   phoneConfirmationResult = null;
+  phoneVerificationId = null;
+  recaptchaContainerInUse = null;
   if (recaptchaVerifier) {
     recaptchaVerifier.clear();
     recaptchaVerifier = null;
   }
   if (typeof window !== 'undefined') {
+    (window as any).confirmationResult = null;
+    (window as any).phoneVerificationId = null;
+    try {
+      window.sessionStorage.removeItem('phoneVerificationId');
+    } catch {
+      // no-op for restricted storage contexts
+    }
     (window as any).recaptchaVerifier = null;
   }
 };
 
 const ensureRecaptchaVerifier = async (containerId: string): Promise<RecaptchaVerifier> => {
-  if (recaptchaVerifier) {
+  if (recaptchaVerifier && recaptchaContainerInUse === containerId) {
     return recaptchaVerifier;
   }
 
-  if (!document.getElementById(containerId)) {
+  if (recaptchaVerifier) {
+    recaptchaVerifier.clear();
+    recaptchaVerifier = null;
+  }
+
+  const container = document.getElementById(containerId);
+  if (!container) {
     throw new Error(`reCAPTCHA container not found: #${containerId}`);
   }
 
@@ -773,6 +804,8 @@ const ensureRecaptchaVerifier = async (containerId: string): Promise<RecaptchaVe
     size: 'invisible',
     callback: () => {},
   });
+
+  recaptchaContainerInUse = containerId;
 
   await recaptchaVerifier.render();
 
@@ -785,6 +818,25 @@ export const initPhoneRecaptcha = async (recaptchaContainerId: string): Promise<
 
 export const sendPhoneOtp = async (phone: string, recaptchaContainerId: string): Promise<void> => {
   const formattedPhone = normalizeIndianPhone(phone);
+  phoneConfirmationResult = null;
+  phoneVerificationId = null;
+  if (typeof window !== 'undefined') {
+    (window as any).confirmationResult = null;
+    (window as any).phoneVerificationId = null;
+    try {
+      window.sessionStorage.removeItem('phoneVerificationId');
+    } catch {
+      // no-op for restricted storage contexts
+    }
+  }
+
+  // Always start with a fresh verifier token per OTP send attempt.
+  // Reusing older verifier sessions can trigger INVALID_APP_CREDENTIAL.
+  if (recaptchaVerifier) {
+    recaptchaVerifier.clear();
+    recaptchaVerifier = null;
+    recaptchaContainerInUse = null;
+  }
 
   try {
     const appVerifier = await ensureRecaptchaVerifier(recaptchaContainerId);
@@ -793,22 +845,73 @@ export const sendPhoneOtp = async (phone: string, recaptchaContainerId: string):
       formattedPhone,
       appVerifier
     );
+    phoneVerificationId = phoneConfirmationResult.verificationId || null;
+    if (typeof window !== 'undefined') {
+      (window as any).confirmationResult = phoneConfirmationResult;
+      (window as any).phoneVerificationId = phoneVerificationId;
+      try {
+        if (phoneVerificationId) {
+          window.sessionStorage.setItem('phoneVerificationId', phoneVerificationId);
+        }
+      } catch {
+        // no-op for restricted storage contexts
+      }
+    }
   } catch (error) {
+    const code = (error as { code?: string })?.code || '';
+    if (
+      code === 'auth/invalid-app-credential' ||
+      code === 'auth/invalid-auth-event' ||
+      code === 'auth/missing-app-credential' ||
+      code === 'auth/captcha-check-failed'
+    ) {
+      // Force fresh verifier on next attempt to avoid stale credential loops.
+      resetPhoneOtpFlow();
+    }
     throw new Error(mapPhoneAuthError(error));
   }
 };
 
 export const verifyPhoneOtp = async (code: string): Promise<void> => {
-  if (!phoneConfirmationResult) {
+  const activeVerificationId =
+    phoneVerificationId ||
+    (typeof window !== 'undefined' ? (window as any).phoneVerificationId || window.sessionStorage.getItem('phoneVerificationId') : null);
+
+  if (!activeVerificationId) {
     throw new Error('Please send OTP first');
   }
-  if (!/^\d{6}$/.test(code)) {
+  const normalizedCode = code.trim();
+  if (!/^\d{6}$/.test(normalizedCode)) {
     throw new Error('Invalid OTP');
   }
   try {
-    await phoneConfirmationResult.confirm(code);
+    const credential = PhoneAuthProvider.credential(activeVerificationId, normalizedCode);
+    await signInWithCredential(auth, credential);
     phoneConfirmationResult = null;
+    phoneVerificationId = null;
+    if (typeof window !== 'undefined') {
+      (window as any).confirmationResult = null;
+      (window as any).phoneVerificationId = null;
+      try {
+        window.sessionStorage.removeItem('phoneVerificationId');
+      } catch {
+        // no-op for restricted storage contexts
+      }
+    }
   } catch (error) {
+    // Temporary diagnostics to pinpoint Firebase OTP credential rejection.
+    // Remove once phone auth is stable in production.
+    console.error('Phone OTP send failed', {
+      code: (error as { code?: string })?.code,
+      message: (error as { message?: string })?.message,
+      customData: (error as { customData?: unknown })?.customData,
+      phone: formattedPhone,
+      container: recaptchaContainerId,
+    });
+    const code = (error as { code?: string })?.code || '';
+    if (code === 'auth/invalid-verification-code') {
+      throw new Error('Incorrect OTP');
+    }
     throw new Error(mapPhoneAuthError(error));
   }
 };
@@ -1172,6 +1275,71 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
         }
       }
   } catch (e) { }
+};
+
+// --- Support Chat Service ---
+
+export const getSupportChats = async (): Promise<SupportChatSession[]> => {
+  const local = getMockData<SupportChatSession[]>('support_chats', []);
+  try {
+    await ensureFirebaseConnection();
+    const snapshot = await getDocs(collection(db, 'support_chats'));
+    const remote: SupportChatSession[] = [];
+    snapshot.forEach((chatDoc) => {
+      remote.push({ ...(chatDoc.data() as SupportChatSession), id: chatDoc.id });
+    });
+    if (remote.length > 0) {
+      setMockData('support_chats', remote);
+      return remote.sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+    }
+  } catch (e) { }
+  return [...local].sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+};
+
+export const getSupportChatsByUserId = async (userId: string): Promise<SupportChatSession[]> => {
+  const all = await getSupportChats();
+  return all.filter((chat) => chat.userId === userId);
+};
+
+export const upsertSupportChat = async (session: SupportChatSession): Promise<void> => {
+  const cleanSession = deepSanitize(session) as SupportChatSession;
+  const local = getMockData<SupportChatSession[]>('support_chats', []);
+  const idx = local.findIndex((item) => item.id === cleanSession.id);
+  if (idx >= 0) local[idx] = cleanSession;
+  else local.push(cleanSession);
+  setMockData('support_chats', local);
+
+  try {
+    await ensureFirebaseConnection();
+    await setDoc(doc(db, 'support_chats', cleanSession.id), cleanSession, { merge: true });
+  } catch (e) { }
+};
+
+export const appendSupportChatMessage = async (
+  sessionId: string,
+  message: SupportChatMessage,
+  metadata?: Partial<SupportChatSession>
+): Promise<SupportChatSession | undefined> => {
+  const existing = (await getSupportChats()).find((chat) => chat.id === sessionId);
+  if (!existing) return undefined;
+  const next: SupportChatSession = {
+    ...existing,
+    ...metadata,
+    messages: [...(existing.messages || []), message],
+    lastMessageAt: message.timestamp,
+  };
+  await upsertSupportChat(next);
+  return next;
+};
+
+export const updateSupportChatSession = async (
+  sessionId: string,
+  patch: Partial<SupportChatSession>
+): Promise<void> => {
+  const existing = (await getSupportChats()).find((chat) => chat.id === sessionId);
+  if (!existing) return;
+  const next = { ...existing, ...patch };
+  await upsertSupportChat(next);
 };
 
 // --- Settings Service ---

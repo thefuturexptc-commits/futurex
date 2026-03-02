@@ -16,6 +16,60 @@ export interface ProductColor {
   sold: number;
 }
 
+export interface ProductVariantOption {
+  color: string;
+  price: number;
+  images: string[];
+  sizes?: string[];
+  videoUrl?: string;
+  hex?: string;
+}
+
+export interface ProductPublicReview {
+  name: string;
+  rating: number;
+  date?: string;
+  comment: string;
+}
+
+export interface SupportChatMessage {
+  id: string;
+  sender: 'user' | 'bot' | 'admin';
+  text: string;
+  timestamp: string;
+  type?: 'text' | 'products' | 'loading_products' | 'compare';
+  products?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    stock: number;
+    isNew?: boolean;
+    image?: string;
+    warranty?: string;
+    battery?: string;
+  }>;
+  compareProducts?: Array<{
+    id: string;
+    name: string;
+    price: number;
+    stock: number;
+    warranty?: string;
+    battery?: string;
+  }>;
+}
+
+export interface SupportChatSession {
+  id: string;
+  userId: string;
+  userEmail?: string;
+  userName?: string;
+  status: 'open' | 'resolved';
+  satisfied: boolean;
+  lastMessageAt: string;
+  createdAt: string;
+  messages: SupportChatMessage[];
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -32,6 +86,11 @@ export interface Product {
   colors?: ProductColor[];
   inStock: boolean;
   images: string[];
+  imagesByColor?: Record<string, string[]>;
+  videoByColor?: Record<string, string>;
+  prices?: Record<string, number>;
+  variants?: ProductVariantOption[];
+  reviews?: ProductPublicReview[];
   isFeatured?: boolean;
   isBestSeller?: boolean;
   variations?: ProductVariation[];
@@ -72,6 +131,7 @@ export interface UserPermissions {
   categories?: boolean;
   admins?: boolean;
   settings?: boolean;
+  support?: boolean;
 }
 
 export interface User {

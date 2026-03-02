@@ -31,10 +31,12 @@ import { InventoryTab } from '../components/admin/tabs/InventoryTab';
 import { ProductsTab } from '../components/admin/tabs/ProductsTab';
 import { OrdersTab } from '../components/admin/tabs/OrdersTab';
 import { CategoriesTab } from '../components/admin/tabs/CategoriesTab';
+import { ReviewsTab } from '../components/admin/tabs/ReviewsTab';
+import { SupportTab } from '../components/admin/tabs/SupportTab';
 import { AdminsTab } from '../components/admin/tabs/AdminsTab';
 import { SettingsTab } from '../components/admin/tabs/SettingsTab';
 
-type TabKey = 'analytics' | 'inventory' | 'products' | 'orders' | 'categories' | 'admins' | 'settings';
+type TabKey = 'analytics' | 'inventory' | 'products' | 'orders' | 'categories' | 'reviews' | 'support' | 'admins' | 'settings';
 
 interface ConfirmState {
   open: boolean;
@@ -111,7 +113,6 @@ export const AdminDashboard: React.FC = () => {
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
   const [hasVariants, setHasVariants] = useState(false);
-  const [shortDescription, setShortDescription] = useState('');
   const [variantCards, setVariantCards] = useState<AdminVariantCard[]>([]);
 
   const [newCategory, setNewCategory] = useState('');
@@ -124,6 +125,7 @@ export const AdminDashboard: React.FC = () => {
     orders: true,
     inventory: true,
     categories: true,
+    support: true,
     admins: false,
     settings: false,
   });
@@ -169,6 +171,8 @@ export const AdminDashboard: React.FC = () => {
         products: 'products',
         orders: 'orders',
         categories: 'categories',
+        reviews: 'products',
+        support: 'orders',
         admins: 'admins',
         settings: 'settings',
       };
@@ -186,6 +190,8 @@ export const AdminDashboard: React.FC = () => {
     { key: 'products', label: 'Products' },
     { key: 'orders', label: 'Orders' },
     { key: 'categories', label: 'Categories' },
+    { key: 'reviews', label: 'Reviews' },
+    { key: 'support', label: 'Support' },
     { key: 'admins', label: 'Admins' },
     { key: 'settings', label: 'Settings' },
   ];
@@ -267,7 +273,6 @@ export const AdminDashboard: React.FC = () => {
 
   const handleOpenAddProduct = () => {
     setProductForm(initialProductState);
-    setShortDescription('');
     setFeaturesString('');
     setSpecsString('');
     setVariations([]);
@@ -312,7 +317,6 @@ export const AdminDashboard: React.FC = () => {
       colors: product.colors || [],
       inStock: product.inStock ?? stock - reservedStock > 0,
     });
-    setShortDescription(((product as unknown as { shortDescription?: string }).shortDescription || '').toString());
     setFeaturesString(product.features?.join('\n') || '');
     setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
     setVariations(product.variations || []);
@@ -553,7 +557,6 @@ export const AdminDashboard: React.FC = () => {
         videoUrl: finalVideoUrl,
         features: cleanFeatures,
         specs: cleanSpecs,
-        ...(shortDescription ? { shortDescription } : {}),
       } as Product;
 
       if (isEditing && productData.id) {
@@ -660,6 +663,7 @@ export const AdminDashboard: React.FC = () => {
         orders: true,
         inventory: true,
         categories: true,
+        support: true,
         admins: false,
         settings: false,
       });
@@ -725,11 +729,12 @@ export const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-4 py-10 text-gray-900 dark:text-white">
+    <div className="min-h-screen max-w-7xl mx-auto px-4 py-10 text-gray-900 dark:text-white bg-gradient-to-b from-rose-50/50 via-amber-50/40 to-sky-50/50 dark:from-transparent dark:via-transparent dark:to-transparent">
       <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">Admin Dashboard</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Enterprise control center for products, orders, and growth analytics</p>
+          <p className="text-xs font-semibold uppercase tracking-widest text-rose-600 dark:text-rose-300 mt-2">Holi Launch Theme</p>
         </div>
         <Button size="sm" variant="outline" onClick={refreshData}>Refresh Data</Button>
       </div>
@@ -800,6 +805,12 @@ export const AdminDashboard: React.FC = () => {
           onAddCategory={handleAddCategory}
           onDeleteCategory={handleDeleteCategory}
         />
+      )}
+      {activeTab === 'reviews' && (
+        <ReviewsTab products={products} />
+      )}
+      {activeTab === 'support' && (
+        <SupportTab />
       )}
       {activeTab === 'admins' && (
         <AdminsTab
@@ -891,10 +902,6 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Band Type (Optional)</label>
                   <input className={inputClass} value={productForm.bandType || ''} onChange={(e) => setProductForm({ ...productForm, bandType: e.target.value })} placeholder="e.g. Sport Loop" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Short Description</label>
-                  <input className={inputClass} value={shortDescription} onChange={(e) => setShortDescription(e.target.value)} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Full Description</label>

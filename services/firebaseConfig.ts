@@ -2,7 +2,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
+import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth';
 
 // Replace these with your actual Firebase project configuration
 // or ensure these environment variables are set in your .env file
@@ -28,8 +28,9 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 
+void setPersistence(auth, browserLocalPersistence).catch(() => {
+  // Keep default persistence if explicit local persistence cannot be set.
+});
+
 export default app;
 
-console.log("🔥 PROJECT ID:", app.options.projectId);
-console.log("🔥 AUTH DOMAIN:", app.options.authDomain);
-console.log("🔥 API KEY:", app.options.apiKey);

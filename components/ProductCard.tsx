@@ -32,14 +32,16 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
 
   return (
     <div className="group relative rounded-[2rem] overflow-hidden text-white transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:scale-[1.03] bg-dark-surface border border-white/10">
-      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-white/5 ${imageAspectClassName || (compact ? 'aspect-[5/6]' : 'aspect-[4/5]')}`}>
+      <div className="pointer-events-none absolute -inset-[1px] rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20" />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent opacity-70" />
+      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-gray-100 dark:bg-white/5 ${imageAspectClassName || (compact ? 'aspect-[5/6]' : 'aspect-[4/5]')}`}>
         <img
           src={previewImage || defaultImage}
           alt={product.name}
           loading="lazy"
           width={640}
           height={800}
-          className="w-full h-full object-cover object-center group-hover:scale-105 transition-all duration-300 ease-out"
+          className="w-full h-full object-contain object-center p-2 group-hover:scale-105 transition-all duration-300 ease-out"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Link>
