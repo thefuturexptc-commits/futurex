@@ -199,12 +199,12 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
 
         <h3 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">{mode === 'login' ? 'Login' : 'Register'}</h3>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-          {mode === 'login' ? 'Continue with Email + Password or Google.' : 'Register with Email + Password + Phone OTP.'}
+          {mode === 'login' ? 'Continue with Email + Password or Google.' : 'Register with Google or Email + Password + Phone OTP.'}
         </p>
 
         <form className="mt-6 space-y-4" onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit}>
           {error && <p className="text-sm text-red-500 bg-red-100 rounded-md p-2">{error}</p>}
-          {mode === 'login' && (
+          {(mode === 'login' || mode === 'register') && (
             <button
               type="button"
               onClick={handleGoogleLogin}

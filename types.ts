@@ -17,12 +17,17 @@ export interface ProductColor {
 }
 
 export interface ProductVariantOption {
-  color: string;
+  colorName: string;
+  colorHex: string;
   price: number;
   images: string[];
-  sizes?: string[];
-  videoUrl?: string;
+  sizes: Array<{ size: string; stock: number }>;
+  // Backward-compatible aliases for old data
+  color?: string;
   hex?: string;
+  size?: string;
+  stock?: number;
+  videoUrl?: string;
 }
 
 export interface ProductPublicReview {
@@ -90,6 +95,7 @@ export interface Product {
   videoByColor?: Record<string, string>;
   prices?: Record<string, number>;
   variants?: ProductVariantOption[];
+  defaultVariant?: string;
   reviews?: ProductPublicReview[];
   isFeatured?: boolean;
   isBestSeller?: boolean;
@@ -105,6 +111,7 @@ export interface Product {
   quantity?: number;
   selectedColorName?: string;
   selectedColorHex?: string;
+  selectedSize?: string;
 }
 
 export const AVAILABLE_COLORS = [

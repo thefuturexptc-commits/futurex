@@ -23,6 +23,16 @@ export const ProductsTab: React.FC<Props> = ({ products, categories, isLoading, 
   const pageSize = 10;
 
   const filtered = useMemo(() => {
+    const getTotalStock = (product: Product) => {
+      if (product.variants?.length) {
+        return product.variants.reduce(
+          (sum, variant) => sum + (variant.sizes || []).reduce((sizeSum, sizeRow) => sizeSum + Number(sizeRow.stock || 0), 0),
+          0
+        );
+      }
+      return Number(product.stock || 0);
+    };
+
     const q = query.toLowerCase().trim();
     const rows = products.filter((p) => {
       const matchText = !q || p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q);
@@ -32,7 +42,7 @@ export const ProductsTab: React.FC<Props> = ({ products, categories, isLoading, 
 
     return [...rows].sort((a, b) => {
       if (sortBy === 'price') return (b.salePrice || b.price) - (a.salePrice || a.price);
-      if (sortBy === 'stock') return b.stock - a.stock;
+      if (sortBy === 'stock') return getTotalStock(b) - getTotalStock(a);
       if (sortBy === 'bestSeller') return Number(Boolean(b.isBestSeller)) - Number(Boolean(a.isBestSeller));
       return Number(b.id.split('_')[1] || 0) - Number(a.id.split('_')[1] || 0);
     });
@@ -102,10 +112,16 @@ export const ProductsTab: React.FC<Props> = ({ products, categories, isLoading, 
             </thead>
             <tbody>
               {paged.map((p, idx) => {
-                const available = p.stock - (p.reservedStock || 0);
+                const total = p.variants?.length
+                  ? p.variants.reduce(
+                      (sum, variant) =>
+                        sum + (variant.sizes || []).reduce((sizeSum, sizeRow) => sizeSum + Number(sizeRow.stock || 0), 0),
+                      0
+                    )
+                  : Number(p.stock || 0);
+                const available = total - (p.reservedStock || 0);
                 const reserved = Number(p.reservedStock || 0);
                 const sold = Number(p.sold || 0);
-                const total = Number(p.stock || 0);
                 const stockStatus = available <= 0 ? 'Out of Stock' : available < 10 ? 'Low Stock' : 'In Stock';
                 return (
                   <tr

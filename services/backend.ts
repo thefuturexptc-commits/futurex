@@ -92,6 +92,14 @@ const isAbortLikeError = (error: unknown): boolean => {
   return message.includes('abort');
 };
 
+const isPermissionDeniedError = (error: unknown): boolean => {
+  if (!error) return false;
+  const code = (error as { code?: string })?.code || '';
+  const message = error instanceof Error ? error.message : String(error);
+  const lowered = `${code} ${message}`.toLowerCase();
+  return lowered.includes('permission-denied') || lowered.includes('missing or insufficient permissions');
+};
+
 const PRODUCTS_CACHE_TTL_MS = 15000;
 let productsCache: { data: Product[]; ts: number } | null = null;
 let productsInFlight: Promise<Product[]> | null = null;
@@ -148,45 +156,138 @@ let anonymousAuthBlocked = false;
 
 const normalizeProductColors = (product: Product): Product => {
   const rawColors = Array.isArray(product.colors) ? product.colors : [];
-  const mappedColors: ProductColor[] = rawColors
-    .map((color: any) => {
-      if (typeof color === 'string') {
-        return {
-          name: color,
-          hex: '#6b7280',
-          images: [...(product.images || [])],
-          stock: Number(product.stock || 0),
-          reservedStock: 0,
-          sold: 0
-        };
-      }
+  const existingColorMap = new Map<string, ProductColor>(
+    rawColors
+      .map((c: any) => {
+        if (typeof c === 'string') return null;
+        const normalizedName = String(c?.name || '').trim().toLowerCase();
+        if (!normalizedName) return null;
+        return [
+          normalizedName,
+          {
+            name: String(c?.name || 'Default'),
+            hex: String(c?.hex || '#6b7280'),
+            images: Array.isArray(c?.images) && c.images.length > 0 ? c.images : [...(product.images || [])],
+            stock: Number(c?.stock ?? 0),
+            reservedStock: Number(c?.reservedStock || 0),
+            sold: Number(c?.sold || 0),
+          } as ProductColor,
+        ] as const;
+      })
+      .filter(Boolean) as Array<readonly [string, ProductColor]>
+  );
+
+  const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+  const mappedFromVariants = rawVariants
+    .map((variant: any) => {
+      const colorName = String(variant?.colorName || variant?.color || '').trim();
+      if (!colorName) return null;
+
+      const rawSizes = Array.isArray(variant?.sizes) ? variant.sizes : [];
+      const normalizedSizes = rawSizes
+        .map((sizeEntry: any) => {
+          if (typeof sizeEntry === 'string') {
+            return { size: sizeEntry.trim(), stock: Number(variant?.stock || 0) };
+          }
+          return {
+            size: String(sizeEntry?.size || '').trim(),
+            stock: Number(sizeEntry?.stock || 0),
+          };
+        })
+        .filter((entry: { size: string; stock: number }) => entry.size !== '');
+
+      const fallbackStock = Number(variant?.stock || 0);
+      const sizes =
+        normalizedSizes.length > 0
+          ? normalizedSizes
+          : [{ size: String(variant?.size || 'Standard').trim() || 'Standard', stock: fallbackStock }];
 
       return {
-        name: String(color?.name || 'Default'),
-        hex: String(color?.hex || '#6b7280'),
-        images: Array.isArray(color?.images) && color.images.length > 0 ? color.images : [...(product.images || [])],
-        stock: Number(color?.stock ?? product.stock ?? 0),
-        reservedStock: Number(color?.reservedStock || 0),
-        sold: Number(color?.sold || 0)
+        colorName,
+        colorHex: String(variant?.colorHex || variant?.hex || '#6b7280'),
+        price: Number(variant?.price ?? product.salePrice ?? product.price ?? 0),
+        images: Array.isArray(variant?.images) && variant.images.length > 0 ? variant.images : [...(product.images || [])],
+        sizes,
+        videoUrl: String(variant?.videoUrl || ''),
       };
     })
-    .filter((c) => c.name.trim() !== '');
+    .filter(Boolean) as Product['variants'];
 
-  if (mappedColors.length === 0) {
-    return { ...product, colors: [] };
-  }
+  const mappedVariants: Product['variants'] =
+    mappedFromVariants.length > 0
+      ? mappedFromVariants
+      : rawColors
+          .map((color: any) => {
+            const colorName = String(typeof color === 'string' ? color : color?.name || '').trim();
+            if (!colorName) return null;
+            const stock = Number(typeof color === 'string' ? product.stock || 0 : color?.stock ?? product.stock ?? 0);
+            return {
+              colorName,
+              colorHex: String(typeof color === 'string' ? '#6b7280' : color?.hex || '#6b7280'),
+              price: Number(product.salePrice || product.price || 0),
+              images:
+                typeof color === 'string'
+                  ? [...(product.images || [])]
+                  : Array.isArray(color?.images) && color.images.length > 0
+                  ? color.images
+                  : [...(product.images || [])],
+              sizes: [{ size: 'Standard', stock }],
+            };
+          })
+          .filter(Boolean) as Product['variants'];
 
-  const aggregateStock = mappedColors.reduce((sum, c) => sum + Number(c.stock || 0), 0);
-  const aggregateReserved = mappedColors.reduce((sum, c) => sum + Number(c.reservedStock || 0), 0);
-  const aggregateSold = mappedColors.reduce((sum, c) => sum + Number(c.sold || 0), 0);
+  const mappedColors: ProductColor[] = mappedVariants.map((variant) => {
+    const normalizedName = String(variant.colorName || '').trim().toLowerCase();
+    const existing = existingColorMap.get(normalizedName);
+    const computedStock = (variant.sizes || []).reduce((sum, entry) => sum + Number(entry.stock || 0), 0);
+    return {
+      name: variant.colorName,
+      hex: variant.colorHex || '#6b7280',
+      images: variant.images?.length ? variant.images : [...(product.images || [])],
+      stock: computedStock,
+      reservedStock: Number(existing?.reservedStock || 0),
+      sold: Number(existing?.sold || 0),
+    };
+  });
+
+  const mappedVariations = mappedVariants.flatMap((variant, variantIdx) =>
+    (variant.sizes || []).map((sizeEntry, sizeIdx) => ({
+      id: `v_${variantIdx}_${sizeIdx}`,
+      size: sizeEntry.size,
+      weight: product.weight || '',
+      color: variant.colorName,
+      price: Number(variant.price || product.salePrice || product.price || 0),
+      stock: Number(sizeEntry.stock || 0),
+    }))
+  );
+
+  const aggregateStock =
+    mappedColors.length > 0
+      ? mappedColors.reduce((sum, c) => sum + Number(c.stock || 0), 0)
+      : Number(product.stock || 0);
+  const aggregateReserved =
+    mappedColors.length > 0
+      ? mappedColors.reduce((sum, c) => sum + Number(c.reservedStock || 0), 0)
+      : Number(product.reservedStock || 0);
+  const aggregateSold =
+    mappedColors.length > 0
+      ? mappedColors.reduce((sum, c) => sum + Number(c.sold || 0), 0)
+      : Number(product.sold || 0);
+  const defaultVariant =
+    mappedVariants.find((variant) => variant.colorName === product.defaultVariant)?.colorName ||
+    mappedVariants[0]?.colorName ||
+    '';
 
   return {
     ...product,
+    variants: mappedVariants,
+    defaultVariant,
     colors: mappedColors,
+    variations: mappedVariations,
     stock: aggregateStock,
     reservedStock: aggregateReserved,
     sold: aggregateSold,
-    inStock: aggregateStock - aggregateReserved > 0
+    inStock: aggregateStock - aggregateReserved > 0,
   };
 };
 
@@ -239,10 +340,34 @@ export const addAuditLog = async (entry: {
   actor: string;
   details?: string;
 }): Promise<void> => {
-  await addDoc(collection(db, 'admin_audit_logs'), {
-    ...entry,
+  const nextEntry = {
+    id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    action: entry.action,
+    actor: entry.actor,
+    details: entry.details,
     timestamp: new Date().toISOString(),
-  });
+  };
+  const localLogs = getMockData<Array<{
+    id: string;
+    action: string;
+    actor: string;
+    details?: string;
+    timestamp: string;
+  }>>('admin_audit_logs', []);
+  setMockData('admin_audit_logs', [nextEntry, ...localLogs].slice(0, 30));
+
+  try {
+    await addDoc(collection(db, 'admin_audit_logs'), {
+      action: nextEntry.action,
+      actor: nextEntry.actor,
+      details: nextEntry.details,
+      timestamp: nextEntry.timestamp,
+    });
+  } catch (error) {
+    if (!isPermissionDeniedError(error)) {
+      console.warn('Failed to write admin audit log to Firebase:', error);
+    }
+  }
 };
 
 export const getAuditLogs = async (): Promise<Array<{
@@ -252,27 +377,44 @@ export const getAuditLogs = async (): Promise<Array<{
   details?: string;
   timestamp: string;
 }>> => {
-  const q = query(
-    collection(db, 'admin_audit_logs'),
-    orderBy('timestamp', 'desc'),
-    limit(30)
-  );
-  const snapshot = await getDocs(q);
-  return snapshot.docs.map((auditDoc) => {
-    const data = auditDoc.data() as {
-      action?: string;
-      actor?: string;
-      details?: string;
-      timestamp?: string;
-    };
-    return {
-      id: auditDoc.id,
-      action: data.action || '',
-      actor: data.actor || 'Unknown',
-      details: data.details,
-      timestamp: data.timestamp || new Date(0).toISOString(),
-    };
-  });
+  const localLogs = getMockData<Array<{
+    id: string;
+    action: string;
+    actor: string;
+    details?: string;
+    timestamp: string;
+  }>>('admin_audit_logs', []);
+
+  try {
+    const q = query(
+      collection(db, 'admin_audit_logs'),
+      orderBy('timestamp', 'desc'),
+      limit(30)
+    );
+    const snapshot = await getDocs(q);
+    const remoteLogs = snapshot.docs.map((auditDoc) => {
+      const data = auditDoc.data() as {
+        action?: string;
+        actor?: string;
+        details?: string;
+        timestamp?: string;
+      };
+      return {
+        id: auditDoc.id,
+        action: data.action || '',
+        actor: data.actor || 'Unknown',
+        details: data.details,
+        timestamp: data.timestamp || new Date(0).toISOString(),
+      };
+    });
+    setMockData('admin_audit_logs', remoteLogs);
+    return remoteLogs;
+  } catch (error) {
+    if (!isPermissionDeniedError(error)) {
+      console.warn('Failed to read admin audit logs from Firebase:', error);
+    }
+    return [...localLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }
 };
 
 // --- Helper: Seed Database ---
@@ -1045,11 +1187,22 @@ export const deleteAdmin = async (adminId: string): Promise<void> => {
 };
 
 export const getAllUsers = async (): Promise<User[]> => {
-    await ensureFirebaseConnection();
-    const querySnapshot = await withTimeout(getDocs(collection(db, 'users')), 1500);
-    const fbUsers: User[] = [];
-    querySnapshot.forEach((userDoc) => fbUsers.push(userDoc.data() as User));
-    return fbUsers;
+    const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+    setMockData('users', localUsers);
+    try {
+      await ensureFirebaseConnection();
+      const querySnapshot = await withTimeout(getDocs(collection(db, 'users')), 1500);
+      const fbUsers: User[] = [];
+      querySnapshot.forEach((userDoc) => fbUsers.push(applyRoleByEmail(userDoc.data() as User)));
+      const normalized = upsertSuperAdmin(fbUsers);
+      setMockData('users', normalized);
+      return normalized;
+    } catch (error) {
+      if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
+        console.warn('Failed to fetch users from Firebase:', error);
+      }
+      return localUsers;
+    }
 };
 
 export const verifyIndianPincode = async (
@@ -1149,12 +1302,27 @@ export const createOrder = async (userId: string, items: any[], total: number, a
 
 // New: Explicitly fetch all orders for Admin
 export const getAllOrders = async (): Promise<Order[]> => {
-    await ensureFirebaseConnection();
-    const ordersQuery = query(collection(db, 'orders'));
-    const querySnapshot = await getDocs(ordersQuery);
-    const fbOrders: Order[] = [];
-    querySnapshot.forEach((orderDoc) => fbOrders.push({ ...(orderDoc.data() as Order), id: orderDoc.id }));
-    return fbOrders.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    const localOrders = getMockData<Order[]>('orders', []);
+    try {
+      await ensureFirebaseConnection();
+      const ordersQuery = query(collection(db, 'orders'));
+      const querySnapshot = await withTimeout(getDocs(ordersQuery), 2500);
+      const fbOrders: Order[] = [];
+      querySnapshot.forEach((orderDoc) => fbOrders.push({ ...(orderDoc.data() as Order), id: orderDoc.id }));
+
+      const combined = [...fbOrders];
+      localOrders.forEach((localOrder) => {
+        if (!combined.find((remoteOrder) => remoteOrder.id === localOrder.id)) {
+          combined.push(localOrder);
+        }
+      });
+      return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    } catch (error) {
+      if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
+        console.warn('Failed to fetch orders from Firebase:', error);
+      }
+      return [...localOrders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    }
 };
 
 export const getUserOrders = async (userId: string): Promise<Order[]> => {

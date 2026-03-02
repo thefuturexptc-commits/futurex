@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
+import { loginWithGoogle, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
 import { Button } from '../components/ui/Button';
 
 export const Signup: React.FC = () => {
@@ -69,6 +69,20 @@ export const Signup: React.FC = () => {
     }
   };
 
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const user = await loginWithGoogle();
+      login(user);
+      navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : redirectPath);
+    } catch (err: any) {
+      setError(err?.message || 'Google signup failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSendOtp = async () => {
     if (otpSent && !otpVerified) {
       setError('OTP already sent. Please verify it first.');
@@ -117,11 +131,20 @@ export const Signup: React.FC = () => {
           <p className="text-center text-xs tracking-[0.25em] font-bold text-cyan-600 dark:text-cyan-300 uppercase">Identity Registration</p>
           <h2 className="mt-3 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Create Account</h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Verify phone via OTP and activate your access
+            Verify phone via OTP or continue with Google
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && <div className="text-red-500 text-sm text-center bg-red-100 p-2 rounded">{error}</div>}
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={handleGoogleSignup}
+            disabled={loading}
+          >
+            Continue with Google
+          </Button>
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>

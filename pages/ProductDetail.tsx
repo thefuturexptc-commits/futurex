@@ -28,12 +28,12 @@ interface DisplayReview {
 }
 
 interface DisplayVariant {
-  color: string;
+  colorName: string;
+  colorHex: string;
   price: number;
   images: string[];
-  sizes: string[];
+  sizes: Array<{ size: string; stock: number }>;
   videoUrl?: string;
-  hex?: string;
 }
 
 const VIDEO_REGEX = /\.(mp4|webm|ogg|mov|m4v)$/i;
@@ -101,66 +101,57 @@ export const ProductDetail: React.FC = () => {
 
   const allVariants = useMemo<DisplayVariant[]>(() => {
     if (!product) return [];
-
-    const normalizeSizes = (sizes: string[]) => Array.from(new Set(sizes.filter(Boolean)));
-    const allVariationSizes = normalizeSizes((product.variations || []).map((v) => String(v.size || '')).filter(Boolean));
     const basePrice = Number(product.salePrice || product.price || 0);
 
-    const getSizesForColor = (colorName: string) => {
-      const exact = normalizeSizes(
-        (product.variations || [])
-          .filter((v) => (v.color || '').toLowerCase() === colorName.toLowerCase())
-          .map((v) => String(v.size || ''))
-          .filter(Boolean)
-      );
-      if (exact.length) return exact;
-      if (allVariationSizes.length) return allVariationSizes;
-      return ['Standard'];
-    };
-
     if (product.variants?.length) {
-      return product.variants.map((variant: ProductVariantOption) => ({
-        color: variant.color,
-        price: Number(variant.price || basePrice),
-        images: variant.images?.length ? variant.images : product.images,
-        sizes: variant.sizes?.length ? normalizeSizes(variant.sizes) : getSizesForColor(variant.color),
-        videoUrl: variant.videoUrl || product.videoByColor?.[variant.color] || '',
-        hex: variant.hex || product.colors?.find((c) => c.name === variant.color)?.hex,
-      }));
+      return product.variants.map((variant: ProductVariantOption) => {
+        const colorName = String(variant.colorName || variant.color || '').trim() || 'Default';
+        const rawSizes = Array.isArray(variant.sizes) ? variant.sizes : [];
+        const sizes =
+          rawSizes.length > 0
+            ? rawSizes
+                .map((sizeRow) => ({
+                  size: String(sizeRow.size || '').trim(),
+                  stock: Number(sizeRow.stock || 0),
+                }))
+                .filter((sizeRow) => sizeRow.size !== '')
+            : [{ size: String(variant.size || 'Standard').trim() || 'Standard', stock: Number(variant.stock || 0) }];
+
+        return {
+          colorName,
+          colorHex: String(variant.colorHex || variant.hex || '#9CA3AF'),
+          price: Number(variant.price || basePrice),
+          images: variant.images?.length ? variant.images : product.images,
+          sizes: sizes.length ? sizes : [{ size: 'Standard', stock: 0 }],
+          videoUrl: variant.videoUrl || product.videoByColor?.[colorName] || '',
+        };
+      });
     }
 
     if (product.colors?.length) {
       return product.colors.map((color) => ({
-        color: color.name,
+        colorName: color.name,
+        colorHex: color.hex || '#9CA3AF',
         price: Number(product.prices?.[color.name] || basePrice),
         images: color.images?.length ? color.images : product.imagesByColor?.[color.name] || product.images,
-        sizes: getSizesForColor(color.name),
+        sizes: [{ size: 'Standard', stock: Number(color.stock || 0) }],
         videoUrl: product.videoByColor?.[color.name] || '',
-        hex: color.hex,
       }));
     }
 
-    return [
-      {
-        color: 'Default',
-        price: basePrice,
-        images: product.images?.length ? product.images : ['https://picsum.photos/700'],
-        sizes: allVariationSizes.length ? allVariationSizes : ['Standard'],
-        videoUrl: product.videoUrl || '',
-        hex: '#9CA3AF',
-      },
-    ];
+    return [{
+      colorName: 'Default',
+      colorHex: '#9CA3AF',
+      price: basePrice,
+      images: product.images?.length ? product.images : ['https://picsum.photos/700'],
+      sizes: [{ size: 'Standard', stock: Number(product.stock || 0) }],
+      videoUrl: product.videoUrl || '',
+    }];
   }, [product]);
-
-  const normalizedCategory = (product?.category || '').toLowerCase();
-  const isRingProduct = normalizedCategory.includes('ring');
-  const isBandProduct = normalizedCategory.includes('band');
-  const isFanProduct = normalizedCategory.includes('fan');
-  const isMonitoringProduct = normalizedCategory.includes('monitor');
 
   const selectedVariant = useMemo(() => {
     if (!allVariants.length) return undefined;
-    return allVariants.find((variant) => variant.color === selectedColor) || allVariants[0];
+    return allVariants.find((variant) => variant.colorName === selectedColor) || allVariants[0];
   }, [allVariants, selectedColor]);
 
   const mediaItems = useMemo(() => {
@@ -170,37 +161,33 @@ export const ProductDetail: React.FC = () => {
     return deduped.map((url) => ({ url, type: isVideoUrl(url) ? 'video' : 'image' as const }));
   }, [selectedVariant, isVideoUrl]);
 
+  const pickPreferredSize = useCallback((variant?: DisplayVariant) => {
+    if (!variant) return '';
+    return variant.sizes.find((entry) => Number(entry.stock || 0) > 0)?.size || variant.sizes[0]?.size || '';
+  }, []);
+
   useEffect(() => {
     if (!allVariants.length) return;
-    const initial = allVariants[0];
-    setSelectedColor(initial.color);
-    setSelectedSize(initial.sizes[0] || '');
+    const initial = allVariants.find((variant) => variant.colorName === product?.defaultVariant) || allVariants[0];
+    setSelectedColor(initial.colorName);
+    setSelectedSize(pickPreferredSize(initial));
     setCurrentPrice(initial.price);
     setVisibleReviewCount(4);
     setIsDescriptionExpanded(false);
     setActiveDetailTab('description');
-  }, [product?.id, allVariants]);
+  }, [product?.id, product?.defaultVariant, allVariants, pickPreferredSize]);
 
   useEffect(() => {
     if (!selectedVariant) return;
-    if (selectedVariant.sizes.length > 0 && !selectedVariant.sizes.includes(selectedSize)) {
-      setSelectedSize(selectedVariant.sizes[0]);
+    const allSizes = selectedVariant.sizes.map((entry) => entry.size);
+    if (allSizes.length > 0 && !allSizes.includes(selectedSize)) {
+      setSelectedSize(pickPreferredSize(selectedVariant));
     }
-  }, [selectedVariant, selectedSize]);
+  }, [selectedVariant, selectedSize, pickPreferredSize]);
 
   useEffect(() => {
     if (!selectedVariant || !product) return;
-    let nextPrice = Number(selectedVariant.price || product.salePrice || product.price || 0);
-    if (selectedSize && product.variations?.length) {
-      const strictMatch =
-        product.variations.find(
-          (variation) =>
-            String(variation.size || '') === selectedSize &&
-            (!variation.color || variation.color.toLowerCase() === selectedVariant.color.toLowerCase())
-        ) || product.variations.find((variation) => String(variation.size || '') === selectedSize);
-      if (strictMatch?.price) nextPrice = Number(strictMatch.price);
-    }
-    setCurrentPrice(nextPrice);
+    setCurrentPrice(Number(selectedVariant.price || product.salePrice || product.price || 0));
   }, [product, selectedVariant, selectedSize]);
 
   const reviews = useMemo<DisplayReview[]>(() => {
@@ -243,87 +230,25 @@ export const ProductDetail: React.FC = () => {
     return wordCount >= REVIEW_WORD_THRESHOLD || comment.trim().length >= REVIEW_CHAR_THRESHOLD;
   }, []);
 
-  const stockByColor = useMemo(() => {
-    if (!product || !selectedVariant) return 0;
-    const match = product.colors?.find((c) => c.name === selectedVariant.color);
-    if (!match) return Math.max(0, Number(product.stock || 0) - Number(product.reservedStock || 0));
-    return Math.max(0, Number(match.stock || 0) - Number(match.reservedStock || 0));
-  }, [product, selectedVariant]);
-
-  const stockBySize = useMemo(() => {
-    if (!product?.variations?.length || !selectedSize) return stockByColor;
-    const variation =
-      product.variations.find(
-        (v) =>
-          String(v.size || '') === selectedSize &&
-          (!v.color || v.color.toLowerCase() === (selectedVariant?.color || '').toLowerCase())
-      ) || product.variations.find((v) => String(v.size || '') === selectedSize);
-    if (!variation) return stockByColor;
-    return Math.max(0, Number(variation.stock || 0));
-  }, [product, selectedSize, selectedVariant, stockByColor]);
-
-  const getColorStock = useCallback(
-    (colorName: string) => {
-      if (!product) return 0;
-
-      const normalizedColor = colorName.toLowerCase();
-      const matchingVariations = (product.variations || []).filter(
-        (variation) => (variation.color || '').toLowerCase() === normalizedColor
-      );
-
-      if (matchingVariations.length > 0) {
-        if (isRingProduct && selectedSize) {
-          const exactBySize = matchingVariations.find((variation) => String(variation.size || '') === selectedSize);
-          return Math.max(0, Number(exactBySize?.stock || 0));
-        }
-        return Math.max(
-          0,
-          matchingVariations.reduce((sum, variation) => sum + Number(variation.stock || 0), 0)
-        );
-      }
-
-      const color = (product.colors || []).find((item) => item.name.toLowerCase() === normalizedColor);
-      if (color) return Math.max(0, Number(color.stock || 0) - Number(color.reservedStock || 0));
-
-      return Math.max(0, Number(product.stock || 0) - Number(product.reservedStock || 0));
-    },
-    [product, isRingProduct, selectedSize]
+  const getVariantTotalStock = useCallback(
+    (variant: DisplayVariant) => (variant.sizes || []).reduce((sum, sizeRow) => sum + Number(sizeRow.stock || 0), 0),
+    []
   );
 
-  const getColorPrice = useCallback(
-    (colorName: string, fallbackPrice: number) => {
-      if (!product) return fallbackPrice;
+  const selectedSizeStock = useMemo(() => {
+    if (!selectedVariant) return 0;
+    const match = (selectedVariant.sizes || []).find((sizeRow) => sizeRow.size === selectedSize);
+    if (match) return Number(match.stock || 0);
+    return getVariantTotalStock(selectedVariant);
+  }, [selectedVariant, selectedSize, getVariantTotalStock]);
 
-      const normalizedColor = colorName.toLowerCase();
-      const matchingVariations = (product.variations || []).filter(
-        (variation) => (variation.color || '').toLowerCase() === normalizedColor
-      );
-
-      if (matchingVariations.length > 0) {
-        if (selectedSize) {
-          const exactBySize = matchingVariations.find((variation) => String(variation.size || '') === selectedSize);
-          if (exactBySize?.price) return Number(exactBySize.price);
-        }
-        if (matchingVariations[0]?.price) return Number(matchingVariations[0].price);
-      }
-
-      return fallbackPrice;
-    },
-    [product, selectedSize]
-  );
-
-  const available = selectedVariant ? getColorStock(selectedVariant.color) : Math.min(stockByColor, stockBySize);
+  const available = selectedVariant ? selectedSizeStock : 0;
   const canPurchase = available > 0;
-  const showRingSizeSelector =
-    isRingProduct &&
-    !isFanProduct &&
-    !isMonitoringProduct &&
-    !isBandProduct &&
-    Boolean(selectedVariant?.sizes?.length);
+  const showSizeSelector = Boolean(selectedVariant?.sizes?.length);
 
   const handleColorChange = (variant: DisplayVariant) => {
-    setSelectedColor(variant.color);
-    setSelectedSize(variant.sizes[0] || '');
+    setSelectedColor(variant.colorName);
+    setSelectedSize(pickPreferredSize(variant));
     setCurrentPrice(variant.price);
   };
 
@@ -377,14 +302,15 @@ export const ProductDetail: React.FC = () => {
 
   const buildConfiguredProduct = () => {
     if (!product) return undefined;
-    const configuredNameParts = [selectedVariant?.color, selectedSize].filter(Boolean);
+    const configuredNameParts = [selectedVariant?.colorName, selectedSize].filter(Boolean);
     return {
       ...product,
       name: configuredNameParts.length ? `${product.name} (${configuredNameParts.join(' | ')})` : product.name,
       price: currentPrice,
       salePrice: currentPrice,
-      selectedColorName: selectedVariant?.color,
-      selectedColorHex: selectedVariant?.hex,
+      selectedColorName: selectedVariant?.colorName,
+      selectedColorHex: selectedVariant?.colorHex,
+      selectedSize,
       images: selectedVariant?.images?.length ? selectedVariant.images : product.images,
     };
   };
@@ -431,6 +357,18 @@ export const ProductDetail: React.FC = () => {
               }
               alt={product.name}
             />
+            {selectedVariant?.images?.length ? (
+              <div className="grid grid-cols-5 gap-2">
+                {selectedVariant.images.map((imageUrl, imageIdx) => (
+                  <img
+                    key={`${selectedVariant.colorName}_${imageIdx}`}
+                    src={imageUrl}
+                    alt={`${product.name} ${selectedVariant.colorName} ${imageIdx + 1}`}
+                    className="h-16 w-full rounded-lg object-cover border border-gray-200 dark:border-white/10"
+                  />
+                ))}
+              </div>
+            ) : null}
             {selectedVariant?.videoUrl && isVideoUrl(selectedVariant.videoUrl) && (
               <div className="w-full rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-2">
                 <video src={selectedVariant.videoUrl} controls className="w-full rounded-xl object-contain" />
@@ -455,58 +393,59 @@ export const ProductDetail: React.FC = () => {
 
             <div>
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-                Select Color {selectedVariant?.color ? `- ${selectedVariant.color}` : ''}
+                Select Color {selectedVariant?.colorName ? `- ${selectedVariant.colorName}` : ''}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {allVariants.map((variant) => (
                   <button
-                    key={variant.color}
+                    key={variant.colorName}
                     type="button"
                     onClick={() => {
-                      if (getColorStock(variant.color) <= 0) return;
+                      if (getVariantTotalStock(variant) <= 0) return;
                       handleColorChange(variant);
                     }}
-                    disabled={getColorStock(variant.color) <= 0}
+                    disabled={getVariantTotalStock(variant) <= 0}
                     className={`text-left rounded-xl border p-3 transition-all duration-200 ${
-                      selectedColor === variant.color
+                      selectedColor === variant.colorName
                         ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-sm'
                         : 'border-gray-300 dark:border-white/20 hover:border-primary-400'
-                    } ${getColorStock(variant.color) <= 0 ? 'opacity-50 cursor-not-allowed hover:border-gray-300 dark:hover:border-white/20' : ''}`}
+                    } ${getVariantTotalStock(variant) <= 0 ? 'opacity-50 cursor-not-allowed hover:border-gray-300 dark:hover:border-white/20' : ''}`}
                   >
                     <div className="flex items-center gap-2">
                       <span
                         className="h-4 w-4 rounded-full border border-black/20 dark:border-white/20"
-                        style={{ backgroundColor: variant.hex || '#9CA3AF' }}
+                        style={{ backgroundColor: variant.colorHex || '#9CA3AF' }}
                       />
-                      <p className="font-semibold text-sm">{variant.color}</p>
+                      <p className="font-semibold text-sm">{variant.colorName}</p>
                     </div>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                      Rs {getColorPrice(variant.color, variant.price).toLocaleString()}
+                      Rs {variant.price.toLocaleString()}
                     </p>
-                    <p className={`mt-1 text-xs font-medium ${getColorStock(variant.color) > 0 ? 'text-gray-500 dark:text-gray-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {getColorStock(variant.color) > 0 ? `Stock: ${getColorStock(variant.color)} left` : 'Out of Stock'}
+                    <p className={`mt-1 text-xs font-medium ${getVariantTotalStock(variant) > 0 ? 'text-gray-500 dark:text-gray-400' : 'text-red-600 dark:text-red-400'}`}>
+                      {getVariantTotalStock(variant) > 0 ? `Stock: ${getVariantTotalStock(variant)} left` : 'Out of Stock'}
                     </p>
                   </button>
                 ))}
               </div>
             </div>
 
-            {showRingSizeSelector ? (
+            {showSizeSelector ? (
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Ring Size</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Select Size</p>
                 <div className="flex flex-wrap gap-2">
-                  {selectedVariant.sizes.map((size) => (
+                  {selectedVariant.sizes.map((sizeRow) => (
                     <button
-                      key={size}
+                      key={`${selectedVariant.colorName}_${sizeRow.size}`}
                       type="button"
-                      onClick={() => setSelectedSize(size)}
+                      onClick={() => setSelectedSize(sizeRow.size)}
+                      disabled={Number(sizeRow.stock || 0) <= 0}
                       className={`min-w-[44px] px-4 py-2 rounded-lg border text-sm font-medium transition ${
-                        selectedSize === size
+                        selectedSize === sizeRow.size
                           ? 'bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-black dark:border-white'
                           : 'border-gray-300 dark:border-white/20 hover:border-primary-400'
-                      }`}
+                      } ${Number(sizeRow.stock || 0) <= 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      {size}
+                      {sizeRow.size} ({Number(sizeRow.stock || 0)})
                     </button>
                   ))}
                 </div>

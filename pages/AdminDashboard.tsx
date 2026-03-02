@@ -21,7 +21,7 @@ import {
   updateWebsiteSettings,
   uploadFile,
 } from '../services/backend';
-import { Order, Product, ProductColor, ProductVariation, User, UserPermissions } from '../types';
+import { Order, Product, User, UserPermissions } from '../types';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
 import { ConfirmModal } from '../components/admin/common/ConfirmModal';
@@ -50,8 +50,7 @@ interface AdminVariantCard {
   variantId: string;
   color: string;
   colorHex: string;
-  size: string;
-  stock: number;
+  sizes: Array<{ id: string; size: string; stock: number }>;
   priceOverride: number | null;
   images: string[];
   selectedFiles: File[];
@@ -61,6 +60,7 @@ interface AdminVariantCard {
 const inputClass =
   'w-full p-2 border border-gray-300 bg-white text-gray-900 rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
 const createProductId = () => `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+const createVariantSizeRow = () => ({ id: `sz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, size: '', stock: 0 });
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -104,17 +104,18 @@ export const AdminDashboard: React.FC = () => {
     isFeatured: false,
     isBestSeller: false,
     variations: [],
+    variants: [],
+    defaultVariant: '',
   };
 
   const [productForm, setProductForm] = useState<Partial<Product>>(initialProductState);
   const [featuresString, setFeaturesString] = useState('');
   const [specsString, setSpecsString] = useState('');
-  const [variations, setVariations] = useState<ProductVariation[]>([]);
-  const [colorBlocks, setColorBlocks] = useState<ProductColor[]>([]);
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
   const [hasVariants, setHasVariants] = useState(false);
   const [variantCards, setVariantCards] = useState<AdminVariantCard[]>([]);
+  const [defaultVariant, setDefaultVariant] = useState('');
 
   const [newCategory, setNewCategory] = useState('');
   const [newAdminEmail, setNewAdminEmail] = useState('');
@@ -267,8 +268,20 @@ export const AdminDashboard: React.FC = () => {
       setProductForm((prev) => ({ ...prev, images: [], stock: 0, reservedStock: 0, sold: 0 }));
     } else {
       setVariantCards([]);
+      setDefaultVariant('');
     }
   }, [hasVariants]);
+
+  useEffect(() => {
+    if (!hasVariants) return;
+    const labels = variantCards
+      .map((variant) => variant.color.trim())
+      .filter((label) => label !== '');
+    if (labels.length === 0) return;
+    if (!labels.includes(defaultVariant)) {
+      setDefaultVariant(labels[0]);
+    }
+  }, [hasVariants, variantCards, defaultVariant]);
 
   if (!isAdmin) return <div className="p-10 text-center text-red-500">Access Denied. Admin only.</div>;
 
@@ -276,11 +289,10 @@ export const AdminDashboard: React.FC = () => {
     setProductForm(initialProductState);
     setFeaturesString('');
     setSpecsString('');
-    setVariations([]);
-    setColorBlocks([]);
     setSelectedImageFiles([]);
     setHasVariants(false);
     setVariantCards([]);
+    setDefaultVariant('');
     setIsEditing(false);
     setShowProductModal(true);
   };
@@ -288,25 +300,38 @@ export const AdminDashboard: React.FC = () => {
   const handleEditProduct = (product: Product) => {
     const reservedStock = Number(product.reservedStock || 0);
     const stock = Number(product.stock || 0);
-    const editingHasVariants = Boolean((product.colors && product.colors.length > 0) || (product.variations && product.variations.length > 0));
-    const variantCount = Math.max(product.colors?.length || 0, product.variations?.length || 0);
-    const builtCards: AdminVariantCard[] = Array.from({ length: variantCount }).map((_, index) => {
-      const color = product.colors?.[index];
-      const variation = product.variations?.[index];
-      const basePrice = Number(product.salePrice ?? product.price ?? 0);
-      const priceOverride = variation && Number(variation.price || 0) !== basePrice ? Number(variation.price || 0) : null;
-      return {
-        variantId: variation?.id || `v_${Date.now()}_${index}`,
-        color: color?.name || variation?.color || '',
-        colorHex: color?.hex || '#6b7280',
-        size: variation?.size || '',
-        stock: Number(color?.stock ?? variation?.stock ?? 0),
-        priceOverride,
-        images: color?.images || [],
-        selectedFiles: [],
-        dragImageIndex: null,
-      };
-    });
+    const basePrice = Number(product.salePrice ?? product.price ?? 0);
+    const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+    const editingHasVariants = rawVariants.length > 0 || Boolean(product.colors?.length || product.variations?.length);
+    const builtCards: AdminVariantCard[] =
+      rawVariants.length > 0
+        ? rawVariants.map((variant, index) => ({
+            variantId: `v_${index}_${Date.now()}`,
+            color: String(variant.colorName || variant.color || '').trim(),
+            colorHex: String(variant.colorHex || variant.hex || '#6b7280'),
+            sizes:
+              (variant.sizes || [])
+                .map((sizeRow) => ({
+                  id: createVariantSizeRow().id,
+                  size: String(sizeRow.size || '').trim(),
+                  stock: Number(sizeRow.stock || 0),
+                }))
+                .filter((sizeRow) => sizeRow.size !== '') || [],
+            priceOverride: Number(variant.price || basePrice) !== basePrice ? Number(variant.price || 0) : null,
+            images: variant.images || [],
+            selectedFiles: [],
+            dragImageIndex: null,
+          }))
+        : (product.colors || []).map((color, index) => ({
+            variantId: `v_legacy_${index}_${Date.now()}`,
+            color: color.name,
+            colorHex: color.hex || '#6b7280',
+            sizes: [{ ...createVariantSizeRow(), size: 'Standard', stock: Number(color.stock || 0) }],
+            priceOverride: null,
+            images: color.images || [],
+            selectedFiles: [],
+            dragImageIndex: null,
+          }));
     setProductForm({
       ...product,
       mrp: product.mrp ?? product.price,
@@ -320,49 +345,81 @@ export const AdminDashboard: React.FC = () => {
     });
     setFeaturesString(product.features?.join('\n') || '');
     setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
-    setVariations(product.variations || []);
-    setColorBlocks(product.colors || []);
     setSelectedImageFiles([]);
     setHasVariants(editingHasVariants);
     setVariantCards(builtCards);
+    setDefaultVariant(product.defaultVariant || builtCards[0]?.color || '');
     setIsEditing(true);
     setShowProductModal(true);
-  };
-
-  const handleAddVariation = () => {
-    setVariations((prev) => [...prev, { id: `v_${Date.now()}`, size: '', weight: '', color: '', price: 0, stock: 0 }]);
   };
 
   const createVariantCard = (): AdminVariantCard => ({
     variantId: `v_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
     color: '',
     colorHex: '#6b7280',
-    size: '',
-    stock: 0,
+    sizes: [createVariantSizeRow()],
     priceOverride: null,
     images: [],
     selectedFiles: [],
     dragImageIndex: null,
   });
 
-  const handleRemoveVariation = (id: string) => {
-    setVariations((prev) => prev.filter((v) => v.id !== id));
-  };
-
-  const handleVariationChange = <K extends keyof ProductVariation>(id: string, field: K, value: ProductVariation[K]) => {
-    setVariations((prev) => prev.map((v) => (v.id === id ? { ...v, [field]: value } : v)));
-  };
-
   const addVariantCard = () => {
     setVariantCards((prev) => [...prev, createVariantCard()]);
   };
 
   const removeVariantCard = (variantId: string) => {
-    setVariantCards((prev) => prev.filter((variant) => variant.variantId !== variantId));
+    setVariantCards((prev) => {
+      const next = prev.filter((variant) => variant.variantId !== variantId);
+      const labels = next.map((variant) => variant.color.trim()).filter((label) => label !== '');
+      if (!labels.includes(defaultVariant)) {
+        setDefaultVariant(labels[0] || '');
+      }
+      return next;
+    });
   };
 
   const updateVariantCard = (variantId: string, patch: Partial<AdminVariantCard>) => {
     setVariantCards((prev) => prev.map((variant) => (variant.variantId === variantId ? { ...variant, ...patch } : variant)));
+  };
+
+  const addSizeRow = (variantId: string) => {
+    setVariantCards((prev) =>
+      prev.map((variant) =>
+        variant.variantId === variantId ? { ...variant, sizes: [...variant.sizes, createVariantSizeRow()] } : variant
+      )
+    );
+  };
+
+  const updateSizeRow = (
+    variantId: string,
+    sizeId: string,
+    field: 'size' | 'stock',
+    value: string | number
+  ) => {
+    setVariantCards((prev) =>
+      prev.map((variant) => {
+        if (variant.variantId !== variantId) return variant;
+        return {
+          ...variant,
+          sizes: variant.sizes.map((sizeRow) =>
+            sizeRow.id === sizeId
+              ? { ...sizeRow, [field]: field === 'stock' ? Number(value || 0) : String(value) }
+              : sizeRow
+          ),
+        };
+      })
+    );
+  };
+
+  const removeSizeRow = (variantId: string, sizeId: string) => {
+    setVariantCards((prev) =>
+      prev.map((variant) => {
+        if (variant.variantId !== variantId) return variant;
+        const filtered = variant.sizes.filter((sizeRow) => sizeRow.id !== sizeId);
+        return { ...variant, sizes: filtered.length > 0 ? filtered : [createVariantSizeRow()] };
+      })
+    );
   };
 
   const addVariantFiles = (variantId: string, files: FileList | null) => {
@@ -415,21 +472,6 @@ export const AdminDashboard: React.FC = () => {
         return { ...variant, images: next };
       })
     );
-  };
-
-  const addColorBlock = () => {
-    setColorBlocks((prev) => [
-      ...prev,
-      { name: '', hex: '#6b7280', images: [...(productForm.images || [])], stock: 0, reservedStock: 0, sold: 0 },
-    ]);
-  };
-
-  const removeColorBlock = (index: number) => {
-    setColorBlocks((prev) => prev.filter((_, idx) => idx !== index));
-  };
-
-  const updateColorBlock = (index: number, field: keyof ProductColor, value: unknown) => {
-    setColorBlocks((prev) => prev.map((c, idx) => (idx === index ? { ...c, [field]: value } : c)));
   };
 
   const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -500,12 +542,15 @@ export const AdminDashboard: React.FC = () => {
             if (url) uploadedVariantUrls.push(url);
           }
           const mergedImages = [...variant.images, ...uploadedVariantUrls];
+          const normalizedSizes = (variant.sizes || [])
+            .map((sizeRow) => ({ ...sizeRow, size: String(sizeRow.size || '').trim(), stock: Number(sizeRow.stock || 0) }))
+            .filter((sizeRow) => sizeRow.size !== '');
           return {
             ...variant,
-            stock: Number(variant.stock || 0),
             priceOverride: variant.priceOverride == null ? null : Number(variant.priceOverride || 0),
             images: mergedImages.length ? mergedImages : ['https://picsum.photos/400'],
-            label: variant.color.trim() || variant.size.trim() || `Variant ${idx + 1}`,
+            sizes: normalizedSizes.length > 0 ? normalizedSizes : [{ ...createVariantSizeRow(), size: 'Standard', stock: 0 }],
+            label: variant.color.trim() || `Variant ${idx + 1}`,
           };
         })
       );
@@ -515,25 +560,40 @@ export const AdminDashboard: React.FC = () => {
             name: variant.label,
             hex: variant.colorHex || '#6b7280',
             images: variant.images,
-            stock: Number(variant.stock || 0),
+            stock: variant.sizes.reduce((sum, sizeRow) => sum + Number(sizeRow.stock || 0), 0),
             reservedStock: 0,
             sold: 0,
           }))
         : [];
 
       const mappedVariations = hasVariants
+        ? normalizedVariantCards.flatMap((variant) =>
+            variant.sizes.map((sizeRow) => ({
+              id: `${variant.variantId}_${sizeRow.id}`,
+              size: sizeRow.size,
+              weight: productForm.weight || '',
+              color: variant.color || '',
+              price: Number(variant.priceOverride ?? productForm.salePrice ?? productForm.price ?? 0),
+              stock: Number(sizeRow.stock || 0),
+            }))
+          )
+        : [];
+
+      const mappedVariants = hasVariants
         ? normalizedVariantCards.map((variant) => ({
-            id: variant.variantId,
-            size: variant.size || '',
-            weight: productForm.weight || '',
-            color: variant.color || '',
+            colorName: variant.label,
+            colorHex: variant.colorHex || '#6b7280',
             price: Number(variant.priceOverride ?? productForm.salePrice ?? productForm.price ?? 0),
-            stock: Number(variant.stock || 0),
+            images: variant.images,
+            sizes: variant.sizes.map((sizeRow) => ({ size: sizeRow.size, stock: Number(sizeRow.stock || 0) })),
           }))
         : [];
 
       const aggregateStock = hasVariants
-        ? normalizedVariantCards.reduce((sum, variant) => sum + Number(variant.stock || 0), 0)
+        ? normalizedVariantCards.reduce(
+            (sum, variant) => sum + variant.sizes.reduce((sizeSum, sizeRow) => sizeSum + Number(sizeRow.stock || 0), 0),
+            0
+          )
         : Number(productForm.stock || 0);
       const aggregateReserved = hasVariants ? 0 : Number(productForm.reservedStock || 0);
       const aggregateSold = hasVariants ? 0 : Number(productForm.sold || 0);
@@ -553,6 +613,8 @@ export const AdminDashboard: React.FC = () => {
         weight: productForm.weight || '',
         bandType: (productForm.category || '').toLowerCase() === 'smart bands' ? productForm.bandType || '' : '',
         colors: sanitizedColors,
+        variants: mappedVariants,
+        defaultVariant: hasVariants ? (defaultVariant || mappedVariants[0]?.colorName || '') : '',
         variations: mappedVariations,
         images: variantDisplayImages,
         videoUrl: finalVideoUrl,
@@ -1014,6 +1076,26 @@ export const AdminDashboard: React.FC = () => {
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Product Variants</h3>
                     <Button type="button" size="sm" variant="outline" onClick={addVariantCard}>+ Add Variant</Button>
                   </div>
+                  {variantCards.length > 0 && (
+                    <div className="max-w-sm">
+                      <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Default Variant</label>
+                      <select
+                        className={inputClass}
+                        value={defaultVariant}
+                        onChange={(e) => setDefaultVariant(e.target.value)}
+                      >
+                        <option value="">Select default variant</option>
+                        {variantCards
+                          .map((variant) => variant.color.trim())
+                          .filter((label) => label !== '')
+                          .map((label) => (
+                            <option key={label} value={label}>
+                              {label}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
                   {variantCards.length === 0 && <p className="text-sm text-gray-500 dark:text-gray-400">No variants added yet.</p>}
                   {variantCards.map((variant, idx) => (
                     <div key={variant.variantId} className="rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 p-4 space-y-3">
@@ -1030,18 +1112,57 @@ export const AdminDashboard: React.FC = () => {
                           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Color Hex</label>
                           <input type="color" className="h-10 w-full rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800" value={variant.colorHex} onChange={(e) => updateVariantCard(variant.variantId, { colorHex: e.target.value })} />
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Size (Optional)</label>
-                          <input className={inputClass} value={variant.size} onChange={(e) => updateVariantCard(variant.variantId, { size: e.target.value })} />
-                        </div>
-                        <div>
-                          <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Stock</label>
-                          <input type="number" className={inputClass} value={variant.stock} onChange={(e) => updateVariantCard(variant.variantId, { stock: Number(e.target.value) })} />
-                        </div>
-                        <div>
+                        <div className="lg:col-span-2">
                           <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Price Override</label>
                           <input type="number" className={inputClass} value={variant.priceOverride ?? ''} onChange={(e) => updateVariantCard(variant.variantId, { priceOverride: e.target.value === '' ? null : Number(e.target.value) })} />
                         </div>
+                        <div className="flex items-end">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant={defaultVariant === variant.color.trim() ? 'primary' : 'outline'}
+                            onClick={() => setDefaultVariant(variant.color.trim())}
+                            disabled={!variant.color.trim()}
+                          >
+                            Set as default
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Sizes & Stock</label>
+                          <Button type="button" size="sm" variant="outline" onClick={() => addSizeRow(variant.variantId)}>+ Add Size</Button>
+                        </div>
+                        {(variant.sizes || []).map((sizeRow) => (
+                          <div key={sizeRow.id} className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+                            <div className="sm:col-span-3">
+                              <input
+                                className={inputClass}
+                                placeholder="Size (e.g. 7, 8, L, XL)"
+                                value={sizeRow.size}
+                                onChange={(e) => updateSizeRow(variant.variantId, sizeRow.id, 'size', e.target.value)}
+                              />
+                            </div>
+                            <div className="sm:col-span-1">
+                              <input
+                                type="number"
+                                className={inputClass}
+                                placeholder="Stock"
+                                value={sizeRow.stock}
+                                onChange={(e) => updateSizeRow(variant.variantId, sizeRow.id, 'stock', Number(e.target.value))}
+                              />
+                            </div>
+                            <div className="sm:col-span-1">
+                              <Button type="button" size="sm" variant="danger" className="w-full" onClick={() => removeSizeRow(variant.variantId, sizeRow.id)}>
+                                Remove
+                              </Button>
+                            </div>
+                          </div>
+                        ))}
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Total variant stock: {(variant.sizes || []).reduce((sum, sizeRow) => sum + Number(sizeRow.stock || 0), 0)}
+                        </p>
                       </div>
 
                       <div className="space-y-2">
