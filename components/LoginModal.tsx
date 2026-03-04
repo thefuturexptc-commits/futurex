@@ -152,8 +152,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       login(user);
       onClose();
       navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : redirectPath);
-    } catch {
-      setError('Google login failed');
+    } catch (error: any) {
+      setError(error?.message || 'Google login failed');
     } finally {
       setLoading(false);
     }
@@ -172,8 +172,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       login(user);
       onClose();
       navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : redirectPath);
-    } catch {
-      setError('Invalid email or password');
+    } catch (error: any) {
+      setError(error?.message || 'Invalid email or password');
     } finally {
       setLoading(false);
     }

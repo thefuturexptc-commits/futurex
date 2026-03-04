@@ -870,66 +870,46 @@ export const isPhoneRegistered = async (phone: string): Promise<boolean> => {
 };
 
 export const loginUser = async (email: string, password: string, phone?: string): Promise<User> => {
-    const normalizedEmail = email.trim().toLowerCase();
-    const normalizedPhone = phone ? normalizeIndianPhone(phone) : undefined;
-    const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
-    setMockData('users', localUsers);
-    let firebaseErrorCode = '';
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedPhone = phone ? normalizeIndianPhone(phone) : undefined;
 
-    // 2. Try Firebase
-    try {
-        const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
-        const firebaseUser = userCredential.user;
-        if (firebaseUser) {
-            const docRef = doc(db, 'users', firebaseUser.uid);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                const remoteUser = docSnap.data() as User;
-                const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
-                if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
-                    throw new Error('Phone number does not match this account');
-                }
-                return applyRoleByEmail(remoteUser);
-            }
-            // Return basic info if doc missing
-            return applyRoleByEmail({
-                id: firebaseUser.uid,
-                name: firebaseUser.displayName || 'User',
-                email: firebaseUser.email || '',
-                role: 'user',
-                addresses: [],
-                permissions: {}
-            });
-        }
-    } catch (e: any) {
-        firebaseErrorCode = e?.code || '';
-        // Fallback to Local
-    }
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+    const firebaseUser = userCredential.user;
+    if (!firebaseUser) throw new Error('Login failed.');
 
-    // 3. Local Check
-    const users = getMockData<User[]>('users', []);
-    const found = users.find(u => {
-      if (u.email.toLowerCase() !== normalizedEmail) return false;
-      if (u.password && u.password !== password) return false;
-      if (!normalizedPhone || !u.phone) return true;
-      try {
-        return normalizeIndianPhone(u.phone) === normalizedPhone;
-      } catch {
-        return false;
+    const docRef = doc(db, 'users', firebaseUser.uid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const remoteUser = docSnap.data() as User;
+      const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
+      if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
+        throw new Error('Phone number does not match this account');
       }
-    });
-    if (found) {
-        await ensureFirebaseConnection(); // Ensure connection for local users too
-        return applyRoleByEmail(found);
+      return applyRoleByEmail(remoteUser);
     }
 
-    if (firebaseErrorCode === 'auth/user-not-found') {
+    return applyRoleByEmail({
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName || 'User',
+      email: firebaseUser.email || '',
+      role: 'user',
+      addresses: [],
+      permissions: {}
+    });
+  } catch (e: any) {
+    const firebaseErrorCode = e?.code || '';
+    if (firebaseErrorCode === 'auth/user-not-found' || firebaseErrorCode === 'auth/invalid-credential') {
       throw new Error('Account not found. Please sign up first.');
     }
-    if (firebaseErrorCode === 'auth/wrong-password' || firebaseErrorCode === 'auth/invalid-credential') {
+    if (firebaseErrorCode === 'auth/wrong-password') {
       throw new Error('Incorrect password.');
     }
-    throw new Error("Invalid email or password");
+    if (firebaseErrorCode === 'auth/invalid-email') {
+      throw new Error('Invalid email address.');
+    }
+    throw new Error('Login failed. Please use a registered email.');
+  }
 };
 
 export const loginWithGoogle = async (): Promise<User> => {
@@ -958,22 +938,12 @@ export const loginWithGoogle = async (): Promise<User> => {
       await setDoc(userRef, deepSanitize(normalizedUser));
       return normalizedUser;
     }
-  } catch (error) {
-    // Simulate google login for demo
-    const mockUser: User = {
-        id: `google_${Date.now()}`,
-        name: 'Demo Google User',
-        email: 'demo@gmail.com',
-        role: 'user',
-        addresses: [],
-        permissions: {}
-    };
-    const users = getMockData<User[]>('users', []);
-    users.push(mockUser);
-    setMockData('users', users);
-    
-    await ensureFirebaseConnection(); // Ensure connection
-    return mockUser;
+  } catch (error: any) {
+    const code = error?.code || '';
+    if (code === 'auth/popup-closed-by-user') {
+      throw new Error('Google login was cancelled.');
+    }
+    throw new Error('Google login failed. Demo login is disabled.');
   }
 };
 
