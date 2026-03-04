@@ -19,6 +19,8 @@ const SmartFans = React.lazy(() => import('./pages/SmartFans').then(module => ({
 const SmartMonitoring = React.lazy(() => import('./pages/SmartMonitoring').then(module => ({ default: module.SmartMonitoring })));
 const Cart = React.lazy(() => import('./pages/Cart').then(module => ({ default: module.Cart })));
 const Checkout = React.lazy(() => import('./pages/Checkout').then(module => ({ default: module.Checkout })));
+const VerifyPhone = React.lazy(() => import('./pages/VerifyPhone').then(module => ({ default: module.VerifyPhone })));
+const Payment = React.lazy(() => import('./pages/Payment').then(module => ({ default: module.Payment })));
 const Profile = React.lazy(() => import('./pages/Profile').then(module => ({ default: module.Profile })));
 const OrderSuccess = React.lazy(() => import('./pages/OrderSuccess').then(module => ({ default: module.OrderSuccess })));
 const ProductDetail = React.lazy(() => import('./pages/ProductDetail').then(module => ({ default: module.ProductDetail })));
@@ -105,6 +107,8 @@ const App: React.FC = () => {
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
                     <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+                    <Route path="/verify-phone" element={<RequireAuth><VerifyPhone /></RequireAuth>} />
+                    <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />
                     <Route path="/order-success" element={<RequireAuth><OrderSuccess /></RequireAuth>} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />

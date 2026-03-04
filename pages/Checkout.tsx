@@ -1,249 +1,151 @@
-import React, { useState, useEffect } from 'react';
-import { useCart } from '../context/CartContext';
-import { useAuth } from '../context/AuthContext';
-import { createOrder, updateUserAddresses, verifyIndianPincode } from '../services/backend';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { CheckoutFlowState, CheckoutShippingDetails } from '../types';
 import { Button } from '../components/ui/Button';
-import { Address } from '../types';
+import { CheckoutStepper } from '../components/CheckoutStepper';
 
-export const Checkout: React.FC = () => {
-  const { items, totalPrice, clearCart } = useCart();
-  const { user, updateUser } = useAuth();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
-  const [verifyingPin, setVerifyingPin] = useState(false);
-  const [pinMessage, setPinMessage] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
-
-  const [address, setAddress] = useState<Omit<Address, 'id'>>({
-    street: '',
-    city: '',
-    zip: '',
-    country: ''
-  });
-
-  useEffect(() => {
-    if (user && user.addresses && user.addresses.length > 0) {
-      const defaultAddress = user.addresses[0];
-      setAddress({
-        street: defaultAddress.street,
-        city: defaultAddress.city,
-        zip: defaultAddress.zip,
-        country: defaultAddress.country
-      });
-    }
-  }, [user]);
-
-  const handleVerifyPincode = async () => {
-    setPinMessage('');
-    if (!/^\d{6}$/.test(address.zip)) {
-      setPinMessage('Enter valid 6-digit pincode');
-      return;
-    }
-    setVerifyingPin(true);
-    const pinData = await verifyIndianPincode(address.zip);
-    setVerifyingPin(false);
-    if (!pinData) {
-      setPinMessage('Pincode not found');
-      return;
-    }
-    setAddress(prev => ({ ...prev, city: pinData.city, country: pinData.country }));
-    setPinMessage(`Verified: ${pinData.city}, ${pinData.country}`);
-  };
-
-  const handleOrder = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setLoading(true);
-
-    const addressId = Date.now().toString();
-    const finalAddress: Address = { ...address, id: addressId };
-
-    try {
-      // ✅ COD FLOW
-      if (paymentMethod === 'cod') {
-        const order = await createOrder(
-          user.id,
-          items,
-          totalPrice,
-          finalAddress
-        );
-
-        await saveAddressIfNeeded(finalAddress);
-        clearCart();
-        navigate('/order-success', { state: { orderId: order.id } });
-        return;
-      }
-
-      // ✅ ONLINE PAYMENT FLOW
-     const options = {
-  key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-
-  // ✅ safer amount conversion
-  amount: Number((totalPrice * 100).toFixed(0)),
-
-  currency: "INR",
-  name: "FutureX",
-  description: "Order Payment",
-
-  handler: async function (response: any) {
-    const order = await createOrder(
-      user.id,
-      items,
-      totalPrice,
-      finalAddress
-    );
-
-    await saveAddressIfNeeded(finalAddress);
-    clearCart();
-    navigate('/order-success', { state: { orderId: order.id } });
-  },
-
-  modal: {
-    ondismiss: function () {
-      setLoading(false);
-      alert("Payment cancelled");
-    }
-  },
-
-  prefill: {
-    name: user.name,
-    email: user.email
-  },
-
-  theme: {
-    color: "#6366f1"
-  }
+const emptyShipping: CheckoutShippingDetails = {
+  name: '',
+  phoneNumber: '',
+  address: '',
+  city: '',
+  state: '',
+  pincode: '',
 };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.open();
+export const Checkout: React.FC = () => {
+  const { items, totalPrice } = useCart();
+  const navigate = useNavigate();
+  const [shippingDetails, setShippingDetails] = useState<CheckoutShippingDetails>(emptyShipping);
+  const [error, setError] = useState('');
 
-    } catch (error) {
-      void error;
-      alert('Payment failed. Please try again.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const saveAddressIfNeeded = async (finalAddress: Address) => {
-    const existingAddresses = user?.addresses || [];
-
-    const addressExists = existingAddresses.some(
-      a =>
-        a.street.toLowerCase() === finalAddress.street.toLowerCase() &&
-        a.zip === finalAddress.zip
+  const isValid = useMemo(() => {
+    const phoneDigits = shippingDetails.phoneNumber.replace(/\D/g, '');
+    return (
+      shippingDetails.name.trim().length >= 2 &&
+      phoneDigits.length === 10 &&
+      shippingDetails.address.trim().length >= 5 &&
+      shippingDetails.city.trim().length >= 2 &&
+      shippingDetails.state.trim().length >= 2 &&
+      /^\d{6}$/.test(shippingDetails.pincode)
     );
+  }, [shippingDetails]);
 
-    if (!addressExists && user) {
-      const newAddresses = [finalAddress, ...existingAddresses];
-      await updateUserAddresses(user.id, newAddresses);
-      updateUser({ ...user, addresses: newAddresses });
+  const handleContinue = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isValid) {
+      setError('Please fill all fields correctly before continuing.');
+      return;
     }
+    setError('');
+    const flowState: CheckoutFlowState = {
+      phone: shippingDetails.phoneNumber.replace(/\D/g, ''),
+      shippingDetails: {
+        ...shippingDetails,
+        phoneNumber: shippingDetails.phoneNumber.replace(/\D/g, ''),
+        pincode: shippingDetails.pincode.replace(/\D/g, '').slice(0, 6),
+      },
+    };
+    navigate('/verify-phone', { state: flowState });
   };
 
-  if (!user) return <div className="p-10 text-center dark:text-white">Please log in to continue.</div>;
-  if (items.length === 0) return <div className="p-10 text-center dark:text-white">Your cart is empty.</div>;
+  if (items.length === 0) {
+    return <div className="p-10 text-center dark:text-white">Your cart is empty.</div>;
+  }
 
   return (
-    <div className="min-h-screen max-w-4xl mx-auto px-4 py-12">
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-8">Checkout</h1>
+    <div className="min-h-screen max-w-5xl mx-auto px-4 py-8 sm:py-12">
+      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">Checkout</h1>
+      <CheckoutStepper current="address" />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-        <form onSubmit={handleOrder} className="space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <form onSubmit={handleContinue} className="lg:col-span-2 space-y-4 bg-white dark:bg-white/5 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-white/10">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Shipping Details</h2>
 
-          {/* Shipping Address */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Shipping Address
-            </h2>
+          <input
+            required
+            type="text"
+            placeholder="Name"
+            value={shippingDetails.name}
+            onChange={(e) => setShippingDetails((prev) => ({ ...prev, name: e.target.value }))}
+            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+          />
 
-            <input required type="text" placeholder="Street"
-              value={address.street}
-              onChange={(e) => setAddress({ ...address, street: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:bg-white/5 dark:text-white p-2"
+          <input
+            required
+            type="tel"
+            placeholder="Phone Number"
+            value={shippingDetails.phoneNumber}
+            onChange={(e) =>
+              setShippingDetails((prev) => ({
+                ...prev,
+                phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 10),
+              }))
+            }
+            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+          />
+
+          <input
+            required
+            type="text"
+            placeholder="Address"
+            value={shippingDetails.address}
+            onChange={(e) => setShippingDetails((prev) => ({ ...prev, address: e.target.value }))}
+            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <input
+              required
+              type="text"
+              placeholder="City"
+              value={shippingDetails.city}
+              onChange={(e) => setShippingDetails((prev) => ({ ...prev, city: e.target.value }))}
+              className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
             />
-
-            <div className="grid grid-cols-2 gap-4">
-              <input required type="text" placeholder="City"
-                value={address.city}
-                onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                className="mt-1 block w-full rounded-md border-gray-300 dark:bg-white/5 dark:text-white p-2"
-              />
-
-              <div className="space-y-2">
-                <input required type="text" placeholder="Zip Code"
-                  value={address.zip}
-                  onChange={(e) => setAddress({ ...address, zip: e.target.value.replace(/\D/g, '').slice(0, 6) })}
-                  className="mt-1 block w-full rounded-md border-gray-300 dark:bg-white/5 dark:text-white p-2"
-                />
-                <Button type="button" size="sm" variant="outline" onClick={handleVerifyPincode} disabled={verifyingPin}>
-                  {verifyingPin ? 'Verifying...' : 'Verify Pincode'}
-                </Button>
-              </div>
-            </div>
-            {pinMessage && <p className={`text-xs ${pinMessage.startsWith('Verified') ? 'text-green-600' : 'text-red-500'}`}>{pinMessage}</p>}
-
-            <input required type="text" placeholder="Country"
-              value={address.country}
-              onChange={(e) => setAddress({ ...address, country: e.target.value })}
-              className="mt-1 block w-full rounded-md border-gray-300 dark:bg-white/5 dark:text-white p-2"
+            <input
+              required
+              type="text"
+              placeholder="State"
+              value={shippingDetails.state}
+              onChange={(e) => setShippingDetails((prev) => ({ ...prev, state: e.target.value }))}
+              className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
             />
           </div>
 
-          {/* Payment Method */}
-          <div className="space-y-2">
-            <h2 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Payment Method
-            </h2>
+          <input
+            required
+            type="text"
+            placeholder="Pincode"
+            value={shippingDetails.pincode}
+            onChange={(e) =>
+              setShippingDetails((prev) => ({
+                ...prev,
+                pincode: e.target.value.replace(/\D/g, '').slice(0, 6),
+              }))
+            }
+            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+          />
 
-            <div className="flex gap-6">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="online"
-                  checked={paymentMethod === 'online'}
-                  onChange={() => setPaymentMethod('online')}
-                />
-                <span className="text-sm dark:text-white">Online Payment</span>
-              </label>
+          {error && <p className="text-sm text-red-500">{error}</p>}
 
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  value="cod"
-                  checked={paymentMethod === 'cod'}
-                  onChange={() => setPaymentMethod('cod')}
-                />
-                <span className="text-sm dark:text-white">Cash on Delivery</span>
-              </label>
-            </div>
-          </div>
-
-          <Button type="submit" size="lg" className="w-full" isLoading={loading}>
-            Place Order (₹{totalPrice.toFixed(2)})
+          <Button type="submit" className="w-full sm:w-auto">
+            Continue
           </Button>
-
         </form>
 
-        {/* Order Summary */}
-        <div className="bg-gray-50 dark:bg-white/5 p-6 rounded-xl h-fit">
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-            Your Order
-          </h2>
-
-          {items.map(item => (
-            <div key={item.id} className="flex justify-between text-sm mb-2">
-              <span>{item.name} x {item.quantity}</span>
-              <span>₹{(item.price * item.quantity).toFixed(2)}</span>
+        <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 sm:p-6 h-fit border border-gray-200 dark:border-white/10">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Summary</h2>
+          {items.map((item) => (
+            <div key={item.id} className="flex justify-between text-sm mb-2 text-gray-700 dark:text-gray-200">
+              <span className="pr-3">{item.name} x {item.quantity}</span>
+              <span>Rs {(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
-
-          <div className="border-t mt-4 pt-4 font-bold text-lg flex justify-between">
+          <div className="border-t mt-4 pt-4 font-bold flex justify-between text-gray-900 dark:text-white">
             <span>Total</span>
-            <span>₹{totalPrice.toFixed(2)}</span>
+            <span>Rs {totalPrice.toFixed(2)}</span>
           </div>
         </div>
       </div>

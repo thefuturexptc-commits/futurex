@@ -160,6 +160,21 @@ export interface Address {
   country: string;
 }
 
+export interface CheckoutShippingDetails {
+  name: string;
+  phoneNumber: string;
+  address: string;
+  city: string;
+  state: string;
+  pincode: string;
+}
+
+export interface CheckoutFlowState {
+  shippingDetails: CheckoutShippingDetails;
+  phone: string;
+  phoneVerified?: boolean;
+}
+
 export interface Order {
   id: string;
   userId: string;
@@ -168,6 +183,10 @@ export interface Order {
   status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Returned';
   date: string;
   shippingAddress: Address;
+  phoneNumber?: string;
+  paymentStatus?: 'Pending' | 'Paid' | 'Failed';
+  shippingDetails?: CheckoutShippingDetails;
+  createdAt?: string;
 }
 
 export interface WebsiteSettings {

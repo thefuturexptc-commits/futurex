@@ -21,7 +21,7 @@ import {
 } from 'firebase/storage';
 import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
-import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession } from '../types';
+import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 
 // 🔒 ADDED: Production Safe URL Validator
@@ -1154,6 +1154,23 @@ export const verifyPhoneOtp = async (code: string): Promise<void> => {
     throw new Error('Invalid OTP');
   }
   try {
+    // Prefer confirmationResult flow when available; it's less prone to stale verificationId issues.
+    if (phoneConfirmationResult) {
+      await phoneConfirmationResult.confirm(normalizedCode);
+      phoneConfirmationResult = null;
+      phoneVerificationId = null;
+      if (typeof window !== 'undefined') {
+        (window as any).confirmationResult = null;
+        (window as any).phoneVerificationId = null;
+        try {
+          window.sessionStorage.removeItem('phoneVerificationId');
+        } catch {
+          // no-op for restricted storage contexts
+        }
+      }
+      return;
+    }
+
     const credential = PhoneAuthProvider.credential(activeVerificationId, normalizedCode);
     await signInWithCredential(auth, credential);
     phoneConfirmationResult = null;
@@ -1352,7 +1369,13 @@ export const verifyIndianPincode = async (
 
 // --- Order Service ---
 
-export const createOrder = async (userId: string, items: any[], total: number, address: Address): Promise<Order> => {
+export const createOrder = async (
+  userId: string,
+  items: any[],
+  total: number,
+  address: Address,
+  meta?: { phoneNumber?: string; paymentStatus?: 'Pending' | 'Paid' | 'Failed'; shippingDetails?: CheckoutShippingDetails }
+): Promise<Order> => {
   const newOrder: Order = {
     id: `ORD-${Date.now()}`,
     userId,
@@ -1360,7 +1383,11 @@ export const createOrder = async (userId: string, items: any[], total: number, a
     total,
     status: 'Processing',
     date: new Date().toISOString(),
-    shippingAddress: address
+    shippingAddress: address,
+    shippingDetails: meta?.shippingDetails,
+    phoneNumber: meta?.phoneNumber,
+    paymentStatus: meta?.paymentStatus || 'Paid',
+    createdAt: new Date().toISOString(),
   };
 
   const cleanOrder = deepSanitize(newOrder);
