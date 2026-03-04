@@ -47,6 +47,7 @@ export const Checkout: React.FC = () => {
         pincode: shippingDetails.pincode.replace(/\D/g, '').slice(0, 6),
       },
     };
+    window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(flowState));
     navigate('/verify-phone', { state: flowState });
   };
 

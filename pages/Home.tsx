@@ -1,10 +1,11 @@
-﻿import React, { MouseEvent, useCallback, useEffect, useRef, useState } from 'react';
+import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
 import { getProducts, seedDatabase } from '../services/backend';
 import { useAuth } from '../context/AuthContext';
+import { useAuthModal } from '../context/AuthModalContext';
 import ringHomeImage from '../assets/images/mainring.jpg';
 import bandHomeImage from '../assets/images/mainband.png';
 import fanHomeImage from '../assets/images/mainfan.png';
@@ -16,9 +17,12 @@ export const Home: React.FC = () => {
   const [loadError, setLoadError] = useState('');
   const [seeding, setSeeding] = useState(false);
   const { user } = useAuth();
+  const { openLogin } = useAuthModal();
   const navigate = useNavigate();
   const bestSellerScrollerRef = useRef<HTMLDivElement | null>(null);
   const featuredScrollerRef = useRef<HTMLDivElement | null>(null);
+  const [heroSpotlightIndex, setHeroSpotlightIndex] = useState(0);
+  const [dealCountdown, setDealCountdown] = useState('00:00:00');
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -57,6 +61,13 @@ export const Home: React.FC = () => {
   const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
   const bestSellersForSlider = bestSellers;
   const featuredProductsForSlider = featuredProducts;
+  const heroSpotlights = useMemo(
+    () =>
+      [...featuredProducts, ...bestSellers].filter(
+        (product, index, arr) => arr.findIndex((item) => item.id === product.id) === index
+      ),
+    [featuredProducts, bestSellers]
+  );
 
   const handleShopNavigation = (path: string) => {
     navigate(path);
@@ -83,6 +94,21 @@ export const Home: React.FC = () => {
     .slice(0, 2);
 
   const topNewArrivals = [...featuredProducts].slice(0, 2);
+  const toOfferSlug = (value: string) =>
+    value
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
+
+  const openProtectedOffer = (event: MouseEvent<HTMLAnchorElement>, offerPath: string) => {
+    event.preventDefault();
+    if (!user) {
+      openLogin(offerPath);
+      return;
+    }
+    navigate(offerPath);
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -120,6 +146,30 @@ export const Home: React.FC = () => {
     };
   }, [loading, bestSellersForSlider.length, featuredProductsForSlider.length]);
 
+  useEffect(() => {
+    if (heroSpotlights.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setHeroSpotlightIndex((prev) => (prev + 1) % heroSpotlights.length);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [heroSpotlights.length]);
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const target = new Date(now);
+      target.setHours(23, 59, 59, 999);
+      const diff = Math.max(0, target.getTime() - now.getTime());
+      const hh = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const mm = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      setDealCountdown(`${hh}:${mm}:${ss}`);
+    };
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const dynamicDeals = [
     ...topPriceDrops.map((p) => {
       const mrp = Number(p.mrp || 0);
@@ -129,21 +179,26 @@ export const Home: React.FC = () => {
         title: `${pct}% OFF on ${p.name}`,
         desc: `Price dropped from Rs ${mrp.toLocaleString()} to Rs ${sale.toLocaleString()}.`,
         badge: 'PRICE DROP',
+        href: `/product/${p.id}`,
+        cta: 'Claim Price Drop',
       };
     }),
     ...topNewArrivals.map((p) => ({
       title: `New Arrival: ${p.name}`,
       desc: `Latest in ${p.category}. Now available from Rs ${Number(p.salePrice || p.price || 0).toLocaleString()}.`,
       badge: 'NEW',
+      href: `/product/${p.id}`,
+      cta: 'Unlock Launch Offer',
     })),
   ].slice(0, 4);
 
   const dealsToShow = dynamicDeals.length > 0 ? dynamicDeals : [
-    { title: 'Flat 20% OFF', desc: 'On new wearable launches this week.', badge: 'LIMITED' },
-    { title: 'Free Express Delivery', desc: 'On prepaid orders above Rs 1,499.', badge: 'FAST' },
-    { title: 'Exchange Bonus', desc: 'Upgrade your old band/ring and save more.', badge: 'BONUS' },
-    { title: 'Weekend Flash Deal', desc: 'Extra 10% off on Smart Bands and Rings every weekend.', badge: 'FLASH' },
+    { title: 'Flat 20% OFF', desc: 'On new wearable launches this week.', badge: 'LIMITED', href: '/offers/flat-20-off', cta: 'Claim 20% OFF' },
+    { title: 'Free Express Delivery', desc: 'On prepaid orders above Rs 1,499.', badge: 'FAST', href: '/offers/free-express-delivery', cta: 'Unlock Delivery' },
+    { title: 'Exchange Bonus', desc: 'Upgrade your old band/ring and save more.', badge: 'BONUS', href: '/offers/exchange-bonus', cta: 'Claim Exchange Bonus' },
+    { title: 'Weekend Flash Deal', desc: 'Extra 10% off on Smart Bands and Rings every weekend.', badge: 'FLASH', href: '/offers/weekend-flash-deal', cta: 'Grab Flash Deal' },
   ];
+  const primaryOfferPath = dealsToShow[0]?.href || '/offers/member-offer';
 
   const categoryCardImages: Record<string, string> = {
     'Smart Bands': bandHomeImage,
@@ -151,6 +206,11 @@ export const Home: React.FC = () => {
     'Smart Fans': fanHomeImage,
     'Smart Monitoring': monitorHomeImage,
   };
+  const spotlightProduct = heroSpotlights[heroSpotlightIndex];
+  const soldToday = Math.max(
+    57,
+    bestSellers.reduce((sum, product) => sum + Math.max(2, Math.floor(Number(product.sold || 0) / 20)), 0)
+  );
 
   const getArrivalHighlight = (product: Product) => {
     const mrp = Number(product.mrp || 0);
@@ -181,7 +241,7 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden text-gray-900 dark:text-white">
+    <div className="min-h-screen overflow-x-hidden pb-24 sm:pb-0 text-gray-900 dark:text-white">
       {loadError && (
         <div className="max-w-7xl mx-auto px-4 pt-6">
           <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -249,6 +309,34 @@ export const Home: React.FC = () => {
               <span className="hidden md:inline text-primary-500">&bull;</span>
               <span className="animate-fade-in-up" style={{ animationDelay: '240ms' }}>99% Accuracy</span>
             </div>
+            <div className="mt-5 flex justify-center gap-3">
+              <Button onClick={() => navigate('/shop/all')} className="rounded-full px-6 py-2.5">
+                Shop Now
+              </Button>
+              <Button
+                variant="outline"
+                className="rounded-full px-6 py-2.5"
+                onClick={() => {
+                  const prompt = spotlightProduct
+                    ? `show specs for ${spotlightProduct.name}`
+                    : 'show best sellers';
+                  window.dispatchEvent(new CustomEvent('support-assistant:ask-product', { detail: { prompt } }));
+                }}
+              >
+                Watch Demo
+              </Button>
+            </div>
+            {spotlightProduct && (
+              <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/40 bg-white/70 dark:bg-black/20 backdrop-blur-md px-4 py-3 flex items-center justify-between gap-3 shadow-xl">
+                <div className="text-left">
+                  <p className="text-[10px] uppercase tracking-[0.22em] text-primary-600 font-bold">Live Spotlight</p>
+                  <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">{spotlightProduct.name}</p>
+                </div>
+                <Button size="sm" className="rounded-full px-4" onClick={() => navigate(`/product/${spotlightProduct.id}`)}>
+                  View
+                </Button>
+              </div>
+            )}
 
           </div>
         </div>
@@ -312,7 +400,7 @@ export const Home: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
                 <span className="text-primary-600 dark:text-primary-400 font-bold tracking-widest uppercase text-xs font-display mb-2 block">Customer Favorites</span>
-                <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
             </div>
             <button onClick={() => handleShopNavigation('/shop/all')} className="group flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors font-display tracking-wide">
               VIEW ALL 
@@ -347,6 +435,7 @@ export const Home: React.FC = () => {
           )}
         </div>
       </section>
+      <div className="h-10 bg-gradient-to-b from-transparent via-primary-100/40 to-transparent dark:via-primary-900/10" />
       
       {/* Featured / New Arrivals Section */}
       <section className="py-12 sm:py-16 bg-gray-50 dark:bg-dark-surface/40 relative border-y border-gray-200 dark:border-white/5 text-gray-900 dark:text-white animate-fade-in-up">
@@ -400,6 +489,7 @@ export const Home: React.FC = () => {
               </div>
           </div>
       </section>
+      <div className="h-10 bg-gradient-to-b from-transparent via-cyan-100/40 to-transparent dark:via-cyan-900/10" />
 
       <section className="py-12 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto px-4 py-8">
@@ -437,20 +527,37 @@ export const Home: React.FC = () => {
           <div className="text-center mb-12">
             <p className="text-xs uppercase tracking-[0.3em] text-primary-600 font-bold">Live Offers</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-display mt-2">Deals & Benefits</h2>
+            <p className="mt-3 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300">Flash window ends in {dealCountdown}</p>
+            <div className="mt-4">
+              <Link
+                to={primaryOfferPath}
+                onClick={(event) => openProtectedOffer(event, primaryOfferPath)}
+                className="inline-flex items-center gap-2 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-4 py-2 text-xs font-semibold tracking-wide"
+              >
+                Open Member Offer
+                <span aria-hidden="true">{'->'}</span>
+              </Link>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
             {dealsToShow.map((offer, idx) => (
-              <div
+              <Link
                 key={offer.title}
+                to={offer.href}
+                onClick={(event) => openProtectedOffer(event, offer.href)}
                 className="relative rounded-2xl border border-gray-200 dark:border-white/10 p-6 bg-gradient-to-br from-cyan-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950 shadow-md hover:-translate-y-1 hover:scale-[1.01] transition-transform duration-300 animate-fade-in-up"
                 style={{ animationDelay: `${idx * 120}ms` }}
               >
-                <span className="inline-block text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300">
+                <span className="inline-block text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300 animate-pulse">
                   {offer.badge}
                 </span>
-                <h3 className="text-2xl font-bold mt-4 text-gray-900 dark:text-white">{offer.title}</h3>
+                <h3 className="text-xl sm:text-2xl font-bold mt-4 text-gray-900 dark:text-white">{offer.title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 mt-2">{offer.desc}</p>
-              </div>
+                <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-semibold tracking-wide">
+                  {offer.cta}
+                  <span aria-hidden="true">{'->'}</span>
+                </span>
+              </Link>
             ))}
           </div>
         </div>
@@ -481,3 +588,4 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+

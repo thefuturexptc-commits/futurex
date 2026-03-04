@@ -5,6 +5,7 @@ import {
   signInAnonymously, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
+  fetchSignInMethodsForEmail,
   signInWithPopup, 
   GoogleAuthProvider,
   RecaptchaVerifier,
@@ -167,6 +168,14 @@ const DEFAULT_PAGE_CONTENT: NonNullable<WebsiteSettings['pageContent']> = {
   terms: 'Add your terms and conditions from Admin Settings.',
   refund: 'Add your refund policy from Admin Settings.',
   cookies: 'Add your cookie policy from Admin Settings.',
+};
+const DEFAULT_SOCIAL_LINKS: NonNullable<WebsiteSettings['socialLinks']> = {
+  email: 'thefuturex.ptc@gmail.com',
+  twitter: '',
+  facebook: '',
+  instagram: '',
+  youtube: '',
+  linkedin: '',
 };
 
 const applyRoleByEmail = (user: User): User => {
@@ -793,14 +802,13 @@ export const registerUser = async (email: string, password: string, phone: strin
     }
 
     const newUser: User = {
-        id: `user_${Date.now()}`,
-        name: normalizedEmail.split('@')[0] || 'User',
-        email: normalizedEmail,
-        phone: normalizedPhone,
-        password,
-        role: 'user',
-        addresses: [],
-        permissions: {}
+      id: `user_${Date.now()}`,
+      name: normalizedEmail.split('@')[0] || 'User',
+      email: normalizedEmail,
+      phone: normalizedPhone,
+      role: 'user',
+      addresses: [],
+      permissions: {}
     };
     const cleanUser = deepSanitize(newUser);
 
@@ -812,7 +820,18 @@ export const registerUser = async (email: string, password: string, phone: strin
         throw new Error('Unable to create account right now.');
       }
       cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
-      await setDoc(doc(db, 'users', firebaseUser.uid), cleanUser);
+      await setDoc(doc(db, 'users', firebaseUser.uid), deepSanitize({
+        uid: firebaseUser.uid,
+        id: firebaseUser.uid,
+        name: cleanUser.name,
+        email: normalizedEmail,
+        phone: normalizedPhone,
+        role: 'user',
+        addresses: [],
+        permissions: {},
+        createdAt: new Date().toISOString(),
+        offersSubscribed: true
+      }));
     } catch (e: any) {
       const code = e?.code || '';
       if (code === 'auth/email-already-in-use') {
@@ -894,11 +913,26 @@ export const loginUser = async (email: string, password: string, phone?: string)
     });
   } catch (e: any) {
     const firebaseErrorCode = e?.code || '';
-    if (firebaseErrorCode === 'auth/user-not-found' || firebaseErrorCode === 'auth/invalid-credential') {
+    if (firebaseErrorCode === 'auth/user-not-found') {
       throw new Error('Account not found. Please sign up first.');
     }
     if (firebaseErrorCode === 'auth/wrong-password') {
       throw new Error('Incorrect password.');
+    }
+    if (firebaseErrorCode === 'auth/invalid-credential') {
+      try {
+        const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
+        if (!methods || methods.length === 0) {
+          throw new Error('Account not found. Please sign up first.');
+        }
+        throw new Error('Incorrect password.');
+      } catch (lookupErr: any) {
+        const lookupMessage = String(lookupErr?.message || '');
+        if (lookupMessage.includes('Account not found') || lookupMessage.includes('Incorrect password')) {
+          throw lookupErr;
+        }
+        throw new Error('Login failed. Please try again.');
+      }
     }
     if (firebaseErrorCode === 'auth/invalid-email') {
       throw new Error('Invalid email address.');
@@ -977,6 +1011,29 @@ export const loginWithGoogle = async (): Promise<User> => {
   }
 };
 
+export const isEmailRegistered = async (email: string): Promise<boolean> => {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return false;
+
+  try {
+    const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
+    if (methods && methods.length > 0) return true;
+  } catch {
+    // Fallback below
+  }
+
+  try {
+    const qEmail = query(collection(db, 'users'), where('email', '==', normalizedEmail));
+    const emailSnap = await getDocs(qEmail);
+    if (!emailSnap.empty) return true;
+  } catch {
+    // Fallback below
+  }
+
+  const users = upsertSuperAdmin(getMockData<User[]>('users', []));
+  return users.some((u) => (u.email || '').trim().toLowerCase() === normalizedEmail);
+};
+
 const normalizeIndianPhone = (input: string): string => {
   const cleaned = input.replace(/\D/g, '');
 
@@ -1035,6 +1092,7 @@ const mapPhoneAuthError = (error: unknown): string => {
 };
 
 export const resetPhoneOtpFlow = () => {
+  const containerId = recaptchaContainerInUse;
   phoneConfirmationResult = null;
   phoneVerificationId = null;
   recaptchaContainerInUse = null;
@@ -1051,6 +1109,12 @@ export const resetPhoneOtpFlow = () => {
       // no-op for restricted storage contexts
     }
     (window as any).recaptchaVerifier = null;
+    if (containerId) {
+      const container = document.getElementById(containerId);
+      if (container) {
+        container.innerHTML = '';
+      }
+    }
   }
 };
 
@@ -1068,6 +1132,8 @@ const ensureRecaptchaVerifier = async (containerId: string): Promise<RecaptchaVe
   if (!container) {
     throw new Error(`reCAPTCHA container not found: #${containerId}`);
   }
+  // Defensive reset to avoid "reCAPTCHA has already been rendered in this element" on retries.
+  container.innerHTML = '';
 
   recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
     size: 'invisible',
@@ -1185,15 +1251,6 @@ export const verifyPhoneOtp = async (code: string): Promise<void> => {
       }
     }
   } catch (error) {
-    // Temporary diagnostics to pinpoint Firebase OTP credential rejection.
-    // Remove once phone auth is stable in production.
-    console.error('Phone OTP send failed', {
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      customData: (error as { customData?: unknown })?.customData,
-      phone: formattedPhone,
-      container: recaptchaContainerId,
-    });
     const code = (error as { code?: string })?.code || '';
     if (code === 'auth/invalid-verification-code') {
       throw new Error('Incorrect OTP');
@@ -1667,37 +1724,61 @@ export const updateSupportChatSession = async (
 // --- Settings Service ---
 
 export const getWebsiteSettings = async (): Promise<WebsiteSettings> => {
-    // Local
-    const localSettings = getMockData<WebsiteSettings>('settings', {
-      primaryColor: '#0ea5e9',
-      logoUrl: '',
-      footerSections: DEFAULT_FOOTER_SECTIONS,
-      pageContent: DEFAULT_PAGE_CONTENT
+    const normalizeSettings = (raw?: Partial<WebsiteSettings> | null): WebsiteSettings => ({
+      primaryColor: raw?.primaryColor || '#0ea5e9',
+      logoUrl: raw?.logoUrl || '',
+      socialLinks: { ...DEFAULT_SOCIAL_LINKS, ...(raw?.socialLinks || {}) },
+      footerSections: raw?.footerSections?.length ? raw.footerSections : DEFAULT_FOOTER_SECTIONS,
+      pageContent: { ...DEFAULT_PAGE_CONTENT, ...(raw?.pageContent || {}) },
     });
-    
-    // Firebase
+
+    const localStored = readFromLocalStorage<WebsiteSettings>('settings');
+    const localSettings = normalizeSettings(localStored);
+
     try {
-        const docRef = doc(db, 'settings', 'general');
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-            const data = docSnap.data() as WebsiteSettings;
-            return {
-              primaryColor: data.primaryColor || '#0ea5e9',
-              logoUrl: data.logoUrl || '',
-              footerSections: data.footerSections?.length ? data.footerSections : DEFAULT_FOOTER_SECTIONS,
-              pageContent: data.pageContent || DEFAULT_PAGE_CONTENT
-            };
+      const docRef = doc(db, 'settings', 'general');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const remoteSettings = normalizeSettings(docSnap.data() as WebsiteSettings);
+
+        // If admin recently changed settings locally but cloud sync failed/stale,
+        // prefer local overrides so website still reflects admin intent.
+        if (localStored) {
+          return normalizeSettings({
+            ...remoteSettings,
+            ...localStored,
+            footerSections: localStored.footerSections?.length ? localStored.footerSections : remoteSettings.footerSections,
+            pageContent: { ...remoteSettings.pageContent, ...(localStored.pageContent || {}) },
+          });
         }
-    } catch(e) { }
-    
+
+        return remoteSettings;
+      }
+    } catch {
+      // Fall back to local settings when remote fetch is unavailable.
+    }
+
     return localSettings;
 };
 
 export const updateWebsiteSettings = async (settings: WebsiteSettings): Promise<void> => {
-    setMockData('settings', settings);
+    const normalizedSettings: WebsiteSettings = {
+      primaryColor: settings.primaryColor || '#0ea5e9',
+      logoUrl: settings.logoUrl || '',
+      socialLinks: { ...DEFAULT_SOCIAL_LINKS, ...(settings.socialLinks || {}) },
+      footerSections: settings.footerSections?.length ? settings.footerSections : DEFAULT_FOOTER_SECTIONS,
+      pageContent: { ...DEFAULT_PAGE_CONTENT, ...(settings.pageContent || {}) },
+    };
+
+    setMockData('settings', normalizedSettings);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('website-settings-updated', { detail: normalizedSettings }));
+    }
     try {
         await ensureFirebaseConnection();
         const docRef = doc(db, 'settings', 'general');
-        await setDoc(docRef, settings, { merge: true });
-    } catch (e) { }
+        await setDoc(docRef, normalizedSettings, { merge: true });
+    } catch {
+      // Keep local settings as source of truth when cloud sync fails.
+    }
 };

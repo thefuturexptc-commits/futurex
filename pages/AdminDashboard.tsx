@@ -67,7 +67,18 @@ export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin' || user?.role === 'superadmin';
   const isSuperAdmin = user?.role === 'superadmin';
-  const { updatePrimaryColor, primaryColor, updateLogoUrl, logoUrl, footerSections, updateFooterSections, pageContent, updatePageContent } = useTheme();
+  const {
+    updatePrimaryColor,
+    primaryColor,
+    updateLogoUrl,
+    logoUrl,
+    socialLinks,
+    updateSocialLinks,
+    footerSections,
+    updateFooterSections,
+    pageContent,
+    updatePageContent,
+  } = useTheme();
 
   const [activeTab, setActiveTab] = useState<TabKey>(() => {
     if (typeof window === 'undefined') return 'analytics';
@@ -184,6 +195,7 @@ export const AdminDashboard: React.FC = () => {
         settings: 'settings',
       };
       if (isSuperAdmin) return true;
+      if (tab === 'settings') return true;
       if (tab === 'admins') return false;
       const required = tabRequirements[tab];
       return required ? Boolean(user?.permissions?.[required]) : false;
@@ -773,7 +785,12 @@ export const AdminDashboard: React.FC = () => {
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const color = e.target.value;
     updatePrimaryColor(color);
-    updateWebsiteSettings({ primaryColor: color, logoUrl, footerSections, pageContent });
+    updateWebsiteSettings({ primaryColor: color, logoUrl, socialLinks, footerSections, pageContent });
+  };
+
+  const handlePresetColorSelect = (color: string) => {
+    updatePrimaryColor(color);
+    updateWebsiteSettings({ primaryColor: color, logoUrl, socialLinks, footerSections, pageContent });
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -782,7 +799,7 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const saveSettings = async () => {
-    await updateWebsiteSettings({ primaryColor, logoUrl, footerSections, pageContent });
+    await updateWebsiteSettings({ primaryColor, logoUrl, socialLinks, footerSections, pageContent });
     pushAudit('Settings Updated');
     alert('Settings Saved');
   };
@@ -908,10 +925,13 @@ export const AdminDashboard: React.FC = () => {
         <SettingsTab
           primaryColor={primaryColor}
           logoUrl={logoUrl}
+          socialLinks={socialLinks}
           footerSections={footerSections}
           pageContent={pageContent}
           onColorChange={handleColorChange}
+          onPresetColorSelect={handlePresetColorSelect}
           onLogoChange={handleLogoChange}
+          onSocialLinksChange={updateSocialLinks}
           onFooterSectionsChange={updateFooterSections}
           onPageContentChange={updatePageContent}
           onSave={saveSettings}

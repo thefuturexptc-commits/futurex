@@ -5,10 +5,27 @@ import { SectionHeader } from '../common/SectionHeader';
 interface Props {
   primaryColor: string;
   logoUrl: string;
+  socialLinks: {
+    email?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    linkedin?: string;
+  };
   footerSections: Array<{ title: string; items: string[] }>;
   pageContent: Record<string, string>;
   onColorChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLogoChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onPresetColorSelect: (color: string) => void;
+  onSocialLinksChange: (links: {
+    email?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    linkedin?: string;
+  }) => void;
   onFooterSectionsChange: (sections: Array<{ title: string; items: string[] }>) => void;
   onPageContentChange: (content: Record<string, string>) => void;
   onSave: () => Promise<void> | void;
@@ -18,10 +35,13 @@ interface Props {
 export const SettingsTab: React.FC<Props> = ({
   primaryColor,
   logoUrl,
+  socialLinks,
   footerSections,
   pageContent,
   onColorChange,
   onLogoChange,
+  onPresetColorSelect,
+  onSocialLinksChange,
   onFooterSectionsChange,
   onPageContentChange,
   onSave,
@@ -69,6 +89,25 @@ export const SettingsTab: React.FC<Props> = ({
               <input type="color" value={primaryColor} onChange={onColorChange} className="h-10 w-20 rounded border border-gray-300 dark:border-gray-600" />
               <span className="text-sm text-gray-700 dark:text-gray-300">{primaryColor}</span>
             </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[
+                { name: 'Ocean', color: '#0ea5e9' },
+                { name: 'Sunset', color: '#f97316' },
+                { name: 'Neon Mint', color: '#10b981' },
+                { name: 'Rose Fire', color: '#e11d48' },
+                { name: 'Royal', color: '#2563eb' },
+              ].map((preset) => (
+                <button
+                  key={preset.name}
+                  type="button"
+                  onClick={() => onPresetColorSelect(preset.color)}
+                  className="inline-flex items-center gap-2 rounded-full border border-gray-300 dark:border-gray-600 px-3 py-1 text-xs font-semibold"
+                >
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: preset.color }} />
+                  {preset.name}
+                </button>
+              ))}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Custom Logo URL</label>
@@ -79,6 +118,53 @@ export const SettingsTab: React.FC<Props> = ({
               placeholder="e.g. https://cdn.example.com/logo.png"
               className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
+          </div>
+          <div className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5 space-y-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Social Links</label>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <input
+                type="email"
+                value={socialLinks.email || ''}
+                onChange={(e) => onSocialLinksChange({ ...socialLinks, email: e.target.value })}
+                placeholder="Gmail address (e.g. support@yourbrand.com)"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              />
+              <input
+                type="url"
+                value={socialLinks.instagram || ''}
+                onChange={(e) => onSocialLinksChange({ ...socialLinks, instagram: e.target.value })}
+                placeholder="Instagram URL"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              />
+              <input
+                type="url"
+                value={socialLinks.facebook || ''}
+                onChange={(e) => onSocialLinksChange({ ...socialLinks, facebook: e.target.value })}
+                placeholder="Facebook URL"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              />
+              <input
+                type="url"
+                value={socialLinks.twitter || ''}
+                onChange={(e) => onSocialLinksChange({ ...socialLinks, twitter: e.target.value })}
+                placeholder="Twitter / X URL"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              />
+              <input
+                type="url"
+                value={socialLinks.youtube || ''}
+                onChange={(e) => onSocialLinksChange({ ...socialLinks, youtube: e.target.value })}
+                placeholder="YouTube URL"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              />
+              <input
+                type="url"
+                value={socialLinks.linkedin || ''}
+                onChange={(e) => onSocialLinksChange({ ...socialLinks, linkedin: e.target.value })}
+                placeholder="LinkedIn URL"
+                className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
+              />
+            </div>
           </div>
           <div className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5 space-y-4">
             <div className="flex items-center justify-between">

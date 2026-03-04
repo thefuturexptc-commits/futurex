@@ -29,12 +29,69 @@ const AdminEditProductPage = React.lazy(() => import('./pages/AdminEditProductPa
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Signup = React.lazy(() => import('./pages/Signup').then(module => ({ default: module.Signup })));
 const InfoPage = React.lazy(() => import('./pages/InfoPage').then(module => ({ default: module.InfoPage })));
+const OfferPage = React.lazy(() => import('./pages/OfferPage').then(module => ({ default: module.OfferPage })));
 
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
   }, [pathname]);
+  return null;
+};
+
+const ScrollJoinPrompt: React.FC<{ onPrompt: () => void }> = ({ onPrompt }) => {
+  const { user } = useAuth();
+  const location = useLocation();
+  const hasPromptedRef = useRef(false);
+
+  useEffect(() => {
+    hasPromptedRef.current = false;
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (user) return;
+    if (location.pathname !== '/') return;
+    if (sessionStorage.getItem('tfx_scroll_join_prompted') === '1') return;
+
+    const onScroll = () => {
+      if (hasPromptedRef.current) return;
+      if (window.scrollY < 40) return;
+      hasPromptedRef.current = true;
+      sessionStorage.setItem('tfx_scroll_join_prompted', '1');
+      onPrompt();
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, [user, location.pathname, onPrompt]);
+
+  return null;
+};
+
+const GlobalAuthPrompt: React.FC = () => {
+  const { user, isAuthReady } = useAuth();
+  const { openLogin } = useAuthModal();
+  const { pathname } = useLocation();
+  const promptedPathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isAuthReady || user) {
+      promptedPathRef.current = null;
+      return;
+    }
+
+    if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
+      return;
+    }
+
+    if (promptedPathRef.current === pathname) return;
+    promptedPathRef.current = pathname;
+    const timer = window.setTimeout(() => {
+      openLogin(pathname);
+    }, 900);
+    return () => window.clearTimeout(timer);
+  }, [isAuthReady, user, pathname, openLogin]);
+
   return null;
 };
 
@@ -81,6 +138,8 @@ const App: React.FC = () => {
           <BrowserRouter>
             <AuthModalProvider value={{ openLogin }}>
               <ScrollToTop />
+              <GlobalAuthPrompt />
+              <ScrollJoinPrompt onPrompt={() => openLogin('/profile')} />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />
                 <CartDrawer /> {/* Global Drawer Overlay */}
@@ -113,6 +172,7 @@ const App: React.FC = () => {
                     <Route path="/login" element={<Login />} />
                     <Route path="/signup" element={<Signup />} />
                     <Route path="/info/:slug" element={<InfoPage />} />
+                    <Route path="/offers/:slug" element={<RequireAuth><OfferPage /></RequireAuth>} />
                     <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
                     <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
                     <Route path="/admin/edit-product" element={<RequireAuth><AdminEditProductPage /></RequireAuth>} />

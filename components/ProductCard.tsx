@@ -44,6 +44,42 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
           className="w-full h-full object-contain object-center p-2 group-hover:scale-105 transition-all duration-300 ease-out"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute left-2 right-2 bottom-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                window.location.href = `/product/${product.id}`;
+              }}
+              className="rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5"
+            >
+              View
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                const prompt = `compare ${product.name}`;
+                window.dispatchEvent(new CustomEvent('support-assistant:ask-product', { detail: { prompt } }));
+              }}
+              className="rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5"
+            >
+              Compare
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                addToCart(product);
+              }}
+              disabled={!canAdd}
+              className="rounded-lg bg-primary-600 text-white text-[11px] font-semibold py-1.5 disabled:opacity-50"
+            >
+              Add
+            </button>
+          </div>
+        </div>
       </Link>
 
       <div className={`${compact ? 'p-4' : 'p-6'} flex flex-col flex-1`}>

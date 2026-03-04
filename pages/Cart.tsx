@@ -12,6 +12,18 @@ export const Cart: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCheckout = () => {
+    const isMobileViewport =
+      typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches;
+
+    if (isMobileViewport) {
+      window.dispatchEvent(
+        new CustomEvent('support-assistant:cart-action', {
+          detail: { action: 'checkout_clicked' },
+        })
+      );
+      return;
+    }
+
     if (!user) {
       openLogin('/checkout');
     } else {

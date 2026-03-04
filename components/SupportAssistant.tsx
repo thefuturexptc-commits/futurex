@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   appendSupportChatMessage,
   getProducts,
@@ -67,9 +67,13 @@ const getSessionId = (userId: string) => {
 
 export const SupportAssistant: React.FC = () => {
   const { user } = useAuth();
-  const { addToCart, isCartOpen } = useCart();
+  const { addToCart, isCartOpen, closeCart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches
+  );
   const [input, setInput] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -79,9 +83,11 @@ export const SupportAssistant: React.FC = () => {
   const [shouldAutoScroll, setShouldAutoScroll] = useState(true);
   const [pendingPrompt, setPendingPrompt] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(() => !localStorage.getItem('tfx_support_tooltip_seen'));
+  const [showAutoNudge, setShowAutoNudge] = useState(false);
   const [isTyping, setIsTyping] = useState(false);
   const [compareBuffer, setCompareBuffer] = useState<ChatProductCard[]>([]);
   const [awaitingCheckout, setAwaitingCheckout] = useState(false);
+  const [pendingAssistantHint, setPendingAssistantHint] = useState<string | null>(null);
 
   const messagesContainerRef = React.useRef<HTMLDivElement | null>(null);
   const bottomRef = React.useRef<HTMLDivElement | null>(null);
@@ -153,6 +159,7 @@ export const SupportAssistant: React.FC = () => {
   }, [userId, user?.email, user?.name]);
 
   useEffect(() => {
+    if (!open) return;
     if (!session) return;
     const timer = window.setInterval(async () => {
       const latest = (await getSupportChatsByUserId(userId)).find((chat) => chat.id === session.id);
@@ -163,9 +170,9 @@ export const SupportAssistant: React.FC = () => {
         if (cleaned.length === prev.length) return prev;
         return cleaned;
       });
-    }, 7000);
+    }, 12000);
     return () => window.clearInterval(timer);
-  }, [session, userId]);
+  }, [open, session, userId]);
 
   useEffect(() => {
     if (!open) return;
@@ -179,11 +186,19 @@ export const SupportAssistant: React.FC = () => {
   }, [open]);
 
   useEffect(() => {
-    // Auto-minimize chat while cart drawer is open.
-    if (isCartOpen && open) {
-      setOpen(false);
+    const onResize = () => {
+      setIsMobileViewport(window.matchMedia('(max-width: 639px)').matches);
+    };
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  useEffect(() => {
+    // On mobile, let assistant replace cart drawer space.
+    if (isMobileViewport && isCartOpen && open) {
+      closeCart();
     }
-  }, [isCartOpen, open]);
+  }, [isMobileViewport, isCartOpen, open, closeCart]);
 
   useEffect(() => {
     if (!open) return;
@@ -210,6 +225,28 @@ export const SupportAssistant: React.FC = () => {
   }, [open, showTooltip]);
 
   useEffect(() => {
+    if (open) {
+      setShowAutoNudge(false);
+      return;
+    }
+
+    const showForMs = 7000;
+    const repeatEveryMs = 30000;
+
+    setShowAutoNudge(true);
+    const hideTimer = window.setTimeout(() => setShowAutoNudge(false), showForMs);
+    const interval = window.setInterval(() => {
+      setShowAutoNudge(true);
+      window.setTimeout(() => setShowAutoNudge(false), showForMs);
+    }, repeatEveryMs);
+
+    return () => {
+      window.clearTimeout(hideTimer);
+      window.clearInterval(interval);
+    };
+  }, [open]);
+
+  useEffect(() => {
     const onAskProduct = (event: Event) => {
       const customEvent = event as CustomEvent<{ prompt?: string }>;
       const prompt = (customEvent.detail?.prompt || '').trim();
@@ -223,6 +260,37 @@ export const SupportAssistant: React.FC = () => {
       window.removeEventListener('support-assistant:ask-product', onAskProduct as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    const onCartAction = (event: Event) => {
+      const customEvent = event as CustomEvent<{ action?: string; productName?: string }>;
+      const action = customEvent.detail?.action || '';
+      const productName = customEvent.detail?.productName || 'this item';
+      if (!action) return;
+
+      if (isCartOpen) closeCart();
+      setOpen(true);
+      setShouldAutoScroll(true);
+
+      if (action === 'added_to_cart') {
+        setPendingAssistantHint(
+          `I noticed you added ${productName} to cart. I can help with checkout, delivery, or best offer options.`
+        );
+        return;
+      }
+
+      if (action === 'checkout_clicked') {
+        setPendingAssistantHint(
+          'Ready to checkout. I can quickly help with delivery, payment steps, and current offers before you proceed.'
+        );
+      }
+    };
+
+    window.addEventListener('support-assistant:cart-action', onCartAction as EventListener);
+    return () => {
+      window.removeEventListener('support-assistant:cart-action', onCartAction as EventListener);
+    };
+  }, [closeCart, isCartOpen]);
 
   const addMessage = async (
     sender: Sender,
@@ -601,7 +669,21 @@ export const SupportAssistant: React.FC = () => {
     setPendingPrompt(null);
   }, [pendingPrompt, session]);
 
-  const chips = useMemo(() => QUICK_CHIPS, []);
+  useEffect(() => {
+    if (!pendingAssistantHint || !session) return;
+    void addMessage('bot', pendingAssistantHint);
+    setPendingAssistantHint(null);
+  }, [pendingAssistantHint, session]);
+
+  const chips = useMemo(() => {
+    if (location.pathname.startsWith('/checkout') || location.pathname.startsWith('/verify-phone') || location.pathname.startsWith('/payment')) {
+      return ['delivery', 'payment', 'phone verify', 'coupon', 'order status', 'support'];
+    }
+    if (location.pathname.startsWith('/product/')) {
+      return ['price', 'stock', 'warranty', 'battery', 'specs', 'compare'];
+    }
+    return QUICK_CHIPS;
+  }, [location.pathname]);
   const productPromptExamples = useMemo(() => {
     const candidates = products
       .filter((product) => Boolean(product?.name))
@@ -612,13 +694,19 @@ export const SupportAssistant: React.FC = () => {
   }, [products]);
 
   return (
-    <div className="fixed bottom-4 right-0 left-0 sm:left-auto sm:bottom-8 sm:right-5 z-[95] pointer-events-none">
+    <div className="fixed inset-x-0 bottom-0 sm:bottom-8 sm:right-5 sm:left-auto z-[95] pointer-events-none">
       {open ? (
-        <div
-          ref={panelRef}
-          className="pointer-events-auto w-full sm:w-[390px] h-[78vh] sm:h-[580px] sm:rounded-2xl border border-cyan-300/40 bg-slate-900 text-gray-100 shadow-[0_20px_45px_rgba(6,182,212,0.25)] overflow-hidden flex flex-col transform transition-all duration-300 ease-out animate-fade-in-up"
-        >
-          <div className="px-4 py-3 border-b border-slate-700 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">
+        <>
+          <div
+            className="fixed inset-0 sm:hidden bg-black/45 backdrop-blur-[1px] pointer-events-auto"
+            onClick={() => setOpen(false)}
+          />
+          <div
+            ref={panelRef}
+            className="pointer-events-auto w-full sm:w-[390px] h-[84vh] sm:h-[580px] rounded-t-2xl sm:rounded-2xl border border-cyan-300/40 bg-slate-900 text-gray-100 shadow-[0_20px_45px_rgba(6,182,212,0.25)] overflow-hidden flex flex-col transform transition-all duration-300 ease-out animate-fade-in-up"
+          >
+            <div className="h-1.5 w-16 rounded-full bg-slate-500/70 mx-auto mt-2 sm:hidden" />
+          <div className="px-4 py-3 border-b border-slate-700 bg-gradient-to-r from-cyan-900/70 via-slate-800 to-fuchsia-900/60">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="relative">
@@ -810,18 +898,19 @@ export const SupportAssistant: React.FC = () => {
               ))}
             </div>
           </div>
-        </div>
+          </div>
+        </>
       ) : (
         <div className="pointer-events-auto flex justify-end p-3 sm:p-0 sm:pr-0">
           <div className="relative">
-            {showTooltip && (
+            {(showTooltip || showAutoNudge) && (
               <div className="absolute -top-12 right-0 rounded-lg border border-cyan-300/60 bg-slate-900 text-cyan-100 text-xs px-2.5 py-1.5 shadow-md whitespace-nowrap">
                 Hi! Ask me about products or orders.
               </div>
             )}
             <button
               type="button"
-              className="h-14 w-14 rounded-full border-2 border-cyan-300/70 bg-slate-900 text-white shadow-[0_0_0_4px_rgba(6,182,212,0.25),0_14px_26px_rgba(0,0,0,0.45)] hover:shadow-[0_0_0_6px_rgba(6,182,212,0.35),0_18px_32px_rgba(0,0,0,0.52)] transition-all duration-200 flex items-center justify-center animate-pulse"
+              className="h-16 w-16 sm:h-14 sm:w-14 rounded-full border-2 border-cyan-300/70 bg-gradient-to-br from-slate-900 via-cyan-950 to-fuchsia-950 text-white shadow-[0_0_0_4px_rgba(6,182,212,0.25),0_14px_26px_rgba(0,0,0,0.45)] hover:shadow-[0_0_0_6px_rgba(6,182,212,0.35),0_18px_32px_rgba(0,0,0,0.52)] transition-all duration-200 flex items-center justify-center animate-pulse"
               onClick={() => setOpen(true)}
               aria-label="Open support chat"
             >

@@ -21,14 +21,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const storedUser = localStorage.getItem('aura_active_user');
     if (storedUser) {
-      const parsed = JSON.parse(storedUser) as User;
-      const isLegacyDemoUser =
-        parsed?.email?.toLowerCase?.() === 'demo@gmail.com' ||
-        String(parsed?.id || '').startsWith('google_');
-      if (isLegacyDemoUser) {
+      try {
+        const parsed = JSON.parse(storedUser) as User;
+        const isLegacyDemoUser =
+          parsed?.email?.toLowerCase?.() === 'demo@gmail.com' ||
+          String(parsed?.id || '').startsWith('google_');
+        if (isLegacyDemoUser) {
+          localStorage.removeItem('aura_active_user');
+        } else {
+          setUser(parsed);
+        }
+      } catch {
         localStorage.removeItem('aura_active_user');
-      } else {
-        setUser(parsed);
       }
     }
     setIsAuthReady(true);

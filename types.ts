@@ -192,6 +192,14 @@ export interface Order {
 export interface WebsiteSettings {
   primaryColor: string; // Hex code
   logoUrl?: string; // URL for the custom brand logo
+  socialLinks?: {
+    email?: string;
+    twitter?: string;
+    facebook?: string;
+    instagram?: string;
+    youtube?: string;
+    linkedin?: string;
+  };
   footerSections?: Array<{
     title: string;
     items: string[];

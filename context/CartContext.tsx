@@ -22,7 +22,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const stored = localStorage.getItem('aura_cart');
-    if (stored) setItems(JSON.parse(stored));
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as CartItem[];
+        setItems(Array.isArray(parsed) ? parsed : []);
+      } catch {
+        localStorage.removeItem('aura_cart');
+        setItems([]);
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -47,7 +55,21 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       return [...prev, { ...product, quantity }];
     });
-    setIsCartOpen(true); // Open drawer on add
+
+    const isMobileViewport =
+      typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches;
+
+    window.dispatchEvent(
+      new CustomEvent('support-assistant:cart-action', {
+        detail: {
+          action: 'added_to_cart',
+          productName: product.name,
+        },
+      })
+    );
+
+    // On mobile, prioritize AI assistant popup over cart drawer.
+    setIsCartOpen(!isMobileViewport);
   };
 
   const removeFromCart = (productId: string) => {

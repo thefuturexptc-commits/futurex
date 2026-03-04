@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 
 export const SiteFooter: React.FC = () => {
-  const { footerSections } = useTheme();
+  const { footerSections, socialLinks } = useTheme();
   const toSlug = (value: string) =>
     value
       .toLowerCase()
@@ -30,6 +30,42 @@ export const SiteFooter: React.FC = () => {
             </div>
           ))}
         </div>
+
+        <div className="mt-8 pt-6 border-t border-white/10">
+          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            {socialLinks.email && (
+              <a href={`mailto:${socialLinks.email}`} className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:text-white transition-colors">
+                Gmail
+              </a>
+            )}
+            {socialLinks.instagram && (
+              <a href={socialLinks.instagram} target="_blank" rel="noreferrer" className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:text-white transition-colors">
+                Instagram
+              </a>
+            )}
+            {socialLinks.facebook && (
+              <a href={socialLinks.facebook} target="_blank" rel="noreferrer" className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:text-white transition-colors">
+                Facebook
+              </a>
+            )}
+            {socialLinks.twitter && (
+              <a href={socialLinks.twitter} target="_blank" rel="noreferrer" className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:text-white transition-colors">
+                Twitter/X
+              </a>
+            )}
+            {socialLinks.youtube && (
+              <a href={socialLinks.youtube} target="_blank" rel="noreferrer" className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:text-white transition-colors">
+                YouTube
+              </a>
+            )}
+            {socialLinks.linkedin && (
+              <a href={socialLinks.linkedin} target="_blank" rel="noreferrer" className="text-xs sm:text-sm px-3 py-1.5 rounded-full border border-white/20 hover:border-white/40 hover:text-white transition-colors">
+                LinkedIn
+              </a>
+            )}
+          </div>
+        </div>
+
         <div className="mt-8 pt-6 border-t border-white/10 text-center text-sm text-gray-400">
           © {new Date().getFullYear()} TheFutureX. Premium Smart Technology.
         </div>

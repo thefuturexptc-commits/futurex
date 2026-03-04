@@ -9,47 +9,138 @@ export const VerifyPhone: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const flowState = location.state as CheckoutFlowState | undefined;
+
+  const readPersistedFlow = (): CheckoutFlowState | null => {
+    try {
+      const raw = window.sessionStorage.getItem('checkout_flow_state');
+      if (!raw) return null;
+      return JSON.parse(raw) as CheckoutFlowState;
+    } catch {
+      return null;
+    }
+  };
+
+  const [currentFlow, setCurrentFlow] = useState<CheckoutFlowState | null>(() => flowState || readPersistedFlow());
   const [otp, setOtp] = useState('');
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [draftPhone, setDraftPhone] = useState('');
+  const [lastOtpPhone, setLastOtpPhone] = useState('');
+  const [autoSendAttemptedPhone, setAutoSendAttemptedPhone] = useState('');
+  const [sendMode, setSendMode] = useState<'auto' | 'manual' | null>(null);
 
-  const phone = useMemo(() => flowState?.phone?.replace(/\D/g, '').slice(0, 10) || '', [flowState?.phone]);
+  const phone = useMemo(() => currentFlow?.phone?.replace(/\D/g, '').slice(0, 10) || '', [currentFlow?.phone]);
 
   useEffect(() => {
-    // Always start this step with a fresh OTP session.
+    if (flowState) setCurrentFlow(flowState);
+  }, [flowState]);
+
+  useEffect(() => {
+    setDraftPhone(phone);
+  }, [phone]);
+
+  useEffect(() => {
+    if (!currentFlow) return;
+    window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(currentFlow));
+  }, [currentFlow]);
+
+  useEffect(() => {
     resetPhoneOtpFlow();
     return () => {
       resetPhoneOtpFlow();
     };
   }, []);
 
-  if (!flowState?.shippingDetails || !phone) {
+  if (!currentFlow?.shippingDetails || !phone) {
     return <Navigate to="/checkout" replace />;
   }
 
-  const handleSendOtp = async () => {
+  const sendOtpForPhone = async (targetPhone: string, mode: 'auto' | 'manual' = 'manual') => {
+    if (sending) return;
+    const normalizedTarget = targetPhone.replace(/\D/g, '').slice(0, 10);
+    if (!/^[6-9]\d{9}$/.test(normalizedTarget)) {
+      setError('Please check your phone number. Enter a valid 10-digit Indian mobile number starting with 6-9.');
+      setMessage('');
+      setOtpSent(false);
+      setEditingPhone(true);
+      return;
+    }
+
     setError('');
     setMessage('');
+    setSendMode(mode);
     setSending(true);
     setOtpSent(false);
     try {
-      await sendPhoneOtp(phone, 'checkout-recaptcha-container');
-      setMessage('OTP sent successfully.');
+      await Promise.race([
+        sendPhoneOtp(normalizedTarget, 'checkout-recaptcha-container'),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('OTP request timed out. Please try again.')), 10000)),
+      ]);
+      setMessage(mode === 'auto' ? `OTP sent automatically to +91 ${normalizedTarget}.` : `OTP sent to +91 ${normalizedTarget}.`);
       setOtpSent(true);
+      setLastOtpPhone(normalizedTarget);
     } catch (err: any) {
-      setError(err?.message || 'Failed to send OTP.');
+      const raw = String(err?.message || 'Failed to send OTP.');
+      if (/recaptcha|captcha/i.test(raw)) {
+        setError('Captcha issue detected. Please wait a few seconds and try again, or refresh the page.');
+      } else if (/invalid|phone|number/i.test(raw)) {
+        setError('Please check your phone number. It looks invalid or unreachable for OTP.');
+        setEditingPhone(true);
+      } else {
+        setError(raw);
+      }
       setOtpSent(false);
     } finally {
       setSending(false);
     }
   };
 
+  useEffect(() => {
+    if (!phone) return;
+    if (sending) return;
+    if (autoSendAttemptedPhone === phone) return;
+    if (lastOtpPhone === phone) return;
+    setAutoSendAttemptedPhone(phone);
+    void sendOtpForPhone(phone, 'auto');
+  }, [phone, sending, lastOtpPhone, autoSendAttemptedPhone]);
+
+  const handleUpdatePhone = async () => {
+    const cleaned = draftPhone.replace(/\D/g, '').slice(0, 10);
+    if (cleaned.length !== 10 || !currentFlow) {
+      setError('Enter a valid 10-digit phone number.');
+      return;
+    }
+
+    const nextFlow: CheckoutFlowState = {
+      ...currentFlow,
+      phone: cleaned,
+      phoneVerified: false,
+      shippingDetails: {
+        ...currentFlow.shippingDetails,
+        phoneNumber: cleaned,
+      },
+    };
+
+    setCurrentFlow(nextFlow);
+    navigate('/verify-phone', { replace: true, state: nextFlow });
+    setEditingPhone(false);
+    setOtp('');
+    setError('');
+    setMessage('Phone updated. Sending OTP automatically...');
+    setAutoSendAttemptedPhone('');
+  };
+
   const handleVerifyOtp = async () => {
+    if (sending) {
+      setError('OTP is still being sent. Please wait a few seconds and try verify again.');
+      return;
+    }
     if (!otpSent) {
-      setError('Please send OTP first.');
+      setError('OTP not sent yet. Please wait a moment or check your number/captcha message below.');
       return;
     }
     setError('');
@@ -60,13 +151,14 @@ export const VerifyPhone: React.FC = () => {
       window.sessionStorage.setItem('checkout_phone_verified', phone);
       navigate('/payment', {
         state: {
-          ...flowState,
+          ...currentFlow,
           phoneVerified: true,
         } as CheckoutFlowState,
       });
     } catch (err: any) {
       const errMsg = err?.message || 'Invalid OTP.';
       setError(errMsg);
+      setEditingPhone(true);
       if (/expired|invalid|resend/i.test(errMsg)) {
         setOtp('');
         setOtpSent(false);
@@ -88,7 +180,7 @@ export const VerifyPhone: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button type="button" onClick={handleSendOtp} disabled={sending}>
+          <Button type="button" onClick={() => void sendOtpForPhone(phone, 'manual')} disabled={sending}>
             {sending ? 'Sending OTP...' : 'Send OTP'}
           </Button>
           <input
@@ -102,10 +194,45 @@ export const VerifyPhone: React.FC = () => {
             {verifying ? 'Verifying...' : 'Verify OTP'}
           </Button>
         </div>
+        {sending && (
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            {sendMode === 'manual' ? 'Sending OTP...' : 'Sending OTP automatically...'}
+          </p>
+        )}
 
         <div id="checkout-recaptcha-container" className="min-h-[78px]" />
         {message && <p className="text-sm text-green-600">{message}</p>}
         {error && <p className="text-sm text-red-500">{error}</p>}
+
+        <div className="pt-1">
+          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Didn't receive OTP?</p>
+          <button
+            type="button"
+            onClick={() => setEditingPhone((prev) => !prev)}
+            className="text-sm font-semibold text-primary-600 hover:text-primary-500"
+          >
+            {editingPhone ? 'Cancel' : 'Edit Phone Number'}
+          </button>
+        </div>
+
+        {editingPhone && (
+          <div className="rounded-xl border border-gray-200 dark:border-white/10 p-4 space-y-3 bg-gray-50/60 dark:bg-white/5">
+            <p className="text-sm font-medium text-gray-900 dark:text-white">Correct Phone Number</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-700 dark:text-gray-300">+91</span>
+              <input
+                type="tel"
+                value={draftPhone}
+                onChange={(e) => setDraftPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="Enter 10-digit number"
+                className="flex-1 rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+              />
+            </div>
+            <Button type="button" onClick={handleUpdatePhone}>
+              Update Number
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );

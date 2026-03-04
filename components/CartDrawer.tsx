@@ -12,6 +12,19 @@ export const CartDrawer: React.FC = () => {
   const navigate = useNavigate();
 
   const handleCheckout = () => {
+    const isMobileViewport =
+      typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches;
+
+    if (isMobileViewport) {
+      closeCart();
+      window.dispatchEvent(
+        new CustomEvent('support-assistant:cart-action', {
+          detail: { action: 'checkout_clicked' },
+        })
+      );
+      return;
+    }
+
     closeCart();
     if (!user) {
       openLogin('/checkout');
@@ -31,7 +44,7 @@ export const CartDrawer: React.FC = () => {
       ></div>
 
       {/* Drawer */}
-      <div className="absolute inset-y-0 right-0 max-w-md w-full flex">
+      <div className="absolute inset-y-0 right-0 w-full sm:max-w-md flex">
         <div className="h-full w-full bg-white dark:bg-dark-surface shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 dark:border-white/10">
           
           {/* Header */}

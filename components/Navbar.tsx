@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
@@ -11,6 +11,7 @@ const NavbarComponent: React.FC = () => {
   const { totalItems, openCart } = useCart();
   const { logoUrl } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
@@ -131,6 +132,13 @@ const NavbarComponent: React.FC = () => {
                 >
                   Login
                 </Button>
+                <Button
+                  size="sm"
+                  className="rounded-full px-6"
+                  onClick={() => navigate('/signup')}
+                >
+                  Sign up
+                </Button>
               </div>
             )}
 
@@ -166,17 +174,60 @@ const NavbarComponent: React.FC = () => {
 
             {!user && (
               <div className="pt-4 mt-4 border-t border-gray-100 dark:border-white/5">
-                <Button
-                  className="w-full justify-center"
-                  onClick={() => navigate('/login')}
-                >
-                  Login
-                </Button>
+                <div className="flex flex-col gap-2">
+                  <Button
+                    className="w-full justify-center"
+                    onClick={() => navigate('/login')}
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center"
+                    onClick={() => navigate('/signup')}
+                  >
+                    Sign up
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         </div>
       )}
+
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-dark-surface/95 backdrop-blur px-2 py-2">
+        <div className="grid grid-cols-5 gap-1 text-center">
+          {[
+            { label: 'Home', path: '/', icon: 'H' },
+            { label: 'Bands', path: '/smart-bands', icon: 'B' },
+            { label: 'Offers', path: '/#offers', icon: 'O' },
+            { label: 'Cart', path: '/cart', icon: 'C' },
+            { label: 'Profile', path: user ? '/profile' : '/login', icon: 'P' },
+          ].map((item) => {
+            const active = item.path !== '/#offers' && location.pathname === item.path;
+            return (
+              <button
+                key={item.label}
+                type="button"
+                onClick={() => {
+                  if (item.path === '/#offers') {
+                    navigate('/');
+                    window.setTimeout(() => {
+                      window.scrollTo({ top: document.body.scrollHeight * 0.62, behavior: 'smooth' });
+                    }, 120);
+                    return;
+                  }
+                  navigate(item.path);
+                }}
+                className={`rounded-xl py-1.5 ${active ? 'bg-primary-600 text-white' : 'text-gray-300'}`}
+              >
+                <p className="text-[10px] font-bold">{item.icon}</p>
+                <p className="text-[10px]">{item.label}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </nav>
   );
 };

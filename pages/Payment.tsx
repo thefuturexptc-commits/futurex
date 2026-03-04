@@ -15,7 +15,16 @@ export const Payment: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const flowState = location.state as CheckoutFlowState | undefined;
+  const readPersistedFlow = (): CheckoutFlowState | null => {
+    try {
+      const raw = window.sessionStorage.getItem('checkout_flow_state');
+      if (!raw) return null;
+      return JSON.parse(raw) as CheckoutFlowState;
+    } catch {
+      return null;
+    }
+  };
+  const flowState = (location.state as CheckoutFlowState | undefined) || readPersistedFlow() || undefined;
   const phone = flowState?.phone?.replace(/\D/g, '').slice(0, 10) || '';
   const verifiedPhone = window.sessionStorage.getItem('checkout_phone_verified') || '';
 
@@ -91,6 +100,7 @@ export const Payment: React.FC = () => {
             }
           );
           await saveAddressIfNeeded(addressForOrder);
+          window.sessionStorage.removeItem('checkout_flow_state');
           window.sessionStorage.removeItem('checkout_phone_verified');
           clearCart();
           navigate('/order-success', { state: { orderId: order.id } });
