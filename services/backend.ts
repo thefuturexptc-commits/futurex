@@ -804,32 +804,27 @@ export const registerUser = async (email: string, password: string, phone: strin
     };
     const cleanUser = deepSanitize(newUser);
 
-    // Firebase
+    // Firebase (strict - no local-only demo fallback)
     try {
-        const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
-        const firebaseUser = userCredential.user;
-        if (firebaseUser) {
-            cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
-            await setDoc(doc(db, 'users', firebaseUser.uid), cleanUser);
-        }
+      const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+      const firebaseUser = userCredential.user;
+      if (!firebaseUser) {
+        throw new Error('Unable to create account right now.');
+      }
+      cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
+      await setDoc(doc(db, 'users', firebaseUser.uid), cleanUser);
     } catch (e: any) {
-        const code = e?.code || '';
-        if (code === 'auth/email-already-in-use') {
-          throw new Error('Email already registered');
-        }
-        if (code === 'auth/invalid-email') {
-          throw new Error('Invalid email address');
-        }
-        if (code === 'auth/weak-password') {
-          throw new Error('Password is too weak');
-        }
-        console.warn("Auth failed/unavailable. Using local user fallback.");
-        // CRITICAL: Force anonymous connection so this 'local' user can still write orders to DB
-        await ensureFirebaseConnection();
-        // Try to save the user profile to DB even if Auth failed (so Admin sees them)
-        try {
-           await setDoc(doc(db, 'users', cleanUser.id), cleanUser);
-        } catch(dbErr) { console.error("Could not save local user to DB", dbErr); }
+      const code = e?.code || '';
+      if (code === 'auth/email-already-in-use') {
+        throw new Error('Email already registered');
+      }
+      if (code === 'auth/invalid-email') {
+        throw new Error('Invalid email address');
+      }
+      if (code === 'auth/weak-password') {
+        throw new Error('Password is too weak');
+      }
+      throw new Error('Registration failed. Please try again.');
     }
 
     // Local cache/store persistence
@@ -910,6 +905,41 @@ export const loginUser = async (email: string, password: string, phone?: string)
     }
     throw new Error('Login failed. Please use a registered email.');
   }
+};
+
+export const loginUserWithPhone = async (phone: string, password: string): Promise<User> => {
+  const normalizedPhone = normalizeIndianPhone(phone);
+  const nationalPhone = getIndianNationalPhone(phone);
+  let accountEmail = '';
+
+  const resolveEmailFromPhone = async (): Promise<string> => {
+    const byPhoneQuery = query(collection(db, 'users'), where('phone', '==', normalizedPhone));
+    const byPhoneSnap = await getDocs(byPhoneQuery);
+    if (!byPhoneSnap.empty) {
+      const first = byPhoneSnap.docs[0].data() as User;
+      if (first?.email) return first.email;
+    }
+
+    const byLegacyPhoneQuery = query(collection(db, 'users'), where('phone', '==', nationalPhone));
+    const byLegacyPhoneSnap = await getDocs(byLegacyPhoneQuery);
+    if (!byLegacyPhoneSnap.empty) {
+      const first = byLegacyPhoneSnap.docs[0].data() as User;
+      if (first?.email) return first.email;
+    }
+    return '';
+  };
+
+  try {
+    accountEmail = await resolveEmailFromPhone();
+  } catch {
+    accountEmail = '';
+  }
+
+  if (!accountEmail) {
+    throw new Error('Account not found. Please sign up first.');
+  }
+
+  return loginUser(accountEmail, password, normalizedPhone);
 };
 
 export const loginWithGoogle = async (): Promise<User> => {

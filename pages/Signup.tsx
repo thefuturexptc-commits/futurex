@@ -132,11 +132,11 @@ export const Signup: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_45%,_#eef2ff_100%)] dark:bg-[radial-gradient(circle_at_top,_#111827_0%,_#020617_60%,_#000000_100%)]">
-      <div className="max-w-md w-full space-y-8 bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl p-8 rounded-3xl shadow-2xl border border-cyan-100 dark:border-cyan-900/40">
+    <div className="min-h-screen flex items-center justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8 bg-[radial-gradient(circle_at_top,_#e0f2fe_0%,_#f8fafc_45%,_#eef2ff_100%)] dark:bg-[radial-gradient(circle_at_top,_#111827_0%,_#020617_60%,_#000000_100%)]">
+      <div className="max-w-md w-full space-y-6 sm:space-y-8 bg-white/90 dark:bg-slate-900/85 backdrop-blur-xl p-4 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl border border-cyan-100 dark:border-cyan-900/40">
         <div>
           <p className="text-center text-xs tracking-[0.25em] font-bold text-cyan-600 dark:text-cyan-300 uppercase">Identity Registration</p>
-          <h2 className="mt-3 text-center text-3xl font-extrabold text-gray-900 dark:text-white">Create Account</h2>
+          <h2 className="mt-3 text-center text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">Create Account</h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Verify phone via OTP to activate your account
           </p>

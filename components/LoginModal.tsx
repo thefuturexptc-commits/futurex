@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { isPhoneRegistered, loginUser, loginWithGoogle, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
+import { isPhoneRegistered, loginUser, loginUserWithPhone, loginWithGoogle, registerUser, resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
 
 interface LoginModalProps {
   isOpen: boolean;
@@ -11,6 +11,7 @@ interface LoginModalProps {
 
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirectPath = '/profile' }) => {
   const [mode, setMode] = useState<'login' | 'register'>('login');
+  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -40,6 +41,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
     if (!isOpen) {
       setMode('login');
       setEmail('');
+      setLoginMethod('email');
       setPassword('');
       setPhone('');
       setOtp('');
@@ -118,8 +120,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       login(user);
       onClose();
       navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/');
-    } catch {
-      setError('Registration failed. Email or phone may already exist.');
+    } catch (error: any) {
+      setError(error?.message || 'Registration failed. Email or phone may already exist.');
     } finally {
       setLoading(false);
     }
@@ -161,14 +163,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim() || !password.trim()) {
-      setError('Enter email and password');
+    if (!password.trim()) {
+      setError('Enter password');
       return;
     }
     setError('');
     setLoading(true);
     try {
-      const user = await loginUser(email.trim(), password);
+      const user =
+        loginMethod === 'email'
+          ? await loginUser(email.trim(), password)
+          : await loginUserWithPhone(phone.trim(), password);
       login(user);
       onClose();
       navigate(user.role === 'admin' || user.role === 'superadmin' ? '/admin' : redirectPath);
@@ -189,7 +194,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
       <div onClick={onClose} className="fixed inset-0 bg-black/70" />
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-md bg-white dark:bg-dark-surface rounded-2xl shadow-2xl p-8 transform transition-all duration-300 ease-out animate-modal-pop mx-4"
+        className="relative w-full max-w-md max-h-[92vh] overflow-y-auto bg-white dark:bg-dark-surface rounded-2xl shadow-2xl p-4 sm:p-8 transform transition-all duration-300 ease-out animate-modal-pop mx-3 sm:mx-4"
       >
         <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-600 dark:text-cyan-300">Secure Access</p>
         <div className="mt-4 grid grid-cols-2 gap-2 bg-gray-100 dark:bg-white/10 p-1 rounded-xl">
@@ -217,6 +222,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
         <form className="mt-6 space-y-4" onSubmit={mode === 'login' ? handleLoginSubmit : handleRegisterSubmit}>
           {error && <p className="text-sm text-red-500 bg-red-100 rounded-md p-2">{error}</p>}
           {mode === 'login' && (
+            <div className="grid grid-cols-2 gap-2 bg-gray-100 dark:bg-white/10 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => { setLoginMethod('email'); setError(''); }}
+                className={`py-2 rounded-lg text-sm font-semibold transition-colors ${loginMethod === 'email' ? 'bg-white dark:bg-dark-surface text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
+              >
+                Email + Password
+              </button>
+              <button
+                type="button"
+                onClick={() => { setLoginMethod('phone'); setError(''); }}
+                className={`py-2 rounded-lg text-sm font-semibold transition-colors ${loginMethod === 'phone' ? 'bg-white dark:bg-dark-surface text-gray-900 dark:text-white' : 'text-gray-600 dark:text-gray-300'}`}
+              >
+                Phone + Password
+              </button>
+            </div>
+          )}
+          {mode === 'login' && (
             <button
               type="button"
               onClick={handleGoogleLogin}
@@ -227,7 +250,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
             </button>
           )}
 
-          {(mode === 'register' || mode === 'login') && (
+          {(mode === 'register' || (mode === 'login' && loginMethod === 'email')) && (
             <input
               type="email"
               required
@@ -256,6 +279,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
+          )}
+
+          {mode === 'login' && loginMethod === 'phone' && (
+            <input
+              type="tel"
+              required
+              placeholder="+91XXXXXXXXXX or 10-digit"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full p-3 border rounded-lg dark:bg-white/5 dark:border-white/10 dark:text-white"
+            />
           )}
 
           {mode === 'register' && (

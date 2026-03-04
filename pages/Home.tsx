@@ -112,8 +112,8 @@ export const Home: React.FC = () => {
       return () => window.cancelAnimationFrame(rafId);
     };
 
-    const cleanupBest = setupAutoGlide(bestSellerScrollerRef, 0.07);
-    const cleanupFeatured = setupAutoGlide(featuredScrollerRef, 0.06);
+    const cleanupBest = setupAutoGlide(bestSellerScrollerRef, 0.05);
+    const cleanupFeatured = setupAutoGlide(featuredScrollerRef, 0.04);
     return () => {
       cleanupBest();
       cleanupFeatured();
