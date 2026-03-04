@@ -874,6 +874,7 @@ export const loginUser = async (email: string, password: string, phone?: string)
     const normalizedPhone = phone ? normalizeIndianPhone(phone) : undefined;
     const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
     setMockData('users', localUsers);
+    let firebaseErrorCode = '';
 
     // 2. Try Firebase
     try {
@@ -900,7 +901,8 @@ export const loginUser = async (email: string, password: string, phone?: string)
                 permissions: {}
             });
         }
-    } catch (e) {
+    } catch (e: any) {
+        firebaseErrorCode = e?.code || '';
         // Fallback to Local
     }
 
@@ -921,7 +923,13 @@ export const loginUser = async (email: string, password: string, phone?: string)
         return applyRoleByEmail(found);
     }
 
-    throw new Error("Invalid credentials");
+    if (firebaseErrorCode === 'auth/user-not-found') {
+      throw new Error('Account not found. Please sign up first.');
+    }
+    if (firebaseErrorCode === 'auth/wrong-password' || firebaseErrorCode === 'auth/invalid-credential') {
+      throw new Error('Incorrect password.');
+    }
+    throw new Error("Invalid email or password");
 };
 
 export const loginWithGoogle = async (): Promise<User> => {

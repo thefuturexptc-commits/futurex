@@ -27,6 +27,8 @@ const stopwords = new Set([
 ]);
 
 const normalize = (value: string) => value.toLowerCase().trim();
+const sanitizeMessages = (items: SupportChatMessage[] = []) =>
+  items.filter((message) => message.type !== 'loading_products');
 const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toLocaleString()}`;
 const formatOrderSummary = (order: Order) =>
   `${order.id}: ${order.status} | ${formatCurrency(order.total)} | ${new Date(order.date).toLocaleString()}`;
@@ -43,6 +45,15 @@ const formatWarranty = (value?: string) => {
     return `${raw} ${n > 1 ? 'Years' : 'Year'}`;
   }
   return raw;
+};
+
+const getPrimaryProductImage = (product: Product): string => {
+  return (
+    product.images?.[0] ||
+    product.colors?.[0]?.images?.[0] ||
+    product.variants?.[0]?.images?.[0] ||
+    ''
+  );
 };
 
 const getSessionId = (userId: string) => {
@@ -107,7 +118,7 @@ export const SupportAssistant: React.FC = () => {
       if (existing) {
         if (!active) return;
         setSession(existing);
-        setMessages(existing.messages || []);
+        setMessages(sanitizeMessages(existing.messages || []));
         return;
       }
 
@@ -132,7 +143,7 @@ export const SupportAssistant: React.FC = () => {
       await upsertSupportChat(created);
       if (!active) return;
       setSession(created);
-      setMessages(created.messages);
+      setMessages(sanitizeMessages(created.messages));
     };
 
     void loadSession();
@@ -148,8 +159,9 @@ export const SupportAssistant: React.FC = () => {
       if (!latest) return;
       setSession(latest);
       setMessages((prev) => {
-        if ((latest.messages || []).length === prev.length) return prev;
-        return latest.messages || prev;
+        const cleaned = sanitizeMessages(latest.messages || []);
+        if (cleaned.length === prev.length) return prev;
+        return cleaned;
       });
     }, 7000);
     return () => window.clearInterval(timer);
@@ -233,7 +245,7 @@ export const SupportAssistant: React.FC = () => {
     });
     if (updated) {
       setSession(updated);
-      setMessages(updated.messages || []);
+      setMessages(sanitizeMessages(updated.messages || []));
     }
   };
 
@@ -267,8 +279,11 @@ export const SupportAssistant: React.FC = () => {
     };
   };
 
-  const listProductsForIntent = (kind: 'arrivals' | 'bestSellers'): ChatProductCard[] => {
-    const byLatest = [...products].sort((a, b) => {
+  const listProductsForIntent = (
+    kind: 'arrivals' | 'bestSellers',
+    sourceProducts: Product[] = products
+  ): ChatProductCard[] => {
+    const byLatest = [...sourceProducts].sort((a, b) => {
       const aId = Number((a.id || '').replace(/[^0-9]/g, '')) || 0;
       const bId = Number((b.id || '').replace(/[^0-9]/g, '')) || 0;
       return bId - aId;
@@ -276,10 +291,10 @@ export const SupportAssistant: React.FC = () => {
 
     const selected =
       kind === 'arrivals'
-        ? [...products.filter((p) => Boolean(p.isFeatured)), ...byLatest].filter(
+        ? [...sourceProducts.filter((p) => Boolean(p.isFeatured)), ...byLatest].filter(
             (product, index, arr) => arr.findIndex((x) => x.id === product.id) === index
           )
-        : [...products.filter((p) => Boolean(p.isBestSeller)), ...[...products].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))]
+        : [...sourceProducts.filter((p) => Boolean(p.isBestSeller)), ...[...sourceProducts].sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0))]
             .filter((product, index, arr) => arr.findIndex((x) => x.id === product.id) === index);
 
     if (!selected.length) return [];
@@ -293,7 +308,7 @@ export const SupportAssistant: React.FC = () => {
         price: Number(product.salePrice || product.price || 0),
         stock: available,
         isNew: kind === 'arrivals' ? true : Boolean(product.isFeatured),
-        image: product.images?.[0] || '',
+        image: getPrimaryProductImage(product),
         warranty: formatWarranty(product.warranty),
         battery: batterySpec || 'Not listed',
       };
@@ -528,22 +543,12 @@ export const SupportAssistant: React.FC = () => {
       }
       if (intent.arrivals || intent.bestSellers) {
         const kind = intent.arrivals ? 'arrivals' : 'bestSellers';
-        const loadingId = `bot_loading_${Date.now()}`;
-        await addMessage(
-          'bot',
-          '',
-          undefined,
-          {
-            id: loadingId,
-            type: 'loading_products',
-          }
-        );
         const latestProducts = loadingProducts ? await getProducts() : products;
         if (loadingProducts) setProducts(latestProducts);
         const list =
           kind === 'arrivals'
-            ? listProductsForIntent('arrivals')
-            : listProductsForIntent('bestSellers');
+            ? listProductsForIntent('arrivals', latestProducts)
+            : listProductsForIntent('bestSellers', latestProducts);
         if (!list.length) {
           await addMessage(
             'bot',
@@ -611,7 +616,7 @@ export const SupportAssistant: React.FC = () => {
       {open ? (
         <div
           ref={panelRef}
-          className="pointer-events-auto w-full sm:w-[390px] h-[78vh] sm:h-[580px] sm:rounded-2xl border border-slate-700 bg-slate-900 text-gray-100 shadow-2xl overflow-hidden flex flex-col transform transition-all duration-300 ease-out animate-fade-in-up"
+          className="pointer-events-auto w-full sm:w-[390px] h-[78vh] sm:h-[580px] sm:rounded-2xl border border-cyan-300/40 bg-slate-900 text-gray-100 shadow-[0_20px_45px_rgba(6,182,212,0.25)] overflow-hidden flex flex-col transform transition-all duration-300 ease-out animate-fade-in-up"
         >
           <div className="px-4 py-3 border-b border-slate-700 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900">
             <div className="flex items-center justify-between">
@@ -684,19 +689,25 @@ export const SupportAssistant: React.FC = () => {
                       {msg.products.map((product) => (
                         <div
                           key={`${msg.id}_${product.id}`}
-                          className="w-64 bg-white rounded-2xl shadow-md p-4 border border-gray-100 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl flex-shrink-0"
+                          className="w-64 h-[330px] bg-white rounded-2xl shadow-md p-4 border border-gray-100 transition duration-300 hover:-translate-y-0.5 hover:shadow-xl flex-shrink-0 flex flex-col"
                         >
                           {product.image ? (
                             <img
                               src={product.image}
                               alt={product.name}
-                              className="w-full h-32 object-cover rounded-lg border border-gray-100"
+                              loading="lazy"
+                              className="w-full h-32 object-contain rounded-lg border border-gray-100 bg-gray-50"
                             />
                           ) : (
                             <div className="w-full h-32 rounded-lg border border-gray-100 bg-gray-50" />
                           )}
                           <div className="mt-2 flex items-start justify-between gap-2">
-                            <h3 className="font-semibold text-gray-900 text-sm leading-snug">{product.name}</h3>
+                            <h3
+                              className="font-semibold text-gray-900 text-xs leading-snug min-h-[2.5rem] overflow-hidden"
+                              style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}
+                            >
+                              {product.name}
+                            </h3>
                             {product.isNew && (
                               <span className="text-[10px] px-2 py-1 bg-green-100 text-green-600 rounded-full font-medium">
                                 NEW
@@ -707,7 +718,7 @@ export const SupportAssistant: React.FC = () => {
                           <div className="text-xs text-gray-500 mt-1">
                             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                           </div>
-                          <div className="flex gap-2 mt-3">
+                          <div className="flex gap-2 mt-auto pt-3">
                             <button
                               type="button"
                               className="flex-1 bg-primary-600 text-white text-xs py-2 rounded-lg hover:bg-primary-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
@@ -804,13 +815,13 @@ export const SupportAssistant: React.FC = () => {
         <div className="pointer-events-auto flex justify-end p-3 sm:p-0 sm:pr-0">
           <div className="relative">
             {showTooltip && (
-              <div className="absolute -top-12 right-0 rounded-lg border border-primary-400/40 bg-slate-900 text-slate-100 text-xs px-2.5 py-1.5 shadow-md whitespace-nowrap">
+              <div className="absolute -top-12 right-0 rounded-lg border border-cyan-300/60 bg-slate-900 text-cyan-100 text-xs px-2.5 py-1.5 shadow-md whitespace-nowrap">
                 Hi! Ask me about products or orders.
               </div>
             )}
             <button
               type="button"
-              className="h-12 w-12 rounded-full border border-primary-400/60 bg-slate-900 text-white shadow-[0_0_0_3px_rgba(99,102,241,0.2),0_10px_20px_rgba(0,0,0,0.35)] hover:shadow-[0_0_0_4px_rgba(99,102,241,0.28),0_12px_24px_rgba(0,0,0,0.4)] transition-all duration-200 flex items-center justify-center"
+              className="h-14 w-14 rounded-full border-2 border-cyan-300/70 bg-slate-900 text-white shadow-[0_0_0_4px_rgba(6,182,212,0.25),0_14px_26px_rgba(0,0,0,0.45)] hover:shadow-[0_0_0_6px_rgba(6,182,212,0.35),0_18px_32px_rgba(0,0,0,0.52)] transition-all duration-200 flex items-center justify-center animate-pulse"
               onClick={() => setOpen(true)}
               aria-label="Open support chat"
             >
@@ -826,7 +837,7 @@ export const SupportAssistant: React.FC = () => {
             <button
               type="button"
               onClick={() => setOpen(true)}
-              className="absolute right-14 top-1/2 -translate-y-1/2 rounded-full border border-primary-400/60 bg-gradient-to-r from-primary-600 to-cyan-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap"
+              className="absolute right-16 top-1/2 -translate-y-1/2 hidden sm:block rounded-full border border-cyan-300/60 bg-gradient-to-r from-cyan-600 to-sky-600 px-3 py-1.5 text-xs font-semibold text-white shadow-md hover:shadow-lg transition-all duration-200 whitespace-nowrap"
               aria-label="Chat with Smart Support"
             >
               Chat with Smart Support

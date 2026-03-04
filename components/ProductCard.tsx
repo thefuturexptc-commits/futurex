@@ -31,10 +31,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
   }, [product.colors, product.images]);
 
   return (
-    <div className="group relative rounded-[2rem] overflow-hidden text-white transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:scale-[1.03] bg-dark-surface border border-white/10">
+    <div className="group relative h-full rounded-[2rem] overflow-hidden text-white transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:scale-[1.03] bg-dark-surface border border-white/10 flex flex-col">
       <div className="pointer-events-none absolute -inset-[1px] rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20" />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent opacity-70" />
-      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-gray-100 dark:bg-white/5 ${imageAspectClassName || (compact ? 'aspect-[5/6]' : 'aspect-[4/5]')}`}>
+      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-gray-100 dark:bg-white/5 ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
         <img
           src={previewImage || defaultImage}
           alt={product.name}
@@ -46,7 +46,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Link>
 
-      <div className={compact ? 'p-4' : 'p-6'}>
+      <div className={`${compact ? 'p-4' : 'p-6'} flex flex-col flex-1`}>
         <div className={compact ? 'mb-2 flex justify-between items-start' : 'mb-3 flex justify-between items-start'}>
           <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest bg-primary-900/20 px-2 py-1 rounded-md">{product.category}</span>
           <div className="flex items-center gap-1 text-amber-400 text-xs font-bold px-2 py-0.5">
@@ -55,7 +55,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
         </div>
 
         <Link to={`/product/${product.id}`}>
-          <h3 className={`${compact ? 'text-lg mb-1' : 'text-xl mb-2'} font-bold text-white leading-tight group-hover:text-primary-300 transition-colors font-display`}>
+          <h3
+            className={`${compact ? 'text-sm sm:text-base mb-1 min-h-[2.5rem]' : 'text-base sm:text-lg mb-2 min-h-[3rem]'} font-bold text-white leading-tight group-hover:text-primary-300 transition-colors font-display overflow-hidden`}
+            style={{ display: '-webkit-box', WebkitLineClamp: compact ? 2 : 3, WebkitBoxOrient: 'vertical' }}
+          >
             {product.name}
           </h3>
         </Link>
@@ -76,7 +79,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
           </div>
         )}
 
-        <div className={compact ? 'flex items-center justify-between mt-3' : 'flex items-center justify-between mt-5'}>
+        <div className={compact ? 'flex items-center justify-between mt-auto pt-3' : 'flex items-center justify-between mt-auto pt-5'}>
           <div className="flex flex-col">
             <span className={`${compact ? 'text-xl' : 'text-2xl'} font-bold text-white font-display`}>Rs {salePrice}</span>
             <div className="flex items-center gap-2">
