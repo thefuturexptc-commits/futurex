@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserOrders, updateUserAddresses, verifyIndianPincode } from '../services/backend';
 import { Order, Address } from '../types';
@@ -34,7 +35,19 @@ export const Profile: React.FC = () => {
     fetchOrders();
   }, [user]);
 
-  if (!user) return <div className="p-10 text-center dark:text-white">Please log in.</div>;
+  if (!user) {
+    return (
+      <div className="p-10 text-center dark:text-white space-y-4">
+        <p>Please log in to view your profile, orders, and saved addresses.</p>
+        <Link
+          to="/login?redirect=%2Fprofile"
+          className="inline-flex items-center justify-center rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
+        >
+          Login to View Orders
+        </Link>
+      </div>
+    );
+  }
 
   // --- Address Handlers ---
 

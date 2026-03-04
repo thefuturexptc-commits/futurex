@@ -43,6 +43,8 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
   const [isDraggingModels, setIsDraggingModels] = useState(false);
   const modelsScrollerRef = useRef<HTMLDivElement | null>(null);
   const pauseAutoSlideRef = useRef(false);
+  const featureScrollerRef = useRef<HTMLDivElement | null>(null);
+  const pauseFeatureAutoSlideRef = useRef(false);
   const dragStartXRef = useRef(0);
   const dragStartScrollLeftRef = useRef(0);
   const handleHorizontalWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
@@ -150,9 +152,39 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     return () => window.cancelAnimationFrame(rafId);
   }, [autoSlideModels, loading, filteredProducts.length]);
 
+  useEffect(() => {
+    if (features.length < 2) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (!featureScrollerRef.current) return;
+
+    let rafId = 0;
+    let lastTs = 0;
+    const speedPxPerMs = 0.045;
+
+    const tick = (ts: number) => {
+      const scroller = featureScrollerRef.current;
+      if (!scroller) return;
+      if (!lastTs) lastTs = ts;
+      const delta = Math.min(ts - lastTs, 32);
+      lastTs = ts;
+
+      const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+      if (maxScroll > 0 && !pauseFeatureAutoSlideRef.current && !document.hidden) {
+        const resetPoint = Math.min(scroller.scrollWidth / 2, maxScroll);
+        scroller.scrollLeft += delta * speedPxPerMs;
+        if (scroller.scrollLeft >= resetPoint) scroller.scrollLeft = 0;
+      }
+      rafId = window.requestAnimationFrame(tick);
+    };
+
+    rafId = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(rafId);
+  }, [features.length]);
+
   const modelCardBaseClass = modelCardClassName || 'w-[74vw] sm:w-[46vw] lg:w-[29vw] xl:w-[26vw] min-w-[240px] max-w-[360px]';
   const modelSkeletonBaseClass = modelCardSkeletonClassName || 'h-72';
   const modelImageAspectClass = modelCardImageAspectClassName || 'aspect-[4/3]';
+  const featureCards = features.length > 1 ? [...features, ...features] : features;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-white transition-colors duration-500">
@@ -198,15 +230,31 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
       </div>
 
       {/* Feature Highlights Strip (Overlapping Hero) */}
-      <div className="max-w-7xl mx-auto px-4 -mt-20 relative z-20 text-gray-900 dark:text-white">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {features.map((feature, idx) => (
-                  <div key={idx} className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10 hover:-translate-y-2 transition-transform duration-300">
-                      <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gray-50 dark:bg-white/5 ${accentColor}`}>
+      <div className="max-w-7xl mx-auto px-4 -mt-8 sm:-mt-14 lg:-mt-20 relative z-20 text-gray-900 dark:text-white">
+          <div
+            ref={featureScrollerRef}
+            onWheel={handleHorizontalWheel}
+            onMouseEnter={() => {
+              pauseFeatureAutoSlideRef.current = true;
+            }}
+            onMouseLeave={() => {
+              pauseFeatureAutoSlideRef.current = false;
+            }}
+            onTouchStart={() => {
+              pauseFeatureAutoSlideRef.current = true;
+            }}
+            onTouchEnd={() => {
+              pauseFeatureAutoSlideRef.current = false;
+            }}
+            className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 px-1 select-none [-webkit-overflow-scrolling:touch]"
+          >
+              {featureCards.map((feature, idx) => (
+                  <div key={`${feature.title}_${idx}`} className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-5 sm:p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10 hover:-translate-y-1 sm:hover:-translate-y-2 transition-transform duration-300 w-[74vw] sm:w-[52vw] md:w-[320px] lg:w-[360px] shrink-0">
+                      <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl mb-3 sm:mb-4 flex items-center justify-center bg-gray-50 dark:bg-white/5 ${accentColor}`}>
                           {feature.icon}
                       </div>
-                      <h3 className="text-lg font-bold text-gray-900 dark:text-white font-display mb-2">{feature.title}</h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{feature.description}</p>
+                      <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white font-display mb-1.5 sm:mb-2">{feature.title}</h3>
+                      <p className="text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{feature.description}</p>
                   </div>
               ))}
           </div>

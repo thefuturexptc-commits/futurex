@@ -55,6 +55,15 @@ export const VerifyPhone: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!currentFlow || !phone) return;
+    const verifiedPhone = window.sessionStorage.getItem('checkout_phone_verified') || '';
+    if (verifiedPhone !== phone) return;
+    const verifiedFlow: CheckoutFlowState = { ...currentFlow, phoneVerified: true };
+    window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(verifiedFlow));
+    navigate('/payment', { replace: true, state: verifiedFlow });
+  }, [currentFlow, phone, navigate]);
+
   if (!currentFlow?.shippingDetails || !phone) {
     return <Navigate to="/checkout" replace />;
   }
@@ -87,8 +96,8 @@ export const VerifyPhone: React.FC = () => {
       const raw = String(err?.message || 'Failed to send OTP.');
       if (/recaptcha|captcha/i.test(raw)) {
         setError('Captcha issue detected. Please wait a few seconds and try again, or refresh the page.');
-      } else if (/invalid|phone|number/i.test(raw)) {
-        setError('Please check your phone number. It looks invalid or unreachable for OTP.');
+      } else if (/invalid phone number format|invalid indian phone number|auth\/invalid-phone-number/i.test(raw)) {
+        setError('Please check your phone number. Enter a valid 10-digit Indian mobile number.');
         setEditingPhone(true);
       } else {
         setError(raw);
@@ -148,12 +157,14 @@ export const VerifyPhone: React.FC = () => {
     setVerifying(true);
     try {
       await verifyPhoneOtp(otp);
+      const verifiedFlow: CheckoutFlowState = {
+        ...currentFlow,
+        phoneVerified: true,
+      };
+      window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(verifiedFlow));
       window.sessionStorage.setItem('checkout_phone_verified', phone);
       navigate('/payment', {
-        state: {
-          ...currentFlow,
-          phoneVerified: true,
-        } as CheckoutFlowState,
+        state: verifiedFlow,
       });
     } catch (err: any) {
       const errMsg = err?.message || 'Invalid OTP.';

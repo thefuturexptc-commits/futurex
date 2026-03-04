@@ -25,6 +25,12 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
     return Number(firstColor.stock || 0) - Number(firstColor.reservedStock || 0);
   }, [product.colors, product.stock, product.reservedStock]);
   const canAdd = selectedColorStock > 0;
+  const viewingNow = useMemo(() => {
+    const seed = String(product.id || product.name)
+      .split('')
+      .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+    return (seed % 17) + 3;
+  }, [product.id, product.name]);
 
   const defaultImage = useMemo(() => {
     return product.colors?.[0]?.images?.[0] || product.images?.[0] || 'https://picsum.photos/400';
@@ -60,8 +66,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                const prompt = `compare ${product.name}`;
-                window.dispatchEvent(new CustomEvent('support-assistant:ask-product', { detail: { prompt } }));
+                window.dispatchEvent(
+                  new CustomEvent('product:compare-add', {
+                    detail: { id: product.id, name: product.name },
+                  })
+                );
               }}
               className="rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5"
             >
@@ -88,6 +97,16 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
           <div className="flex items-center gap-1 text-amber-400 text-xs font-bold px-2 py-0.5">
             <span>*</span> {product.rating || 0}
           </div>
+        </div>
+        <div className="flex items-center gap-2 mb-1">
+          {canAdd && selectedColorStock <= 5 && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-400">
+              Only {selectedColorStock} left
+            </span>
+          )}
+          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
+            {viewingNow} viewing now
+          </span>
         </div>
 
         <Link to={`/product/${product.id}`}>

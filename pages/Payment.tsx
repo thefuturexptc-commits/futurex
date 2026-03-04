@@ -28,7 +28,7 @@ export const Payment: React.FC = () => {
   const phone = flowState?.phone?.replace(/\D/g, '').slice(0, 10) || '';
   const verifiedPhone = window.sessionStorage.getItem('checkout_phone_verified') || '';
 
-  const isPhoneVerified = Boolean(flowState?.phoneVerified && phone && verifiedPhone === phone);
+  const isPhoneVerified = Boolean(phone && verifiedPhone === phone);
 
   const addressForOrder = useMemo<Address | null>(() => {
     if (!flowState?.shippingDetails) return null;
@@ -50,7 +50,7 @@ export const Payment: React.FC = () => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login?redirect=%2Fpayment" replace />;
   }
 
   if (!addressForOrder || items.length === 0) {

@@ -17,6 +17,10 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
+  const sanitizeUserForStorage = (userData: User): User => {
+    const { password: _password, ...rest } = userData;
+    return rest as User;
+  };
 
   useEffect(() => {
     const storedUser = localStorage.getItem('aura_active_user');
@@ -29,7 +33,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (isLegacyDemoUser) {
           localStorage.removeItem('aura_active_user');
         } else {
-          setUser(parsed);
+          setUser(sanitizeUserForStorage(parsed));
         }
       } catch {
         localStorage.removeItem('aura_active_user');
@@ -39,8 +43,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('aura_active_user', JSON.stringify(userData));
+    const sanitized = sanitizeUserForStorage(userData);
+    setUser(sanitized);
+    localStorage.setItem('aura_active_user', JSON.stringify(sanitized));
   };
 
   const logout = () => {
@@ -50,8 +55,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Allow components to update user state (e.g., after adding an address)
   const updateUser = (userData: User) => {
-      setUser(userData);
-      localStorage.setItem('aura_active_user', JSON.stringify(userData));
+      const sanitized = sanitizeUserForStorage(userData);
+      setUser(sanitized);
+      localStorage.setItem('aura_active_user', JSON.stringify(sanitized));
   };
 
   return (

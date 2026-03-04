@@ -56,20 +56,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return [...prev, { ...product, quantity }];
     });
 
-    const isMobileViewport =
-      typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches;
-
-    window.dispatchEvent(
-      new CustomEvent('support-assistant:cart-action', {
-        detail: {
-          action: 'added_to_cart',
-          productName: product.name,
-        },
-      })
-    );
-
-    // On mobile, prioritize AI assistant popup over cart drawer.
-    setIsCartOpen(!isMobileViewport);
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (productId: string) => {

@@ -353,7 +353,6 @@ const upsertSuperAdmin = (users: User[]): User[] => {
     id: 'superadmin_1',
     name: 'Super Admin',
     email: SUPERADMIN_EMAIL,
-    password: 'superadmin123',
     role: 'superadmin',
     phone: '9999999999',
     addresses: [],
@@ -1007,7 +1006,7 @@ export const loginWithGoogle = async (): Promise<User> => {
     if (code === 'auth/popup-closed-by-user') {
       throw new Error('Google login was cancelled.');
     }
-    throw new Error('Google login failed. Demo login is disabled.');
+    throw new Error('Google login failed. Please continue with email.');
   }
 };
 
@@ -1032,6 +1031,18 @@ export const isEmailRegistered = async (email: string): Promise<boolean> => {
 
   const users = upsertSuperAdmin(getMockData<User[]>('users', []));
   return users.some((u) => (u.email || '').trim().toLowerCase() === normalizedEmail);
+};
+
+export const isEmailRegisteredInFirebase = async (email: string): Promise<boolean> => {
+  const normalizedEmail = email.trim().toLowerCase();
+  if (!normalizedEmail) return false;
+
+  const methods = await fetchSignInMethodsForEmail(auth, normalizedEmail);
+  if (methods && methods.length > 0) return true;
+
+  const qEmail = query(collection(db, 'users'), where('email', '==', normalizedEmail));
+  const emailSnap = await getDocs(qEmail);
+  return !emailSnap.empty;
 };
 
 const normalizeIndianPhone = (input: string): string => {
@@ -1320,21 +1331,11 @@ export const updateUserAddresses = async (userId: string, addresses: Address[]):
 };
 
 export const addNewAdmin = async (email: string, name: string, password: string, permissions?: UserPermissions): Promise<void> => {
-    // Local
+    // Validate against current local list
     const users = upsertSuperAdmin(getMockData<User[]>('users', []));
     if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
         throw new Error('User with this email already exists');
     }
-    users.push({
-      id: `admin_${Date.now()}`,
-      name,
-      email,
-      password,
-      role: 'admin',
-      addresses: [],
-      permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) }
-    });
-    setMockData('users', users);
 
     try {
         await ensureFirebaseConnection();
@@ -1352,11 +1353,24 @@ export const addNewAdmin = async (email: string, name: string, password: string,
             id: uid,
             email, 
             name, 
-            password,
             role: 'admin', 
             addresses: [],
             permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) }
         });
+
+        // Persist local cache only after remote creation succeeds.
+        const refreshedUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+        if (!refreshedUsers.some((u) => u.id === uid || u.email.toLowerCase() === email.toLowerCase())) {
+          refreshedUsers.push({
+            id: uid,
+            name,
+            email,
+            role: 'admin',
+            addresses: [],
+            permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) }
+          });
+          setMockData('users', refreshedUsers);
+        }
 
         // Cleanup
         await deleteApp(secondaryApp);

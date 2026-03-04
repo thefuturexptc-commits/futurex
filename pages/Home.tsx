@@ -1,4 +1,4 @@
-import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ProductCard';
@@ -12,6 +12,55 @@ import fanHomeImage from '../assets/images/mainfan.png';
 import monitorHomeImage from '../assets/images/mainmonitor.png';
 
 export const Home: React.FC = () => {
+  const colorMoods = useMemo(
+    () => [
+      {
+        id: 'neon',
+        dot: 'bg-primary-500',
+        heroGradient: 'from-pink-500 via-purple-500 to-cyan-500',
+        bullet: 'text-primary-500',
+        chip: 'bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300',
+        sectionText: 'text-primary-600 dark:text-primary-400',
+        sectionHoverText: 'hover:text-primary-600 dark:hover:text-primary-400',
+        categoryGlow: 'group-hover:shadow-[0_0_40px_rgba(236,72,153,0.4)]',
+        offerCard: 'from-cyan-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950',
+      },
+      {
+        id: 'ocean',
+        dot: 'bg-cyan-500',
+        heroGradient: 'from-cyan-500 via-blue-500 to-indigo-500',
+        bullet: 'text-cyan-500',
+        chip: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-900/40 dark:text-cyan-300',
+        sectionText: 'text-cyan-600 dark:text-cyan-400',
+        sectionHoverText: 'hover:text-cyan-600 dark:hover:text-cyan-400',
+        categoryGlow: 'group-hover:shadow-[0_0_40px_rgba(6,182,212,0.4)]',
+        offerCard: 'from-cyan-50 via-sky-50 to-blue-50 dark:from-cyan-950/40 dark:via-slate-950 dark:to-blue-950/40',
+      },
+      {
+        id: 'sunset',
+        dot: 'bg-amber-500',
+        heroGradient: 'from-amber-500 via-orange-500 to-rose-500',
+        bullet: 'text-amber-500',
+        chip: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+        sectionText: 'text-amber-600 dark:text-amber-400',
+        sectionHoverText: 'hover:text-amber-600 dark:hover:text-amber-400',
+        categoryGlow: 'group-hover:shadow-[0_0_40px_rgba(251,146,60,0.4)]',
+        offerCard: 'from-amber-50 via-orange-50 to-rose-50 dark:from-amber-950/35 dark:via-slate-950 dark:to-rose-950/35',
+      },
+      {
+        id: 'emerald',
+        dot: 'bg-emerald-500',
+        heroGradient: 'from-emerald-500 via-teal-500 to-cyan-500',
+        bullet: 'text-emerald-500',
+        chip: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+        sectionText: 'text-emerald-600 dark:text-emerald-400',
+        sectionHoverText: 'hover:text-emerald-600 dark:hover:text-emerald-400',
+        categoryGlow: 'group-hover:shadow-[0_0_40px_rgba(16,185,129,0.4)]',
+        offerCard: 'from-emerald-50 via-teal-50 to-cyan-50 dark:from-emerald-950/35 dark:via-slate-950 dark:to-cyan-950/35',
+      },
+    ],
+    []
+  );
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -23,6 +72,11 @@ export const Home: React.FC = () => {
   const featuredScrollerRef = useRef<HTMLDivElement | null>(null);
   const [heroSpotlightIndex, setHeroSpotlightIndex] = useState(0);
   const [dealCountdown, setDealCountdown] = useState('00:00:00');
+  const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
+  const [compareProductIds, setCompareProductIds] = useState<string[]>([]);
+  const [isCompareOpen, setIsCompareOpen] = useState(false);
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
+  const [activeMoodId] = useState('neon');
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -94,13 +148,6 @@ export const Home: React.FC = () => {
     .slice(0, 2);
 
   const topNewArrivals = [...featuredProducts].slice(0, 2);
-  const toOfferSlug = (value: string) =>
-    value
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-+|-+$/g, '');
-
   const openProtectedOffer = (event: MouseEvent<HTMLAnchorElement>, offerPath: string) => {
     event.preventDefault();
     if (!user) {
@@ -147,14 +194,6 @@ export const Home: React.FC = () => {
   }, [loading, bestSellersForSlider.length, featuredProductsForSlider.length]);
 
   useEffect(() => {
-    if (heroSpotlights.length <= 1) return;
-    const timer = window.setInterval(() => {
-      setHeroSpotlightIndex((prev) => (prev + 1) % heroSpotlights.length);
-    }, 3000);
-    return () => window.clearInterval(timer);
-  }, [heroSpotlights.length]);
-
-  useEffect(() => {
     const updateCountdown = () => {
       const now = new Date();
       const target = new Date(now);
@@ -167,6 +206,43 @@ export const Home: React.FC = () => {
     };
     updateCountdown();
     const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const loadRecentlyViewed = () => {
+      try {
+        const raw = localStorage.getItem('aura_recently_viewed_products');
+        const ids = raw ? (JSON.parse(raw) as string[]) : [];
+        setRecentlyViewedIds(ids.slice(0, 8));
+      } catch {
+        setRecentlyViewedIds([]);
+      }
+    };
+    loadRecentlyViewed();
+    window.addEventListener('focus', loadRecentlyViewed);
+    return () => window.removeEventListener('focus', loadRecentlyViewed);
+  }, []);
+
+  useEffect(() => {
+    const onCompareAdd = (event: Event) => {
+      const detail = (event as CustomEvent<{ id?: string }>).detail;
+      const id = detail?.id;
+      if (!id) return;
+      setCompareProductIds((prev) => {
+        const next = [id, ...prev.filter((item) => item !== id)].slice(0, 3);
+        return next;
+      });
+      setIsCompareOpen(true);
+    };
+    window.addEventListener('product:compare-add', onCompareAdd as EventListener);
+    return () => window.removeEventListener('product:compare-add', onCompareAdd as EventListener);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setTestimonialIndex((prev) => (prev + 1) % 3);
+    }, 3800);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -206,11 +282,47 @@ export const Home: React.FC = () => {
     'Smart Fans': fanHomeImage,
     'Smart Monitoring': monitorHomeImage,
   };
-  const spotlightProduct = heroSpotlights[heroSpotlightIndex];
-  const soldToday = Math.max(
-    57,
-    bestSellers.reduce((sum, product) => sum + Math.max(2, Math.floor(Number(product.sold || 0) / 20)), 0)
+  const heroExcludedCategories = new Set(['Smart Bands', 'Smart Fans']);
+  const heroSpotlightsForHero = useMemo(
+    () => heroSpotlights.filter((item) => !heroExcludedCategories.has(item.category)),
+    [heroSpotlights]
   );
+  const spotlightProduct =
+    heroSpotlightsForHero.length > 0
+      ? heroSpotlightsForHero[heroSpotlightIndex % heroSpotlightsForHero.length]
+      : undefined;
+  useEffect(() => {
+    if (heroSpotlightsForHero.length <= 1) return;
+    const timer = window.setInterval(() => {
+      setHeroSpotlightIndex((prev) => (prev + 1) % heroSpotlightsForHero.length);
+    }, 3000);
+    return () => window.clearInterval(timer);
+  }, [heroSpotlightsForHero.length]);
+  const recentlyViewedProducts = useMemo(() => {
+    if (!recentlyViewedIds.length || !products.length) return [];
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return recentlyViewedIds
+      .map((productId) => byId.get(productId))
+      .filter((item): item is Product => Boolean(item))
+      .slice(0, 4);
+  }, [recentlyViewedIds, products]);
+  const compareProducts = useMemo(() => {
+    if (!compareProductIds.length || !products.length) return [];
+    const byId = new Map(products.map((product) => [product.id, product]));
+    return compareProductIds
+      .map((productId) => byId.get(productId))
+      .filter((item): item is Product => Boolean(item))
+      .slice(0, 3);
+  }, [compareProductIds, products]);
+  const testimonials = useMemo(
+    () => [
+      { name: 'Ritika S.', role: 'Smart Band Buyer', text: 'Battery backup is excellent and fitness tracking is accurate. Design feels premium.' },
+      { name: 'Arjun K.', role: 'Smart Ring User', text: 'The ring is light, stylish, and sleep insights are very helpful for daily routine.' },
+      { name: 'Neha P.', role: 'Smart Fan Buyer', text: 'Cooling plus purifier mode works smoothly. The app control is quick and stable.' },
+    ],
+    []
+  );
+  const activeMood = colorMoods.find((mood) => mood.id === activeMoodId) || colorMoods[0];
 
   const getArrivalHighlight = (product: Product) => {
     const mrp = Number(product.mrp || 0);
@@ -241,7 +353,7 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden pb-24 sm:pb-0 text-gray-900 dark:text-white">
+    <div className="min-h-screen overflow-x-hidden pb-24 sm:pb-0 text-gray-900 dark:text-white bg-white dark:bg-dark-bg">
       {loadError && (
         <div className="max-w-7xl mx-auto px-4 pt-6">
           <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -273,7 +385,7 @@ export const Home: React.FC = () => {
            <div className="absolute top-20 left-8 w-72 h-72 rounded-full blur-3xl opacity-20 bg-pink-400 animate-float-slow"></div>
            <div className="absolute top-1/2 right-8 w-72 h-72 rounded-full blur-3xl opacity-20 bg-cyan-400 animate-float-slow" style={{ animationDelay: '1.5s' }}></div>
            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full blur-3xl opacity-20 bg-purple-400 animate-float-slow" style={{ animationDelay: '3s' }}></div>
-           <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-[length:200%_200%] animate-gradient-x"></div>
+           <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${activeMood.heroGradient} bg-[length:200%_200%] animate-gradient-x`}></div>
         </div>
 
         {/* Hero Content */}
@@ -283,7 +395,7 @@ export const Home: React.FC = () => {
             {/* Tech Badge */}
             <div className="flex justify-center mb-6 sm:mb-8">
                 <div className="glass-card px-4 sm:px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-2 sm:gap-3 shadow-lg">
-                   <div className="w-2 h-2 rounded-full bg-primary-500 animate-pulse"></div>
+                   <div className={`w-2 h-2 rounded-full animate-pulse ${activeMood.dot}`}></div>
                    <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display">
                       Future Ready - Series X
                    </span>
@@ -293,7 +405,7 @@ export const Home: React.FC = () => {
             {/* Main Headline */}
             <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.95] font-display">
               WEAR THE <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-cyan-500 bg-[length:200%_200%] animate-gradient-x animate-pulse-slow">
+              <span className={`text-transparent bg-clip-text bg-gradient-to-r ${activeMood.heroGradient} bg-[length:200%_200%] animate-gradient-x animate-pulse-slow`}>
                 FUTURE
               </span>
             </h1>
@@ -304,32 +416,15 @@ export const Home: React.FC = () => {
             </p>
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 text-xs sm:text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 tracking-wide">
               <span className="animate-fade-in-up">14 Days Battery</span>
-              <span className="hidden md:inline text-primary-500">&bull;</span>
+              <span className={`hidden md:inline ${activeMood.bullet}`}>&bull;</span>
               <span className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>50m Water Proof</span>
-              <span className="hidden md:inline text-primary-500">&bull;</span>
+              <span className={`hidden md:inline ${activeMood.bullet}`}>&bull;</span>
               <span className="animate-fade-in-up" style={{ animationDelay: '240ms' }}>99% Accuracy</span>
-            </div>
-            <div className="mt-5 flex justify-center gap-3">
-              <Button onClick={() => navigate('/shop/all')} className="rounded-full px-6 py-2.5">
-                Shop Now
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-full px-6 py-2.5"
-                onClick={() => {
-                  const prompt = spotlightProduct
-                    ? `show specs for ${spotlightProduct.name}`
-                    : 'show best sellers';
-                  window.dispatchEvent(new CustomEvent('support-assistant:ask-product', { detail: { prompt } }));
-                }}
-              >
-                Watch Demo
-              </Button>
             </div>
             {spotlightProduct && (
               <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/40 bg-white/70 dark:bg-black/20 backdrop-blur-md px-4 py-3 flex items-center justify-between gap-3 shadow-xl">
                 <div className="text-left">
-                  <p className="text-[10px] uppercase tracking-[0.22em] text-primary-600 font-bold">Live Spotlight</p>
+                  <p className={`text-[10px] uppercase tracking-[0.22em] font-bold ${activeMood.sectionText}`}>Live Spotlight</p>
                   <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">{spotlightProduct.name}</p>
                 </div>
                 <Button size="sm" className="rounded-full px-4" onClick={() => navigate(`/product/${spotlightProduct.id}`)}>
@@ -349,6 +444,7 @@ export const Home: React.FC = () => {
               <path d="M100 0 L100 200 M0 100 L200 100" strokeWidth="1"/>
            </svg>
         </div>
+
       </section>
 
       {/* Floating Category Cards - Overlapping Hero */}
@@ -360,7 +456,7 @@ export const Home: React.FC = () => {
                   key={cat}
                   to={getCategoryRoute(cat)}
                   onClick={(event) => handleProtectedCategoryClick(event, getCategoryRoute(cat))}
-                  className="group relative h-64 sm:h-72 lg:h-80 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden cursor-pointer glass-card transition-all transition-shadow duration-500 hover:-translate-y-2 sm:hover:-translate-y-4 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] group-hover:shadow-[0_0_40px_rgba(236,72,153,0.4)] border-white/50"
+                  className={`group relative h-64 sm:h-72 lg:h-80 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden cursor-pointer glass-card transition-all transition-shadow duration-500 hover:-translate-y-2 sm:hover:-translate-y-4 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] ${activeMood.categoryGlow} border-white/50`}
                 >
                 {/* Image */}
                 <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800">
@@ -380,7 +476,7 @@ export const Home: React.FC = () => {
                 <div className="absolute bottom-0 left-0 w-full p-5 sm:p-8">
                     <div className="flex justify-between items-end">
                         <div>
-                            <p className="text-xs font-bold text-primary-600 dark:text-primary-400 uppercase tracking-widest mb-2 font-display">Series 0{idx + 1}</p>
+                            <p className={`text-xs font-bold uppercase tracking-widest mb-2 font-display ${activeMood.sectionText}`}>Series 0{idx + 1}</p>
                             <h3 className="text-2xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight font-display">{cat}</h3>
                         </div>
                         <div className="w-12 h-12 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shadow-lg transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
@@ -399,10 +495,10 @@ export const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-                <span className="text-primary-600 dark:text-primary-400 font-bold tracking-widest uppercase text-xs font-display mb-2 block">Customer Favorites</span>
+                <span className={`font-bold tracking-widest uppercase text-xs font-display mb-2 block ${activeMood.sectionText}`}>Customer Favorites</span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
             </div>
-            <button onClick={() => handleShopNavigation('/shop/all')} className="group flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 font-medium transition-colors font-display tracking-wide">
+            <button onClick={() => handleShopNavigation('/shop/all')} className={`group flex items-center gap-2 text-gray-600 dark:text-gray-300 ${activeMood.sectionHoverText} font-medium transition-colors font-display tracking-wide`}>
               VIEW ALL 
               <span className="group-hover:translate-x-1 transition-transform">{'->'}</span>
             </button>
@@ -489,35 +585,60 @@ export const Home: React.FC = () => {
               </div>
           </div>
       </section>
+      {recentlyViewedProducts.length > 0 && (
+        <section className="py-12 sm:py-16 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+          <div className="max-w-7xl mx-auto px-4">
+            <div className="flex items-center justify-between gap-4 mb-7">
+              <div>
+                <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Continue Shopping</p>
+                <h2 className="text-2xl sm:text-3xl font-bold font-display mt-2">Recently Viewed</h2>
+              </div>
+              <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate('/shop/all')}>
+                Browse All
+              </Button>
+            </div>
+            <div className="flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto lg:overflow-visible pb-2 snap-x snap-mandatory">
+              {recentlyViewedProducts.map((product) => (
+                <div key={product.id} className="w-[78vw] sm:w-[46vw] lg:w-auto min-w-[230px] lg:min-w-0 shrink-0 snap-start">
+                  <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
       <div className="h-10 bg-gradient-to-b from-transparent via-cyan-100/40 to-transparent dark:via-cyan-900/10" />
 
       <section className="py-12 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Why Choose TheFutureX?</h2>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-8">
+            <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Customer Stories</p>
+            <h2 className="mt-2 text-3xl sm:text-4xl font-bold font-display">What Buyers Say</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10">
-              <div className="w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gray-50 dark:bg-white/5 text-primary-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L15 12l-5.25-5M13.5 17L18.75 12 13.5 7" /></svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white font-display mb-2">AI Powered Sensors</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Real-time biometric intelligence tuned by adaptive machine learning models.</p>
+          <div className="relative overflow-hidden rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-sky-50 via-white to-rose-50 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950 p-6 sm:p-8 shadow-xl">
+            <div
+              className="flex transition-transform duration-500 ease-out"
+              style={{ transform: `translateX(-${testimonialIndex * 100}%)` }}
+            >
+              {testimonials.map((entry) => (
+                <article key={entry.name} className="w-full shrink-0 text-center px-1">
+                  <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">"{entry.text}"</p>
+                  <p className="mt-4 text-sm font-bold text-gray-900 dark:text-white">{entry.name}</p>
+                  <p className={`text-xs uppercase tracking-[0.2em] ${activeMood.sectionText}`}>{entry.role}</p>
+                </article>
+              ))}
             </div>
-            <div className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10">
-              <div className="w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gray-50 dark:bg-white/5 text-primary-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 7h18M6 7v10a2 2 0 002 2h8a2 2 0 002-2V7M9 11h6M10 15h4" /></svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white font-display mb-2">Fast Delivery Network</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Priority dispatch and optimized logistics ensure your smart devices reach you quickly and safely.</p>
-            </div>
-            <div className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10">
-              <div className="w-12 h-12 rounded-xl mb-4 flex items-center justify-center bg-gray-50 dark:bg-white/5 text-primary-500">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999A5.002 5.002 0 005.5 9.5 4.5 4.5 0 003 15z" /></svg>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white font-display mb-2">Climate-Resistant Tech</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">Designed to perform reliably across heat, rain, sweat, and high-humidity conditions.</p>
-            </div>
+          </div>
+          <div className="mt-4 flex items-center justify-center gap-2">
+            {testimonials.map((entry, idx) => (
+              <button
+                key={entry.name}
+                type="button"
+                className={`h-2.5 rounded-full transition-all ${testimonialIndex === idx ? `${activeMood.dot} w-7` : 'w-2.5 bg-gray-300 dark:bg-gray-600'}`}
+                onClick={() => setTestimonialIndex(idx)}
+                aria-label={`Go to testimonial ${idx + 1}`}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -525,7 +646,7 @@ export const Home: React.FC = () => {
       <section className="py-12 sm:py-16 px-4 bg-gray-50 dark:bg-dark-surface/40 border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <p className="text-xs uppercase tracking-[0.3em] text-primary-600 font-bold">Live Offers</p>
+            <p className={`text-xs uppercase tracking-[0.3em] font-bold ${activeMood.sectionText}`}>Live Offers</p>
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-display mt-2">Deals & Benefits</h2>
             <p className="mt-3 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300">Flash window ends in {dealCountdown}</p>
             <div className="mt-4">
@@ -539,21 +660,21 @@ export const Home: React.FC = () => {
               </Link>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
             {dealsToShow.map((offer, idx) => (
               <Link
                 key={offer.title}
                 to={offer.href}
                 onClick={(event) => openProtectedOffer(event, offer.href)}
-                className="relative rounded-2xl border border-gray-200 dark:border-white/10 p-6 bg-gradient-to-br from-cyan-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950 shadow-md hover:-translate-y-1 hover:scale-[1.01] transition-transform duration-300 animate-fade-in-up"
+                className={`relative rounded-2xl border border-gray-200 dark:border-white/10 p-4 sm:p-6 bg-gradient-to-br ${activeMood.offerCard} shadow-md hover:-translate-y-1 hover:scale-[1.01] transition-transform duration-300 animate-fade-in-up max-w-[360px] md:max-w-none mx-auto w-full`}
                 style={{ animationDelay: `${idx * 120}ms` }}
               >
-                <span className="inline-block text-[10px] font-bold tracking-widest px-3 py-1 rounded-full bg-primary-100 text-primary-700 dark:bg-primary-900/40 dark:text-primary-300 animate-pulse">
+                <span className={`inline-block text-[10px] font-bold tracking-widest px-3 py-1 rounded-full animate-pulse ${activeMood.chip}`}>
                   {offer.badge}
                 </span>
-                <h3 className="text-xl sm:text-2xl font-bold mt-4 text-gray-900 dark:text-white">{offer.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mt-2">{offer.desc}</p>
-                <span className="mt-5 inline-flex items-center gap-2 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-3 sm:px-4 py-2 text-[11px] sm:text-xs font-semibold tracking-wide">
+                <h3 className="text-lg sm:text-2xl font-bold mt-3 sm:mt-4 text-gray-900 dark:text-white leading-snug">{offer.title}</h3>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-2">{offer.desc}</p>
+                <span className="mt-4 sm:mt-5 inline-flex items-center gap-2 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold tracking-wide">
                   {offer.cta}
                   <span aria-hidden="true">{'->'}</span>
                 </span>
@@ -585,7 +706,61 @@ export const Home: React.FC = () => {
              </div>
         </div>
       </section>
+      {compareProducts.length > 0 && (
+        <div
+          className={`fixed left-3 right-3 sm:left-auto sm:right-5 sm:w-[420px] bottom-[74px] sm:bottom-5 z-50 transition-all duration-300 ${
+            isCompareOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 pointer-events-none'
+          }`}
+        >
+          <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className={`text-sm font-bold ${activeMood.sectionText}`}>Compare Products ({compareProducts.length}/3)</p>
+              <button
+                type="button"
+                className="text-xs font-semibold text-gray-500 hover:text-gray-900 dark:hover:text-white"
+                onClick={() => setIsCompareOpen(false)}
+              >
+                Hide
+              </button>
+            </div>
+            <div className="mt-3 space-y-2">
+              {compareProducts.map((item) => (
+                <div key={item.id} className="flex items-center justify-between gap-2 rounded-xl border border-gray-200 dark:border-white/10 px-3 py-2">
+                  <p className="text-xs font-semibold text-gray-800 dark:text-gray-100 line-clamp-1">{item.name}</p>
+                  <button
+                    type="button"
+                    className="text-[11px] font-bold text-rose-500"
+                    onClick={() => setCompareProductIds((prev) => prev.filter((id) => id !== item.id))}
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Button
+                size="sm"
+                onClick={() => {
+                  const names = compareProducts.map((item) => item.name).join(' vs ');
+                  window.dispatchEvent(new CustomEvent('support-assistant:ask-product', { detail: { prompt: `compare ${names}` } }));
+                }}
+              >
+                Compare Now
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setCompareProductIds([]);
+                  setIsCompareOpen(false);
+                }}
+              >
+                Clear
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-

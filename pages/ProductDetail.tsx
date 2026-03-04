@@ -63,6 +63,7 @@ export const ProductDetail: React.FC = () => {
   const [reviewText, setReviewText] = useState('');
   const [reviewImageFiles, setReviewImageFiles] = useState<File[]>([]);
   const [expandedReviewIds, setExpandedReviewIds] = useState<string[]>([]);
+  const [reviewError, setReviewError] = useState('');
 
   const isVideoUrl = useCallback((url: string) => VIDEO_REGEX.test(url), []);
 
@@ -75,6 +76,18 @@ export const ProductDetail: React.FC = () => {
       setProduct(p);
       setLoading(false);
     });
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    try {
+      const raw = localStorage.getItem('aura_recently_viewed_products');
+      const current = raw ? (JSON.parse(raw) as string[]) : [];
+      const next = [id, ...current.filter((pid) => pid !== id)].slice(0, 12);
+      localStorage.setItem('aura_recently_viewed_products', JSON.stringify(next));
+    } catch {
+      // Ignore storage errors and continue.
+    }
   }, [id]);
 
   useEffect(() => {
@@ -206,14 +219,16 @@ export const ProductDetail: React.FC = () => {
       comment: review.comment || '',
       images: [],
     }));
-    const fromStorage = storedReviews.map((review) => ({
-      id: review.id,
-      name: review.userName,
-      rating: Number(review.rating || 0),
-      date: new Date(review.createdAt).toLocaleDateString(),
-      comment: review.comment || '',
-      images: review.images || [],
-    }));
+    const fromStorage = storedReviews
+      .filter((review) => Number(review.rating || 0) >= 4)
+      .map((review) => ({
+        id: review.id,
+        name: review.userName,
+        rating: Number(review.rating || 0),
+        date: new Date(review.createdAt).toLocaleDateString(),
+        comment: review.comment || '',
+        images: review.images || [],
+      }));
     return [...fromStorage, ...fromProduct];
   }, [product?.reviews, storedReviews]);
 
@@ -273,8 +288,13 @@ export const ProductDetail: React.FC = () => {
       openLogin(`/product/${product.id}`);
       return;
     }
+    if (Number(reviewRating || 0) < 4) {
+      setReviewError('Only 4-star and 5-star reviews are accepted right now.');
+      return;
+    }
     const comment = reviewText.trim();
     if (!comment) return;
+    setReviewError('');
 
     const imageDataUrls = await Promise.all(
       reviewImageFiles.map(
@@ -362,13 +382,13 @@ export const ProductDetail: React.FC = () => {
               alt={product.name}
             />
             {carouselImages.length ? (
-              <div className="grid grid-cols-5 gap-2">
+              <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
                 {carouselImages.map((imageUrl, imageIdx) => (
                   <img
                     key={`${selectedVariant?.colorName || 'default'}_${imageIdx}`}
                     src={imageUrl}
                     alt={`${product.name} ${selectedVariant?.colorName || 'Default'} ${imageIdx + 1}`}
-                    className="h-16 w-full rounded-lg object-cover border border-gray-200 dark:border-white/10"
+                    className="h-16 w-16 sm:h-16 sm:w-16 rounded-lg object-cover border border-gray-200 dark:border-white/10 shrink-0 snap-start"
                   />
                 ))}
               </div>
@@ -383,7 +403,7 @@ export const ProductDetail: React.FC = () => {
           <div className="space-y-6">
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-gray-500 dark:text-gray-400">{product.category}</p>
-              <h1 className="text-2xl sm:text-3xl font-bold leading-tight">{product.name}</h1>
+              <h1 className="text-xl sm:text-2xl font-bold leading-tight">{product.name}</h1>
             </div>
 
             <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-300">
@@ -399,7 +419,7 @@ export const ProductDetail: React.FC = () => {
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                 Select Color {selectedVariant?.colorName ? `- ${selectedVariant.colorName}` : ''}
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-wrap gap-2 sm:gap-3">
                 {allVariants.map((variant) => (
                   <button
                     key={variant.colorName}
@@ -409,7 +429,7 @@ export const ProductDetail: React.FC = () => {
                       handleColorChange(variant);
                     }}
                     disabled={getVariantTotalStock(variant) <= 0}
-                    className={`text-left rounded-xl border p-3 transition-all duration-200 ${
+                    className={`text-left rounded-xl border p-2.5 sm:p-3 transition-all duration-200 w-[150px] sm:w-[170px] ${
                       selectedColor === variant.colorName
                         ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-sm'
                         : 'border-gray-300 dark:border-white/20 hover:border-primary-400'
@@ -436,14 +456,14 @@ export const ProductDetail: React.FC = () => {
             {showSizeSelector ? (
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-3">Select Size</p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex sm:flex-wrap gap-2 overflow-x-auto sm:overflow-visible pb-1 sm:pb-0 snap-x snap-mandatory">
                   {selectedVariant.sizes.map((sizeRow) => (
                     <button
                       key={`${selectedVariant.colorName}_${sizeRow.size}`}
                       type="button"
                       onClick={() => setSelectedSize(sizeRow.size)}
                       disabled={Number(sizeRow.stock || 0) <= 0}
-                      className={`min-w-[44px] px-4 py-2 rounded-lg border text-sm font-medium transition ${
+                      className={`min-w-[84px] px-4 py-2 rounded-lg border text-sm font-medium transition shrink-0 snap-start ${
                         selectedSize === sizeRow.size
                           ? 'bg-gray-900 text-white border-gray-900 dark:bg-white dark:text-black dark:border-white'
                           : 'border-gray-300 dark:border-white/20 hover:border-primary-400'
@@ -595,7 +615,10 @@ export const ProductDetail: React.FC = () => {
                   <label className="text-sm text-gray-700 dark:text-gray-300">Rating</label>
                   <select
                     value={reviewRating}
-                    onChange={(e) => setReviewRating(Number(e.target.value))}
+                    onChange={(e) => {
+                      setReviewRating(Number(e.target.value));
+                      setReviewError('');
+                    }}
                     className="rounded-lg border border-gray-300 dark:border-white/20 bg-white dark:bg-white/5 px-3 py-2 text-sm"
                   >
                     {[5, 4, 3, 2, 1].map((r) => (
@@ -603,6 +626,7 @@ export const ProductDetail: React.FC = () => {
                     ))}
                   </select>
                 </div>
+                {reviewError && <p className="text-xs text-red-600 dark:text-red-400">{reviewError}</p>}
                 <textarea
                   value={reviewText}
                   onChange={(e) => setReviewText(e.target.value)}

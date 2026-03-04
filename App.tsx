@@ -122,6 +122,38 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
   return children;
 };
 
+const RequireAdmin: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+  const { user, isAuthReady } = useAuth();
+  const { openLogin } = useAuthModal();
+  const location = useLocation();
+  const promptedPathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthReady && !user && promptedPathRef.current !== location.pathname) {
+      openLogin(location.pathname);
+      promptedPathRef.current = location.pathname;
+    }
+    if (user) {
+      promptedPathRef.current = null;
+    }
+  }, [isAuthReady, user, location.pathname, openLogin]);
+
+  if (!isAuthReady) {
+    return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>;
+  }
+
+  if (!user) {
+    return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Login required...</div>;
+  }
+
+  const hasAdminRole = user.role === 'admin' || user.role === 'superadmin';
+  if (!hasAdminRole) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+
 const App: React.FC = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loginRedirectPath, setLoginRedirectPath] = useState('/profile');
@@ -174,8 +206,8 @@ const App: React.FC = () => {
                     <Route path="/info/:slug" element={<InfoPage />} />
                     <Route path="/offers/:slug" element={<RequireAuth><OfferPage /></RequireAuth>} />
                     <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-                    <Route path="/admin" element={<RequireAuth><AdminDashboard /></RequireAuth>} />
-                    <Route path="/admin/edit-product" element={<RequireAuth><AdminEditProductPage /></RequireAuth>} />
+                    <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                    <Route path="/admin/edit-product" element={<RequireAdmin><AdminEditProductPage /></RequireAdmin>} />
                     <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>

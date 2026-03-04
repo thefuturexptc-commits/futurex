@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { isEmailRegistered, loginUser, loginWithGoogle } from '../services/backend';
+import { isEmailRegisteredInFirebase, loginUser, loginWithGoogle } from '../services/backend';
 import { Button } from '../components/ui/Button';
 
 export const Login: React.FC = () => {
@@ -14,31 +14,45 @@ export const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get('redirect');
   const redirectPath = redirectParam && redirectParam.startsWith('/') ? redirectParam : '';
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      if (!email.trim() || !password.trim()) {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!normalizedEmail || !password.trim()) {
         setError('Enter email and password');
         setLoading(false);
         return;
       }
-
-      const exists = await isEmailRegistered(email.trim());
-      if (!exists) {
-        navigate(`/signup?email=${encodeURIComponent(email.trim())}&redirect=${encodeURIComponent(redirectPath)}`);
+      if (!isValidEmail(normalizedEmail)) {
+        setError('Enter a valid email format');
+        setLoading(false);
         return;
       }
 
-      const user = await loginUser(email.trim(), password);
+      const exists = await isEmailRegisteredInFirebase(normalizedEmail);
+      if (!exists) {
+        const goToRegister = window.confirm('This email is not registered yet. Please register first. Go to Sign up now?');
+        if (goToRegister) {
+          navigate(`/signup?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
+        }
+        return;
+      }
+
+      const user = await loginUser(normalizedEmail, password);
       login(user);
       navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
     } catch (err: any) {
       const message = String(err?.message || 'Login failed.');
       if (message.includes('Account not found')) {
-        navigate(`/signup?email=${encodeURIComponent(email.trim())}&redirect=${encodeURIComponent(redirectPath)}`);
+        const normalizedEmail = email.trim().toLowerCase();
+        const goToRegister = window.confirm('This email is not registered yet. Please register first. Go to Sign up now?');
+        if (goToRegister) {
+          navigate(`/signup?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
+        }
         return;
       }
       if (message.includes('Incorrect password')) {
@@ -108,7 +122,7 @@ export const Login: React.FC = () => {
 
           <div>
             <Button type="submit" className="w-full rounded-xl" isLoading={loading}>
-              Login
+              Continue with Email
             </Button>
           </div>
 

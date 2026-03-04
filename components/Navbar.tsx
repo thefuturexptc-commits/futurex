@@ -123,18 +123,18 @@ const NavbarComponent: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className="hidden sm:flex space-x-2">
+              <div className="flex space-x-1 sm:space-x-2">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="rounded-full px-6 border-gray-300 dark:border-gray-600"
+                  className="rounded-full px-3 sm:px-6 border-gray-300 dark:border-gray-600 text-xs sm:text-sm"
                   onClick={() => navigate('/login')}
                 >
                   Login
                 </Button>
                 <Button
                   size="sm"
-                  className="rounded-full px-6"
+                  className="rounded-full px-3 sm:px-6 text-xs sm:text-sm"
                   onClick={() => navigate('/signup')}
                 >
                   Sign up
@@ -158,33 +158,87 @@ const NavbarComponent: React.FC = () => {
         </div>
       </div>
 
+      <div className="md:hidden border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-surface/95">
+        <div className="px-2 py-2 flex gap-1 overflow-x-auto">
+          {navLinks.map((link) => {
+            const active = location.pathname === link.path;
+            return (
+              <button
+                key={link.name}
+                onClick={() => openCategory(link.path)}
+                className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide transition-colors ${
+                  active
+                    ? 'bg-primary-600 text-white'
+                    : 'bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-200'
+                }`}
+              >
+                {link.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Mobile Menu */}
       {mobileMenuOpen && (
         <div className="md:hidden bg-white/95 dark:bg-dark-surface/95 border-b border-gray-200 dark:border-white/10 absolute w-full z-50">
           <div className="px-4 pt-4 pb-6 space-y-2">
-            {navLinks.map((link) => (
-              <button
-                key={link.name}
-                className="block w-full text-left px-3 py-3 rounded-lg text-base font-bold uppercase tracking-wider hover:bg-gray-50 dark:hover:bg-white/5"
-                onClick={() => openCategory(link.path)}
-              >
-                {link.name}
-              </button>
-            ))}
-
+            {user ? (
+              <div className="pt-2">
+                <div className="flex flex-col gap-2">
+                  <Button
+                    className="w-full justify-center"
+                    onClick={() => {
+                      navigate('/profile');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    Profile
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="outline"
+                      className="w-full justify-center"
+                      onClick={() => {
+                        navigate('/admin');
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Admin Dashboard
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    className="w-full justify-center"
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </div>
+              </div>
+            ) : null}
             {!user && (
               <div className="pt-4 mt-4 border-t border-gray-100 dark:border-white/5">
                 <div className="flex flex-col gap-2">
                   <Button
                     className="w-full justify-center"
-                    onClick={() => navigate('/login')}
+                    onClick={() => {
+                      navigate('/login');
+                      setMobileMenuOpen(false);
+                    }}
                   >
                     Login
                   </Button>
                   <Button
                     variant="outline"
                     className="w-full justify-center"
-                    onClick={() => navigate('/signup')}
+                    onClick={() => {
+                      navigate('/signup');
+                      setMobileMenuOpen(false);
+                    }}
                   >
                     Sign up
                   </Button>
@@ -196,33 +250,26 @@ const NavbarComponent: React.FC = () => {
       )}
 
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-dark-surface/95 backdrop-blur px-2 py-2">
-        <div className="grid grid-cols-5 gap-1 text-center">
+        <div className="grid grid-cols-6 gap-1 text-center">
           {[
-            { label: 'Home', path: '/', icon: 'H' },
-            { label: 'Bands', path: '/smart-bands', icon: 'B' },
-            { label: 'Offers', path: '/#offers', icon: 'O' },
-            { label: 'Cart', path: '/cart', icon: 'C' },
-            { label: 'Profile', path: user ? '/profile' : '/login', icon: 'P' },
+            { label: 'Home', path: '/' },
+            { label: 'Bands', path: '/smart-bands' },
+            { label: 'Rings', path: '/smart-rings' },
+            { label: 'Fans', path: '/smart-fans' },
+            { label: 'Monitoring', path: '/smart-monitoring' },
+            { label: 'Profile', path: user ? '/profile' : '/login?redirect=%2Fprofile' },
           ].map((item) => {
-            const active = item.path !== '/#offers' && location.pathname === item.path;
+            const active = location.pathname === item.path;
             return (
               <button
                 key={item.label}
                 type="button"
                 onClick={() => {
-                  if (item.path === '/#offers') {
-                    navigate('/');
-                    window.setTimeout(() => {
-                      window.scrollTo({ top: document.body.scrollHeight * 0.62, behavior: 'smooth' });
-                    }, 120);
-                    return;
-                  }
                   navigate(item.path);
                 }}
-                className={`rounded-xl py-1.5 ${active ? 'bg-primary-600 text-white' : 'text-gray-300'}`}
+                className={`rounded-xl py-2 ${active ? 'bg-primary-600 text-white' : 'text-gray-300'}`}
               >
-                <p className="text-[10px] font-bold">{item.icon}</p>
-                <p className="text-[10px]">{item.label}</p>
+                <p className="text-[10px] font-semibold">{item.label}</p>
               </button>
             );
           })}
