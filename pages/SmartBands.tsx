@@ -76,7 +76,6 @@ export const SmartBands: React.FC = () => {
       accentColor="text-cyan-500"
       features={features}
       autoSlideModels
-      modelCardClassName="w-[74vw] sm:w-[46vw] lg:w-[29vw] xl:w-[26vw] min-w-[240px] max-w-[360px]"
       modelCardSkeletonClassName="h-72"
       modelCardImageAspectClassName="aspect-[4/3]"
     />

@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useState } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
@@ -39,56 +39,21 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
-const ScrollJoinPrompt: React.FC<{ onPrompt: () => void }> = ({ onPrompt }) => {
-  const { user } = useAuth();
-  const location = useLocation();
-  const hasPromptedRef = useRef(false);
-
-  useEffect(() => {
-    hasPromptedRef.current = false;
-  }, [location.pathname]);
-
-  useEffect(() => {
-    if (user) return;
-    if (location.pathname !== '/') return;
-    if (sessionStorage.getItem('tfx_scroll_join_prompted') === '1') return;
-
-    const onScroll = () => {
-      if (hasPromptedRef.current) return;
-      if (window.scrollY < 40) return;
-      hasPromptedRef.current = true;
-      sessionStorage.setItem('tfx_scroll_join_prompted', '1');
-      onPrompt();
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [user, location.pathname, onPrompt]);
-
-  return null;
-};
-
-const GlobalAuthPrompt: React.FC = () => {
+const FirstLoadAuthPrompt: React.FC = () => {
   const { user, isAuthReady } = useAuth();
   const { openLogin } = useAuthModal();
   const { pathname } = useLocation();
-  const promptedPathRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!isAuthReady || user) {
-      promptedPathRef.current = null;
-      return;
-    }
+    if (!isAuthReady || user) return;
+    if (pathname.startsWith('/login') || pathname.startsWith('/signup')) return;
+    if (sessionStorage.getItem('tfx_first_load_auth_prompted') === '1') return;
 
-    if (pathname.startsWith('/login') || pathname.startsWith('/signup')) {
-      return;
-    }
-
-    if (promptedPathRef.current === pathname) return;
-    promptedPathRef.current = pathname;
+    sessionStorage.setItem('tfx_first_load_auth_prompted', '1');
     const timer = window.setTimeout(() => {
-      openLogin(pathname);
-    }, 900);
+      openLogin(pathname || '/');
+    }, 1200);
+
     return () => window.clearTimeout(timer);
   }, [isAuthReady, user, pathname, openLogin]);
 
@@ -97,26 +62,14 @@ const GlobalAuthPrompt: React.FC = () => {
 
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, isAuthReady } = useAuth();
-  const { openLogin } = useAuthModal();
   const location = useLocation();
-  const promptedPathRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (isAuthReady && !user && promptedPathRef.current !== location.pathname) {
-      openLogin(location.pathname);
-      promptedPathRef.current = location.pathname;
-    }
-    if (user) {
-      promptedPathRef.current = null;
-    }
-  }, [isAuthReady, user, location.pathname, openLogin]);
 
   if (!isAuthReady) {
     return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>;
   }
 
   if (!user) {
-    return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Login required...</div>;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   return children;
@@ -124,26 +77,14 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
 
 const RequireAdmin: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, isAuthReady } = useAuth();
-  const { openLogin } = useAuthModal();
   const location = useLocation();
-  const promptedPathRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (isAuthReady && !user && promptedPathRef.current !== location.pathname) {
-      openLogin(location.pathname);
-      promptedPathRef.current = location.pathname;
-    }
-    if (user) {
-      promptedPathRef.current = null;
-    }
-  }, [isAuthReady, user, location.pathname, openLogin]);
 
   if (!isAuthReady) {
     return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>;
   }
 
   if (!user) {
-    return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Login required...</div>;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   const hasAdminRole = user.role === 'admin' || user.role === 'superadmin';
@@ -170,8 +111,7 @@ const App: React.FC = () => {
           <BrowserRouter>
             <AuthModalProvider value={{ openLogin }}>
               <ScrollToTop />
-              <GlobalAuthPrompt />
-              <ScrollJoinPrompt onPrompt={() => openLogin('/profile')} />
+              <FirstLoadAuthPrompt />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />
                 <CartDrawer /> {/* Global Drawer Overlay */}

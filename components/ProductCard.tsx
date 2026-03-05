@@ -2,17 +2,30 @@ import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
+import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
 
 interface ProductCardProps {
   product: Product;
   compact?: boolean;
   imageAspectClassName?: string;
+  disableHoverEffects?: boolean;
 }
 
-const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = false, imageAspectClassName }) => {
+const ProductCardComponent: React.FC<ProductCardProps> = ({
+  product,
+  compact = false,
+  imageAspectClassName,
+  disableHoverEffects = false,
+}) => {
   const { addToCart } = useCart();
+  const { user } = useAuth();
+  const { openLogin } = useAuthModal();
   const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const supportsHover =
+    typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const enableHoverEffects = !disableHoverEffects && supportsHover;
 
   const salePrice = Number(product.salePrice || product.price || 0);
   const mrp = Number(product.mrp || product.price || 0);
@@ -36,9 +49,27 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
     return product.colors?.[0]?.images?.[0] || product.images?.[0] || 'https://picsum.photos/400';
   }, [product.colors, product.images]);
 
+  const handleAddToCart = () => {
+    if (!user) {
+      openLogin(`/product/${product.id}`);
+      return;
+    }
+    addToCart(product);
+  };
+
   return (
-    <div className="group relative h-full rounded-[2rem] overflow-hidden text-white transition-all duration-500 ease-out hover:-translate-y-3 hover:shadow-2xl hover:scale-[1.03] bg-dark-surface border border-white/10 flex flex-col">
-      <div className="pointer-events-none absolute -inset-[1px] rounded-[2rem] opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20" />
+    <div
+      className={`group relative h-full overflow-hidden text-white transition-all duration-500 ease-out bg-dark-surface border border-white/10 flex flex-col ${
+        compact
+          ? `rounded-3xl ${enableHoverEffects ? 'hover:-translate-y-1.5 hover:shadow-[0_16px_35px_rgba(0,0,0,0.45)]' : 'shadow-[0_8px_20px_rgba(0,0,0,0.28)]'}`
+          : `rounded-[2rem] ${enableHoverEffects ? 'hover:-translate-y-3 hover:shadow-2xl hover:scale-[1.03]' : ''}`
+      }`}
+    >
+      <div
+        className={`pointer-events-none absolute -inset-[1px] transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20 ${
+          compact ? 'rounded-3xl' : 'rounded-[2rem]'
+        } ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
+      />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent opacity-70" />
       <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-gray-100 dark:bg-white/5 ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
         <img
@@ -47,10 +78,20 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
           loading="lazy"
           width={640}
           height={800}
-          className="w-full h-full object-contain object-center p-2 group-hover:scale-105 transition-all duration-300 ease-out"
+          className={`w-full h-full object-contain object-center transition-all duration-300 ease-out ${
+            enableHoverEffects ? 'group-hover:scale-105' : ''
+          } ${compact ? 'p-1.5' : 'p-2'}`}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        <div className="absolute left-2 right-2 bottom-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+        <div
+          className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-300 ${
+            enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
+          }`}
+        />
+        <div
+          className={`absolute left-2 right-2 bottom-2 opacity-100 transition-opacity duration-300 ${
+            enableHoverEffects ? 'sm:opacity-0 sm:group-hover:opacity-100' : 'sm:opacity-100'
+          }`}
+        >
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
@@ -58,7 +99,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
                 e.preventDefault();
                 window.location.href = `/product/${product.id}`;
               }}
-              className="rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5"
+              className={`rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5 ${enableHoverEffects ? 'hover:bg-white' : ''}`}
             >
               View
             </button>
@@ -72,7 +113,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
                   })
                 );
               }}
-              className="rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5"
+              className={`rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5 ${enableHoverEffects ? 'hover:bg-white' : ''}`}
             >
               Compare
             </button>
@@ -80,10 +121,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                addToCart(product);
+                handleAddToCart();
               }}
               disabled={!canAdd}
-              className="rounded-lg bg-primary-600 text-white text-[11px] font-semibold py-1.5 disabled:opacity-50"
+              className={`rounded-lg bg-primary-600 text-white font-semibold disabled:opacity-50 ${enableHoverEffects ? 'hover:bg-primary-500' : ''} ${compact ? 'text-[10px] py-1.5' : 'text-[11px] py-1.5'}`}
             >
               Add
             </button>
@@ -91,9 +132,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
         </div>
       </Link>
 
-      <div className={`${compact ? 'p-4' : 'p-6'} flex flex-col flex-1`}>
+      <div className={`${compact ? 'p-3.5' : 'p-6'} flex flex-col flex-1`}>
         <div className={compact ? 'mb-2 flex justify-between items-start' : 'mb-3 flex justify-between items-start'}>
-          <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest bg-primary-900/20 px-2 py-1 rounded-md">{product.category}</span>
+          <span className={`${compact ? 'text-[9px] px-1.5 py-0.5 rounded' : 'text-[10px] px-2 py-1 rounded-md'} font-bold text-primary-300 uppercase tracking-widest bg-primary-900/30`}>{product.category}</span>
           <div className="flex items-center gap-1 text-amber-400 text-xs font-bold px-2 py-0.5">
             <span>*</span> {product.rating || 0}
           </div>
@@ -104,14 +145,16 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
               Only {selectedColorStock} left
             </span>
           )}
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
-            {viewingNow} viewing now
-          </span>
+          {!compact && (
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300">
+              {viewingNow} viewing now
+            </span>
+          )}
         </div>
 
         <Link to={`/product/${product.id}`}>
           <h3
-            className={`${compact ? 'text-sm sm:text-base mb-1 min-h-[2.5rem]' : 'text-base sm:text-lg mb-2 min-h-[3rem]'} font-bold text-white leading-tight group-hover:text-primary-300 transition-colors font-display overflow-hidden`}
+            className={`${compact ? 'text-[13px] sm:text-sm mb-1 min-h-[2.15rem]' : 'text-base sm:text-lg mb-2 min-h-[3rem]'} font-bold text-white leading-tight transition-colors font-display overflow-hidden ${enableHoverEffects ? 'group-hover:text-primary-300' : ''}`}
             style={{ display: '-webkit-box', WebkitLineClamp: compact ? 2 : 3, WebkitBoxOrient: 'vertical' }}
           >
             {product.name}
@@ -124,7 +167,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
               <button
                 key={`${product.id}_${color.name}`}
                 type="button"
-                className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} rounded-full border border-white/30 hover:scale-110 transition-transform`}
+                className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} rounded-full border border-white/30 transition-transform ${enableHoverEffects ? 'hover:scale-110' : ''}`}
                 style={{ backgroundColor: color.hex }}
                 onMouseEnter={() => setPreviewImage(color.images?.[0] || null)}
                 onMouseLeave={() => setPreviewImage(null)}
@@ -134,14 +177,14 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
           </div>
         )}
 
-        <div className={compact ? 'flex items-center justify-between mt-auto pt-3' : 'flex items-center justify-between mt-auto pt-5'}>
+        <div className={compact ? 'flex items-center justify-between mt-auto pt-2.5' : 'flex items-center justify-between mt-auto pt-5'}>
           <div className="flex flex-col">
-            <span className={`${compact ? 'text-xl' : 'text-2xl'} font-bold text-white font-display`}>Rs {salePrice}</span>
+            <span className={`${compact ? 'text-lg' : 'text-2xl'} font-bold text-white font-display`}>Rs {salePrice}</span>
             <div className="flex items-center gap-2">
-              <span className="line-through text-xs text-gray-400">Rs {mrp}</span>
+              <span className={`${compact ? 'text-[10px]' : 'text-xs'} line-through text-gray-400`}>Rs {mrp}</span>
               {percent > 0 && <span className="text-xs text-green-500 font-semibold">{percent}% off</span>}
             </div>
-            <span className={`text-xs font-semibold mt-1 ${canAdd ? 'text-green-500' : 'text-red-500'}`}>
+            <span className={`${compact ? 'text-[10px]' : 'text-xs'} font-semibold mt-1 ${canAdd ? 'text-green-500' : 'text-red-500'}`}>
               {canAdd ? 'In Stock' : 'Out of Stock'}
             </span>
           </div>
@@ -150,10 +193,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({ product, compact = f
             variant="outline"
             onClick={(e) => {
               e.preventDefault();
-              addToCart(product);
+              handleAddToCart();
             }}
             disabled={!canAdd}
-            className={`${compact ? 'w-9 h-9' : 'w-10 h-10'} rounded-full p-0 flex items-center justify-center border-white/20 hover:border-primary-500 hover:bg-primary-500 hover:text-white transition-all duration-300 shadow-sm`}
+            className={`${compact ? 'w-9 h-9' : 'w-10 h-10'} rounded-full p-0 flex items-center justify-center border-white/20 transition-all duration-300 shadow-sm ${enableHoverEffects ? 'hover:border-primary-500 hover:bg-primary-500 hover:text-white' : ''}`}
           >
             <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
           </Button>

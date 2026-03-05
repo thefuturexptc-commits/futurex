@@ -33,12 +33,10 @@ export const Login: React.FC = () => {
         return;
       }
 
-      const exists = await isEmailRegisteredInFirebase(normalizedEmail);
-      if (!exists) {
-        const goToRegister = window.confirm('This email is not registered yet. Please register first. Go to Sign up now?');
-        if (goToRegister) {
-          navigate(`/signup?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
-        }
+      const isRegistered = await isEmailRegisteredInFirebase(normalizedEmail);
+      if (!isRegistered) {
+        navigate(`/signup?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
+        setLoading(false);
         return;
       }
 

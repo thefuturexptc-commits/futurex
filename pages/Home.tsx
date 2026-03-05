@@ -5,7 +5,6 @@ import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
 import { getProducts, seedDatabase } from '../services/backend';
 import { useAuth } from '../context/AuthContext';
-import { useAuthModal } from '../context/AuthModalContext';
 import ringHomeImage from '../assets/images/mainring.jpg';
 import bandHomeImage from '../assets/images/mainband.png';
 import fanHomeImage from '../assets/images/mainfan.png';
@@ -66,7 +65,6 @@ export const Home: React.FC = () => {
   const [loadError, setLoadError] = useState('');
   const [seeding, setSeeding] = useState(false);
   const { user } = useAuth();
-  const { openLogin } = useAuthModal();
   const navigate = useNavigate();
   const bestSellerScrollerRef = useRef<HTMLDivElement | null>(null);
   const featuredScrollerRef = useRef<HTMLDivElement | null>(null);
@@ -151,7 +149,7 @@ export const Home: React.FC = () => {
   const openProtectedOffer = (event: MouseEvent<HTMLAnchorElement>, offerPath: string) => {
     event.preventDefault();
     if (!user) {
-      openLogin(offerPath);
+      navigate(`/login?redirect=${encodeURIComponent(offerPath)}`);
       return;
     }
     navigate(offerPath);

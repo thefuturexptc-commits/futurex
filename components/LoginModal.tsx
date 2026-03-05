@@ -68,7 +68,7 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
             onClick={goToLogin}
             className="rounded-lg bg-primary-600 text-white py-2.5 text-sm font-semibold hover:bg-primary-700 transition-colors"
           >
-            Login
+            Continue with Email
           </button>
           <button
             type="button"

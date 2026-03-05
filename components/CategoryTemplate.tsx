@@ -181,7 +181,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     return () => window.cancelAnimationFrame(rafId);
   }, [features.length]);
 
-  const modelCardBaseClass = modelCardClassName || 'w-[74vw] sm:w-[46vw] lg:w-[29vw] xl:w-[26vw] min-w-[240px] max-w-[360px]';
+  const modelCardBaseClass = modelCardClassName || 'w-[62vw] sm:w-[36vw] lg:w-[24vw] xl:w-[20vw] min-w-[180px] max-w-[280px]';
   const modelSkeletonBaseClass = modelCardSkeletonClassName || 'h-72';
   const modelImageAspectClass = modelCardImageAspectClassName || 'aspect-[4/3]';
   const featureCards = features.length > 1 ? [...features, ...features] : features;
@@ -314,7 +314,12 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
             >
                 {[...filteredProducts, ...filteredProducts].map((p, index) => (
                   <div key={`${p.id}_${index}`} className={`${modelCardBaseClass} shrink-0 snap-start`}>
-                    <ProductCard product={p} compact imageAspectClassName={modelImageAspectClass} />
+                    <ProductCard
+                      product={p}
+                      compact
+                      imageAspectClassName={modelImageAspectClass}
+                      disableHoverEffects
+                    />
                   </div>
                 ))}
             </div>

@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useAuthModal } from '../context/AuthModalContext';
 import { useCart } from '../context/CartContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -67,6 +68,7 @@ const getSessionId = (userId: string) => {
 
 export const SupportAssistant: React.FC = () => {
   const { user } = useAuth();
+  const { openLogin } = useAuthModal();
   const { addToCart, isCartOpen, closeCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -389,6 +391,10 @@ export const SupportAssistant: React.FC = () => {
     const fullProduct = getProductById(card.id);
     if (!fullProduct) {
       await addMessage('bot', 'This product is no longer available.');
+      return;
+    }
+    if (!user) {
+      openLogin(`/product/${fullProduct.id}`);
       return;
     }
     addToCart({ ...fullProduct, price: card.price }, 1);

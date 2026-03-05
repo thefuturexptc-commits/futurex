@@ -741,9 +741,9 @@ export const ProductDetail: React.FC = () => {
         <section className="mt-12 border-t border-gray-200 dark:border-white/10 pt-8">
           <h2 className="text-2xl font-semibold mb-5">Recommended Products</h2>
           {recommendedProducts.length > 0 ? (
-            <div className="flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto lg:overflow-visible pb-2 snap-x snap-mandatory">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {recommendedProducts.map((recommended) => (
-                <div key={recommended.id} className="w-[78vw] sm:w-[46vw] lg:w-auto min-w-[230px] lg:min-w-0 shrink-0 snap-start">
+                <div key={recommended.id} className="min-w-0">
                   <ProductCard product={recommended} compact imageAspectClassName="aspect-[4/3]" />
                 </div>
               ))}
