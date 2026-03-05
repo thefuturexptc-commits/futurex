@@ -29,9 +29,6 @@ export const VerifyPhone: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [draftPhone, setDraftPhone] = useState('');
-  const [lastOtpPhone, setLastOtpPhone] = useState('');
-  const [autoSendAttemptedPhone, setAutoSendAttemptedPhone] = useState('');
-  const [sendMode, setSendMode] = useState<'auto' | 'manual' | null>(null);
 
   const phone = useMemo(() => currentFlow?.phone?.replace(/\D/g, '').slice(0, 10) || '', [currentFlow?.phone]);
 
@@ -68,7 +65,7 @@ export const VerifyPhone: React.FC = () => {
     return <Navigate to="/checkout" replace />;
   }
 
-  const sendOtpForPhone = async (targetPhone: string, mode: 'auto' | 'manual' = 'manual') => {
+  const sendOtpForPhone = async (targetPhone: string) => {
     if (sending) return;
     const normalizedTarget = targetPhone.replace(/\D/g, '').slice(0, 10);
     if (!/^[6-9]\d{9}$/.test(normalizedTarget)) {
@@ -81,7 +78,6 @@ export const VerifyPhone: React.FC = () => {
 
     setError('');
     setMessage('');
-    setSendMode(mode);
     setSending(true);
     setOtpSent(false);
     try {
@@ -89,9 +85,8 @@ export const VerifyPhone: React.FC = () => {
         sendPhoneOtp(normalizedTarget, 'checkout-recaptcha-container'),
         new Promise((_, reject) => setTimeout(() => reject(new Error('OTP request timed out. Please try again.')), 10000)),
       ]);
-      setMessage(mode === 'auto' ? `OTP sent automatically to +91 ${normalizedTarget}.` : `OTP sent to +91 ${normalizedTarget}.`);
+      setMessage(`OTP sent to +91 ${normalizedTarget}.`);
       setOtpSent(true);
-      setLastOtpPhone(normalizedTarget);
     } catch (err: any) {
       const raw = String(err?.message || 'Failed to send OTP.');
       if (/recaptcha|captcha/i.test(raw)) {
@@ -107,15 +102,6 @@ export const VerifyPhone: React.FC = () => {
       setSending(false);
     }
   };
-
-  useEffect(() => {
-    if (!phone) return;
-    if (sending) return;
-    if (autoSendAttemptedPhone === phone) return;
-    if (lastOtpPhone === phone) return;
-    setAutoSendAttemptedPhone(phone);
-    void sendOtpForPhone(phone, 'auto');
-  }, [phone, sending, lastOtpPhone, autoSendAttemptedPhone]);
 
   const handleUpdatePhone = async () => {
     const cleaned = draftPhone.replace(/\D/g, '').slice(0, 10);
@@ -138,9 +124,9 @@ export const VerifyPhone: React.FC = () => {
     navigate('/verify-phone', { replace: true, state: nextFlow });
     setEditingPhone(false);
     setOtp('');
+    setOtpSent(false);
     setError('');
-    setMessage('Phone updated. Sending OTP automatically...');
-    setAutoSendAttemptedPhone('');
+    setMessage('Phone updated. Click "Send OTP" to receive a new code.');
   };
 
   const handleVerifyOtp = async () => {
@@ -191,7 +177,7 @@ export const VerifyPhone: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button type="button" onClick={() => void sendOtpForPhone(phone, 'manual')} disabled={sending}>
+          <Button type="button" onClick={() => void sendOtpForPhone(phone)} disabled={sending}>
             {sending ? 'Sending OTP...' : 'Send OTP'}
           </Button>
           <input
@@ -205,11 +191,7 @@ export const VerifyPhone: React.FC = () => {
             {verifying ? 'Verifying...' : 'Verify OTP'}
           </Button>
         </div>
-        {sending && (
-          <p className="text-sm text-gray-600 dark:text-gray-300">
-            {sendMode === 'manual' ? 'Sending OTP...' : 'Sending OTP automatically...'}
-          </p>
-        )}
+        {sending && <p className="text-sm text-gray-600 dark:text-gray-300">Sending OTP...</p>}
 
         <div id="checkout-recaptcha-container" className="min-h-[78px]" />
         {message && <p className="text-sm text-green-600">{message}</p>}

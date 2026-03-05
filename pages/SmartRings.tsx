@@ -60,7 +60,7 @@ export const SmartRings: React.FC = () => {
       heroImage={heroImage}
       accentColor="text-purple-400"
       features={features}
-      autoSlideModels
+      autoSlideModels={false}
     />
   );
 };

@@ -29,7 +29,7 @@ export const SmartMonitoring: React.FC = () => {
       heroImage={heroImage}
       accentColor="text-rose-400"
       features={features}
-      autoSlideModels
+      autoSlideModels={false}
     />
   );
 };

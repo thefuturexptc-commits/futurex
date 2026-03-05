@@ -61,17 +61,22 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     <div
       className={`group relative h-full overflow-hidden text-white transition-all duration-500 ease-out bg-dark-surface border border-white/10 flex flex-col ${
         compact
-          ? `rounded-3xl ${enableHoverEffects ? 'hover:-translate-y-1.5 hover:shadow-[0_16px_35px_rgba(0,0,0,0.45)]' : 'shadow-[0_8px_20px_rgba(0,0,0,0.28)]'}`
-          : `rounded-[2rem] ${enableHoverEffects ? 'hover:-translate-y-3 hover:shadow-2xl hover:scale-[1.03]' : ''}`
+          ? `rounded-3xl ${enableHoverEffects ? 'hover:-translate-y-1.5 hover:shadow-[0_22px_48px_rgba(0,0,0,0.52)]' : 'shadow-[0_12px_28px_rgba(0,0,0,0.34)]'}`
+          : `rounded-[2rem] ${enableHoverEffects ? 'hover:-translate-y-3 hover:shadow-[0_28px_58px_rgba(0,0,0,0.5)] hover:scale-[1.03]' : 'shadow-[0_14px_30px_rgba(0,0,0,0.36)]'}`
       }`}
     >
+      <div
+        className={`pointer-events-none absolute inset-[1px] bg-gradient-to-b from-white/12 via-white/[0.03] to-transparent ${
+          compact ? 'rounded-3xl' : 'rounded-[2rem]'
+        }`}
+      />
       <div
         className={`pointer-events-none absolute -inset-[1px] transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20 ${
           compact ? 'rounded-3xl' : 'rounded-[2rem]'
         } ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent opacity-70" />
-      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-gray-100 dark:bg-white/5 ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/5 via-transparent to-transparent opacity-60" />
+      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden bg-gradient-to-b from-white/[0.03] to-transparent ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
         <img
           src={previewImage || defaultImage}
           alt={product.name}
@@ -87,49 +92,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
           }`}
         />
-        <div
-          className={`absolute left-2 right-2 bottom-2 opacity-100 transition-opacity duration-300 ${
-            enableHoverEffects ? 'sm:opacity-0 sm:group-hover:opacity-100' : 'sm:opacity-100'
-          }`}
-        >
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                window.location.href = `/product/${product.id}`;
-              }}
-              className={`rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5 ${enableHoverEffects ? 'hover:bg-white' : ''}`}
-            >
-              View
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                window.dispatchEvent(
-                  new CustomEvent('product:compare-add', {
-                    detail: { id: product.id, name: product.name },
-                  })
-                );
-              }}
-              className={`rounded-lg bg-white/90 text-gray-900 text-[11px] font-semibold py-1.5 ${enableHoverEffects ? 'hover:bg-white' : ''}`}
-            >
-              Compare
-            </button>
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                handleAddToCart();
-              }}
-              disabled={!canAdd}
-              className={`rounded-lg bg-primary-600 text-white font-semibold disabled:opacity-50 ${enableHoverEffects ? 'hover:bg-primary-500' : ''} ${compact ? 'text-[10px] py-1.5' : 'text-[11px] py-1.5'}`}
-            >
-              Add
-            </button>
-          </div>
-        </div>
       </Link>
 
       <div className={`${compact ? 'p-3.5' : 'p-6'} flex flex-col flex-1`}>

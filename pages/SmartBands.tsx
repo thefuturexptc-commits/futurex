@@ -75,7 +75,7 @@ export const SmartBands: React.FC = () => {
       heroImage={heroImage}
       accentColor="text-cyan-500"
       features={features}
-      autoSlideModels
+      autoSlideModels={false}
       modelCardSkeletonClassName="h-72"
       modelCardImageAspectClassName="aspect-[4/3]"
     />

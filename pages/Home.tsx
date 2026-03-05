@@ -595,9 +595,9 @@ export const Home: React.FC = () => {
                 Browse All
               </Button>
             </div>
-            <div className="flex lg:grid lg:grid-cols-4 gap-4 overflow-x-auto lg:overflow-visible pb-2 snap-x snap-mandatory">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {recentlyViewedProducts.map((product) => (
-                <div key={product.id} className="w-[78vw] sm:w-[46vw] lg:w-auto min-w-[230px] lg:min-w-0 shrink-0 snap-start">
+                <div key={product.id} className="min-w-0">
                   <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
                 </div>
               ))}

@@ -294,35 +294,55 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
         </div>
 
         {loading ? (
-            <div onWheel={handleHorizontalWheel} className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing">
-                {[1,2,3,4].map(i => (
-                    <div key={i} className={`bg-white dark:bg-white/5 rounded-[2rem] ${modelSkeletonBaseClass} ${modelCardBaseClass} shrink-0 animate-pulse snap-start`}></div>
-                ))}
-            </div>
-        ) : filteredProducts.length > 0 ? (
-            <div
-              ref={modelsScrollerRef}
-              onWheel={handleHorizontalWheel}
-              onMouseDown={handleModelsMouseDown}
-              onMouseMove={handleModelsMouseMove}
-              onMouseUp={stopModelsDragging}
-              onMouseLeave={() => {
-                stopModelsDragging();
-                pauseAutoSlideRef.current = false;
-              }}
-              className={`flex gap-6 overflow-x-auto pb-2 select-none ${isDraggingModels ? 'cursor-grabbing' : 'cursor-grab'}`}
-            >
-                {[...filteredProducts, ...filteredProducts].map((p, index) => (
-                  <div key={`${p.id}_${index}`} className={`${modelCardBaseClass} shrink-0 snap-start`}>
-                    <ProductCard
-                      product={p}
-                      compact
-                      imageAspectClassName={modelImageAspectClass}
-                      disableHoverEffects
-                    />
+            autoSlideModels ? (
+              <div onWheel={handleHorizontalWheel} className="flex gap-6 overflow-x-auto pb-2 snap-x snap-mandatory cursor-grab active:cursor-grabbing">
+                  {[1,2,3,4].map(i => (
+                      <div key={i} className={`bg-white dark:bg-white/5 rounded-[2rem] ${modelSkeletonBaseClass} ${modelCardBaseClass} shrink-0 animate-pulse snap-start`}></div>
+                  ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="min-w-0">
+                    <div className={`bg-white dark:bg-white/5 rounded-[2rem] ${modelSkeletonBaseClass} animate-pulse`} />
                   </div>
                 ))}
-            </div>
+              </div>
+            )
+        ) : filteredProducts.length > 0 ? (
+            autoSlideModels ? (
+              <div
+                ref={modelsScrollerRef}
+                onWheel={handleHorizontalWheel}
+                onMouseDown={handleModelsMouseDown}
+                onMouseMove={handleModelsMouseMove}
+                onMouseUp={stopModelsDragging}
+                onMouseLeave={() => {
+                  stopModelsDragging();
+                  pauseAutoSlideRef.current = false;
+                }}
+                className={`flex gap-6 overflow-x-auto pb-2 select-none ${isDraggingModels ? 'cursor-grabbing' : 'cursor-grab'}`}
+              >
+                  {[...filteredProducts, ...filteredProducts].map((p, index) => (
+                    <div key={`${p.id}_${index}`} className={`${modelCardBaseClass} shrink-0 snap-start`}>
+                      <ProductCard
+                        product={p}
+                        compact
+                        imageAspectClassName={modelImageAspectClass}
+                        disableHoverEffects
+                      />
+                    </div>
+                  ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                {filteredProducts.map((p) => (
+                  <div key={p.id} className="min-w-0">
+                    <ProductCard product={p} compact imageAspectClassName={modelImageAspectClass} />
+                  </div>
+                ))}
+              </div>
+            )
         ) : (
             <div className="text-center py-20 bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-white/5">
                 <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1" d="M20 12H4M12 20V4" /></svg>
