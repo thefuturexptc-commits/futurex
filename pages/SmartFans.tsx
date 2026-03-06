@@ -51,7 +51,7 @@ export const SmartFans: React.FC = () => {
       heroImage={heroImage}
       accentColor="text-emerald-400"
       features={features}
-      autoSlideModels
+      autoSlideModels={false}
     />
   );
 };
