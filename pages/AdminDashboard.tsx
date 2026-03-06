@@ -300,7 +300,10 @@ export const AdminDashboard: React.FC = () => {
     settingsAutoSaveTimerRef.current = window.setTimeout(async () => {
       try {
         setSettingsAutoSaveState('saving');
-        await updateWebsiteSettings({ primaryColor, logoUrl, socialLinks, footerSections, pageContent });
+        await updateWebsiteSettings(
+          { primaryColor, logoUrl, socialLinks, footerSections, pageContent },
+          { requireCloud: true }
+        );
         setSettingsAutoSaveState('saved');
       } catch {
         setSettingsAutoSaveState('error');
@@ -816,12 +819,10 @@ export const AdminDashboard: React.FC = () => {
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const color = e.target.value;
     updatePrimaryColor(color);
-    updateWebsiteSettings({ primaryColor: color, logoUrl, socialLinks, footerSections, pageContent });
   };
 
   const handlePresetColorSelect = (color: string) => {
     updatePrimaryColor(color);
-    updateWebsiteSettings({ primaryColor: color, logoUrl, socialLinks, footerSections, pageContent });
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -830,10 +831,19 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const saveSettings = async () => {
-    await updateWebsiteSettings({ primaryColor, logoUrl, socialLinks, footerSections, pageContent });
-    setSettingsAutoSaveState('saved');
-    pushAudit('Settings Updated');
-    alert('Settings Saved');
+    try {
+      await updateWebsiteSettings(
+        { primaryColor, logoUrl, socialLinks, footerSections, pageContent },
+        { requireCloud: true }
+      );
+      setSettingsAutoSaveState('saved');
+      pushAudit('Settings Updated');
+      alert('Settings Saved');
+    } catch (error) {
+      setSettingsAutoSaveState('error');
+      const message = error instanceof Error ? error.message : 'Backend sync failed.';
+      alert(message);
+    }
   };
 
   const handleSeed = () => {

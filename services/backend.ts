@@ -1,5 +1,5 @@
 import { 
-  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit
+  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
@@ -158,25 +158,126 @@ const DEFAULT_FOOTER_SECTIONS: NonNullable<WebsiteSettings['footerSections']> = 
   { title: 'LEGAL', items: ['Privacy', 'Terms', 'Refund', 'Cookies'] },
 ];
 const DEFAULT_PAGE_CONTENT: NonNullable<WebsiteSettings['pageContent']> = {
-  'about-us': 'Write your About Us content from Admin Settings.',
-  contact: 'Add your contact details from Admin Settings.',
-  shipping: 'Add your shipping policy details from Admin Settings.',
+  'about-us': `Welcome to TheFutureX, your trusted destination for innovative and high-quality electronic products designed for modern lifestyles.
+
+At TheFutureX, we believe technology should make life easier, smarter, and more convenient. Our goal is to provide reliable gadgets and smart devices that enhance everyday living while maintaining excellent quality and affordability.
+
+Our Mission
+
+Our mission is to bring the latest and most useful technology products to customers across India while ensuring great customer service and a smooth shopping experience.
+
+We focus on offering products that combine innovation, durability, and value for money.
+
+What We Offer
+
+At TheFutureX, we specialize in a range of modern electronic products, including smart wearable devices, smart home solutions, and daily-use electronic accessories designed for convenience and performance.`,
+  contact: `We are here to help. If you have any questions about our products, orders, shipping, or returns, please feel free to contact us. Our support team will be happy to assist you.
+
+Customer Support
+
+Email: support@thefuturex.in
+
+For order-related queries, please include your Order ID in the email so we can assist you faster.
+
+Business Address
+
+TheFutureX
+Office No. 310, Padmi Bai Tower
+Virar East, Maharashtra
+India
+
+Working Hours
+
+Monday - Saturday: 10:00 AM - 6:00 PM
+Sunday: Closed`,
+  shipping: `At TheFutureX, we aim to deliver your orders quickly and safely. This Shipping Policy explains how we process and ship your orders.
+
+1. Order Processing
+
+All orders placed on TheFutureX.in are processed within 1-2 business days after successful payment confirmation.
+
+Orders are not processed or shipped on Sundays or public holidays.
+
+If we experience a high volume of orders, shipments may be delayed slightly. In such cases, customers will be notified.
+
+2. Shipping Time
+
+Estimated delivery time depends on the customer's location.
+Metro Cities: 3-5 business days
+Other Cities: 4-7 business days
+
+Delivery timelines may vary depending on courier availability and unforeseen circumstances.
+
+3. Shipping Charges
+
+Shipping charges may vary depending on the product and delivery location.
+
+In some cases, free shipping may be offered during promotional offers or on selected products.
+
+The final shipping cost will be shown at the checkout page before payment.
+
+4. Order Tracking
+
+Once your order is shipped, you will receive a tracking ID via email or SMS.
+
+You can track your order using the tracking link provided.
+
+5. Delivery Issues
+
+If you face any issues with delivery, such as delayed shipment, package not delivered, or incorrect delivery address, please contact our support team immediately.
+
+6. Incorrect Address
+
+Customers must ensure that the shipping address provided during checkout is accurate.
+
+TheFutureX will not be responsible for orders delivered to an incorrect address provided by the customer.
+
+7. Damaged Packages
+
+If your package arrives damaged or tampered, please take photos or videos while opening the package and contact our support team within 24 hours of delivery.
+
+8. Contact Us
+
+For any shipping-related questions, please contact us:
+Email: support@thefuturex.in
+Address: Virar East, Maharashtra, India
+Website: https://thefuturex.in`,
   returns: 'Add your return policy details from Admin Settings.',
   faq: 'Add frequently asked questions from Admin Settings.',
   'track-order': 'Add order tracking instructions from Admin Settings.',
   privacy: 'Add your privacy policy from Admin Settings.',
   terms: 'Add your terms and conditions from Admin Settings.',
-  refund: 'Add your refund policy from Admin Settings.',
+  refund: `At TheFutureX, customer satisfaction is our priority. If you are not completely satisfied with your purchase, you may request a return or refund under the conditions mentioned below.
+
+1. Return Eligibility
+
+You may request a return if:
+- The product is damaged, defective, or received in incorrect condition.
+- The wrong product was delivered.
+- The product is unused and in original packaging (for eligible return cases).
+
+To process your request quickly, contact support within the return window with order details and proof photos/videos.
+
+For refund and return support:
+Email: support@thefuturex.in`,
   cookies: 'Add your cookie policy from Admin Settings.',
 };
 const DEFAULT_SOCIAL_LINKS: NonNullable<WebsiteSettings['socialLinks']> = {
-  email: 'thefuturex.ptc@gmail.com',
+  email: 'support@thefuturex.in',
   twitter: '',
   facebook: '',
   instagram: '',
   youtube: '',
   linkedin: '',
 };
+
+const normalizeWebsiteSettings = (raw?: Partial<WebsiteSettings> | null): WebsiteSettings => ({
+  primaryColor: raw?.primaryColor || '#0ea5e9',
+  logoUrl: raw?.logoUrl || '',
+  socialLinks: { ...DEFAULT_SOCIAL_LINKS, ...(raw?.socialLinks || {}) },
+  footerSections: raw?.footerSections?.length ? raw.footerSections : DEFAULT_FOOTER_SECTIONS,
+  pageContent: { ...DEFAULT_PAGE_CONTENT, ...(raw?.pageContent || {}) },
+});
 
 const applyRoleByEmail = (user: User): User => {
   const normalizedEmail = (user.email || '').trim().toLowerCase();
@@ -894,15 +995,30 @@ export const loginUser = async (email: string, password: string, phone?: string)
     const docRef = doc(db, 'users', firebaseUser.uid);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
-      const remoteUser = docSnap.data() as User;
+      const rawRemoteUser = docSnap.data() as User;
+      const remoteUser = applyRoleByEmail(rawRemoteUser);
       const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
       if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
         throw new Error('Phone number does not match this account');
       }
+      if (rawRemoteUser.role !== remoteUser.role) {
+        try {
+          await setDoc(
+            docRef,
+            deepSanitize({
+              role: remoteUser.role,
+              permissions: remoteUser.permissions || {},
+            }),
+            { merge: true }
+          );
+        } catch {
+          // If role sync fails, continue with in-app role to avoid blocking login.
+        }
+      }
       return applyRoleByEmail(remoteUser);
     }
 
-    return applyRoleByEmail({
+    const fallbackUser = applyRoleByEmail({
       id: firebaseUser.uid,
       name: firebaseUser.displayName || 'User',
       email: firebaseUser.email || '',
@@ -910,6 +1026,26 @@ export const loginUser = async (email: string, password: string, phone?: string)
       addresses: [],
       permissions: {}
     });
+
+    if (fallbackUser.role !== 'user') {
+      try {
+        await setDoc(
+          docRef,
+          deepSanitize({
+            id: fallbackUser.id,
+            email: fallbackUser.email,
+            name: fallbackUser.name,
+            role: fallbackUser.role,
+            permissions: fallbackUser.permissions || {},
+          }),
+          { merge: true }
+        );
+      } catch {
+        // Ignore role sync failures during fallback user bootstrap.
+      }
+    }
+
+    return fallbackUser;
   } catch (e: any) {
     const firebaseErrorCode = e?.code || '';
     if (firebaseErrorCode === 'auth/user-not-found') {
@@ -987,7 +1123,23 @@ export const loginWithGoogle = async (): Promise<User> => {
     const userSnap = await getDoc(userRef);
 
     if (userSnap.exists()) {
-      return applyRoleByEmail(userSnap.data() as User);
+      const rawUser = userSnap.data() as User;
+      const normalizedUser = applyRoleByEmail(rawUser);
+      if (rawUser.role !== normalizedUser.role) {
+        try {
+          await setDoc(
+            userRef,
+            deepSanitize({
+              role: normalizedUser.role,
+              permissions: normalizedUser.permissions || {},
+            }),
+            { merge: true }
+          );
+        } catch {
+          // Ignore role sync failure and continue with normalized role in app state.
+        }
+      }
+      return normalizedUser;
     } else {
       const newUser: User = {
         id: firebaseUser.uid,
@@ -1738,31 +1890,24 @@ export const updateSupportChatSession = async (
 // --- Settings Service ---
 
 export const getWebsiteSettings = async (): Promise<WebsiteSettings> => {
-    const normalizeSettings = (raw?: Partial<WebsiteSettings> | null): WebsiteSettings => ({
-      primaryColor: raw?.primaryColor || '#0ea5e9',
-      logoUrl: raw?.logoUrl || '',
-      socialLinks: { ...DEFAULT_SOCIAL_LINKS, ...(raw?.socialLinks || {}) },
-      footerSections: raw?.footerSections?.length ? raw.footerSections : DEFAULT_FOOTER_SECTIONS,
-      pageContent: { ...DEFAULT_PAGE_CONTENT, ...(raw?.pageContent || {}) },
-    });
-
     const localStored = readFromLocalStorage<WebsiteSettings>('settings');
-    const localSettings = normalizeSettings(localStored);
+    const localSettings = normalizeWebsiteSettings(localStored);
 
     try {
       const docRef = doc(db, 'settings', 'general');
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        const remoteSettings = normalizeSettings(docSnap.data() as WebsiteSettings);
+        const remoteSettings = normalizeWebsiteSettings(docSnap.data() as WebsiteSettings);
 
-        // If admin recently changed settings locally but cloud sync failed/stale,
-        // prefer local overrides so website still reflects admin intent.
+        // Backend settings should remain source of truth when available.
+        // Keep local values only as fallback for fields missing from remote.
         if (localStored) {
-          return normalizeSettings({
-            ...remoteSettings,
+          return normalizeWebsiteSettings({
             ...localStored,
-            footerSections: localStored.footerSections?.length ? localStored.footerSections : remoteSettings.footerSections,
-            pageContent: { ...remoteSettings.pageContent, ...(localStored.pageContent || {}) },
+            ...remoteSettings,
+            socialLinks: { ...(localStored.socialLinks || {}), ...(remoteSettings.socialLinks || {}) },
+            footerSections: remoteSettings.footerSections?.length ? remoteSettings.footerSections : localSettings.footerSections,
+            pageContent: { ...(localStored.pageContent || {}), ...(remoteSettings.pageContent || {}) },
           });
         }
 
@@ -1775,14 +1920,33 @@ export const getWebsiteSettings = async (): Promise<WebsiteSettings> => {
     return localSettings;
 };
 
-export const updateWebsiteSettings = async (settings: WebsiteSettings): Promise<void> => {
-    const normalizedSettings: WebsiteSettings = {
-      primaryColor: settings.primaryColor || '#0ea5e9',
-      logoUrl: settings.logoUrl || '',
-      socialLinks: { ...DEFAULT_SOCIAL_LINKS, ...(settings.socialLinks || {}) },
-      footerSections: settings.footerSections?.length ? settings.footerSections : DEFAULT_FOOTER_SECTIONS,
-      pageContent: { ...DEFAULT_PAGE_CONTENT, ...(settings.pageContent || {}) },
-    };
+export const subscribeWebsiteSettings = (onChange: (settings: WebsiteSettings) => void): (() => void) => {
+  try {
+    const docRef = doc(db, 'settings', 'general');
+    const unsubscribe = onSnapshot(
+      docRef,
+      (docSnap) => {
+        if (!docSnap.exists()) return;
+        const normalized = normalizeWebsiteSettings(docSnap.data() as WebsiteSettings);
+        setMockData('settings', normalized);
+        onChange(normalized);
+      },
+      () => {
+        // Ignore realtime listener failures and continue with last known settings.
+      }
+    );
+    return unsubscribe;
+  } catch {
+    return () => {};
+  }
+};
+
+export const updateWebsiteSettings = async (
+  settings: WebsiteSettings,
+  options?: { requireCloud?: boolean }
+): Promise<void> => {
+    const normalizedSettings: WebsiteSettings = normalizeWebsiteSettings(settings);
+    let cloudError: unknown = null;
 
     setMockData('settings', normalizedSettings);
     if (typeof window !== 'undefined') {
@@ -1792,7 +1956,12 @@ export const updateWebsiteSettings = async (settings: WebsiteSettings): Promise<
         await ensureFirebaseConnection();
         const docRef = doc(db, 'settings', 'general');
         await setDoc(docRef, normalizedSettings, { merge: true });
-    } catch {
+    } catch (error) {
+      cloudError = error;
       // Keep local settings as source of truth when cloud sync fails.
+    }
+
+    if (options?.requireCloud && cloudError) {
+      throw new Error('Saved locally, but backend sync failed. Please check admin permissions/login.');
     }
 };
