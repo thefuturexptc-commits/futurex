@@ -10,6 +10,12 @@ service cloud.firestore {
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
     }
 
+    function isSuperAdminEmail() {
+      return signedIn() &&
+        request.auth.token.email != null &&
+        lower(request.auth.token.email) == 'thefuturex.ptc@gmail.com';
+    }
+
     // Product catalog
     // Public read keeps storefront working.
     // If you need strict admin-only reads for variant/size stock, change read to: allow read: if isAdmin();
@@ -21,7 +27,7 @@ service cloud.firestore {
     // Settings & categories are admin-managed.
     match /settings/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isSuperAdminEmail();
     }
 
     match /categories/{docId} {

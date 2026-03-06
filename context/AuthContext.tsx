@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { auth } from '../services/firebaseConfig';
 
 interface AuthContextType {
   user: User | null;
@@ -42,6 +44,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthReady(true);
   }, []);
 
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) return;
+      const storedUser = localStorage.getItem('aura_active_user');
+      if (storedUser) {
+        setUser(null);
+        localStorage.removeItem('aura_active_user');
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   const login = (userData: User) => {
     const sanitized = sanitizeUserForStorage(userData);
     setUser(sanitized);
@@ -51,6 +65,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('aura_active_user');
+    void signOut(auth).catch(() => {
+      // Ignore signout failures and still clear local session.
+    });
   };
 
   // Allow components to update user state (e.g., after adding an address)

@@ -24,6 +24,7 @@ import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
 import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
+import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 
 // 🔒 ADDED: Production Safe URL Validator
 const isValidProductionUrl = (url: string): boolean => {
@@ -152,131 +153,13 @@ const DEFAULT_SUPERADMIN_PERMISSIONS: UserPermissions = {
 };
 
 const SUPERADMIN_EMAIL = 'thefuturex.ptc@gmail.com';
-const DEFAULT_FOOTER_SECTIONS: NonNullable<WebsiteSettings['footerSections']> = [
-  { title: 'COMPANY', items: ['About Us', 'Contact'] },
-  { title: 'SUPPORT', items: ['Shipping', 'Returns', 'FAQ', 'Track Order'] },
-  { title: 'LEGAL', items: ['Privacy', 'Terms', 'Refund', 'Cookies'] },
-];
-const DEFAULT_PAGE_CONTENT: NonNullable<WebsiteSettings['pageContent']> = {
-  'about-us': `Welcome to TheFutureX, your trusted destination for innovative and high-quality electronic products designed for modern lifestyles.
-
-At TheFutureX, we believe technology should make life easier, smarter, and more convenient. Our goal is to provide reliable gadgets and smart devices that enhance everyday living while maintaining excellent quality and affordability.
-
-Our Mission
-
-Our mission is to bring the latest and most useful technology products to customers across India while ensuring great customer service and a smooth shopping experience.
-
-We focus on offering products that combine innovation, durability, and value for money.
-
-What We Offer
-
-At TheFutureX, we specialize in a range of modern electronic products, including smart wearable devices, smart home solutions, and daily-use electronic accessories designed for convenience and performance.`,
-  contact: `We are here to help. If you have any questions about our products, orders, shipping, or returns, please feel free to contact us. Our support team will be happy to assist you.
-
-Customer Support
-
-Email: support@thefuturex.in
-
-For order-related queries, please include your Order ID in the email so we can assist you faster.
-
-Business Address
-
-TheFutureX
-Office No. 310, Padmi Bai Tower
-Virar East, Maharashtra
-India
-
-Working Hours
-
-Monday - Saturday: 10:00 AM - 6:00 PM
-Sunday: Closed`,
-  shipping: `At TheFutureX, we aim to deliver your orders quickly and safely. This Shipping Policy explains how we process and ship your orders.
-
-1. Order Processing
-
-All orders placed on TheFutureX.in are processed within 1-2 business days after successful payment confirmation.
-
-Orders are not processed or shipped on Sundays or public holidays.
-
-If we experience a high volume of orders, shipments may be delayed slightly. In such cases, customers will be notified.
-
-2. Shipping Time
-
-Estimated delivery time depends on the customer's location.
-Metro Cities: 3-5 business days
-Other Cities: 4-7 business days
-
-Delivery timelines may vary depending on courier availability and unforeseen circumstances.
-
-3. Shipping Charges
-
-Shipping charges may vary depending on the product and delivery location.
-
-In some cases, free shipping may be offered during promotional offers or on selected products.
-
-The final shipping cost will be shown at the checkout page before payment.
-
-4. Order Tracking
-
-Once your order is shipped, you will receive a tracking ID via email or SMS.
-
-You can track your order using the tracking link provided.
-
-5. Delivery Issues
-
-If you face any issues with delivery, such as delayed shipment, package not delivered, or incorrect delivery address, please contact our support team immediately.
-
-6. Incorrect Address
-
-Customers must ensure that the shipping address provided during checkout is accurate.
-
-TheFutureX will not be responsible for orders delivered to an incorrect address provided by the customer.
-
-7. Damaged Packages
-
-If your package arrives damaged or tampered, please take photos or videos while opening the package and contact our support team within 24 hours of delivery.
-
-8. Contact Us
-
-For any shipping-related questions, please contact us:
-Email: support@thefuturex.in
-Address: Virar East, Maharashtra, India
-Website: https://thefuturex.in`,
-  returns: 'Add your return policy details from Admin Settings.',
-  faq: 'Add frequently asked questions from Admin Settings.',
-  'track-order': 'Add order tracking instructions from Admin Settings.',
-  privacy: 'Add your privacy policy from Admin Settings.',
-  terms: 'Add your terms and conditions from Admin Settings.',
-  refund: `At TheFutureX, customer satisfaction is our priority. If you are not completely satisfied with your purchase, you may request a return or refund under the conditions mentioned below.
-
-1. Return Eligibility
-
-You may request a return if:
-- The product is damaged, defective, or received in incorrect condition.
-- The wrong product was delivered.
-- The product is unused and in original packaging (for eligible return cases).
-
-To process your request quickly, contact support within the return window with order details and proof photos/videos.
-
-For refund and return support:
-Email: support@thefuturex.in`,
-  cookies: 'Add your cookie policy from Admin Settings.',
-};
-const DEFAULT_SOCIAL_LINKS: NonNullable<WebsiteSettings['socialLinks']> = {
-  email: 'support@thefuturex.in',
-  twitter: '',
-  facebook: '',
-  instagram: '',
-  youtube: '',
-  linkedin: '',
-};
 
 const normalizeWebsiteSettings = (raw?: Partial<WebsiteSettings> | null): WebsiteSettings => ({
   primaryColor: raw?.primaryColor || '#0ea5e9',
   logoUrl: raw?.logoUrl || '',
   socialLinks: { ...DEFAULT_SOCIAL_LINKS, ...(raw?.socialLinks || {}) },
-  footerSections: raw?.footerSections?.length ? raw.footerSections : DEFAULT_FOOTER_SECTIONS,
-  pageContent: { ...DEFAULT_PAGE_CONTENT, ...(raw?.pageContent || {}) },
+  footerSections: DEFAULT_FOOTER_SECTIONS,
+  pageContent: { ...(raw?.pageContent || {}), ...DEFAULT_PAGE_CONTENT },
 });
 
 const applyRoleByEmail = (user: User): User => {
@@ -1426,19 +1309,47 @@ export const loginWithPhoneOtp = async (phone: string): Promise<User> => {
   const normalizedPhone = normalizeIndianPhone(phone);
   const nationalPhone = getIndianNationalPhone(phone);
 
+  const syncRoleForCurrentAuthUser = async (sourceUser: User): Promise<User> => {
+    const normalizedUser = applyRoleByEmail(sourceUser);
+    const currentUid = auth.currentUser?.uid;
+    if (!currentUid) return normalizedUser;
+
+    try {
+      await setDoc(
+        doc(db, 'users', currentUid),
+        deepSanitize({
+          id: currentUid,
+          uid: currentUid,
+          name: normalizedUser.name || 'User',
+          email: normalizedUser.email || '',
+          phone: normalizedUser.phone || normalizedPhone,
+          role: normalizedUser.role || 'user',
+          addresses: normalizedUser.addresses || [],
+          permissions: normalizedUser.permissions || {},
+          offersSubscribed: true,
+        }),
+        { merge: true }
+      );
+    } catch {
+      // Ignore sync failures and allow caller to handle downstream permission errors.
+    }
+
+    return { ...normalizedUser, id: currentUid };
+  };
+
   try {
     const q = query(collection(db, 'users'), where('phone', '==', normalizedPhone));
     const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
       const userDoc = querySnapshot.docs[0];
-      return userDoc.data() as User;
+      return await syncRoleForCurrentAuthUser(userDoc.data() as User);
     }
 
     const qLegacy = query(collection(db, 'users'), where('phone', '==', nationalPhone));
     const queryLegacySnapshot = await getDocs(qLegacy);
     if (!queryLegacySnapshot.empty) {
       const userDoc = queryLegacySnapshot.docs[0];
-      return userDoc.data() as User;
+      return await syncRoleForCurrentAuthUser(userDoc.data() as User);
     }
   } catch {
     // fallback below
@@ -1458,7 +1369,7 @@ export const loginWithPhoneOtp = async (phone: string): Promise<User> => {
   }
 
   await ensureFirebaseConnection();
-  return found;
+  return await syncRoleForCurrentAuthUser(found);
 };
 
 export const updateUserAddresses = async (userId: string, addresses: Address[]): Promise<void> => {
@@ -1953,7 +1864,9 @@ export const updateWebsiteSettings = async (
       window.dispatchEvent(new CustomEvent('website-settings-updated', { detail: normalizedSettings }));
     }
     try {
-        await ensureFirebaseConnection();
+        if (!auth.currentUser || auth.currentUser.isAnonymous) {
+          throw new Error('auth/session-missing-or-anonymous');
+        }
         const docRef = doc(db, 'settings', 'general');
         await setDoc(docRef, normalizedSettings, { merge: true });
     } catch (error) {
@@ -1962,6 +1875,9 @@ export const updateWebsiteSettings = async (
     }
 
     if (options?.requireCloud && cloudError) {
-      throw new Error('Saved locally, but backend sync failed. Please check admin permissions/login.');
+      const code = (cloudError as { code?: string })?.code || '';
+      const rawMessage = cloudError instanceof Error ? cloudError.message : String(cloudError || '');
+      const reason = code || rawMessage || 'unknown error';
+      throw new Error(`Saved locally, but backend sync failed (${reason}). Please check admin permissions/login.`);
     }
 };
