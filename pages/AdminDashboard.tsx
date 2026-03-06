@@ -1,5 +1,5 @@
 
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -150,6 +150,9 @@ export const AdminDashboard: React.FC = () => {
 
   const [auditLog, setAuditLog] = useState<AdminAuditEntry[]>([]);
   const [confirmState, setConfirmState] = useState<ConfirmState | null>(null);
+  const [settingsAutoSaveState, setSettingsAutoSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const settingsAutoSaveTimerRef = useRef<number | null>(null);
+  const settingsBootstrappedRef = useRef(false);
 
   const pushAudit = useCallback(
     async (action: string, details?: string) => {
@@ -283,6 +286,34 @@ export const AdminDashboard: React.FC = () => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(ADMIN_ACTIVE_TAB_KEY, activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!settingsBootstrappedRef.current) {
+      settingsBootstrappedRef.current = true;
+      return;
+    }
+
+    if (settingsAutoSaveTimerRef.current) {
+      window.clearTimeout(settingsAutoSaveTimerRef.current);
+    }
+
+    settingsAutoSaveTimerRef.current = window.setTimeout(async () => {
+      try {
+        setSettingsAutoSaveState('saving');
+        await updateWebsiteSettings({ primaryColor, logoUrl, socialLinks, footerSections, pageContent });
+        setSettingsAutoSaveState('saved');
+      } catch {
+        setSettingsAutoSaveState('error');
+      }
+    }, 900);
+
+    return () => {
+      if (settingsAutoSaveTimerRef.current) {
+        window.clearTimeout(settingsAutoSaveTimerRef.current);
+        settingsAutoSaveTimerRef.current = null;
+      }
+    };
+  }, [primaryColor, logoUrl, socialLinks, footerSections, pageContent]);
 
   useEffect(() => {
     if (hasVariants) {
@@ -800,6 +831,7 @@ export const AdminDashboard: React.FC = () => {
 
   const saveSettings = async () => {
     await updateWebsiteSettings({ primaryColor, logoUrl, socialLinks, footerSections, pageContent });
+    setSettingsAutoSaveState('saved');
     pushAudit('Settings Updated');
     alert('Settings Saved');
   };
@@ -837,6 +869,21 @@ export const AdminDashboard: React.FC = () => {
       {auditError && (
         <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
           Audit log warning: {auditError}
+        </div>
+      )}
+      {settingsAutoSaveState === 'saving' && (
+        <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-700 dark:border-sky-900/40 dark:bg-sky-900/20 dark:text-sky-200">
+          Saving settings changes...
+        </div>
+      )}
+      {settingsAutoSaveState === 'saved' && (
+        <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-200">
+          Settings auto-saved.
+        </div>
+      )}
+      {settingsAutoSaveState === 'error' && (
+        <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
+          Auto-save failed. Your draft is still kept locally. Use Save Settings to retry.
         </div>
       )}
 

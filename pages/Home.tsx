@@ -463,6 +463,7 @@ export const Home: React.FC = () => {
                         alt={cat} 
                         loading="lazy"
                         decoding="async"
+                        sizes="(max-width: 640px) 88vw, (max-width: 1024px) 44vw, 25vw"
                         className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[0.2] group-hover:grayscale-0"
                     />
                 </div>
@@ -489,12 +490,12 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Best Sellers Section */}
-      <section className="py-12 sm:py-16 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-10 sm:py-16 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
                 <span className={`font-bold tracking-widest uppercase text-xs font-display mb-2 block ${activeMood.sectionText}`}>Customer Favorites</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
             </div>
             <button onClick={() => handleShopNavigation('/shop/all')} className={`group flex items-center gap-2 text-gray-600 dark:text-gray-300 ${activeMood.sectionHoverText} font-medium transition-colors font-display tracking-wide`}>
               VIEW ALL 
@@ -518,7 +519,7 @@ export const Home: React.FC = () => {
                 {bestSellersForSlider.map((product, idx) => (
                   <div
                     key={`${product.id}_${idx}`}
-                    className="w-[74vw] sm:w-[46vw] lg:w-[320px] min-w-[240px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide"
+                    className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide"
                     style={{ ['--reveal-delay' as string]: `${idx * 120}ms` }}
                   >
                     <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
@@ -532,14 +533,14 @@ export const Home: React.FC = () => {
       <div className="h-10 bg-gradient-to-b from-transparent via-primary-100/40 to-transparent dark:via-primary-900/10" />
       
       {/* Featured / New Arrivals Section */}
-      <section className="py-12 sm:py-16 bg-gray-50 dark:bg-dark-surface/40 relative border-y border-gray-200 dark:border-white/5 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-10 sm:py-16 bg-gray-50 dark:bg-dark-surface/40 relative border-y border-gray-200 dark:border-white/5 text-gray-900 dark:text-white animate-fade-in-up">
           <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none"></div>
           <div className="max-w-7xl mx-auto px-4 relative z-10">
               <div className="text-center mb-10">
                  <span className="inline-block py-1.5 px-4 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold tracking-widest uppercase mb-4 shadow-sm border border-purple-200/50 dark:border-purple-700/30 font-display">
                     Just Dropped
                  </span>
-                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">New Arrivals</h2>
+                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">New Arrivals</h2>
                  <p className="mt-4 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light text-lg">
                     Cutting-edge technology designed to seamlessly integrate into your lifestyle.
                  </p>
@@ -561,7 +562,7 @@ export const Home: React.FC = () => {
                     {featuredProductsForSlider.map((product, idx) => (
                       <div
                         key={`${product.id}_${idx}`}
-                        className="w-[74vw] sm:w-[46vw] lg:w-[320px] min-w-[240px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide relative"
+                        className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide relative"
                         style={{ ['--reveal-delay' as string]: `${idx * 120}ms` }}
                       >
                         <div
@@ -569,7 +570,7 @@ export const Home: React.FC = () => {
                         >
                           {getArrivalHighlight(product).label}
                         </div>
-                        <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-rose-500/30 via-fuchsia-500/20 to-cyan-500/30 blur-xl opacity-80 pointer-events-none" />
+                        <div className="hidden sm:block absolute -inset-1 rounded-3xl bg-gradient-to-r from-rose-500/30 via-fuchsia-500/20 to-cyan-500/30 blur-xl opacity-80 pointer-events-none" />
                         <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
                       </div>
                     ))}
@@ -584,12 +585,12 @@ export const Home: React.FC = () => {
           </div>
       </section>
       {recentlyViewedProducts.length > 0 && (
-        <section className="py-12 sm:py-16 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+        <section className="py-10 sm:py-16 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between gap-4 mb-7">
               <div>
                 <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Continue Shopping</p>
-                <h2 className="text-2xl sm:text-3xl font-bold font-display mt-2">Recently Viewed</h2>
+                <h2 className="text-xl sm:text-3xl font-bold font-display mt-2">Recently Viewed</h2>
               </div>
               <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate('/shop/all')}>
                 Browse All
@@ -607,11 +608,11 @@ export const Home: React.FC = () => {
       )}
       <div className="h-10 bg-gradient-to-b from-transparent via-cyan-100/40 to-transparent dark:via-cyan-900/10" />
 
-      <section className="py-12 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-10 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Customer Stories</p>
-            <h2 className="mt-2 text-3xl sm:text-4xl font-bold font-display">What Buyers Say</h2>
+            <h2 className="mt-2 text-2xl sm:text-4xl font-bold font-display">What Buyers Say</h2>
           </div>
           <div className="relative overflow-hidden rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-sky-50 via-white to-rose-50 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950 p-6 sm:p-8 shadow-xl">
             <div
@@ -641,11 +642,11 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 px-4 bg-gray-50 dark:bg-dark-surface/40 border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-10 sm:py-16 px-4 bg-gray-50 dark:bg-dark-surface/40 border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className={`text-xs uppercase tracking-[0.3em] font-bold ${activeMood.sectionText}`}>Live Offers</p>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white font-display mt-2">Deals & Benefits</h2>
+            <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white font-display mt-2">Deals & Benefits</h2>
             <p className="mt-3 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300">Flash window ends in {dealCountdown}</p>
             <div className="mt-4">
               <Link
@@ -683,7 +684,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Newsletter / CTA */}
-      <section className="py-14 sm:py-20 px-4 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-10 sm:py-20 px-4 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
         {/* Background blobs for this section */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-primary-100/30 to-purple-100/30 dark:from-primary-900/10 dark:to-purple-900/10 blur-[100px] rounded-full pointer-events-none"></div>
 

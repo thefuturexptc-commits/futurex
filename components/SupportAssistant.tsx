@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { useCart } from '../context/CartContext';
+import { useTheme } from '../context/ThemeContext';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   appendSupportChatMessage,
@@ -18,6 +19,7 @@ type Sender = SupportChatMessage['sender'];
 type ChatProductCard = NonNullable<SupportChatMessage['products']>[number];
 
 const QUICK_CHIPS = ['price', 'stock', 'warranty', 'order status', 'new arrivals', 'best sellers'];
+const INFO_QUICK_CHIPS = ['about us', 'privacy', 'returns', 'contact'];
 const SUPPORT_PHONE = '+91 85303 40676';
 const SUPPORT_EMAIL = 'thefuturex.ptc@gmail.com';
 const DEFAULT_BOT_TEXT =
@@ -28,6 +30,12 @@ const stopwords = new Set([
 ]);
 
 const normalize = (value: string) => value.toLowerCase().trim();
+const toSlug = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 const sanitizeMessages = (items: SupportChatMessage[] = []) =>
   items.filter((message) => message.type !== 'loading_products');
 const formatCurrency = (amount: number) => `Rs ${Number(amount || 0).toLocaleString()}`;
@@ -70,6 +78,7 @@ export const SupportAssistant: React.FC = () => {
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
   const { addToCart, isCartOpen, closeCart } = useCart();
+  const { footerSections, pageContent, socialLinks } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -639,6 +648,12 @@ export const SupportAssistant: React.FC = () => {
         return;
       }
 
+      const infoAnswer = getInfoPageAnswer(text);
+      if (infoAnswer) {
+        await addBotAnswer(infoAnswer);
+        return;
+      }
+
       const product = findProduct(text);
       if (product) {
         await addBotAnswer(buildProductAnswer(product, text));
@@ -683,12 +698,12 @@ export const SupportAssistant: React.FC = () => {
 
   const chips = useMemo(() => {
     if (location.pathname.startsWith('/checkout') || location.pathname.startsWith('/verify-phone') || location.pathname.startsWith('/payment')) {
-      return ['delivery', 'payment', 'phone verify', 'coupon', 'order status', 'support'];
+      return ['delivery', 'payment', 'phone verify', 'coupon', 'order status', 'support', ...INFO_QUICK_CHIPS];
     }
     if (location.pathname.startsWith('/product/')) {
-      return ['price', 'stock', 'warranty', 'battery', 'specs', 'compare'];
+      return ['price', 'stock', 'warranty', 'battery', 'specs', 'compare', ...INFO_QUICK_CHIPS];
     }
-    return QUICK_CHIPS;
+    return [...QUICK_CHIPS, ...INFO_QUICK_CHIPS];
   }, [location.pathname]);
   const productPromptExamples = useMemo(() => {
     const candidates = products
@@ -698,6 +713,41 @@ export const SupportAssistant: React.FC = () => {
     if (candidates.length === 0) return '- Smart Ring\n- Smart Monitor\n- Smart Band';
     return candidates.join('\n');
   }, [products]);
+
+  const infoPages = useMemo(() => {
+    const pages = footerSections.flatMap((section) =>
+      section.items.map((item) => {
+        const slug = toSlug(item);
+        return {
+          label: item,
+          slug,
+          content: (pageContent[slug] || '').trim(),
+        };
+      })
+    );
+    return pages.filter((entry, index, arr) => arr.findIndex((item) => item.slug === entry.slug) === index);
+  }, [footerSections, pageContent]);
+
+  const getInfoPageAnswer = (text: string): string | null => {
+    const normalizedText = normalize(text);
+    const hasInfoIntent = /(about|policy|privacy|terms|refund|return|shipping|faq|contact|cookies|track order|company)/i.test(normalizedText);
+    if (!hasInfoIntent) return null;
+
+    const match =
+      infoPages.find((entry) => {
+        const label = normalize(entry.label);
+        const slugWords = entry.slug.split('-').filter((word) => word.length > 2);
+        return normalizedText.includes(label) || slugWords.some((word) => normalizedText.includes(word));
+      }) || null;
+
+    if (!match) return null;
+    const content = match.content || `${match.label} details will be updated soon.`;
+    if (match.slug === 'contact') {
+      const contactDetails = [socialLinks?.email ? `Email: ${socialLinks.email}` : ''].filter(Boolean).join('\n');
+      return contactDetails ? `${content}\n\n${contactDetails}` : content;
+    }
+    return content;
+  };
 
   return (
     <div className="fixed inset-x-0 bottom-0 sm:bottom-8 sm:right-5 sm:left-auto z-[95] pointer-events-none">
@@ -719,6 +769,7 @@ export const SupportAssistant: React.FC = () => {
                   <img
                     src={supportAssistantLogo}
                     alt="TheFutureX Assistant"
+                    loading="lazy"
                     className="h-9 w-9 rounded-full object-cover border border-gray-200 shadow-sm"
                   />
                 </div>
@@ -891,12 +942,12 @@ export const SupportAssistant: React.FC = () => {
                 Send
               </button>
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
+            <div className="flex flex-wrap gap-2 mt-2 max-h-20 overflow-y-auto pr-1">
               {chips.map((chip) => (
                 <button
                   key={chip}
                   type="button"
-                  className="text-xs px-2 py-1 rounded-full border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                  className="text-xs px-2 py-1 rounded-full border border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 shrink-0"
                   onClick={() => void processMessage(chip)}
                 >
                   {chip}
@@ -916,7 +967,7 @@ export const SupportAssistant: React.FC = () => {
             )}
             <button
               type="button"
-              className="h-16 w-16 sm:h-14 sm:w-14 rounded-full border-2 border-cyan-300/70 bg-gradient-to-br from-slate-900 via-cyan-950 to-fuchsia-950 text-white shadow-[0_0_0_4px_rgba(6,182,212,0.25),0_14px_26px_rgba(0,0,0,0.45)] hover:shadow-[0_0_0_6px_rgba(6,182,212,0.35),0_18px_32px_rgba(0,0,0,0.52)] transition-all duration-200 flex items-center justify-center animate-pulse"
+              className="h-12 w-12 sm:h-14 sm:w-14 rounded-full border-2 border-cyan-300/70 bg-gradient-to-br from-slate-900 via-cyan-950 to-fuchsia-950 text-white shadow-[0_0_0_3px_rgba(6,182,212,0.22),0_10px_20px_rgba(0,0,0,0.4)] sm:shadow-[0_0_0_4px_rgba(6,182,212,0.25),0_14px_26px_rgba(0,0,0,0.45)] hover:shadow-[0_0_0_6px_rgba(6,182,212,0.35),0_18px_32px_rgba(0,0,0,0.52)] transition-all duration-200 flex items-center justify-center animate-pulse"
               onClick={() => setOpen(true)}
               aria-label="Open support chat"
             >
@@ -924,7 +975,8 @@ export const SupportAssistant: React.FC = () => {
                 <img
                   src={supportAssistantLogo}
                   alt="Assistant logo"
-                  className="h-7 w-7 rounded-full object-cover border border-slate-500"
+                  loading="lazy"
+                  className="h-5 w-5 sm:h-7 sm:w-7 rounded-full object-cover border border-slate-500"
                 />
                 <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border border-white" />
               </span>

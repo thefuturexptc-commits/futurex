@@ -372,8 +372,8 @@ export const ProductDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+    <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-white pb-24 sm:pb-0">
+      <div className="max-w-7xl mx-auto px-4 py-10 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           <div className="space-y-4">
             <ProductImageCarousel
@@ -388,6 +388,7 @@ export const ProductDetail: React.FC = () => {
                     key={`${selectedVariant?.colorName || 'default'}_${imageIdx}`}
                     src={imageUrl}
                     alt={`${product.name} ${selectedVariant?.colorName || 'Default'} ${imageIdx + 1}`}
+                    loading="lazy"
                     className="h-16 w-16 sm:h-16 sm:w-16 rounded-lg object-cover border border-gray-200 dark:border-white/10 shrink-0 snap-start"
                   />
                 ))}
@@ -412,7 +413,7 @@ export const ProductDetail: React.FC = () => {
             </div>
 
             <div className="flex items-end gap-3">
-              <p className="text-4xl font-extrabold text-gray-900 dark:text-white">Rs {currentPrice.toLocaleString()}</p>
+              <p className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white">Rs {currentPrice.toLocaleString()}</p>
             </div>
 
             <div>
@@ -488,7 +489,7 @@ export const ProductDetail: React.FC = () => {
               )}
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="hidden sm:grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button size="lg" className="h-12 rounded-xl" onClick={handleAddToCart} disabled={!canPurchase}>
                 Add to Cart
               </Button>
@@ -516,7 +517,7 @@ export const ProductDetail: React.FC = () => {
         </div>
 
         <section className="mt-14 border-t border-gray-200 dark:border-white/10 pt-8">
-          <h2 className="text-2xl font-bold mb-4">Product Details</h2>
+          <h2 className="text-xl sm:text-2xl font-bold mb-4">Product Details</h2>
           <div className="mb-5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-dark-surface p-2 flex flex-wrap gap-2">
             {[
               { key: 'description', label: 'Description' },
@@ -542,7 +543,7 @@ export const ProductDetail: React.FC = () => {
 
           {activeDetailTab === 'description' && (
             <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">
-              <p className="text-sm leading-7 text-gray-700 dark:text-gray-300">
+              <p className="text-sm leading-7 sm:leading-8 text-gray-700 dark:text-gray-300">
                 {isDescriptionExpanded || descriptionText.length <= 400
                   ? descriptionText
                   : `${descriptionText.slice(0, 400).trim()}...`}
@@ -703,6 +704,7 @@ export const ProductDetail: React.FC = () => {
                               key={`${review.id}_${imgIdx}`}
                               src={img}
                               alt="review attachment"
+                              loading="lazy"
                               className="h-16 w-full rounded-md object-cover border border-gray-200 dark:border-white/10"
                             />
                           ))}
@@ -739,7 +741,7 @@ export const ProductDetail: React.FC = () => {
         </section>
 
         <section className="mt-12 border-t border-gray-200 dark:border-white/10 pt-8">
-          <h2 className="text-2xl font-semibold mb-5">Recommended Products</h2>
+          <h2 className="text-xl sm:text-2xl font-semibold mb-5">Recommended Products</h2>
           {recommendedProducts.length > 0 ? (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               {recommendedProducts.map((recommended) => (
@@ -752,6 +754,16 @@ export const ProductDetail: React.FC = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">No recommendations available right now.</p>
           )}
         </section>
+      </div>
+      <div className="sm:hidden fixed left-0 right-0 bottom-0 z-40 border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-bg/95 backdrop-blur px-4 py-3">
+        <div className="grid grid-cols-2 gap-2">
+          <Button className="h-11 rounded-xl" onClick={handleAddToCart} disabled={!canPurchase}>
+            Add to Cart
+          </Button>
+          <Button variant="secondary" className="h-11 rounded-xl" onClick={handleBuyNow} disabled={!canPurchase}>
+            Buy Now
+          </Button>
+        </div>
       </div>
     </div>
   );

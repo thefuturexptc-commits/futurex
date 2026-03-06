@@ -37,7 +37,7 @@ export const InfoPage: React.FC = () => {
             Back
           </Button>
         </div>
-        <div className="whitespace-pre-wrap text-sm sm:text-base leading-7 text-gray-700 dark:text-gray-300">
+        <div className="whitespace-pre-wrap text-sm sm:text-base leading-7 sm:leading-8 text-gray-700 dark:text-gray-300">
           {content}
         </div>
       </div>

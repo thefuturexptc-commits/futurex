@@ -27,6 +27,7 @@ const DEFAULT_SOCIAL_LINKS: NonNullable<WebsiteSettings['socialLinks']> = {
   youtube: '',
   linkedin: '',
 };
+const SETTINGS_DRAFT_KEY = 'aura_settings_draft';
 
 interface ThemeContextType {
   theme: Theme;
@@ -72,7 +73,28 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.classList.add('dark');
     localStorage.setItem('aura_theme', 'dark');
 
-    getWebsiteSettings().then((settings) => applyWebsiteSettings(settings)).catch(() => {});
+    let localDraft: Partial<WebsiteSettings> = {};
+    try {
+      const raw = localStorage.getItem(SETTINGS_DRAFT_KEY);
+      if (raw) {
+        localDraft = JSON.parse(raw) as Partial<WebsiteSettings>;
+        applyWebsiteSettings(localDraft);
+      }
+    } catch {
+      // Ignore malformed local draft and continue with remote settings.
+    }
+
+    getWebsiteSettings()
+      .then((settings) =>
+        applyWebsiteSettings({
+          ...settings,
+          ...localDraft,
+          socialLinks: { ...(settings.socialLinks || {}), ...(localDraft.socialLinks || {}) },
+          footerSections: localDraft.footerSections?.length ? localDraft.footerSections : settings.footerSections,
+          pageContent: { ...(settings.pageContent || {}), ...(localDraft.pageContent || {}) },
+        })
+      )
+      .catch(() => {});
 
     const onSettingsUpdated = (event: Event) => {
       const customEvent = event as CustomEvent<Partial<WebsiteSettings>>;
@@ -84,6 +106,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       window.removeEventListener('website-settings-updated', onSettingsUpdated as EventListener);
     };
   }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        SETTINGS_DRAFT_KEY,
+        JSON.stringify({
+          primaryColor,
+          logoUrl,
+          socialLinks,
+          footerSections,
+          pageContent,
+        } as WebsiteSettings)
+      );
+    } catch {
+      // Ignore local storage write issues.
+    }
+  }, [primaryColor, logoUrl, socialLinks, footerSections, pageContent]);
 
   useEffect(() => {
     const rgb = hexToRgb(primaryColor);
