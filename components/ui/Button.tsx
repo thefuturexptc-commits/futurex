@@ -15,12 +15,12 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props 
 }) => {
-  const baseStyle = "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed";
+  const baseStyle = "inline-flex items-center justify-center rounded-lg font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-400/60 focus:ring-offset-2 focus:ring-offset-[#020611] disabled:opacity-50 disabled:cursor-not-allowed";
   
   const variants = {
-    primary: "bg-primary-600 hover:bg-primary-500 text-white shadow-lg shadow-primary-500/30",
-    secondary: "bg-gray-800 hover:bg-gray-700 text-white",
-    outline: "border-2 border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-500 text-gray-700 dark:text-gray-200 hover:text-primary-600 dark:hover:text-primary-400 bg-transparent",
+    primary: "bg-gradient-to-r from-[#0b2a6e] via-[#0d3f9f] to-[#1167c7] hover:from-[#0f3384] hover:via-[#1552be] hover:to-[#1678e6] text-white shadow-lg shadow-cyan-700/30 border border-cyan-400/30",
+    secondary: "bg-gradient-to-r from-[#0b1224] to-[#122342] hover:from-[#101a32] hover:to-[#17305a] text-cyan-100 border border-cyan-800/40 shadow-lg shadow-black/35",
+    outline: "border-2 border-cyan-700/60 hover:border-cyan-400/80 text-cyan-100 hover:text-white bg-[#050b17]/60 hover:bg-[#0a1a34]/75",
     danger: "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30"
   };
 

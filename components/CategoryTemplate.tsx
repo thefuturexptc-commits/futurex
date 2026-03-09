@@ -15,6 +15,11 @@ interface CategoryTemplateProps {
   subtitle: string;
   heroGradient: string; // CSS class for gradient background
   heroImage: string; // URL for the hero image
+  heroBackgroundImage?: string; // optional URL for immersive hero backdrop
+  heroOverlayClassName?: string;
+  heroTintClassName?: string;
+  heroSideOverlayClassName?: string;
+  showHeroGridPattern?: boolean;
   accentColor: string; // text-color class for accents
   features: Feature[];
   autoSlideModels?: boolean;
@@ -29,6 +34,11 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
   subtitle, 
   heroGradient,
   heroImage,
+  heroBackgroundImage,
+  heroOverlayClassName,
+  heroTintClassName,
+  heroSideOverlayClassName,
+  showHeroGridPattern = true,
   accentColor,
   features,
   autoSlideModels = true,
@@ -190,10 +200,28 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-white transition-colors duration-500">
       
       {/* Immersive Hero Section */}
-      <div className={`relative ${heroGradient} min-h-[60vh] flex items-center overflow-hidden text-white`}>
+      <div className={`relative ${heroBackgroundImage ? 'bg-black' : heroGradient} min-h-[60vh] flex items-center overflow-hidden text-white`}>
+        {heroBackgroundImage && (
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-85 animate-pulse"
+            style={{ backgroundImage: `url(${heroBackgroundImage})`, animationDuration: '10s' }}
+            aria-hidden="true"
+          />
+        )}
+        {heroBackgroundImage && (
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 animate-pulse mix-blend-screen"
+            style={{ backgroundImage: `url(${heroBackgroundImage})`, animationDuration: '7s' }}
+            aria-hidden="true"
+          />
+        )}
         {/* Abstract Background Patterns */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
-        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-black/20 to-transparent"></div>
+        {showHeroGridPattern && <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>}
+        <div className={`absolute inset-0 ${heroOverlayClassName || 'bg-gradient-to-b from-black/52 via-black/68 to-black/80'}`}></div>
+        <div className={`absolute inset-0 ${heroTintClassName || 'bg-black/22'}`}></div>
+        <div className={`absolute top-0 right-0 w-1/2 h-full ${heroSideOverlayClassName || 'bg-gradient-to-l from-black/55 to-transparent'}`}></div>
+        <div className="absolute -top-20 left-8 w-72 h-72 rounded-full bg-cyan-300/8 blur-3xl animate-float-slow"></div>
+        <div className="absolute bottom-8 right-16 w-80 h-80 rounded-full bg-blue-400/10 blur-3xl animate-float-slow" style={{ animationDelay: '1.5s' }}></div>
         
         <div className="max-w-7xl mx-auto px-4 w-full relative z-10 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             {/* Text Content */}
@@ -212,19 +240,20 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
 
             {/* Hero Image */}
             <div className="relative flex justify-center lg:justify-end animate-float">
-                <div className="relative z-10 w-full max-w-md aspect-square rounded-[3rem] overflow-hidden glass-card border-0 shadow-2xl shadow-black/30">
-                     <div className="absolute inset-0 bg-gradient-to-tr from-black/40 to-transparent z-10"></div>
+                <div className="absolute -inset-6 rounded-[3.5rem] bg-cyan-300/20 blur-3xl animate-pulse-slow"></div>
+                <div className="relative z-10 w-full max-w-md aspect-square rounded-[3rem] overflow-hidden glass-card border border-cyan-300/25 shadow-2xl shadow-cyan-700/25 animate-float-slow group">
+                     <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-cyan-200/10 z-10"></div>
                      <img 
                         src={heroImage} 
                         alt={category} 
                         loading="lazy"
                         width={960}
                         height={960}
-                        className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700"
+                        className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                      />
                 </div>
                 {/* Decorative Blur Behind Image */}
-                <div className="absolute inset-0 bg-white/20 blur-[100px] rounded-full transform scale-75"></div>
+                <div className="absolute inset-0 bg-cyan-100/20 blur-[100px] rounded-full transform scale-75 animate-pulse-slow"></div>
             </div>
         </div>
       </div>

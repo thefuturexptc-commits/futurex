@@ -126,7 +126,7 @@ export const Shop: React.FC = () => {
             <div
               key={p.id}
               className="opacity-0 home-product-slide"
-              style={{ ['--reveal-delay' as '--reveal-delay']: `${Math.min(idx, 7) * 80}ms` }}
+              style={{ ['--reveal-delay' as string]: `${Math.min(idx, 7) * 80}ms` }}
             >
               <ProductCard product={p} compact imageAspectClassName="aspect-[4/3]" />
             </div>

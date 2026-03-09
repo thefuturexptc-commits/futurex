@@ -1,6 +1,7 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
 import heroImage from '../assets/images/smartfans-hero.png';
+import heroBackgroundImage from '../assets/images/smartrings-neon-bg.svg';
 
 export const SmartFans: React.FC = () => {
   const features = [
@@ -49,6 +50,11 @@ export const SmartFans: React.FC = () => {
       subtitle="Transform your home into a sanctuary. Intelligent airflow that purifies, cools, and adapts to your life seamlessly."
       heroGradient="bg-gradient-to-br from-teal-900 via-emerald-900 to-green-900"
       heroImage={heroImage}
+      heroBackgroundImage={heroBackgroundImage}
+      heroOverlayClassName="bg-gradient-to-b from-black/20 via-black/34 to-black/50"
+      heroTintClassName="bg-black/8"
+      heroSideOverlayClassName="bg-gradient-to-l from-black/22 to-transparent"
+      showHeroGridPattern={false}
       accentColor="text-emerald-400"
       features={features}
       autoSlideModels={false}

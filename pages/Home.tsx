@@ -370,49 +370,57 @@ export const Home: React.FC = () => {
         </div>
       )}
       {/* Hero Section */}
-      <section className="relative min-h-[460px] sm:min-h-[620px] py-16 sm:py-20 flex items-center justify-center overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="relative min-h-[500px] sm:min-h-[620px] py-14 sm:py-20 flex items-center justify-center overflow-hidden bg-black text-gray-900 dark:text-white animate-fade-in-up">
         
         {/* Dynamic Background */}
-        <div className="absolute inset-0 bg-gray-50 dark:bg-dark-bg transition-colors duration-500">
-           {/* Tech Grid Pattern */}
-           <div className="absolute inset-0 bg-grid-pattern opacity-60 z-0"></div>
-           
-           {/* Animated Gradient Orbs */}
-           <div className="absolute top-[-20%] right-[-10%] w-[800px] h-[800px] bg-gradient-to-br from-primary-200/40 to-purple-200/40 dark:from-primary-900/20 dark:to-purple-900/20 rounded-full blur-[100px] animate-float-fast opacity-70"></div>
-           <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-gradient-to-tr from-cyan-200/40 to-blue-200/40 dark:from-cyan-900/20 dark:to-blue-900/20 rounded-full blur-[120px] animate-float" style={{animationDelay: '2s'}}></div>
-           <div className="absolute top-20 left-8 w-72 h-72 rounded-full blur-3xl opacity-20 bg-pink-400 animate-float-slow"></div>
-           <div className="absolute top-1/2 right-8 w-72 h-72 rounded-full blur-3xl opacity-20 bg-cyan-400 animate-float-slow" style={{ animationDelay: '1.5s' }}></div>
-           <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-72 h-72 rounded-full blur-3xl opacity-20 bg-purple-400 animate-float-slow" style={{ animationDelay: '3s' }}></div>
-           <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${activeMood.heroGradient} bg-[length:200%_200%] animate-gradient-x`}></div>
+        <div className="absolute inset-0 bg-black transition-colors duration-500">
+           <div
+             className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-85 animate-pulse"
+             style={{ backgroundImage: "url('/hero-frame-tech.svg')", animationDuration: '9s' }}
+             aria-hidden="true"
+           ></div>
+           <div
+             className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-15 animate-pulse"
+             style={{ backgroundImage: "url('/hero-frame-tech.svg')" }}
+             aria-hidden="true"
+           ></div>
+           <div
+             className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-blue-300/5 to-cyan-400/0 animate-pulse"
+             style={{ animationDuration: '7s' }}
+             aria-hidden="true"
+           ></div>
+           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-black/60"></div>
+           <div className="absolute -top-12 left-4 sm:left-10 w-40 sm:w-72 h-40 sm:h-72 rounded-full bg-cyan-300/10 blur-3xl animate-float-slow"></div>
+           <div className="absolute -bottom-10 right-2 sm:right-12 w-44 sm:w-80 h-44 sm:h-80 rounded-full bg-blue-400/12 blur-3xl animate-float-slow" style={{ animationDelay: '1.4s' }}></div>
         </div>
 
         {/* Hero Content */}
-        <div className="relative z-10 container mx-auto px-4 text-center">
-          <div className="animate-fade-in-up space-y-5 sm:space-y-6 max-w-5xl mx-auto">
+        <div className="relative z-10 container mx-auto px-3 sm:px-4 text-center">
+          <div className="animate-fade-in-up space-y-4 sm:space-y-6 max-w-5xl mx-auto">
             
             {/* Tech Badge */}
-            <div className="flex justify-center mb-6 sm:mb-8">
-                <div className="glass-card px-4 sm:px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-2 sm:gap-3 shadow-lg">
+            <div className="flex justify-center mb-5 sm:mb-8">
+                <div className="glass-card px-3 sm:px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-2 sm:gap-3 shadow-lg max-w-full">
                    <div className={`w-2 h-2 rounded-full animate-pulse ${activeMood.dot}`}></div>
-                   <span className="text-[10px] sm:text-xs font-bold tracking-[0.2em] sm:tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display">
+                   <span className="text-[9px] sm:text-xs font-bold tracking-[0.17em] sm:tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display whitespace-normal sm:whitespace-nowrap">
                       Future Ready - Series X
                    </span>
                 </div>
             </div>
 
             {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-gray-900 dark:text-white leading-[0.95] font-display">
+            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-gray-100 dark:text-white leading-[0.95] font-display">
               WEAR THE <br />
-              <span className={`text-transparent bg-clip-text bg-gradient-to-r ${activeMood.heroGradient} bg-[length:200%_200%] animate-gradient-x animate-pulse-slow`}>
+              <span className={`text-transparent bg-clip-text bg-gradient-to-r ${activeMood.heroGradient} bg-[length:200%_200%] animate-gradient-x brightness-75 saturate-90`}>
                 FUTURE
               </span>
             </h1>
 
             {/* Subtext */}
-            <p className="text-base sm:text-lg md:text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide">
+            <p className="text-sm sm:text-lg md:text-xl text-gray-200/85 dark:text-gray-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide px-1">
               Advanced biometrics. Seamless connectivity. Designed for the visionaries of tomorrow.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 text-xs sm:text-sm md:text-base font-bold text-gray-700 dark:text-gray-200 tracking-wide">
+            <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 text-[11px] sm:text-sm md:text-base font-bold text-gray-100 dark:text-gray-200 tracking-wide">
               <span className="animate-fade-in-up">14 Days Battery</span>
               <span className={`hidden md:inline ${activeMood.bullet}`}>&bull;</span>
               <span className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>50m Water Proof</span>
@@ -420,12 +428,12 @@ export const Home: React.FC = () => {
               <span className="animate-fade-in-up" style={{ animationDelay: '240ms' }}>99% Accuracy</span>
             </div>
             {spotlightProduct && (
-              <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/40 bg-white/70 dark:bg-black/20 backdrop-blur-md px-4 py-3 flex items-center justify-between gap-3 shadow-xl">
-                <div className="text-left">
+              <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/40 bg-white/70 dark:bg-black/20 backdrop-blur-md px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
+                <div className="text-left w-full sm:w-auto">
                   <p className={`text-[10px] uppercase tracking-[0.22em] font-bold ${activeMood.sectionText}`}>Live Spotlight</p>
                   <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">{spotlightProduct.name}</p>
                 </div>
-                <Button size="sm" className="rounded-full px-4" onClick={() => navigate(`/product/${spotlightProduct.id}`)}>
+                <Button size="sm" className="rounded-full px-4 w-full sm:w-auto" onClick={() => navigate(`/product/${spotlightProduct.id}`)}>
                   View
                 </Button>
               </div>
@@ -434,27 +442,21 @@ export const Home: React.FC = () => {
           </div>
         </div>
 
-        {/* Floating Abstract Tech Elements */}
-        <div className="absolute top-1/3 left-10 hidden lg:block opacity-20 pointer-events-none animate-spin-slow">
-           <svg width="200" height="200" viewBox="0 0 200 200" fill="none" stroke="currentColor" className="text-gray-900 dark:text-white">
-              <circle cx="100" cy="100" r="90" strokeWidth="1" strokeDasharray="10 10"/>
-              <circle cx="100" cy="100" r="70" strokeWidth="1"/>
-              <path d="M100 0 L100 200 M0 100 L200 100" strokeWidth="1"/>
-           </svg>
-        </div>
+        {/* Intentionally no extra floating overlays to preserve the clean horizon mesh look */}
 
       </section>
 
       {/* Floating Category Cards - Overlapping Hero */}
       <section className="relative z-20 pt-2 pb-12 sm:pb-14 px-4 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
             {['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'].map((cat, idx) => (
                 <Link
                   key={cat}
                   to={getCategoryRoute(cat)}
                   onClick={(event) => handleProtectedCategoryClick(event, getCategoryRoute(cat))}
-                  className={`group relative h-64 sm:h-72 lg:h-80 rounded-[1.5rem] sm:rounded-[2rem] overflow-hidden cursor-pointer glass-card transition-all transition-shadow duration-500 hover:-translate-y-2 sm:hover:-translate-y-4 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] ${activeMood.categoryGlow} border-white/50`}
+                  className={`group relative aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer border border-cyan-500/20 bg-[#060b1a] transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_18px_40px_-20px_rgba(34,211,238,0.45)] ${activeMood.categoryGlow} animate-fade-in-up`}
+                  style={{ animationDelay: `${idx * 90}ms` }}
                 >
                 {/* Image */}
                 <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800">
@@ -464,22 +466,23 @@ export const Home: React.FC = () => {
                         loading="lazy"
                         decoding="async"
                         sizes="(max-width: 640px) 88vw, (max-width: 1024px) 44vw, 25vw"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 grayscale-[0.2] group-hover:grayscale-0"
+                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-[0.7] saturate-125"
                     />
                 </div>
                 
                 {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-white/95 via-white/10 to-transparent dark:from-black/95 dark:via-black/10 dark:to-transparent opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#050910] via-[#070d18]/40 to-transparent opacity-100 transition-opacity"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-300/5 to-blue-400/0 opacity-70"></div>
                 
                 {/* Content */}
-                <div className="absolute bottom-0 left-0 w-full p-5 sm:p-8">
+                <div className="absolute bottom-0 left-0 w-full p-3 sm:p-5">
                     <div className="flex justify-between items-end">
                         <div>
-                            <p className={`text-xs font-bold uppercase tracking-widest mb-2 font-display ${activeMood.sectionText}`}>Series 0{idx + 1}</p>
-                            <h3 className="text-2xl md:text-4xl font-bold tracking-tight text-gray-900 dark:text-white leading-tight font-display">{cat}</h3>
+                            <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5 font-display text-cyan-300/90">Series 0{idx + 1}</p>
+                            <h3 className="text-xs sm:text-lg md:text-2xl font-bold tracking-tight text-white leading-tight font-display">{cat}</h3>
                         </div>
-                        <div className="w-12 h-12 rounded-full bg-white dark:bg-white/10 flex items-center justify-center shadow-lg transform translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                            <svg className="w-5 h-5 text-gray-900 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-300/15 border border-cyan-200/40 flex items-center justify-center shadow-lg transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                         </div>
                     </div>
                 </div>
@@ -585,7 +588,7 @@ export const Home: React.FC = () => {
           </div>
       </section>
       {recentlyViewedProducts.length > 0 && (
-        <section className="py-10 sm:py-16 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+        <section className="py-10 sm:py-16 bg-[#040813] dark:bg-[#03060f] border-y border-cyan-500/10 text-gray-100 dark:text-white animate-fade-in-up">
           <div className="max-w-7xl mx-auto px-4">
             <div className="flex items-center justify-between gap-4 mb-7">
               <div>
@@ -596,9 +599,9 @@ export const Home: React.FC = () => {
                 Browse All
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
               {recentlyViewedProducts.map((product) => (
-                <div key={product.id} className="min-w-0">
+                <div key={product.id} className="min-w-0 rounded-2xl border border-cyan-500/20 bg-[#060b1a] p-1.5 sm:p-2 shadow-[0_14px_34px_-20px_rgba(34,211,238,0.4)]">
                   <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
                 </div>
               ))}
@@ -642,7 +645,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-10 sm:py-16 px-4 bg-gray-50 dark:bg-dark-surface/40 border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="py-10 sm:py-16 px-4 bg-[#040813] dark:bg-[#03060f] border-y border-cyan-500/10 text-gray-100 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className={`text-xs uppercase tracking-[0.3em] font-bold ${activeMood.sectionText}`}>Live Offers</p>
@@ -659,21 +662,22 @@ export const Home: React.FC = () => {
               </Link>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
             {dealsToShow.map((offer, idx) => (
               <Link
                 key={offer.title}
                 to={offer.href}
                 onClick={(event) => openProtectedOffer(event, offer.href)}
-                className={`relative rounded-2xl border border-gray-200 dark:border-white/10 p-4 sm:p-6 bg-gradient-to-br ${activeMood.offerCard} shadow-md hover:-translate-y-1 hover:scale-[1.01] transition-transform duration-300 animate-fade-in-up max-w-[360px] md:max-w-none mx-auto w-full`}
+                className="relative rounded-2xl border border-cyan-500/20 p-3 sm:p-5 bg-[#060b1a] shadow-[0_18px_34px_-22px_rgba(34,211,238,0.45)] hover:-translate-y-1 hover:scale-[1.01] transition-transform duration-300 animate-fade-in-up w-full overflow-hidden"
                 style={{ animationDelay: `${idx * 120}ms` }}
               >
-                <span className={`inline-block text-[10px] font-bold tracking-widest px-3 py-1 rounded-full animate-pulse ${activeMood.chip}`}>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-300/0 via-cyan-300/5 to-blue-400/0 pointer-events-none"></div>
+                <span className="inline-block text-[10px] font-bold tracking-widest px-2.5 sm:px-3 py-1 rounded-full animate-pulse bg-cyan-300/15 text-cyan-100 border border-cyan-200/30">
                   {offer.badge}
                 </span>
-                <h3 className="text-lg sm:text-2xl font-bold mt-3 sm:mt-4 text-gray-900 dark:text-white leading-snug">{offer.title}</h3>
-                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-2">{offer.desc}</p>
-                <span className="mt-4 sm:mt-5 inline-flex items-center gap-2 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-xs font-semibold tracking-wide">
+                <h3 className="text-sm sm:text-lg font-bold mt-2.5 sm:mt-3 text-white leading-snug">{offer.title}</h3>
+                <p className="text-[11px] sm:text-sm text-gray-300 mt-1.5 sm:mt-2 line-clamp-2">{offer.desc}</p>
+                <span className="mt-3 sm:mt-4 inline-flex items-center gap-2 rounded-full bg-cyan-300/15 text-cyan-100 border border-cyan-200/30 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-semibold tracking-wide">
                   {offer.cta}
                   <span aria-hidden="true">{'->'}</span>
                 </span>

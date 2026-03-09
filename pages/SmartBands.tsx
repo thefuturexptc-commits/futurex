@@ -1,6 +1,7 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
 import heroImage from '../assets/images/smartbands-hero.png';
+import heroBackgroundImage from '../assets/images/smartbands-corridor-bg.svg';
 
 export const SmartBands: React.FC = () => {
   const features = [
@@ -73,6 +74,7 @@ export const SmartBands: React.FC = () => {
       subtitle="The next evolution of fitness tracking. Lightweight, powerful, and designed to push your limits beyond the horizon."
       heroGradient="bg-gradient-to-br from-slate-900 via-cyan-900 to-blue-900"
       heroImage={heroImage}
+      heroBackgroundImage={heroBackgroundImage}
       accentColor="text-cyan-500"
       features={features}
       autoSlideModels={false}

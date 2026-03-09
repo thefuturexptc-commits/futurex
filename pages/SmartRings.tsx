@@ -1,6 +1,7 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
 import heroImage from '../assets/images/smartrings-hero.png';
+import heroBackgroundImage from '../assets/images/smartrings-neon-bg.svg';
 
 export const SmartRings: React.FC = () => {
   const features = [
@@ -58,6 +59,11 @@ export const SmartRings: React.FC = () => {
       subtitle="Elegance meets intelligence. Monitor your vital signs 24/7 without screens, vibrations, or distractions."
       heroGradient="bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900"
       heroImage={heroImage}
+      heroBackgroundImage={heroBackgroundImage}
+      heroOverlayClassName="bg-gradient-to-b from-black/20 via-black/34 to-black/50"
+      heroTintClassName="bg-black/8"
+      heroSideOverlayClassName="bg-gradient-to-l from-black/22 to-transparent"
+      showHeroGridPattern={false}
       accentColor="text-purple-400"
       features={features}
       autoSlideModels={false}

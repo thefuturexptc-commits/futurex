@@ -1,6 +1,7 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
 import heroImage from '../assets/images/smartmonitoring-hero.png';
+import heroBackgroundImage from '../assets/images/smartrings-neon-bg.svg';
 export const SmartMonitoring: React.FC = () => {
   const features = [
     {
@@ -27,6 +28,11 @@ export const SmartMonitoring: React.FC = () => {
       subtitle="Take control of your well-being with lab-quality diagnostics in the comfort of your home. Prevention starts here."
       heroGradient="bg-gradient-to-br from-rose-900 via-red-900 to-orange-900"
       heroImage={heroImage}
+      heroBackgroundImage={heroBackgroundImage}
+      heroOverlayClassName="bg-gradient-to-b from-black/20 via-black/34 to-black/50"
+      heroTintClassName="bg-black/8"
+      heroSideOverlayClassName="bg-gradient-to-l from-black/22 to-transparent"
+      showHeroGridPattern={false}
       accentColor="text-rose-400"
       features={features}
       autoSlideModels={false}
