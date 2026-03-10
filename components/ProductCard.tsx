@@ -264,15 +264,19 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           <Button
             size="sm"
-            variant="outline"
+            variant={compact ? 'primary' : 'outline'}
             onClick={(e) => {
               e.preventDefault();
               handleAddToCart();
             }}
             disabled={!canAdd}
-            className={`${compact ? 'w-9 h-9' : 'w-10 h-10'} rounded-full p-0 flex items-center justify-center border-white/20 transition-all duration-300 shadow-sm ${enableHoverEffects ? 'hover:border-primary-500 hover:bg-primary-500 hover:text-white' : ''}`}
+            className={
+              compact
+                ? 'min-w-[110px] rounded-full px-4 py-2 text-xs font-semibold shadow-sm'
+                : `w-10 h-10 rounded-full p-0 flex items-center justify-center border-white/20 transition-all duration-300 shadow-sm ${enableHoverEffects ? 'hover:border-primary-500 hover:bg-primary-500 hover:text-white' : ''}`
+            }
           >
-            <svg className={compact ? 'w-4 h-4' : 'w-5 h-5'} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+            {compact ? 'Add to Cart' : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>}
           </Button>
         </div>
       </div>

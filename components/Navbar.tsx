@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
+import { getCategories } from '../services/backend';
 import { Button } from './ui/Button';
 import defaultBrandLogo from '../assets/images/untitled-design-51.png';
 
@@ -13,6 +14,7 @@ const NavbarComponent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [categories, setCategories] = useState<string[]>(['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
 
   const handleLogout = () => {
     logout();
@@ -24,13 +26,50 @@ const NavbarComponent: React.FC = () => {
     setMobileMenuOpen(false);
   };
 
-  const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'Bands', path: '/smart-bands' },
-    { name: 'Rings', path: '/smart-rings' },
-    { name: 'Fans', path: '/smart-fans' },
-    { name: 'Monitoring', path: '/smart-monitoring' },
-  ];
+  const getCategoryPath = (category: string) => {
+    const normalized = category.trim().toLowerCase();
+    if (normalized === 'smart bands') return '/smart-bands';
+    if (normalized === 'smart rings') return '/smart-rings';
+    if (normalized === 'smart fans') return '/smart-fans';
+    if (normalized === 'smart monitoring') return '/smart-monitoring';
+    return `/shop/${encodeURIComponent(category)}`;
+  };
+
+  const getCategoryLabel = (category: string) => {
+    const normalized = category.trim().toLowerCase();
+    if (normalized === 'smart bands') return 'Bands';
+    if (normalized === 'smart rings') return 'Rings';
+    if (normalized === 'smart fans') return 'Fans';
+    if (normalized === 'smart monitoring') return 'Monitoring';
+    return category.trim();
+  };
+
+  useEffect(() => {
+    let isMounted = true;
+    getCategories()
+      .then((items) => {
+        if (!isMounted || !items.length) return;
+        setCategories(items);
+      })
+      .catch(() => {
+        // Keep fallback categories when backend fetch is unavailable.
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const categoryLinks = useMemo(
+    () =>
+      categories.map((category) => ({
+        name: getCategoryLabel(category),
+        path: getCategoryPath(category),
+      })),
+    [categories]
+  );
+
+  const navLinks = [{ name: 'Home', path: '/' }, ...categoryLinks];
 
   return (
     <nav className="sticky top-0 z-50 w-full glass-nav transition-all duration-300">
@@ -251,25 +290,18 @@ const NavbarComponent: React.FC = () => {
 
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-dark-surface/95 backdrop-blur px-2 py-2">
         <div className="grid grid-cols-6 gap-1 text-center">
-          {[
-            { label: 'Home', path: '/' },
-            { label: 'Bands', path: '/smart-bands' },
-            { label: 'Rings', path: '/smart-rings' },
-            { label: 'Fans', path: '/smart-fans' },
-            { label: 'Monitoring', path: '/smart-monitoring' },
-            { label: 'Profile', path: user ? '/profile' : '/login?redirect=%2Fprofile' },
-          ].map((item) => {
+          {[...navLinks.slice(0, 5), { name: 'Profile', path: user ? '/profile' : '/login?redirect=%2Fprofile' }].map((item) => {
             const active = location.pathname === item.path;
             return (
               <button
-                key={item.label}
+                key={item.name}
                 type="button"
                 onClick={() => {
                   navigate(item.path);
                 }}
                 className={`rounded-xl py-2 ${active ? 'bg-primary-600 text-white' : 'text-gray-300'}`}
               >
-                <p className="text-[10px] font-semibold">{item.label}</p>
+                <p className="text-[10px] font-semibold">{item.name}</p>
               </button>
             );
           })}

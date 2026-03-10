@@ -5,7 +5,7 @@ import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
 import { getProducts, seedDatabase } from '../services/backend';
 import { useAuth } from '../context/AuthContext';
-import ringHomeImage from '../assets/images/mainring.jpg';
+import ringHomeImage from '../assets/images/smart-rings-home-new.png';
 import bandHomeImage from '../assets/images/mainband.png';
 import fanHomeImage from '../assets/images/mainfan.png';
 import monitorHomeImage from '../assets/images/mainmonitor.png';

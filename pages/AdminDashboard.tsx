@@ -198,7 +198,6 @@ export const AdminDashboard: React.FC = () => {
         settings: 'settings',
       };
       if (isSuperAdmin) return true;
-      if (tab === 'settings') return true;
       if (tab === 'admins') return false;
       const required = tabRequirements[tab];
       return required ? Boolean(user?.permissions?.[required]) : false;
@@ -219,6 +218,7 @@ export const AdminDashboard: React.FC = () => {
   ];
 
   const availableTabs = useMemo(() => tabs.filter((tab) => hasTabAccess(tab.key)).map((tab) => tab.key), [hasTabAccess]);
+  const canManageSettings = hasTabAccess('settings');
 
   const refreshData = useCallback(async () => {
     setIsLoading(true);
@@ -288,6 +288,11 @@ export const AdminDashboard: React.FC = () => {
   }, [activeTab]);
 
   useEffect(() => {
+    if (!canManageSettings || activeTab !== 'settings') {
+      setSettingsAutoSaveState('idle');
+      return;
+    }
+
     if (!settingsBootstrappedRef.current) {
       settingsBootstrappedRef.current = true;
       return;
@@ -316,7 +321,7 @@ export const AdminDashboard: React.FC = () => {
         settingsAutoSaveTimerRef.current = null;
       }
     };
-  }, [primaryColor, logoUrl, socialLinks, footerSections, pageContent]);
+  }, [activeTab, canManageSettings, primaryColor, logoUrl, socialLinks, footerSections, pageContent]);
 
   useEffect(() => {
     if (hasVariants) {
@@ -718,10 +723,15 @@ export const AdminDashboard: React.FC = () => {
 
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
-    await addCategory(newCategory.trim());
-    pushAudit('Category Added', newCategory.trim());
-    setNewCategory('');
-    await refreshData();
+    try {
+      await addCategory(newCategory.trim());
+      pushAudit('Category Added', newCategory.trim());
+      setNewCategory('');
+      await refreshData();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Failed to add category.';
+      alert(message);
+    }
   };
 
   const handleDeleteCategory = (cat: string) => {
@@ -731,9 +741,14 @@ export const AdminDashboard: React.FC = () => {
       message: `Delete category ${cat}?`,
       confirmLabel: 'Delete',
       onConfirm: async () => {
-        await deleteCategory(cat);
-        pushAudit('Category Deleted', cat);
-        await refreshData();
+        try {
+          await deleteCategory(cat);
+          pushAudit('Category Deleted', cat);
+          await refreshData();
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Failed to delete category.';
+          alert(message);
+        }
       },
     });
   };
@@ -881,17 +896,17 @@ export const AdminDashboard: React.FC = () => {
           Audit log warning: {auditError}
         </div>
       )}
-      {settingsAutoSaveState === 'saving' && (
+      {activeTab === 'settings' && settingsAutoSaveState === 'saving' && (
         <div className="mb-4 rounded-xl border border-sky-200 bg-sky-50 p-3 text-sm text-sky-700 dark:border-sky-900/40 dark:bg-sky-900/20 dark:text-sky-200">
           Saving settings changes...
         </div>
       )}
-      {settingsAutoSaveState === 'saved' && (
+      {activeTab === 'settings' && settingsAutoSaveState === 'saved' && (
         <div className="mb-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-900/20 dark:text-emerald-200">
           Settings auto-saved.
         </div>
       )}
-      {settingsAutoSaveState === 'error' && (
+      {activeTab === 'settings' && settingsAutoSaveState === 'error' && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
           Auto-save failed. Your draft is still kept locally. Use Save Settings to retry.
         </div>

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { isEmailRegisteredInFirebase, loginUser, loginWithGoogle } from '../services/backend';
+import { loginUser, loginWithGoogle } from '../services/backend';
 import { Button } from '../components/ui/Button';
 
 export const Login: React.FC = () => {
@@ -29,13 +29,6 @@ export const Login: React.FC = () => {
       }
       if (!isValidEmail(normalizedEmail)) {
         setError('Enter a valid email format');
-        setLoading(false);
-        return;
-      }
-
-      const isRegistered = await isEmailRegisteredInFirebase(normalizedEmail);
-      if (!isRegistered) {
-        navigate(`/signup?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
         setLoading(false);
         return;
       }

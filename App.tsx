@@ -133,7 +133,7 @@ const App: React.FC = () => {
                     
                     {/* Legacy/General Shop Route for Search/View All */}
                     <Route path="/shop/all" element={<Shop />} />
-                    <Route path="/shop/:category" element={<Navigate to="/shop/all" replace />} /> {/* Redirect old category links just in case */}
+                    <Route path="/shop/:category" element={<Shop />} />
 
                     <Route path="/product/:id" element={<ProductDetail />} />
                     <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />

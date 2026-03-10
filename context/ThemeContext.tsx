@@ -37,9 +37,21 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const applyWebsiteSettings = (settings: Partial<WebsiteSettings>) => {
     if (settings.primaryColor) setPrimaryColor(settings.primaryColor);
     if (typeof settings.logoUrl === 'string') setLogoUrl(settings.logoUrl);
-    setFooterSections(DEFAULT_FOOTER_SECTIONS);
-    if (settings.pageContent) setPageContent({ ...settings.pageContent, ...DEFAULT_PAGE_CONTENT });
-    if (settings.socialLinks) setSocialLinks((prev) => ({ ...prev, ...settings.socialLinks }));
+    if (settings.footerSections?.length) {
+      setFooterSections(settings.footerSections);
+    } else {
+      setFooterSections(DEFAULT_FOOTER_SECTIONS);
+    }
+    if (settings.pageContent) {
+      setPageContent({ ...DEFAULT_PAGE_CONTENT, ...settings.pageContent });
+    } else {
+      setPageContent(DEFAULT_PAGE_CONTENT);
+    }
+    if (settings.socialLinks) {
+      setSocialLinks({ ...DEFAULT_SOCIAL_LINKS, ...settings.socialLinks });
+    } else {
+      setSocialLinks(DEFAULT_SOCIAL_LINKS);
+    }
   };
 
   useEffect(() => {

@@ -1,10 +1,11 @@
 import { 
-  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot
+  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, getFirestore
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
+  UserCredential,
   fetchSignInMethodsForEmail,
   signInWithPopup, 
   GoogleAuthProvider,
@@ -20,7 +21,7 @@ import {
   uploadBytes, 
   getDownloadURL 
 } from 'firebase/storage';
-import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
+import { initializeApp, deleteApp, FirebaseApp, getApps, getApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
 import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
@@ -154,10 +155,23 @@ const DEFAULT_SUPERADMIN_PERMISSIONS: UserPermissions = {
 
 const SUPERADMIN_EMAIL = 'thefuturex.ptc@gmail.com';
 
+const normalizeSocialLinks = (raw?: Partial<WebsiteSettings['socialLinks']> | null): NonNullable<WebsiteSettings['socialLinks']> => {
+  const entries = Object.entries(DEFAULT_SOCIAL_LINKS).map(([key, defaultValue]) => {
+    const rawValue = raw?.[key as keyof NonNullable<WebsiteSettings['socialLinks']>];
+    if (typeof rawValue !== 'string') {
+      return [key, defaultValue];
+    }
+
+    const trimmed = rawValue.trim();
+    return [key, trimmed || defaultValue];
+  });
+  return Object.fromEntries(entries) as NonNullable<WebsiteSettings['socialLinks']>;
+};
+
 const normalizeWebsiteSettings = (raw?: Partial<WebsiteSettings> | null): WebsiteSettings => ({
   primaryColor: raw?.primaryColor || '#0ea5e9',
   logoUrl: raw?.logoUrl || '',
-  socialLinks: { ...DEFAULT_SOCIAL_LINKS, ...(raw?.socialLinks || {}) },
+  socialLinks: normalizeSocialLinks(raw?.socialLinks),
   footerSections: DEFAULT_FOOTER_SECTIONS,
   pageContent: { ...(raw?.pageContent || {}), ...DEFAULT_PAGE_CONTENT },
 });
@@ -179,6 +193,38 @@ const applyRoleByEmail = (user: User): User => {
     };
   }
   return user;
+};
+
+const resolvePreferredUserProfile = (baseUser: User): User => {
+  const normalizedBase = applyRoleByEmail(baseUser);
+  const normalizedEmail = (normalizedBase.email || '').trim().toLowerCase();
+  const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+  const localMatch = localUsers.find(
+    (u) => u.id === normalizedBase.id || (u.email || '').trim().toLowerCase() === normalizedEmail
+  );
+
+  if (!localMatch) {
+    return normalizedBase;
+  }
+
+  const normalizedLocal = applyRoleByEmail(localMatch);
+  const shouldPreferLocal =
+    normalizedLocal.role === 'superadmin' ||
+    (normalizedLocal.role === 'admin' && normalizedBase.role !== 'superadmin');
+
+  if (!shouldPreferLocal) {
+    return normalizedBase;
+  }
+
+  return {
+    ...normalizedBase,
+    ...normalizedLocal,
+    id: normalizedBase.id || normalizedLocal.id,
+    email: normalizedBase.email || normalizedLocal.email,
+    name: normalizedLocal.name || normalizedBase.name,
+    addresses: normalizedBase.addresses || normalizedLocal.addresses || [],
+    permissions: { ...(normalizedBase.permissions || {}), ...(normalizedLocal.permissions || {}) },
+  };
 };
 
 let recaptchaVerifier: RecaptchaVerifier | null = null;
@@ -697,54 +743,79 @@ export const getCategories = async (): Promise<string[]> => {
 };
 
 export const addCategory = async (category: string): Promise<void> => {
-  const cats = getMockData<string[]>('categories', []);
-  if (!cats.includes(category)) {
-      cats.push(category);
-      setMockData('categories', cats);
+  const normalizedCategory = category.trim();
+  if (!normalizedCategory) {
+    throw new Error('Category name is required');
   }
 
+  const previousCats = getMockData<string[]>('categories', []);
+  const existsLocally = previousCats.some((cat) => cat.trim().toLowerCase() === normalizedCategory.toLowerCase());
+  const nextCats = existsLocally ? previousCats : [...previousCats, normalizedCategory];
+  setMockData('categories', nextCats);
+
   try {
-      await ensureFirebaseConnection();
-      
-      const catCol = collection(db, 'categories');
-      const snapshot = await getDocs(catCol);
+    await ensureFirebaseConnection();
 
-      // CRITICAL: If DB is empty, seed defaults first so we don't lose the "previous" ones.
-      if (snapshot.empty) {
-          const defaults = ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'];
-          for (const def of defaults) {
-              if (def !== category) { 
-                  await addDoc(catCol, { name: def });
-              }
-          }
-      }
-      
-      // Check if this specific category already exists in DB to avoid duplicates
-      let exists = false;
-      snapshot.forEach(doc => {
-          if (doc.data().name === category) exists = true;
-      });
+    const catCol = collection(db, 'categories');
+    const snapshot = await getDocs(catCol);
 
-      if (!exists) {
-          await addDoc(catCol, { name: category });
+    if (snapshot.empty) {
+      const defaults = ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'];
+      for (const def of defaults) {
+        if (def.trim().toLowerCase() !== normalizedCategory.toLowerCase()) {
+          await addDoc(catCol, { name: def });
+        }
       }
-  } catch (e) { 
-      console.error("Error adding category:", e);
+    }
+
+    let existsRemotely = false;
+    snapshot.forEach((categoryDoc) => {
+      const remoteName = String(categoryDoc.data().name || '').trim().toLowerCase();
+      if (remoteName === normalizedCategory.toLowerCase()) existsRemotely = true;
+    });
+
+    if (!existsRemotely) {
+      await addDoc(catCol, { name: normalizedCategory });
+    }
+  } catch (error) {
+    setMockData('categories', previousCats);
+    if (isPermissionDeniedError(error)) {
+      throw new Error('Missing backend permission to add category. Log in again with an admin account and retry.');
+    }
+    if (isAbortLikeError(error)) {
+      throw new Error('Category sync timed out. Please retry.');
+    }
+    throw error instanceof Error ? error : new Error('Failed to add category');
   }
 };
 
 export const deleteCategory = async (category: string): Promise<void> => {
-  const cats = getMockData<string[]>('categories', []);
-  setMockData('categories', cats.filter(c => c !== category));
+  const normalizedCategory = category.trim();
+  if (!normalizedCategory) {
+    throw new Error('Category name is required');
+  }
+
+  const previousCats = getMockData<string[]>('categories', []);
+  setMockData(
+    'categories',
+    previousCats.filter((cat) => cat.trim().toLowerCase() !== normalizedCategory.toLowerCase())
+  );
 
   try {
-      await ensureFirebaseConnection();
-      const q = query(collection(db, 'categories'), where('name', '==', category));
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach(async (d) => {
-        await deleteDoc(doc(db, 'categories', d.id));
-      });
-  } catch (e) { }
+    await ensureFirebaseConnection();
+    const q = query(collection(db, 'categories'), where('name', '==', normalizedCategory));
+    const querySnapshot = await getDocs(q);
+    await Promise.all(querySnapshot.docs.map((categoryDoc) => deleteDoc(doc(db, 'categories', categoryDoc.id))));
+  } catch (error) {
+    setMockData('categories', previousCats);
+    if (isPermissionDeniedError(error)) {
+      throw new Error('Missing backend permission to delete category. Log in again with an admin account and retry.');
+    }
+    if (isAbortLikeError(error)) {
+      throw new Error('Category delete timed out. Please retry.');
+    }
+    throw error instanceof Error ? error : new Error('Failed to delete category');
+  }
 };
 
 // --- Auth Service ---
@@ -879,16 +950,29 @@ export const loginUser = async (email: string, password: string, phone?: string)
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const rawRemoteUser = docSnap.data() as User;
-      const remoteUser = applyRoleByEmail(rawRemoteUser);
+      const remoteUser = resolvePreferredUserProfile({
+        ...rawRemoteUser,
+        id: rawRemoteUser.id || firebaseUser.uid,
+        email: rawRemoteUser.email || firebaseUser.email || normalizedEmail,
+      });
       const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
       if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
         throw new Error('Phone number does not match this account');
       }
-      if (rawRemoteUser.role !== remoteUser.role) {
+      const permissionsChanged =
+        JSON.stringify(rawRemoteUser.permissions || {}) !== JSON.stringify(remoteUser.permissions || {});
+      const identityChanged =
+        (rawRemoteUser.id || firebaseUser.uid) !== remoteUser.id ||
+        (rawRemoteUser.email || '') !== (remoteUser.email || '') ||
+        (rawRemoteUser.name || '') !== (remoteUser.name || '');
+      if (rawRemoteUser.role !== remoteUser.role || permissionsChanged || identityChanged) {
         try {
           await setDoc(
             docRef,
             deepSanitize({
+              id: remoteUser.id,
+              email: remoteUser.email,
+              name: remoteUser.name,
               role: remoteUser.role,
               permissions: remoteUser.permissions || {},
             }),
@@ -898,10 +982,10 @@ export const loginUser = async (email: string, password: string, phone?: string)
           // If role sync fails, continue with in-app role to avoid blocking login.
         }
       }
-      return applyRoleByEmail(remoteUser);
+      return remoteUser;
     }
 
-    const fallbackUser = applyRoleByEmail({
+    const fallbackUser = resolvePreferredUserProfile({
       id: firebaseUser.uid,
       name: firebaseUser.displayName || 'User',
       email: firebaseUser.email || '',
@@ -1394,53 +1478,173 @@ export const updateUserAddresses = async (userId: string, addresses: Address[]):
 };
 
 export const addNewAdmin = async (email: string, name: string, password: string, permissions?: UserPermissions): Promise<void> => {
-    // Validate against current local list
-    const users = upsertSuperAdmin(getMockData<User[]>('users', []));
-    if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
-        throw new Error('User with this email already exists');
+    const normalizedEmail = (email || '').trim().toLowerCase();
+    const normalizedName = (name || '').trim();
+
+    if (!normalizedEmail) {
+      throw new Error('Admin email is required');
     }
+    if (!normalizedName) {
+      throw new Error('Admin name is required');
+    }
+
+    const users = upsertSuperAdmin(getMockData<User[]>('users', []));
+    const secondaryAppName = `SecondaryApp_${Date.now()}`;
+    let secondaryApp: FirebaseApp | null = null;
+    const adminProfile = {
+      id: '',
+      email: normalizedEmail,
+      name: normalizedName,
+      role: 'admin' as const,
+      addresses: [],
+      permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) },
+      createdAt: new Date().toISOString()
+    };
+
+    const syncCurrentSuperAdminProfile = async () => {
+      const currentEmail = (auth.currentUser?.email || '').trim().toLowerCase();
+      const hasMainSuperAdminSession = Boolean(auth.currentUser?.uid) && currentEmail === SUPERADMIN_EMAIL;
+      if (!hasMainSuperAdminSession || !auth.currentUser) return false;
+
+      await setDoc(
+        doc(db, 'users', auth.currentUser.uid),
+        deepSanitize({
+          id: auth.currentUser.uid,
+          email: SUPERADMIN_EMAIL,
+          name: auth.currentUser.displayName || 'Super Admin',
+          role: 'superadmin',
+          addresses: [],
+          permissions: { ...DEFAULT_SUPERADMIN_PERMISSIONS }
+        }),
+        { merge: true }
+      );
+
+      return true;
+    };
 
     try {
         await ensureFirebaseConnection();
+
+        const existingLocalUser = users.find((u) => (u.email || '').trim().toLowerCase() === normalizedEmail);
+        if (existingLocalUser) {
+          if (existingLocalUser.role === 'admin' || existingLocalUser.role === 'superadmin') {
+            throw new Error('This email is already an admin');
+          }
+
+          adminProfile.id = existingLocalUser.id;
+          const hasSuperAdminAccess = await syncCurrentSuperAdminProfile();
+          if (!hasSuperAdminAccess) {
+            throw new Error('Log out and log back in as the superadmin, then try again.');
+          }
+
+          await setDoc(doc(db, 'users', existingLocalUser.id), deepSanitize(adminProfile), { merge: true });
+          const refreshedUsers = upsertSuperAdmin(getMockData<User[]>('users', []))
+            .map((u) => ((u.email || '').trim().toLowerCase() === normalizedEmail ? { ...u, ...adminProfile } : u));
+          setMockData('users', refreshedUsers);
+          return;
+        }
+
+        try {
+          const existingRemoteQuery = query(collection(db, 'users'), where('email', '==', normalizedEmail), limit(1));
+          const existingRemoteSnap = await getDocs(existingRemoteQuery);
+          if (!existingRemoteSnap.empty) {
+            const remoteUser = applyRoleByEmail(existingRemoteSnap.docs[0].data() as User);
+            if (remoteUser.role === 'admin' || remoteUser.role === 'superadmin') {
+              throw new Error('This email is already an admin');
+            }
+
+            adminProfile.id = remoteUser.id || existingRemoteSnap.docs[0].id;
+            const hasSuperAdminAccess = await syncCurrentSuperAdminProfile();
+            if (!hasSuperAdminAccess) {
+              throw new Error('Log out and log back in as the superadmin, then try again.');
+            }
+
+            await setDoc(doc(db, 'users', adminProfile.id), deepSanitize(adminProfile), { merge: true });
+            const refreshedUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+            const nextUsers = refreshedUsers.some((u) => (u.email || '').trim().toLowerCase() === normalizedEmail)
+              ? refreshedUsers.map((u) => ((u.email || '').trim().toLowerCase() === normalizedEmail ? { ...u, ...adminProfile } : u))
+              : [...refreshedUsers, adminProfile];
+            setMockData('users', nextUsers);
+            return;
+          }
+        } catch (lookupError) {
+          if (lookupError instanceof Error && lookupError.message) {
+            throw lookupError;
+          }
+        }
         
-        // Create in Firebase Auth using secondary app to avoid logging out current admin
-        // We use the options from the main app to initialize the secondary one
-        const secondaryApp = initializeApp(mainApp.options, "SecondaryApp");
+        // Create in Firebase Auth using a dedicated secondary app to avoid logging out current admin.
+        secondaryApp = initializeApp(mainApp.options, secondaryAppName);
         const secondaryAuth = getAuthFromApp(secondaryApp);
+        const secondaryDb = getFirestore(secondaryApp);
         
-        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        let userCredential: UserCredential;
+        try {
+          userCredential = await createUserWithEmailAndPassword(secondaryAuth, normalizedEmail, password);
+        } catch (createError: any) {
+          const createCode = createError?.code || '';
+          if (createCode !== 'auth/email-already-in-use') {
+            throw createError;
+          }
+
+          // Recover partially-created admins: earlier attempts may have created the Auth user
+          // but failed before the Firestore user profile was written.
+          userCredential = await signInWithEmailAndPassword(secondaryAuth, normalizedEmail, password);
+        }
         const uid = userCredential.user.uid;
+        adminProfile.id = uid;
         
-        // Save user document
-        await setDoc(doc(db, 'users', uid), { 
-            id: uid,
-            email, 
-            name, 
-            role: 'admin', 
-            addresses: [],
-            permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) }
-        });
+        const hasMainSuperAdminSession = await syncCurrentSuperAdminProfile();
+
+        if (hasMainSuperAdminSession) {
+          await setDoc(doc(db, 'users', uid), deepSanitize(adminProfile), { merge: true });
+        } else {
+          // Fallback: try writing via the newly-created user's own auth session.
+          await userCredential.user.getIdToken(true).catch(() => '');
+          await setDoc(doc(secondaryDb, 'users', uid), deepSanitize(adminProfile), { merge: true });
+        }
 
         // Persist local cache only after remote creation succeeds.
         const refreshedUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
-        if (!refreshedUsers.some((u) => u.id === uid || u.email.toLowerCase() === email.toLowerCase())) {
-          refreshedUsers.push({
-            id: uid,
-            name,
-            email,
-            role: 'admin',
-            addresses: [],
-            permissions: { ...DEFAULT_ADMIN_PERMISSIONS, ...(permissions || {}) }
-          });
+        if (!refreshedUsers.some((u) => u.id === uid || (u.email || '').toLowerCase() === normalizedEmail)) {
+          refreshedUsers.push(adminProfile);
           setMockData('users', refreshedUsers);
         }
 
-        // Cleanup
-        await deleteApp(secondaryApp);
-
-    } catch(e) { 
+    } catch(e: any) { 
         console.error("Error adding admin to Firebase:", e);
-        throw e;
+        const code = e?.code || '';
+        if (code === 'auth/email-already-in-use') {
+          throw new Error('This email already has an account. Use the same password as that account to repair and attach the admin profile, or choose a different email.');
+        }
+        if (code === 'auth/invalid-credential' || code === 'auth/wrong-password') {
+          throw new Error('This email already exists in Firebase Auth, but the password did not match the existing account. Enter the original password for that email or use a different email.');
+        }
+        if (code === 'auth/invalid-email') {
+          throw new Error('Invalid email address');
+        }
+        if (code === 'auth/weak-password') {
+          throw new Error('Password is too weak');
+        }
+        if (code === 'permission-denied' || code === 'firestore/permission-denied') {
+          throw new Error('Missing Firestore permission to save the admin profile. Log out and log back in as the superadmin, then try again.');
+        }
+        throw e instanceof Error ? e : new Error('Failed to add admin');
+    } finally {
+        // Cleanup secondary app to prevent stale/duplicate app instances.
+        if (secondaryApp) {
+          try {
+            await deleteApp(secondaryApp);
+          } catch {
+            // Ignore cleanup failures.
+          }
+        } else if (getApps().some((app) => app.name === secondaryAppName)) {
+          try {
+            await deleteApp(getApp(secondaryAppName));
+          } catch {
+            // Ignore cleanup failures.
+          }
+        }
     }
 };
 

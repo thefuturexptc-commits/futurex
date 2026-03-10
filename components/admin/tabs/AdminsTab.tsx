@@ -35,6 +35,7 @@ export const AdminsTab: React.FC<Props> = ({
   onDeleteAdmin,
 }) => {
   const admins = users.filter((u) => u.role === 'admin' || u.role === 'superadmin');
+  const [showPassword, setShowPassword] = React.useState(false);
 
   return (
     <div className="space-y-6 animate-fade-in-up">
@@ -46,7 +47,12 @@ export const AdminsTab: React.FC<Props> = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <input value={newAdminName} onChange={(e) => setNewAdminName(e.target.value)} required placeholder="e.g. Priya Sharma" className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600" />
             <input type="email" value={newAdminEmail} onChange={(e) => setNewAdminEmail(e.target.value)} required placeholder="e.g. admin@futurex.com" className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600" />
-            <input type="password" value={newAdminPassword} onChange={(e) => setNewAdminPassword(e.target.value)} required minLength={6} placeholder="e.g. admin123" className="h-10 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600" />
+            <div className="flex gap-2">
+              <input type={showPassword ? 'text' : 'password'} value={newAdminPassword} onChange={(e) => setNewAdminPassword(e.target.value)} required minLength={6} placeholder="e.g. admin123" className="h-10 min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600" />
+              <Button type="button" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>
+                {showPassword ? 'Hide' : 'Show'}
+              </Button>
+            </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
             {(Object.keys(newAdminPermissions) as Array<keyof UserPermissions>).map((perm) => (
