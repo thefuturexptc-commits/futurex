@@ -135,7 +135,7 @@ export const Checkout: React.FC = () => {
       },
     };
     window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(flowState));
-    navigate('/verify-phone', { state: flowState });
+    navigate('/verify-phone', { replace: true, state: flowState });
   };
 
   if (items.length === 0) {

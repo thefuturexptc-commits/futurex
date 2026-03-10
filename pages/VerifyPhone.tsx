@@ -150,6 +150,7 @@ export const VerifyPhone: React.FC = () => {
       window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(verifiedFlow));
       window.sessionStorage.setItem('checkout_phone_verified', phone);
       navigate('/payment', {
+        replace: true,
         state: verifiedFlow,
       });
     } catch (err: any) {

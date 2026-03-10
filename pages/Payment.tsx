@@ -7,13 +7,17 @@ import { CheckoutStepper } from '../components/CheckoutStepper';
 import { Address, CheckoutFlowState } from '../types';
 import { createOrder, updateUserAddresses } from '../services/backend';
 
+const LAST_ORDER_SUCCESS_KEY = 'last_order_success';
+
 export const Payment: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, updateUser } = useAuth();
-  const { items, totalPrice, clearCart } = useCart();
+  const { items, totalPrice } = useCart();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [paymentMethod, setPaymentMethod] = useState<'online' | 'cod'>('online');
+  const [orderSubmitting, setOrderSubmitting] = useState(false);
 
   const readPersistedFlow = (): CheckoutFlowState | null => {
     try {
@@ -53,7 +57,7 @@ export const Payment: React.FC = () => {
     return <Navigate to="/login?redirect=%2Fpayment" replace />;
   }
 
-  if (!addressForOrder || items.length === 0) {
+  if (!addressForOrder || (items.length === 0 && !orderSubmitting)) {
     return <Navigate to="/checkout" replace />;
   }
 
@@ -70,11 +74,49 @@ export const Payment: React.FC = () => {
     }
   };
 
+  const finalizeSuccessfulOrder = async (paymentStatus: 'Pending' | 'Paid') => {
+    setOrderSubmitting(true);
+    const order = await createOrder(
+      user.id,
+      items,
+      totalPrice,
+      addressForOrder,
+      {
+        phoneNumber: flowState.shippingDetails.phoneNumber,
+        paymentStatus,
+        shippingDetails: flowState.shippingDetails,
+      }
+    );
+
+    try {
+      await saveAddressIfNeeded(addressForOrder);
+    } catch (addressError) {
+      console.warn('Order placed, but address save failed:', addressError);
+    }
+
+    window.sessionStorage.removeItem('checkout_flow_state');
+    window.sessionStorage.removeItem('checkout_phone_verified');
+    window.sessionStorage.setItem(
+      LAST_ORDER_SUCCESS_KEY,
+      JSON.stringify({ orderId: order.id, paymentMethod })
+    );
+    navigate('/order-success', { replace: true, state: { orderId: order.id, paymentMethod } });
+  };
+
+  const placeOrder = async (paymentStatus: 'Pending' | 'Paid') => {
+    await finalizeSuccessfulOrder(paymentStatus);
+  };
+
   const handlePayment = async () => {
     setError('');
     setLoading(true);
 
     try {
+      if (paymentMethod === 'cod') {
+        await placeOrder('Pending');
+        return;
+      }
+
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
         amount: Number((totalPrice * 100).toFixed(0)),
@@ -88,22 +130,7 @@ export const Payment: React.FC = () => {
         },
         theme: { color: '#6366f1' },
         handler: async () => {
-          const order = await createOrder(
-            user.id,
-            items,
-            totalPrice,
-            addressForOrder,
-            {
-              phoneNumber: flowState.shippingDetails.phoneNumber,
-              paymentStatus: 'Paid',
-              shippingDetails: flowState.shippingDetails,
-            }
-          );
-          await saveAddressIfNeeded(addressForOrder);
-          window.sessionStorage.removeItem('checkout_flow_state');
-          window.sessionStorage.removeItem('checkout_phone_verified');
-          clearCart();
-          navigate('/order-success', { state: { orderId: order.id } });
+          await placeOrder('Paid');
         },
         modal: {
           ondismiss: () => {
@@ -133,6 +160,32 @@ export const Payment: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4 bg-white dark:bg-white/5 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-white/10">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Payment</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('online')}
+              className={`rounded-xl border p-4 text-left transition-colors ${
+                paymentMethod === 'online'
+                  ? 'border-primary-500 bg-primary-50 text-gray-900 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-gray-200 bg-white text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300'
+              }`}
+            >
+              <p className="font-semibold">Online Payment</p>
+              <p className="mt-1 text-sm opacity-80">Pay securely with Razorpay.</p>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPaymentMethod('cod')}
+              className={`rounded-xl border p-4 text-left transition-colors ${
+                paymentMethod === 'cod'
+                  ? 'border-primary-500 bg-primary-50 text-gray-900 dark:bg-primary-500/10 dark:text-white'
+                  : 'border-gray-200 bg-white text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300'
+              }`}
+            >
+              <p className="font-semibold">Cash on Delivery</p>
+              <p className="mt-1 text-sm opacity-80">Pay when your order arrives.</p>
+            </button>
+          </div>
           <div className="text-sm text-gray-700 dark:text-gray-200 space-y-1">
             <p><span className="font-semibold">Name:</span> {flowState.shippingDetails.name}</p>
             <p><span className="font-semibold">Phone:</span> +91 {flowState.shippingDetails.phoneNumber}</p>
@@ -143,7 +196,7 @@ export const Payment: React.FC = () => {
 
           {error && <p className="text-sm text-red-500">{error}</p>}
           <Button type="button" className="w-full sm:w-auto" onClick={handlePayment} isLoading={loading}>
-            Pay Now (Rs {totalPrice.toFixed(2)})
+            {paymentMethod === 'cod' ? `Place COD Order (Rs ${totalPrice.toFixed(2)})` : `Pay Now (Rs ${totalPrice.toFixed(2)})`}
           </Button>
         </div>
 

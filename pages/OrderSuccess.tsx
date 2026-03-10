@@ -1,11 +1,31 @@
-import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import React, { useEffect, useMemo } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
+import { useCart } from '../context/CartContext';
+
+const LAST_ORDER_SUCCESS_KEY = 'last_order_success';
 
 export const OrderSuccess: React.FC = () => {
   const location = useLocation();
-  const state = location.state as { orderId: string } | undefined;
-  const orderId = state?.orderId || 'Unknown';
+  const navigate = useNavigate();
+  const { clearCart } = useCart();
+  const state = location.state as { orderId: string; paymentMethod?: 'online' | 'cod' } | undefined;
+  const persistedState = useMemo(() => {
+    try {
+      const raw = window.sessionStorage.getItem(LAST_ORDER_SUCCESS_KEY);
+      return raw ? (JSON.parse(raw) as { orderId: string; paymentMethod?: 'online' | 'cod' }) : undefined;
+    } catch {
+      return undefined;
+    }
+  }, []);
+  const finalState = state || persistedState;
+  const orderId = finalState?.orderId || 'Unknown';
+  const paymentMethod = finalState?.paymentMethod || 'online';
+
+  useEffect(() => {
+    clearCart();
+    window.sessionStorage.removeItem(LAST_ORDER_SUCCESS_KEY);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-dark-bg">
@@ -20,7 +40,9 @@ export const OrderSuccess: React.FC = () => {
 
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4 font-display">Order Successful!</h1>
         <p className="text-gray-600 dark:text-gray-300 mb-8 text-lg">
-          Thank you for your purchase. Your order has been placed successfully and is being processed.
+          {paymentMethod === 'cod'
+            ? 'Your Cash on Delivery order has been placed successfully and will be confirmed on delivery.'
+            : 'Thank you for your purchase. Your order has been placed successfully and is being processed.'}
         </p>
 
         <div className="bg-gray-50 dark:bg-white/5 p-4 rounded-xl mb-8">
@@ -29,12 +51,12 @@ export const OrderSuccess: React.FC = () => {
         </div>
 
         <div className="space-y-3">
-          <Link to="/profile">
-            <Button className="w-full h-12">View Order Details</Button>
-          </Link>
-          <Link to="/">
-            <Button variant="outline" className="w-full h-12">Continue Shopping</Button>
-          </Link>
+          <Button className="w-full h-12" onClick={() => navigate('/profile')}>
+            View Order Details
+          </Button>
+          <Button variant="outline" className="w-full h-12" onClick={() => navigate('/')}>
+            Continue Shopping
+          </Button>
         </div>
       </div>
     </div>
