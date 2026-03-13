@@ -107,87 +107,112 @@ If your package arrives damaged or tampered, please take photos or videos while 
 Email: support@thefuturex.in
 Address: Virar East, Maharashtra, India
 Website: https://thefuturex.in`,
-  'returns-refund': `Return & Refund Policy
+  'returns-refund': `Return, Exchange & Warranty Policy
 
 TheFutureX
-
 Last updated: March 2026
 
-At TheFutureX, we strive to deliver high-quality products. If you experience an issue with your order, you may request a return, replacement, or refund according to the policy below.
+At TheFutureX, we are committed to providing high-quality products. This policy explains the conditions for product exchange, repair, and warranty coverage for products such as smart bands, smart rings, and bladeless fans.
 
-Return Eligibility
+1. Exchange Policy (No Return / No Refund)
 
-Customers can request a return within 7 days of receiving the product if:
-- the product is damaged during delivery
-- the product is defective or not working
-- the wrong item was delivered
-- accessories or parts are missing
+TheFutureX does not provide returns or refunds.
+If a product has a manufacturing defect or issue upon delivery, the product will be replaced with the same product model.
 
-The product must be returned in original packaging with all accessories.
+Customers can request an exchange within 7 days of delivery if the product has a fault caused during manufacturing or packaging.
 
-Required Proof for Returns (Important)
+Eligible issues include:
+- Product not turning on
+- Product damaged during shipping
+- Missing parts or accessories
+- Product not functioning correctly on first use
 
-To process a return or warranty claim, customers must provide both photo and video proof of the issue.
+If the issue is verified, the product will be exchanged for the same product model.
+
+2. Proof Required (Compulsory)
+
+To request an exchange, customers must provide both photo and video proof of the issue.
 
 Required proof includes:
-- clear photos of the product
-- a video showing the problem or defect
-- photos of packaging if the item arrived damaged
+- Clear photos of the product
+- A video showing the problem or defect
+- Photos or video of packaging if the product arrived damaged
 
-This helps our support team verify the issue quickly and prevents fraudulent claims.
+Requests without photo and video proof will not be approved.
 
-Requests without photo and video evidence may not be approved.
+3. 2-Pay Repair System
 
-Refund Process
+If a product develops an issue after the exchange period, we provide a 2-Pay repair support system.
 
-Once the returned product is received and inspected:
-- refunds will be processed within 7 business days
-- the refund will be issued to the original payment method
+Under this system:
+- The customer contacts our support team and reports the issue.
+- The customer sends the product to our service center using courier.
+- The customer pays the service or repair charges if required.
+- After repair, TheFutureX will courier the product back to the customer and cover the return shipping cost.
 
-Replacement Policy
+This system helps ensure that products with internal issues can still be repaired and returned to the customer.
 
-If the product is defective or damaged, customers may request a replacement instead of a refund, subject to availability.
+4. Warranty Policy
 
-Warranty Policy
+Smart Bands & Smart Rings
 
-All eligible products sold on TheFutureX include a 6-month limited warranty from the date of delivery.
+Smart bands and smart rings include a 6-month limited warranty from the date of delivery.
 
-The warranty covers internal manufacturing defects, such as:
-- motor malfunction
-- internal electronic issues
-- product not functioning under normal usage conditions
+The warranty covers:
+- device connection issues
+- internal electronic malfunction
+- product not functioning under normal usage
 
 The warranty does not cover:
-- physical damage caused by misuse
-- unauthorized repairs
-- damage caused by water or improper handling
+- physical damage
+- water damage unless specified
+- damage caused by misuse or unauthorized repair
 
-Warranty Claim Process
+Bladeless Fans
+
+Bladeless fans include a 1-year warranty on the motor and internal components from the date of delivery.
+
+The warranty covers:
+- motor malfunction
+- internal electrical faults
+- fan not operating correctly under normal use
+
+The warranty does not cover:
+- physical damage to the fan frame
+- improper installation
+- damage caused by misuse
+
+5. Warranty Claim Process
 
 To request warranty service, customers must provide:
 - Order ID
 - Product name
 - Description of the issue
-- photo and video proof of the problem
+- Photo and video proof of the problem
 
-Our support team will review the claim and guide the customer through repair, replacement, or further assistance.
+Our support team will review the request and guide the customer through repair or product exchange if applicable.
 
-Contact Us
+6. Customer Support
 
-For return or warranty requests:
+For exchange requests, warranty claims, or support, please contact us:
 
 TheFutureX
 
 Address
-322 Padmibai Tower
+Office No. 310, Padmibai Tower
 Station Road, Virar East
 Palghar, Maharashtra 401305
 India
 
-Email: thefuturex.ptc@gmail.com
-Phone: +91 8530340676
-Website: https://thefuturex.in`,
-  returns: `See the Return & Refund Policy for return eligibility, compulsory photo and video proof requirements, refunds, replacements, and warranty claims.`,
+Customer Support Phone
++91 8530340676
+
+Email
+support@thefuturex.in
+
+Website
+https://thefuturex.in`,
+  returns: `See the Return, Exchange & Warranty Policy for no-return exchange rules, compulsory photo and video proof, the 2-Pay repair system, and warranty coverage.`,
   privacy: `Privacy Policy
 
 At TheFutureX, accessible from https://thefuturex.in, protecting the privacy of our customers is one of our main priorities. This Privacy Policy document outlines the types of information that are collected and recorded by TheFutureX and how we use it.
