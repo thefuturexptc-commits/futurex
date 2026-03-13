@@ -107,55 +107,87 @@ If your package arrives damaged or tampered, please take photos or videos while 
 Email: support@thefuturex.in
 Address: Virar East, Maharashtra, India
 Website: https://thefuturex.in`,
-  'returns-refund': `Refund & Return Policy
+  'returns-refund': `Return & Refund Policy
 
-At TheFutureX, customer satisfaction is our priority. If you are not completely satisfied with your purchase, you may request a return or refund under the conditions mentioned below.
+TheFutureX
+
+Last updated: March 2026
+
+At TheFutureX, we strive to deliver high-quality products. If you experience an issue with your order, you may request a return, replacement, or refund according to the policy below.
 
 Return Eligibility
-You may request a return if:
-The product is damaged, defective, or incorrect.
-The return request is made within 7 days of delivery.
-The product is unused and in its original packaging.
-All accessories, manuals, and packaging materials are included.
-Returns requested after the allowed period may not be accepted.
 
-How to Request a Return
-To initiate a return request, please contact our support team with the following details:
-Order ID
-Reason for return
-Photos or unboxing video (if product is damaged or defective)
-Email: support@thefuturex.in
+Customers can request a return within 7 days of receiving the product if:
+- the product is damaged during delivery
+- the product is defective or not working
+- the wrong item was delivered
+- accessories or parts are missing
 
-Our support team will review your request and provide instructions for the return process.
+The product must be returned in original packaging with all accessories.
 
-Return Process
-Once the return request is approved:
-The customer will be informed about the return shipping process.
-The product must be packed securely in its original packaging.
-The product should be returned to the address provided by our support team.
+Required Proof for Returns (Important)
 
-Refund Policy
-After the returned product is received and inspected:
-If the return is approved, the refund will be processed within 5-7 business days.
-Refunds will be credited to the original payment method used during checkout.
-For Cash on Delivery (COD) orders, refunds may be processed through bank transfer or UPI.
+To process a return or warranty claim, customers must provide both photo and video proof of the issue.
 
-Non-Returnable Items
-The following cases may not qualify for return or refund:
-Products damaged due to misuse or improper handling
-Used products
-Products returned without original packaging
-Requests made after the return period
+Required proof includes:
+- clear photos of the product
+- a video showing the problem or defect
+- photos of packaging if the item arrived damaged
 
-Damaged or Defective Products
-If you receive a damaged or defective product, please report it within 24 hours of delivery with photos or videos for quick resolution.
+This helps our support team verify the issue quickly and prevents fraudulent claims.
+
+Requests without photo and video evidence may not be approved.
+
+Refund Process
+
+Once the returned product is received and inspected:
+- refunds will be processed within 7 business days
+- the refund will be issued to the original payment method
+
+Replacement Policy
+
+If the product is defective or damaged, customers may request a replacement instead of a refund, subject to availability.
+
+Warranty Policy
+
+All eligible products sold on TheFutureX include a 6-month limited warranty from the date of delivery.
+
+The warranty covers internal manufacturing defects, such as:
+- motor malfunction
+- internal electronic issues
+- product not functioning under normal usage conditions
+
+The warranty does not cover:
+- physical damage caused by misuse
+- unauthorized repairs
+- damage caused by water or improper handling
+
+Warranty Claim Process
+
+To request warranty service, customers must provide:
+- Order ID
+- Product name
+- Description of the issue
+- photo and video proof of the problem
+
+Our support team will review the claim and guide the customer through repair, replacement, or further assistance.
 
 Contact Us
-If you have any questions about refunds or returns, please contact us:
-Email: support@thefuturex.in
+
+For return or warranty requests:
+
+TheFutureX
+
+Address
+322 Padmibai Tower
+Station Road, Virar East
+Palghar, Maharashtra 401305
+India
+
+Email: thefuturex.ptc@gmail.com
 Phone: +91 8530340676
-Address: Office No. 310, Padmi Bai Tower, Virar East, Maharashtra, India`,
-  returns: `See Returns/Refund policy for complete return and refund details.`,
+Website: https://thefuturex.in`,
+  returns: `See the Return & Refund Policy for return eligibility, compulsory photo and video proof requirements, refunds, replacements, and warranty claims.`,
   privacy: `Privacy Policy
 
 At TheFutureX, accessible from https://thefuturex.in, protecting the privacy of our customers is one of our main priorities. This Privacy Policy document outlines the types of information that are collected and recorded by TheFutureX and how we use it.
