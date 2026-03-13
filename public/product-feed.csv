@@ -1,0 +1,4 @@
+id,title,description,link,image_link,price,availability,condition,brand
+bracelet001,Smart Health Bracelet,Smart wearable bracelet with heart rate SpO2 sleep tracking,https://thefuturex.in/products/smart-bracelet,https://thefuturex.in/images/bracelet.jpg,4999 INR,in_stock,new,TheFutureX
+ring001,Smart Ring,Smart health monitoring ring with sleep and stress tracking,https://thefuturex.in/products/smart-ring,https://thefuturex.in/images/ring.jpg,6999 INR,in_stock,new,TheFutureX
+fan001,Wall Mounted Bladeless Cooling & Heater Fan with Air Purifier,Bladeless cooling fan with heater and air purifier for smart homes,https://thefuturex.in/products/bladeless-fan,https://thefuturex.in/images/fan.jpg,10999 INR,in_stock,new,TheFutureX

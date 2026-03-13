@@ -10,6 +10,15 @@ export const OrderSuccess: React.FC = () => {
   const navigate = useNavigate();
   const { clearCart } = useCart();
   const state = location.state as { orderId: string; paymentMethod?: 'online' | 'cod' } | undefined;
+  const searchState = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const orderId = params.get('orderId') || undefined;
+    const paymentMethodParam = params.get('paymentMethod');
+    const paymentMethod = paymentMethodParam === 'cod' || paymentMethodParam === 'online'
+      ? paymentMethodParam
+      : undefined;
+    return orderId ? { orderId, paymentMethod } : undefined;
+  }, [location.search]);
   const persistedState = useMemo(() => {
     try {
       const raw = window.sessionStorage.getItem(LAST_ORDER_SUCCESS_KEY);
@@ -18,7 +27,7 @@ export const OrderSuccess: React.FC = () => {
       return undefined;
     }
   }, []);
-  const finalState = state || persistedState;
+  const finalState = state || searchState || persistedState;
   const orderId = finalState?.orderId || 'Unknown';
   const paymentMethod = finalState?.paymentMethod || 'online';
 

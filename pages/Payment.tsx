@@ -100,7 +100,10 @@ export const Payment: React.FC = () => {
       LAST_ORDER_SUCCESS_KEY,
       JSON.stringify({ orderId: order.id, paymentMethod })
     );
-    navigate('/order-success', { replace: true, state: { orderId: order.id, paymentMethod } });
+    navigate(`/order-success?orderId=${encodeURIComponent(order.id)}&paymentMethod=${encodeURIComponent(paymentMethod)}`, {
+      replace: true,
+      state: { orderId: order.id, paymentMethod },
+    });
   };
 
   const placeOrder = async (paymentStatus: 'Pending' | 'Paid') => {
