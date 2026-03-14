@@ -11,6 +11,9 @@ import { SupportAssistant } from './components/SupportAssistant';
 import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
 import { SiteFooter } from './components/SiteFooter';
 
+// ✅ META PIXEL
+import { initMetaPixel, trackPageView } from './services/Metapixel';
+
 const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Shop = React.lazy(() => import('./pages/Shop').then(module => ({ default: module.Shop })));
 const SmartBands = React.lazy(() => import('./pages/SmartBands').then(module => ({ default: module.SmartBands })));
@@ -35,6 +38,15 @@ const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, behavior: 'auto' });
+  }, [pathname]);
+  return null;
+};
+
+// ✅ Fires PageView on every route change
+const MetaPixelPageTracker: React.FC = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    trackPageView();
   }, [pathname]);
   return null;
 };
@@ -99,6 +111,11 @@ const App: React.FC = () => {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [loginRedirectPath, setLoginRedirectPath] = useState('/profile');
 
+  // ✅ Initialize Meta Pixel once on app mount
+  useEffect(() => {
+    initMetaPixel();
+  }, []);
+
   const openLogin = (redirectPath = '/profile') => {
     setLoginRedirectPath(redirectPath);
     setIsLoginOpen(true);
@@ -111,6 +128,8 @@ const App: React.FC = () => {
           <BrowserRouter>
             <AuthModalProvider value={{ openLogin }}>
               <ScrollToTop />
+              {/* ✅ Tracks every page navigation */}
+              <MetaPixelPageTracker />
               <FirstLoadAuthPrompt />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />

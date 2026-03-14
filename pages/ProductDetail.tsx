@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Product, ProductPublicReview, ProductVariantOption } from '../types';
 import { getProductById, getProducts } from '../services/backend';
+import { trackViewContent, trackAddToCart } from '../services/Metapixel';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { useCart } from '../context/CartContext';
@@ -75,6 +76,15 @@ export const ProductDetail: React.FC = () => {
     getProductById(id).then((p) => {
       setProduct(p);
       setLoading(false);
+      // ✅ META PIXEL: ViewContent
+      if (p) {
+        trackViewContent({
+          id: p.id,
+          name: p.name,
+          category: p.category,
+          price: p.salePrice ?? p.price,
+        });
+      }
     });
   }, [id]);
 
@@ -349,7 +359,17 @@ export const ProductDetail: React.FC = () => {
       return;
     }
     const configured = buildConfiguredProduct();
-    if (configured) addToCart(configured);
+    if (configured) {
+      addToCart(configured);
+      // ✅ META PIXEL: AddToCart
+      trackAddToCart({
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        price: product.salePrice ?? product.price,
+        quantity: configured.quantity ?? 1,
+      });
+    }
   };
 
   const handleBuyNow = () => {
@@ -361,6 +381,14 @@ export const ProductDetail: React.FC = () => {
     const configured = buildConfiguredProduct();
     if (!configured) return;
     addToCart(configured);
+    // ✅ META PIXEL: AddToCart (Buy Now path)
+    trackAddToCart({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      price: product.salePrice ?? product.price,
+      quantity: configured.quantity ?? 1,
+    });
     navigate('/checkout');
   };
 

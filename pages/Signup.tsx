@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { registerUser } from '../services/backend';
+import { trackCompleteRegistration } from '../services/Metapixel';
 import { Button } from '../components/ui/Button';
 
 export const Signup: React.FC = () => {
@@ -51,6 +52,8 @@ export const Signup: React.FC = () => {
     try {
       const user = await registerUser(email.trim(), password, phone);
       login(user);
+      // ✅ META PIXEL: CompleteRegistration
+      trackCompleteRegistration('email');
       navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
     } catch (err: any) {
       setError(err?.message || 'Registration failed');
