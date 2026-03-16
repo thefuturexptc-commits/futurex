@@ -8,6 +8,13 @@ import { Address, CheckoutFlowState } from '../types';
 import { createOrder, updateUserAddresses } from '../services/backend';
 
 const LAST_ORDER_SUCCESS_KEY = 'last_order_success';
+const ORDER_SOURCE_SESSION_KEY = 'tfx_order_source';
+
+const getOrderSourceFromSession = (): string => {
+  if (typeof window === 'undefined') return 'Website';
+  const stored = window.sessionStorage.getItem(ORDER_SOURCE_SESSION_KEY)?.trim();
+  return stored || 'Website';
+};
 
 export const Payment: React.FC = () => {
   const location = useLocation();
@@ -32,7 +39,7 @@ export const Payment: React.FC = () => {
   const phone = flowState?.phone?.replace(/\D/g, '').slice(0, 10) || '';
   const verifiedPhone = window.sessionStorage.getItem('checkout_phone_verified') || '';
 
-  const isPhoneVerified = Boolean(phone && verifiedPhone === phone);
+  const isPhoneVerified = Boolean((flowState?.phoneVerified && phone) || (phone && verifiedPhone === phone));
 
   const addressForOrder = useMemo<Address | null>(() => {
     if (!flowState?.shippingDetails) return null;
@@ -76,6 +83,12 @@ export const Payment: React.FC = () => {
 
   const finalizeSuccessfulOrder = async (paymentStatus: 'Pending' | 'Paid') => {
     setOrderSubmitting(true);
+    const verifiedFlow: CheckoutFlowState = {
+      ...(flowState as CheckoutFlowState),
+      phoneVerified: true,
+    };
+    window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(verifiedFlow));
+
     const order = await createOrder(
       user.id,
       items,
@@ -84,7 +97,9 @@ export const Payment: React.FC = () => {
       {
         phoneNumber: flowState.shippingDetails.phoneNumber,
         paymentStatus,
+        paymentMethod,
         shippingDetails: flowState.shippingDetails,
+        orderSource: getOrderSourceFromSession(),
       }
     );
 

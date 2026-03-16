@@ -372,7 +372,7 @@ export const ProductDetail: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-white pb-24 sm:pb-0">
+    <div className="min-h-screen bg-white dark:bg-dark-bg text-gray-900 dark:text-white pb-40 sm:pb-0">
       <div className="max-w-7xl mx-auto px-4 py-10 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           <div className="space-y-4">
@@ -420,7 +420,7 @@ export const ProductDetail: React.FC = () => {
               <p className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
                 Select Color {selectedVariant?.colorName ? `- ${selectedVariant.colorName}` : ''}
               </p>
-              <div className="flex flex-wrap gap-2 sm:gap-3">
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
                 {allVariants.map((variant) => (
                   <button
                     key={variant.colorName}
@@ -430,7 +430,7 @@ export const ProductDetail: React.FC = () => {
                       handleColorChange(variant);
                     }}
                     disabled={getVariantTotalStock(variant) <= 0}
-                    className={`text-left rounded-xl border p-2.5 sm:p-3 transition-all duration-200 w-[150px] sm:w-[170px] ${
+                    className={`text-left rounded-xl border p-2.5 sm:p-3 transition-all duration-200 w-full sm:w-[170px] min-w-0 ${
                       selectedColor === variant.colorName
                         ? 'border-primary-600 bg-primary-50 dark:bg-primary-900/20 shadow-sm'
                         : 'border-gray-300 dark:border-white/20 hover:border-primary-400'
@@ -755,14 +755,39 @@ export const ProductDetail: React.FC = () => {
           )}
         </section>
       </div>
-      <div className="sm:hidden fixed left-0 right-0 bottom-0 z-40 border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-bg/95 backdrop-blur px-4 py-3">
-        <div className="grid grid-cols-2 gap-2">
-          <Button className="h-11 rounded-xl" onClick={handleAddToCart} disabled={!canPurchase}>
-            Add to Cart
-          </Button>
-          <Button variant="secondary" className="h-11 rounded-xl" onClick={handleBuyNow} disabled={!canPurchase}>
-            Buy Now
-          </Button>
+      <div
+        className="sm:hidden fixed left-0 right-0 bottom-0 z-40 border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-bg/95 backdrop-blur px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+      >
+        <div className="mx-auto max-w-7xl space-y-3">
+          <div className="flex items-start justify-between gap-3 rounded-2xl border border-gray-200 dark:border-white/10 bg-gray-50/90 dark:bg-white/5 px-4 py-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-500 dark:text-gray-400">
+                Ready to Order
+              </p>
+              <p className="mt-1 truncate text-lg font-bold text-gray-900 dark:text-white">
+                Rs {currentPrice.toLocaleString()}
+              </p>
+            </div>
+            <div className="text-right">
+              <p className={`text-sm font-semibold ${canPurchase ? 'text-green-600' : 'text-red-600'}`}>
+                {canPurchase ? `${available} in stock` : 'Out of stock'}
+              </p>
+              {selectedVariant?.colorName ? (
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  {selectedVariant.colorName}{selectedSize ? ` | ${selectedSize}` : ''}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
+            <Button className="h-12 w-full rounded-xl text-base" onClick={handleAddToCart} disabled={!canPurchase}>
+              Add to Cart
+            </Button>
+            <Button variant="secondary" className="h-12 w-full rounded-xl text-base" onClick={handleBuyNow} disabled={!canPurchase}>
+              Buy Now
+            </Button>
+          </div>
         </div>
       </div>
     </div>

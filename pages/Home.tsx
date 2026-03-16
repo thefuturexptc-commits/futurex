@@ -595,13 +595,16 @@ export const Home: React.FC = () => {
                 <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Continue Shopping</p>
                 <h2 className="text-xl sm:text-3xl font-bold font-display mt-2">Recently Viewed</h2>
               </div>
-              <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate('/shop/all')}>
+              <Button variant="outline" size="sm" className="rounded-full shrink-0" onClick={() => navigate('/shop/all')}>
                 Browse All
               </Button>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+            <div className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-5 sm:overflow-visible">
               {recentlyViewedProducts.map((product) => (
-                <div key={product.id} className="min-w-0 rounded-2xl border border-cyan-500/20 bg-[#060b1a] p-1.5 sm:p-2 shadow-[0_14px_34px_-20px_rgba(34,211,238,0.4)]">
+                <div
+                  key={product.id}
+                  className="w-[78vw] min-w-[240px] shrink-0 min-[420px]:w-[62vw] sm:w-auto sm:min-w-0 rounded-2xl border border-cyan-500/20 bg-[#060b1a] p-1.5 sm:p-2 shadow-[0_14px_34px_-20px_rgba(34,211,238,0.4)]"
+                >
                   <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
                 </div>
               ))}

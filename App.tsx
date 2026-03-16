@@ -39,6 +39,77 @@ const ScrollToTop: React.FC = () => {
   return null;
 };
 
+const ORDER_SOURCE_SESSION_KEY = 'tfx_order_source';
+
+const normalizeOrderSource = (raw: string): string => {
+  const value = raw.trim().toLowerCase();
+  if (!value) return 'Website';
+  if (value.includes('meta ads') || value.includes('meta_ad') || value.includes('metaads')) return 'Meta Ads';
+  if (value.includes('instagram') || value === 'ig') return 'Instagram';
+  if (value.includes('facebook') || value === 'fb' || value.includes('meta')) return 'Facebook';
+  if (value.includes('whatsapp') || value === 'wa') return 'WhatsApp';
+  if (value.includes('youtube') || value === 'yt') return 'YouTube';
+  if (value.includes('google')) return 'Google';
+  if (value.includes('website') || value.includes('direct')) return 'Website';
+  if (value.includes('email')) return 'Email';
+  return raw.trim();
+};
+
+const OrderSourceTracker: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(location.search);
+    const explicitSource =
+      params.get('utm_source') ||
+      params.get('utm_platform') ||
+      params.get('campaign_source') ||
+      params.get('source') ||
+      params.get('src') ||
+      (params.has('fbclid') ? 'facebook' : '') ||
+      (params.has('igshid') ? 'instagram' : '');
+
+    if (explicitSource) {
+      window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, normalizeOrderSource(explicitSource));
+      return;
+    }
+
+    const existing = window.sessionStorage.getItem(ORDER_SOURCE_SESSION_KEY);
+    if (existing) return;
+
+    const referrer = document.referrer;
+    if (!referrer) {
+      window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'Website');
+      return;
+    }
+
+    try {
+      const referrerHost = new URL(referrer).hostname.toLowerCase();
+      if (referrerHost.includes('instagram')) {
+        window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'Instagram');
+      } else if (referrerHost.includes('facebook') || referrerHost.includes('fb.com')) {
+        window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'Facebook');
+      } else if (referrerHost.includes('whatsapp')) {
+        window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'WhatsApp');
+      } else if (referrerHost.includes('youtube')) {
+        window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'YouTube');
+      } else if (referrerHost.includes('google')) {
+        window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'Google');
+      } else if (referrerHost !== window.location.hostname) {
+        window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'Referral');
+      } else {
+        window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'Website');
+      }
+    } catch {
+      window.sessionStorage.setItem(ORDER_SOURCE_SESSION_KEY, 'Website');
+    }
+  }, [location.search]);
+
+  return null;
+};
+
 const FirstLoadAuthPrompt: React.FC = () => {
   const { user, isAuthReady } = useAuth();
   const { openLogin } = useAuthModal();
@@ -111,6 +182,7 @@ const App: React.FC = () => {
           <BrowserRouter>
             <AuthModalProvider value={{ openLogin }}>
               <ScrollToTop />
+              <OrderSourceTracker />
               <FirstLoadAuthPrompt />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />
