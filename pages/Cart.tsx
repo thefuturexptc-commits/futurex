@@ -44,7 +44,7 @@ export const Cart: React.FC = () => {
               <div className="flex-1">
                 <h3 className="font-bold text-sm sm:text-lg text-gray-900 dark:text-white line-clamp-2">{item.name}</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm">{item.category}</p>
-                <div className="font-bold text-primary-600 mt-1">Rs {item.price}</div>
+                <div className="font-bold text-primary-600 mt-1">₹{item.price.toFixed(2)}</div>
               </div>
 
               <div className="flex flex-col items-end space-y-2">
@@ -64,11 +64,11 @@ export const Cart: React.FC = () => {
           <div className="space-y-3 mb-6">
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Subtotal</span>
-              <span>Rs {totalPrice.toFixed(2)}</span>
+              <span>₹{totalPrice.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Tax (8%)</span>
-              <span>Rs {(totalPrice * 0.08).toFixed(2)}</span>
+              <span>₹{(totalPrice * 0.08).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-gray-600 dark:text-gray-400">
               <span>Shipping</span>
@@ -76,7 +76,7 @@ export const Cart: React.FC = () => {
             </div>
             <div className="border-t border-gray-200 dark:border-white/10 pt-3 flex justify-between font-bold text-lg text-gray-900 dark:text-white">
               <span>Total</span>
-              <span>Rs {(totalPrice * 1.08).toFixed(2)}</span>
+              <span>₹{(totalPrice * 1.08).toFixed(2)}</span>
             </div>
           </div>
           <Button className="w-full" size="lg" onClick={handleCheckout}>Proceed to Checkout</Button>
@@ -86,7 +86,7 @@ export const Cart: React.FC = () => {
       <div className="sm:hidden fixed left-0 right-0 bottom-0 z-40 border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-bg/95 backdrop-blur px-4 py-3">
         <div className="flex items-center justify-between text-sm mb-2 text-gray-700 dark:text-gray-200">
           <span>Total</span>
-          <span className="font-bold text-gray-900 dark:text-white">Rs {(totalPrice * 1.08).toFixed(2)}</span>
+          <span className="font-bold text-gray-900 dark:text-white">₹{(totalPrice * 1.08).toFixed(2)}</span>
         </div>
         <Button className="w-full h-11 rounded-xl" onClick={handleCheckout}>Proceed to Checkout</Button>
       </div>

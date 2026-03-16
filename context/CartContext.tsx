@@ -4,8 +4,8 @@ import { CartItem, Product } from '../types';
 interface CartContextType {
   items: CartItem[];
   addToCart: (product: Product, quantity?: number) => void;
-  removeFromCart: (productId: string) => void;
-  updateQuantity: (productId: string, quantity: number) => void;
+  removeFromCart: (productId: string, selectedColorName?: string, price?: number) => void;
+  updateQuantity: (productId: string, quantity: number, selectedColorName?: string, price?: number) => void;
   clearCart: () => void;
   totalItems: number;
   totalPrice: number;
@@ -59,13 +59,20 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsCartOpen(true);
   };
 
-  const removeFromCart = (productId: string) => {
-    setItems(prev => prev.filter(item => item.id !== productId));
+  const isSameVariant = (item: CartItem, id: string, colorName?: string, price?: number) =>
+    item.id === id &&
+    (colorName === undefined || (item.selectedColorName || '') === (colorName || '')) &&
+    (price === undefined || Number(item.price) === Number(price));
+
+  const removeFromCart = (productId: string, selectedColorName?: string, price?: number) => {
+    setItems(prev => prev.filter(item => !isSameVariant(item, productId, selectedColorName, price)));
   };
 
-  const updateQuantity = (productId: string, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number, selectedColorName?: string, price?: number) => {
     if (quantity < 1) return;
-    setItems(prev => prev.map(item => item.id === productId ? { ...item, quantity } : item));
+    setItems(prev => prev.map(item =>
+      isSameVariant(item, productId, selectedColorName, price) ? { ...item, quantity } : item
+    ));
   };
 
   const clearCart = () => setItems([]);

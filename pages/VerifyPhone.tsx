@@ -55,9 +55,10 @@ export const VerifyPhone: React.FC = () => {
   useEffect(() => {
     if (!currentFlow || !phone) return;
     const verifiedPhone = window.sessionStorage.getItem('checkout_phone_verified') || '';
-    if (verifiedPhone !== phone) return;
+    if (verifiedPhone !== phone && !currentFlow.phoneVerified) return;
     const verifiedFlow: CheckoutFlowState = { ...currentFlow, phoneVerified: true };
     window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(verifiedFlow));
+    window.sessionStorage.setItem('checkout_phone_verified', phone);
     navigate('/payment', { replace: true, state: verifiedFlow });
   }, [currentFlow, phone, navigate]);
 

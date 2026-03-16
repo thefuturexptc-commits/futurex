@@ -46,15 +46,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) return;
-      const storedUser = localStorage.getItem('aura_active_user');
-      if (storedUser) {
-        setUser(null);
-        localStorage.removeItem('aura_active_user');
+      // Only clear the local session if Firebase explicitly signs the user out
+      // (firebaseUser is null) AND auth is fully initialized (not still loading).
+      // We guard with isAuthReady to avoid wiping a valid local session on
+      // the very first emission before Firebase has resolved its state.
+      if (!firebaseUser && isAuthReady) {
+        const storedUser = localStorage.getItem('aura_active_user');
+        if (storedUser) {
+          setUser(null);
+          localStorage.removeItem('aura_active_user');
+        }
       }
     });
     return () => unsubscribe();
-  }, []);
+  }, [isAuthReady]);
 
   const login = (userData: User) => {
     const sanitized = sanitizeUserForStorage(userData);

@@ -129,6 +129,7 @@ export const Checkout: React.FC = () => {
     setError('');
     const flowState: CheckoutFlowState = {
       phone: phoneDigits,
+      phoneVerified: window.sessionStorage.getItem('checkout_phone_verified') === phoneDigits,
       shippingDetails: {
         ...shippingDetails,
         phoneNumber: phoneDigits,
@@ -143,6 +144,10 @@ export const Checkout: React.FC = () => {
       totalValue: totalPrice,
     });
 
+    if (flowState.phoneVerified) {
+      navigate('/payment', { replace: true, state: flowState });
+      return;
+    }
     navigate('/verify-phone', { replace: true, state: flowState });
   };
 

@@ -22,7 +22,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const theme: Theme = 'dark';
+  const [theme, setTheme] = useState<Theme>('dark');
   const [primaryColor, setPrimaryColor] = useState('#0ea5e9');
   const [logoUrl, setLogoUrl] = useState('');
   const [socialLinks, setSocialLinks] = useState<NonNullable<WebsiteSettings['socialLinks']>>(DEFAULT_SOCIAL_LINKS);
@@ -56,9 +56,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove('light');
-    root.classList.add('dark');
-    localStorage.setItem('aura_theme', 'dark');
+    const savedTheme = (localStorage.getItem('aura_theme') as Theme) || 'dark';
+    setTheme(savedTheme);
+    root.classList.remove('light', 'dark');
+    root.classList.add(savedTheme);
 
     let localDraft: Partial<WebsiteSettings> = {};
     try {
@@ -126,7 +127,14 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.style.setProperty('--color-primary-50', '240 249 255');
   }, [primaryColor]);
 
-  const toggleTheme = () => {};
+  const toggleTheme = () => {
+    const newTheme: Theme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+    const root = window.document.documentElement;
+    root.classList.remove('light', 'dark');
+    root.classList.add(newTheme);
+    localStorage.setItem('aura_theme', newTheme);
+  };
 
   return (
     <ThemeContext.Provider

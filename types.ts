@@ -185,8 +185,10 @@ export interface Order {
   shippingAddress: Address;
   phoneNumber?: string;
   paymentStatus?: 'Pending' | 'Paid' | 'Failed';
+  paymentMethod?: 'online' | 'cod';
   shippingDetails?: CheckoutShippingDetails;
   createdAt?: string;
+  orderSource?: string;
 }
 
 export interface WebsiteSettings {

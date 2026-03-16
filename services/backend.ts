@@ -1712,20 +1712,29 @@ export const createOrder = async (
   items: any[],
   total: number,
   address: Address,
-  meta?: { phoneNumber?: string; paymentStatus?: 'Pending' | 'Paid' | 'Failed'; shippingDetails?: CheckoutShippingDetails }
+  meta?: {
+    phoneNumber?: string;
+    paymentStatus?: 'Pending' | 'Paid' | 'Failed';
+    paymentMethod?: 'online' | 'cod';
+    shippingDetails?: CheckoutShippingDetails;
+    orderSource?: string;
+  }
 ): Promise<Order> => {
+  const placedAt = new Date().toISOString();
   const newOrder: Order = {
     id: `ORD-${Date.now()}`,
     userId,
     items,
     total,
     status: 'Processing',
-    date: new Date().toISOString(),
+    date: placedAt,
     shippingAddress: address,
     shippingDetails: meta?.shippingDetails,
     phoneNumber: meta?.phoneNumber,
     paymentStatus: meta?.paymentStatus || 'Paid',
-    createdAt: new Date().toISOString(),
+    paymentMethod: meta?.paymentMethod,
+    createdAt: placedAt,
+    orderSource: meta?.orderSource || 'Website',
   };
 
   const cleanOrder = deepSanitize(newOrder);
