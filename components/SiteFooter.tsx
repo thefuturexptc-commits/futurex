@@ -67,7 +67,7 @@ export const SiteFooter: React.FC = () => {
         </div>
 
         <div className="mt-8 pt-6 border-t border-white/10 text-center text-sm text-gray-400 space-y-1">
-          <p>&copy; {new Date().getFullYear()}TheFutureX | Powered by PTCGRAM Private Limited</p>
+          <p>&copy; {new Date().getFullYear()} TheFutureX | Powered by PTCGRAM Private Limited</p>
         </div>
       </div>
     </footer>
