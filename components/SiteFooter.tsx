@@ -67,8 +67,7 @@ export const SiteFooter: React.FC = () => {
         </div>
 
         <div className="mt-8 pt-6 border-t border-white/10 text-center text-sm text-gray-400 space-y-1">
-          <p>&copy; {new Date().getFullYear()} TheFutureX. Premium Smart Technology.</p>
-          <p>TheFutureX (TFX) is a brand of PTCGram. PTCGram is the parent company of TheFutureX.</p>
+          <p>&copy; {new Date().getFullYear()} Powered by PTCGRAM Private Limited</p>
         </div>
       </div>
     </footer>
