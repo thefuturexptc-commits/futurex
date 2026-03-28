@@ -6,6 +6,7 @@ import { trackCompleteRegistration } from '../services/Metapixel';
 import { Button } from '../components/ui/Button';
 
 export const Signup: React.FC = () => {
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
@@ -28,13 +29,25 @@ export const Signup: React.FC = () => {
     return /^\d{10}$/.test(digits) || /^91\d{10}$/.test(digits) || /^0\d{10}$/.test(digits);
   };
 
+  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
+    if (!name.trim()) {
+      setError('Enter your full name');
+      setLoading(false);
+      return;
+    }
     if (!email.trim()) {
       setError('Enter email address');
+      setLoading(false);
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError('Enter a valid email address');
       setLoading(false);
       return;
     }
@@ -50,7 +63,7 @@ export const Signup: React.FC = () => {
     }
 
     try {
-      const user = await registerUser(email.trim(), password, phone);
+      const user = await registerUser(email.trim(), password, phone, name.trim());
       login(user);
       // ✅ META PIXEL: CompleteRegistration
       trackCompleteRegistration('email');
@@ -75,6 +88,20 @@ export const Signup: React.FC = () => {
           {error && <div className="text-red-500 text-sm text-center bg-red-100 p-2 rounded">{error}</div>}
 
           <div className="rounded-md shadow-sm space-y-4">
+            <div>
+              <label htmlFor="full-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
+              <input
+                id="full-name"
+                name="name"
+                type="text"
+                required
+                className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
+                placeholder="Your full name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+
             <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
               <input

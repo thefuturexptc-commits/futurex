@@ -571,11 +571,14 @@ export const ProductDetail: React.FC = () => {
 
           {activeDetailTab === 'description' && (
             <div className="rounded-xl border border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-white/5 p-4">
-              <p className="text-sm leading-7 sm:leading-8 text-gray-700 dark:text-gray-300">
-                {isDescriptionExpanded || descriptionText.length <= 400
-                  ? descriptionText
-                  : `${descriptionText.slice(0, 400).trim()}...`}
-              </p>
+              {product.description ? (
+                <div
+                  className={`prose prose-sm dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-7 ${!isDescriptionExpanded && descriptionText.length > 400 ? 'line-clamp-6' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              ) : (
+                <p className="text-sm text-gray-500 dark:text-gray-400">No description available.</p>
+              )}
               {descriptionText.length > 400 && (
                 <button
                   type="button"
@@ -760,7 +763,7 @@ export const ProductDetail: React.FC = () => {
                     }
                     className="rounded-lg border border-gray-300 dark:border-white/20 px-4 py-2 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-white/5 transition"
                   >
-                    {canAddMoreReviews ? 'Show More Reviews' : canShowLessReviews ? 'Show Less' : 'Show More Reviews'}
+                  {visibleReviewCount < reviews.length ? 'Show More Reviews' : 'Show Less'}
                   </button>
                 </div>
               )}

@@ -57,12 +57,13 @@ We are always here to help. If you have any questions about our products, orders
 
 **CUSTOMER SUPPORT**
 Email: support@thefuturex.in
+Contact Number: +91 85303 40676
 
 For order-related queries, please include your Order ID in your email so we can assist you more quickly.
 
 **BUSINESS ADDRESS**
 TheFutureX
-Office No. 310, Padmi Bai Tower
+Office No. 322, Padmi Bai Tower
 Virar East, Maharashtra
 India
 

@@ -820,7 +820,7 @@ export const deleteCategory = async (category: string): Promise<void> => {
 
 // --- Auth Service ---
 
-export const registerUser = async (email: string, password: string, phone: string): Promise<User> => {
+export const registerUser = async (email: string, password: string, phone: string, name?: string): Promise<User> => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhone = normalizeIndianPhone(phone);
     const nationalPhone = getIndianNationalPhone(phone);
@@ -857,7 +857,7 @@ export const registerUser = async (email: string, password: string, phone: strin
 
     const newUser: User = {
       id: `user_${Date.now()}`,
-      name: normalizedEmail.split('@')[0] || 'User',
+      name: (name && name.trim()) ? name.trim() : (normalizedEmail.split('@')[0] || 'User'),
       email: normalizedEmail,
       phone: normalizedPhone,
       role: 'user',

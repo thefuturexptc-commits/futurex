@@ -129,7 +129,7 @@ export const Home: React.FC = () => {
     event.preventDefault();
     handleShopNavigation(categoryPath);
   };
-  
+
   const handleHorizontalWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
     if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
     event.currentTarget.scrollLeft += event.deltaY;
@@ -155,41 +155,41 @@ export const Home: React.FC = () => {
     navigate(offerPath);
   };
 
-  useEffect(() => {
-    if (loading) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const setupAutoGlide = (
-      scrollerRef: React.MutableRefObject<HTMLDivElement | null>,
-      speedPxPerMs: number
-    ) => {
-      const scroller = scrollerRef.current;
-      if (!scroller) return () => {};
-      let rafId = 0;
-      let lastTs = 0;
-      const tick = (ts: number) => {
-        const current = scrollerRef.current;
-        if (!current) return;
-        if (!lastTs) lastTs = ts;
-        const delta = Math.min(ts - lastTs, 32);
-        lastTs = ts;
-        const maxScroll = current.scrollWidth - current.clientWidth;
-        if (maxScroll > 0) {
-          current.scrollLeft += delta * speedPxPerMs;
-          if (current.scrollLeft >= maxScroll) current.scrollLeft = 0;
-        }
-        rafId = window.requestAnimationFrame(tick);
-      };
-      rafId = window.requestAnimationFrame(tick);
-      return () => window.cancelAnimationFrame(rafId);
-    };
+  // useEffect(() => {
+  //   if (loading) return;
+  //   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  //   const setupAutoGlide = (
+  //     scrollerRef: React.MutableRefObject<HTMLDivElement | null>,
+  //     speedPxPerMs: number
+  //   ) => {
+  //     const scroller = scrollerRef.current;
+  //     if (!scroller) return () => {};
+  //     let rafId = 0;
+  //     let lastTs = 0;
+  //     const tick = (ts: number) => {
+  //       const current = scrollerRef.current;
+  //       if (!current) return;
+  //       if (!lastTs) lastTs = ts;
+  //       const delta = Math.min(ts - lastTs, 32);
+  //       lastTs = ts;
+  //       const maxScroll = current.scrollWidth - current.clientWidth;
+  //       if (maxScroll > 0) {
+  //         current.scrollLeft += delta * speedPxPerMs;
+  //         if (current.scrollLeft >= maxScroll) current.scrollLeft = 0;
+  //       }
+  //       rafId = window.requestAnimationFrame(tick);
+  //     };
+  //     rafId = window.requestAnimationFrame(tick);
+  //     return () => window.cancelAnimationFrame(rafId);
+  //   };
 
-    const cleanupBest = setupAutoGlide(bestSellerScrollerRef, 0.05);
-    const cleanupFeatured = setupAutoGlide(featuredScrollerRef, 0.04);
-    return () => {
-      cleanupBest();
-      cleanupFeatured();
-    };
-  }, [loading, bestSellersForSlider.length, featuredProductsForSlider.length]);
+  //   const cleanupBest = setupAutoGlide(bestSellerScrollerRef, 0.05);
+  //   const cleanupFeatured = setupAutoGlide(featuredScrollerRef, 0.04);
+  //   return () => {
+  //     cleanupBest();
+  //     cleanupFeatured();
+  //   };
+  // }, [loading, bestSellersForSlider.length, featuredProductsForSlider.length]);
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -342,10 +342,10 @@ export const Home: React.FC = () => {
   // Helper to get route from category name
   const getCategoryRoute = (cat: string) => {
     const map: Record<string, string> = {
-        'Smart Bands': '/smart-bands',
-        'Smart Rings': '/smart-rings',
-        'Smart Fans': '/smart-fans',
-        'Smart Monitoring': '/smart-monitoring'
+      'Smart Bands': '/smart-bands',
+      'Smart Rings': '/smart-rings',
+      'Smart Fans': '/smart-fans',
+      'Smart Monitoring': '/smart-monitoring'
     };
     return map[cat] || '/shop/all';
   };
@@ -371,41 +371,41 @@ export const Home: React.FC = () => {
       )}
       {/* Hero Section */}
       <section className="relative min-h-[500px] sm:min-h-[620px] py-14 sm:py-20 flex items-center justify-center overflow-hidden bg-black text-gray-900 dark:text-white animate-fade-in-up">
-        
+
         {/* Dynamic Background */}
         <div className="absolute inset-0 bg-black transition-colors duration-500">
-           <div
-             className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-85 animate-pulse"
-             style={{ backgroundImage: "url('/hero-frame-tech.svg')", animationDuration: '9s' }}
-             aria-hidden="true"
-           ></div>
-           <div
-             className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-15 animate-pulse"
-             style={{ backgroundImage: "url('/hero-frame-tech.svg')" }}
-             aria-hidden="true"
-           ></div>
-           <div
-             className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-blue-300/5 to-cyan-400/0 animate-pulse"
-             style={{ animationDuration: '7s' }}
-             aria-hidden="true"
-           ></div>
-           <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-black/60"></div>
-           <div className="absolute -top-12 left-4 sm:left-10 w-40 sm:w-72 h-40 sm:h-72 rounded-full bg-cyan-300/10 blur-3xl animate-float-slow"></div>
-           <div className="absolute -bottom-10 right-2 sm:right-12 w-44 sm:w-80 h-44 sm:h-80 rounded-full bg-blue-400/12 blur-3xl animate-float-slow" style={{ animationDelay: '1.4s' }}></div>
+          <div
+            className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-85 animate-pulse"
+            style={{ backgroundImage: "url('/hero-frame-tech.svg')", animationDuration: '9s' }}
+            aria-hidden="true"
+          ></div>
+          <div
+            className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-15 animate-pulse"
+            style={{ backgroundImage: "url('/hero-frame-tech.svg')" }}
+            aria-hidden="true"
+          ></div>
+          <div
+            className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-blue-300/5 to-cyan-400/0 animate-pulse"
+            style={{ animationDuration: '7s' }}
+            aria-hidden="true"
+          ></div>
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-black/60"></div>
+          <div className="absolute -top-12 left-4 sm:left-10 w-40 sm:w-72 h-40 sm:h-72 rounded-full bg-cyan-300/10 blur-3xl animate-float-slow"></div>
+          <div className="absolute -bottom-10 right-2 sm:right-12 w-44 sm:w-80 h-44 sm:h-80 rounded-full bg-blue-400/12 blur-3xl animate-float-slow" style={{ animationDelay: '1.4s' }}></div>
         </div>
 
         {/* Hero Content */}
         <div className="relative z-10 container mx-auto px-3 sm:px-4 text-center">
           <div className="animate-fade-in-up space-y-4 sm:space-y-6 max-w-5xl mx-auto">
-            
+
             {/* Tech Badge */}
             <div className="flex justify-center mb-5 sm:mb-8">
-                <div className="glass-card px-3 sm:px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-2 sm:gap-3 shadow-lg max-w-full">
-                   <div className={`w-2 h-2 rounded-full animate-pulse ${activeMood.dot}`}></div>
-                   <span className="text-[9px] sm:text-xs font-bold tracking-[0.17em] sm:tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display whitespace-normal sm:whitespace-nowrap">
-                      Future Ready - Series X
-                   </span>
-                </div>
+              <div className="glass-card px-3 sm:px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-2 sm:gap-3 shadow-lg max-w-full">
+                <div className={`w-2 h-2 rounded-full animate-pulse ${activeMood.dot}`}></div>
+                <span className="text-[9px] sm:text-xs font-bold tracking-[0.17em] sm:tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display whitespace-normal sm:whitespace-nowrap">
+                  Future Ready - Series X
+                </span>
+              </div>
             </div>
 
             {/* Main Headline */}
@@ -449,46 +449,46 @@ export const Home: React.FC = () => {
       {/* Floating Category Cards - Overlapping Hero */}
       <section className="relative z-20 pt-2 pb-12 sm:pb-14 px-4 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
             {['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'].map((cat, idx) => (
-                <Link
-                  key={cat}
-                  to={getCategoryRoute(cat)}
-                  onClick={(event) => handleProtectedCategoryClick(event, getCategoryRoute(cat))}
-                  className={`group relative aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer border border-cyan-500/20 bg-[#060b1a] transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_18px_40px_-20px_rgba(34,211,238,0.45)] ${activeMood.categoryGlow} animate-fade-in-up`}
-                  style={{ animationDelay: `${idx * 90}ms` }}
-                >
+              <Link
+                key={cat}
+                to={getCategoryRoute(cat)}
+                onClick={(event) => handleProtectedCategoryClick(event, getCategoryRoute(cat))}
+                className={`group relative aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer border border-cyan-500/20 bg-[#060b1a] transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_18px_40px_-20px_rgba(34,211,238,0.45)] ${activeMood.categoryGlow} animate-fade-in-up`}
+                style={{ animationDelay: `${idx * 90}ms` }}
+              >
                 {/* Image */}
                 <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800">
-                    <img 
-                        src={categoryCardImages[cat] || `https://picsum.photos/seed/${cat}tech/500/700`} 
-                        alt={cat} 
-                        loading="lazy"
-                        decoding="async"
-                        sizes="(max-width: 640px) 88vw, (max-width: 1024px) 44vw, 25vw"
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-[0.7] saturate-125"
-                    />
+                  <img
+                    src={categoryCardImages[cat] || `https://picsum.photos/seed/${cat}tech/500/700`}
+                    alt={cat}
+                    loading="lazy"
+                    decoding="async"
+                    sizes="(max-width: 640px) 88vw, (max-width: 1024px) 44vw, 25vw"
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-[0.7] saturate-125"
+                  />
                 </div>
-                
+
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-[#050910] via-[#070d18]/40 to-transparent opacity-100 transition-opacity"></div>
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-300/5 to-blue-400/0 opacity-70"></div>
-                
+
                 {/* Content */}
                 <div className="absolute bottom-0 left-0 w-full p-3 sm:p-5">
-                    <div className="flex justify-between items-end">
-                        <div>
-                            <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5 font-display text-cyan-300/90">Series 0{idx + 1}</p>
-                            <h3 className="text-xs sm:text-lg md:text-2xl font-bold tracking-tight text-white leading-tight font-display">{cat}</h3>
-                        </div>
-                        <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-300/15 border border-cyan-200/40 flex items-center justify-center shadow-lg transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                            <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                        </div>
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5 font-display text-cyan-300/90">Series 0{idx + 1}</p>
+                      <h3 className="text-xs sm:text-lg md:text-2xl font-bold tracking-tight text-white leading-tight font-display">{cat}</h3>
                     </div>
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-300/15 border border-cyan-200/40 flex items-center justify-center shadow-lg transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </div>
+                  </div>
                 </div>
-                </Link>
+              </Link>
             ))}
-            </div>
+          </div>
         </div>
       </section>
 
@@ -497,32 +497,36 @@ export const Home: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-                <span className={`font-bold tracking-widest uppercase text-xs font-display mb-2 block ${activeMood.sectionText}`}>Customer Favorites</span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
+              <span className={`font-bold tracking-widest uppercase text-xs font-display mb-2 block ${activeMood.sectionText}`}>Customer Favorites</span>
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
             </div>
             <button onClick={() => handleShopNavigation('/shop/all')} className={`group flex items-center gap-2 text-gray-600 dark:text-gray-300 ${activeMood.sectionHoverText} font-medium transition-colors font-display tracking-wide`}>
-              VIEW ALL 
-              <span className="group-hover:translate-x-1 transition-transform">{'->'}</span>
+              VIEW ALL
+              {/* <span className="group-hover:translate-x-1 transition-transform">{'->'}</span> */}
             </button>
           </div>
-          
+
           {loading ? (
-             <div className="flex justify-center py-20">
-                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-             </div>
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            </div>
           ) : (
             <div className="relative">
               <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
               <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
-              <div
+              {/* <div
                 ref={bestSellerScrollerRef}
                 onWheel={handleHorizontalWheel}
                 className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
-              >
+              > */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {bestSellersForSlider.map((product, idx) => (
                   <div
-                    key={`${product.id}_${idx}`}
-                    className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide"
+                    // key={`${product.id}_${idx}`}
+                    // className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide"
+
+                    key={product.id}
+                    className="w-full opacity-0 home-product-slide"
                     style={{ ['--reveal-delay' as string]: `${idx * 120}ms` }}
                   >
                     <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
@@ -534,58 +538,61 @@ export const Home: React.FC = () => {
         </div>
       </section>
       <div className="h-10 bg-gradient-to-b from-transparent via-primary-100/40 to-transparent dark:via-primary-900/10" />
-      
+
       {/* Featured / New Arrivals Section */}
       <section className="py-10 sm:py-16 bg-gray-50 dark:bg-dark-surface/40 relative border-y border-gray-200 dark:border-white/5 text-gray-900 dark:text-white animate-fade-in-up">
-          <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none"></div>
-          <div className="max-w-7xl mx-auto px-4 relative z-10">
-              <div className="text-center mb-10">
-                 <span className="inline-block py-1.5 px-4 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold tracking-widest uppercase mb-4 shadow-sm border border-purple-200/50 dark:border-purple-700/30 font-display">
-                    Just Dropped
-                 </span>
-                 <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">New Arrivals</h2>
-                 <p className="mt-4 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light text-lg">
-                    Cutting-edge technology designed to seamlessly integrate into your lifestyle.
-                 </p>
-              </div>
-
-              {loading ? (
-                 <div className="flex justify-center py-20">
-                     <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-                 </div>
-              ) : (
-                <div className="relative">
-                  <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
-                  <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
-                  <div
-                    ref={featuredScrollerRef}
-                    onWheel={handleHorizontalWheel}
-                    className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
-                  >
-                    {featuredProductsForSlider.map((product, idx) => (
-                      <div
-                        key={`${product.id}_${idx}`}
-                        className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide relative"
-                        style={{ ['--reveal-delay' as string]: `${idx * 120}ms` }}
-                      >
-                        <div
-                          className={`absolute top-3 left-3 z-20 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider ${getArrivalHighlight(product).className}`}
-                        >
-                          {getArrivalHighlight(product).label}
-                        </div>
-                        <div className="hidden sm:block absolute -inset-1 rounded-3xl bg-gradient-to-r from-rose-500/30 via-fuchsia-500/20 to-cyan-500/30 blur-xl opacity-80 pointer-events-none" />
-                        <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              <div className="mt-10 flex justify-center">
-                <Button onClick={() => handleShopNavigation('/shop/all')} variant="outline" className="rounded-full px-8 py-3">
-                  View All New Arrivals
-                </Button>
-              </div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none"></div>
+        <div className="max-w-7xl mx-auto px-4 relative z-10">
+          <div className="text-center mb-10">
+            <span className="inline-block py-1.5 px-4 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold tracking-widest uppercase mb-4 shadow-sm border border-purple-200/50 dark:border-purple-700/30 font-display">
+              Just Dropped
+            </span>
+            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">New Arrivals</h2>
+            <p className="mt-4 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light text-lg">
+              Cutting-edge technology designed to seamlessly integrate into your lifestyle.
+            </p>
           </div>
+
+          {loading ? (
+            <div className="flex justify-center py-20">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
+              <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
+              {/* <div
+                ref={featuredScrollerRef}
+                onWheel={handleHorizontalWheel}
+                className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
+              > */}
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                {featuredProductsForSlider.map((product, idx) => (
+                  <div
+                    // key={`${product.id}_${idx}`}
+                    // className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide relative"
+                    key={product.id}
+                    className="w-full opacity-0 home-product-slide"
+                    style={{ ['--reveal-delay' as string]: `${idx * 120}ms` }}
+                  >
+                    <div
+                      className={`absolute top-3 left-3 z-20 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider ${getArrivalHighlight(product).className}`}
+                    >
+                      {getArrivalHighlight(product).label}
+                    </div>
+                    <div className="hidden sm:block absolute -inset-1 rounded-3xl bg-gradient-to-r from-rose-500/30 via-fuchsia-500/20 to-cyan-500/30 blur-xl opacity-80 pointer-events-none" />
+                    <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="mt-10 flex justify-center">
+            <Button onClick={() => handleShopNavigation('/shop/all')} variant="outline" className="rounded-full px-8 py-3">
+              View All New Arrivals
+            </Button>
+          </div>
+        </div>
       </section>
       {recentlyViewedProducts.length > 0 && (
         <section className="py-10 sm:py-16 bg-[#040813] dark:bg-[#03060f] border-y border-cyan-500/10 text-gray-100 dark:text-white animate-fade-in-up">
@@ -661,7 +668,7 @@ export const Home: React.FC = () => {
                 className="inline-flex items-center gap-2 rounded-full bg-gray-900 text-white dark:bg-white dark:text-gray-900 px-4 py-2 text-xs font-semibold tracking-wide"
               >
                 Open Member Offer
-                <span aria-hidden="true">{'->'}</span>
+                {/* <span aria-hidden="true">{'->'}</span> */}
               </Link>
             </div>
           </div>
@@ -682,7 +689,7 @@ export const Home: React.FC = () => {
                 <p className="text-[11px] sm:text-sm text-gray-300 mt-1.5 sm:mt-2 line-clamp-2">{offer.desc}</p>
                 <span className="mt-3 sm:mt-4 inline-flex items-center gap-2 rounded-full bg-cyan-300/15 text-cyan-100 border border-cyan-200/30 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-semibold tracking-wide">
                   {offer.cta}
-                  <span aria-hidden="true">{'->'}</span>
+                  {/* <span aria-hidden="true">{'->'}</span> */}
                 </span>
               </Link>
             ))}
@@ -696,27 +703,26 @@ export const Home: React.FC = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-primary-100/30 to-purple-100/30 dark:from-primary-900/10 dark:to-purple-900/10 blur-[100px] rounded-full pointer-events-none"></div>
 
         <div className="max-w-4xl mx-auto glass-card rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 md:p-20 text-center relative border border-white/60 dark:border-white/10 shadow-2xl">
-             <div className="relative z-10">
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 font-display">Join the Revolution.</h2>
-                <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-lg mx-auto leading-relaxed">
-                    Be the first to experience the next generation of wearable tech. Exclusive drops for members.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                    <input 
-                        type="email" 
-                        placeholder="Enter your email" 
-                        className="flex-1 px-6 py-4 rounded-full border border-gray-300 bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-inner"
-                    />
-                    <Button onClick={() => (user ? navigate('/profile') : navigate('/shop/all'))} className="rounded-full px-10 py-4 font-display tracking-wide shadow-lg shadow-primary-500/20 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)]">SUBSCRIBE</Button>
-                </div>
-             </div>
+          <div className="relative z-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 font-display">Join the Revolution.</h2>
+            <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-lg mx-auto leading-relaxed">
+              Be the first to experience the next generation of wearable tech. Exclusive drops for members.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 px-6 py-4 rounded-full border border-gray-300 bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-inner"
+              />
+              <Button onClick={() => (user ? navigate('/profile') : navigate('/shop/all'))} className="rounded-full px-10 py-4 font-display tracking-wide shadow-lg shadow-primary-500/20 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)]">SUBSCRIBE</Button>
+            </div>
+          </div>
         </div>
       </section>
       {compareProducts.length > 0 && (
         <div
-          className={`fixed left-3 right-3 sm:left-auto sm:right-5 sm:w-[420px] bottom-[74px] sm:bottom-5 z-50 transition-all duration-300 ${
-            isCompareOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 pointer-events-none'
-          }`}
+          className={`fixed left-3 right-3 sm:left-auto sm:right-5 sm:w-[420px] bottom-[74px] sm:bottom-5 z-50 transition-all duration-300 ${isCompareOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 pointer-events-none'
+            }`}
         >
           <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white/95 dark:bg-slate-950/95 backdrop-blur-xl shadow-2xl p-4">
             <div className="flex items-center justify-between gap-3">

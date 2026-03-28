@@ -55,8 +55,8 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, redirec
           ✕
         </button>
 
-        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-300">Join TheFutureX</p>
-        <h3 className="mt-2 text-xl font-bold text-gray-900 dark:text-white">Join TheFutureX</h3>
+        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-cyan-600 dark:text-cyan-300">TheFutureX</p>
+        <h3 className="mt-2 text-xl font-bold text-gray-900 dark:text-white">Sign in to continue</h3>
         <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
           Login to unlock exclusive offers & faster checkout
         </p>

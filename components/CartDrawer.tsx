@@ -74,13 +74,19 @@ export const CartDrawer: React.FC = () => {
                     </div>
                     <div className="flex flex-1 items-end justify-between text-sm">
                       <div className="flex items-center border border-gray-300 dark:border-white/20 rounded-md">
-                         <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300">-</button>
+                         <button onClick={() => {
+                           if (item.quantity - 1 < 1) {
+                             removeFromCart(item.id, item.selectedColorName, item.price);
+                           } else {
+                             updateQuantity(item.id, item.quantity - 1, item.selectedColorName, item.price);
+                           }
+                         }} className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300">-</button>
                          <span className="px-2 font-medium text-gray-900 dark:text-white">{item.quantity}</span>
-                         <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300">+</button>
+                         <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedColorName, item.price)} className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300">+</button>
                       </div>
                       <button 
                         type="button" 
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item.id, item.selectedColorName, item.price)}
                         className="font-medium text-primary-600 hover:text-primary-500 dark:text-primary-400"
                       >
                         Remove
