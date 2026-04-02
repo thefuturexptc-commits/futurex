@@ -1,9 +1,9 @@
 export const PRODUCT_ASSET_TOKENS = {
-  AURA_BAND_X1: "/images/aura-band-x1.jpg",
-  AURA_BAND_LITE: "/images/aura-band-lite.jpg",
-  AURA_RING_HALO: "/images/aura-ring-halo.png",
-  AURA_BREEZE_PRO: "/images/aura-breeze-pro.jpg",
-  AURA_VITALS_MONITOR: "/images/aura-vitals-monitor.jpg",
+  AURA_BAND_X1: "/images/aura-band-x1.webp",
+  AURA_BAND_LITE: "/images/aura-band-lite.webp",
+  AURA_RING_HALO: "/images/aura-ring-halo.webp",
+  AURA_BREEZE_PRO: "/images/aura-breeze-pro.webp",
+  AURA_VITALS_MONITOR: "/images/aura-vitals-monitor.webp",
 };
 
 export const PRODUCT_CATALOG = [

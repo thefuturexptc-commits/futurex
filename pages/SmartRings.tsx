@@ -1,7 +1,7 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
-import heroImage from '../assets/images/smartrings-hero.png';
-import heroBackgroundImage from '../assets/images/smartrings-neon-bg.svg';
+import heroImage from '../assets/images/smartrings-hero.webp';
+import heroBackgroundImage from '../assets/images/smartrings-neon-bg.webp';
 
 export const SmartRings: React.FC = () => {
   const features = [

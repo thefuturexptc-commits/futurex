@@ -115,7 +115,7 @@ export const SettingsTab: React.FC<Props> = ({
               type="text"
               value={logoUrl}
               onChange={onLogoChange}
-              placeholder="e.g. https://cdn.example.com/logo.png"
+              placeholder="e.g. https://cdn.example.com/logo.webp"
               className="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
             />
           </div>

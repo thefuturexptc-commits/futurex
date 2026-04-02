@@ -1,7 +1,7 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
-import heroImage from '../assets/images/smartbands-hero.png';
-import heroBackgroundImage from '../assets/images/smartbands-corridor-bg.svg';
+import heroImage from '../assets/images/smartbands-hero.webp';
+import heroBackgroundImage from '../assets/images/smartbands-corridor-bg.webp';
 
 export const SmartBands: React.FC = () => {
   const features = [

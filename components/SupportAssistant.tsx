@@ -13,7 +13,7 @@ import {
   updateSupportChatSession,
 } from '../services/backend';
 import { Order, Product, SupportChatMessage, SupportChatSession } from '../types';
-import supportAssistantLogo from '../assets/images/support-assistant-logo.jpg';
+import supportAssistantLogo from '../assets/images/support-assistant-logo.webp';
 
 type Sender = SupportChatMessage['sender'];
 type ChatProductCard = NonNullable<SupportChatMessage['products']>[number];
@@ -21,7 +21,7 @@ type ChatProductCard = NonNullable<SupportChatMessage['products']>[number];
 const QUICK_CHIPS = ['price', 'stock', 'warranty', 'order status', 'new arrivals', 'best sellers'];
 const INFO_QUICK_CHIPS = ['about us', 'privacy', 'returns', 'contact'];
 const SUPPORT_PHONE = '+91 85303 40676';
-const SUPPORT_EMAIL = 'support@thefuturex.in';
+const SUPPORT_EMAIL = 'thefuturex.ptc@gmail.com';
 const DEFAULT_BOT_TEXT =
   "Hi! I'm TheFutureX Assistant.\n\nI can help with:\n- Product price\n- Stock availability\n- Warranty\n- Battery details\n- Product specs\n- Order status\n\nJust type your question below.";
 

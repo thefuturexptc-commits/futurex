@@ -310,3 +310,27 @@ svg {
     backdrop-filter: blur(8px);
   }
 }
+
+
+
+/* ______________
+HEADER
+______________ */
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-down {
+  animation: slide-down 0.25s ease;
+}

@@ -6,9 +6,8 @@ import { CartProvider } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { CartDrawer } from './components/CartDrawer';
-import { LoginModal } from './components/LoginModal';
 import { SupportAssistant } from './components/SupportAssistant';
-import { AuthModalProvider, useAuthModal } from './context/AuthModalContext';
+import { AuthModalProvider } from './context/AuthModalContext';
 import { SiteFooter } from './components/SiteFooter';
 
 // ✅ META PIXEL
@@ -122,27 +121,6 @@ const OrderSourceTracker: React.FC = () => {
   return null;
 };
 
-const FirstLoadAuthPrompt: React.FC = () => {
-  const { user, isAuthReady } = useAuth();
-  const { openLogin } = useAuthModal();
-  const { pathname } = useLocation();
-
-  useEffect(() => {
-    if (!isAuthReady || user) return;
-    if (pathname.startsWith('/login') || pathname.startsWith('/signup')) return;
-    if (sessionStorage.getItem('tfx_first_load_auth_prompted') === '1') return;
-
-    sessionStorage.setItem('tfx_first_load_auth_prompted', '1');
-    const timer = window.setTimeout(() => {
-      openLogin(pathname || '/');
-    }, 1200);
-
-    return () => window.clearTimeout(timer);
-  }, [isAuthReady, user, pathname, openLogin]);
-
-  return null;
-};
-
 const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
   const { user, isAuthReady } = useAuth();
   const location = useLocation();
@@ -179,67 +157,52 @@ const RequireAdmin: React.FC<{ children: React.ReactElement }> = ({ children }) 
 };
 
 const App: React.FC = () => {
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [loginRedirectPath, setLoginRedirectPath] = useState('/profile');
-
   // ✅ Initialize Meta Pixel once on app mount
   useEffect(() => {
     initMetaPixel();
   }, []);
-
-  const openLogin = (redirectPath = '/profile') => {
-    setLoginRedirectPath(redirectPath);
-    setIsLoginOpen(true);
-  };
 
   return (
     <ThemeProvider>
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
-            <AuthModalProvider value={{ openLogin }}>
+            <AuthModalProvider value={{ openLogin: () => {} }}>
               <ScrollToTop />
-              {/* ✅ Tracks every page navigation */}
               <MetaPixelPageTracker />
               <OrderSourceTracker />
-              <FirstLoadAuthPrompt />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />
-                <CartDrawer /> {/* Global Drawer Overlay */}
-                <LoginModal
-                  isOpen={isLoginOpen}
-                  onClose={() => setIsLoginOpen(false)}
-                  redirectPath={loginRedirectPath}
-                />
-                <main className="flex-grow">
+                <CartDrawer />
+                <main className="flex-grow pb-16 md:pb-0">
                   <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>}>
                     <Routes>
-                    <Route path="/" element={<Home />} />
-                    
-                    {/* Dedicated Category Routes */}
-                    <Route path="/smart-bands" element={<SmartBands />} />
-                    <Route path="/smart-rings" element={<SmartRings />} />
-                    <Route path="/smart-fans" element={<SmartFans />} />
-                    <Route path="/smart-monitoring" element={<SmartMonitoring />} />
-                    
-                    {/* Legacy/General Shop Route for Search/View All */}
-                    <Route path="/shop/all" element={<Shop />} />
-                    <Route path="/shop/:category" element={<Shop />} />
+                      <Route path="/" element={<Home />} />
 
-                    <Route path="/product/:id" element={<ProductDetail />} />
-                    <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
-                    <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
-                    <Route path="/verify-phone" element={<RequireAuth><VerifyPhone /></RequireAuth>} />
-                    <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />
-                    <Route path="/order-success" element={<RequireAuth><OrderSuccess /></RequireAuth>} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/signup" element={<Signup />} />
-                    <Route path="/info/:slug" element={<InfoPage />} />
-                    <Route path="/offers/:slug" element={<RequireAuth><OfferPage /></RequireAuth>} />
-                    <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
-                    <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-                    <Route path="/admin/edit-product" element={<RequireAdmin><AdminEditProductPage /></RequireAdmin>} />
-                    <Route path="*" element={<Navigate to="/" replace />} />
+                      {/* Dedicated Category Routes */}
+                      <Route path="/smart-bands" element={<SmartBands />} />
+                      <Route path="/smart-rings" element={<SmartRings />} />
+                      <Route path="/smart-fans" element={<SmartFans />} />
+                      <Route path="/smart-monitoring" element={<SmartMonitoring />} />
+
+                      {/* Legacy/General Shop Route for Search/View All */}
+                      <Route path="/shop/all" element={<Shop />} />
+                      <Route path="/shop/:category" element={<Shop />} />
+
+                      <Route path="/product/:id" element={<ProductDetail />} />
+                      <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
+                      <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
+                      <Route path="/verify-phone" element={<RequireAuth><VerifyPhone /></RequireAuth>} />
+                      <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />
+                      <Route path="/order-success" element={<RequireAuth><OrderSuccess /></RequireAuth>} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/signup" element={<Signup />} />
+                      <Route path="/info/:slug" element={<InfoPage />} />
+                      <Route path="/offers/:slug" element={<RequireAuth><OfferPage /></RequireAuth>} />
+                      <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
+                      <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
+                      <Route path="/admin/edit-product" element={<RequireAdmin><AdminEditProductPage /></RequireAdmin>} />
+                      <Route path="*" element={<Navigate to="/" replace />} />
                     </Routes>
                   </Suspense>
                 </main>

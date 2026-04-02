@@ -5,7 +5,7 @@ import { Pagination } from '../common/Pagination';
 import { SectionHeader } from '../common/SectionHeader';
 import { StatusBadge } from '../common/StatusBadge';
 import { TableSkeleton } from '../common/TableSkeleton';
-import tfxLogo from '../../../assets/images/thefuturex-logo.png';
+import tfxLogo from '../../../assets/images/thefuturex-logo.webp';
 
 interface Props {
   orders: Order[];
