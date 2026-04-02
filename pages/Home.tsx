@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
-import { getProducts, seedDatabase } from '../services/backend';
+import { getProducts, seedDatabase, toProductSlug } from '../services/backend';
 import { useAuth } from '../context/AuthContext';
 import ringHomeImage from '../assets/images/smart-rings-home-new.webp';
 import bandHomeImage from '../assets/images/mainband.webp';
@@ -253,7 +253,7 @@ export const Home: React.FC = () => {
         title: `${pct}% OFF on ${p.name}`,
         desc: `Price dropped from Rs ${mrp.toLocaleString()} to Rs ${sale.toLocaleString()}.`,
         badge: 'PRICE DROP',
-        href: `/product/${p.id}`,
+        href: `/product/${toProductSlug(p.name)}`,
         cta: 'Claim Price Drop',
       };
     }),
@@ -261,7 +261,7 @@ export const Home: React.FC = () => {
       title: `New Arrival: ${p.name}`,
       desc: `Latest in ${p.category}. Now available from Rs ${Number(p.salePrice || p.price || 0).toLocaleString()}.`,
       badge: 'NEW',
-      href: `/product/${p.id}`,
+      href: `/product/${toProductSlug(p.name)}`,
       cta: 'Unlock Launch Offer',
     })),
   ].slice(0, 4);
@@ -378,7 +378,7 @@ export const Home: React.FC = () => {
 
         <div
           className="absolute inset-0 bg-center bg-cover bg-no-repeat"
-          style={{ backgroundImage: "url('/demobanner.jpeg')" }}
+          style={{ backgroundImage: "url('/demobanner.webp')" }}
         />
 
       </section>

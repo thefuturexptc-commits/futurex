@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Product, ProductPublicReview, ProductVariantOption } from '../types';
-import { getProductById, getProducts } from '../services/backend';
+import { getProductById, getProducts, toProductSlug } from '../services/backend';
 import { trackViewContent, trackAddToCart } from '../services/Metapixel';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
@@ -58,6 +58,9 @@ export const ProductDetail: React.FC = () => {
   const [visibleReviewCount, setVisibleReviewCount] = useState(4);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [activeDetailTab, setActiveDetailTab] = useState<'description' | 'features' | 'specs' | 'faq' | 'reviews'>('description');
+
+  // ✅ FIX: Track selected thumbnail index to sync with carousel
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
   const [storedReviews, setStoredReviews] = useState<ProductReviewStorageItem[]>([]);
   const [reviewRating, setReviewRating] = useState(5);
@@ -205,6 +208,8 @@ export const ProductDetail: React.FC = () => {
     setVisibleReviewCount(4);
     setIsDescriptionExpanded(false);
     setActiveDetailTab('description');
+    // ✅ FIX: Reset image index when product/variant changes
+    setSelectedImageIndex(0);
   }, [product?.id, product?.defaultVariant, allVariants, pickPreferredSize]);
 
   useEffect(() => {
@@ -282,6 +287,8 @@ export const ProductDetail: React.FC = () => {
     setSelectedColor(variant.colorName);
     setSelectedSize(pickPreferredSize(variant));
     setCurrentPrice(variant.price);
+    // ✅ FIX: Reset image index when color variant changes
+    setSelectedImageIndex(0);
   };
 
   const handleReviewImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -295,7 +302,7 @@ export const ProductDetail: React.FC = () => {
     e.preventDefault();
     if (!product) return;
     if (!user) {
-      openLogin(`/product/${product.id}`);
+      openLogin(`/product/${toProductSlug(product.name)}`);
       return;
     }
     if (Number(reviewRating || 0) < 4) {
@@ -355,7 +362,7 @@ export const ProductDetail: React.FC = () => {
   const handleAddToCart = () => {
     if (!product) return;
     if (!user) {
-      openLogin(`/product/${product.id}`);
+      openLogin(`/product/${toProductSlug(product.name)}`);
       return;
     }
     const configured = buildConfiguredProduct();
@@ -375,7 +382,7 @@ export const ProductDetail: React.FC = () => {
   const handleBuyNow = () => {
     if (!product) return;
     if (!user) {
-      openLogin(`/product/${product.id}`);
+      openLogin(`/product/${toProductSlug(product.name)}`);
       return;
     }
     const configured = buildConfiguredProduct();
@@ -404,10 +411,13 @@ export const ProductDetail: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 py-10 sm:py-12">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-start">
           <div className="space-y-4">
+            {/* ✅ FIX: Pass selectedIndex and onSelectIndex to sync carousel with thumbnails */}
             <ProductImageCarousel
               key={`${selectedVariant?.colorName || 'default'}_${carouselImages.length}`}
               images={carouselImages}
               alt={product.name}
+              selectedIndex={selectedImageIndex}
+              onSelectIndex={setSelectedImageIndex}
             />
             {carouselImages.length ? (
               <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
@@ -417,7 +427,13 @@ export const ProductDetail: React.FC = () => {
                     src={imageUrl}
                     alt={`${product.name} ${selectedVariant?.colorName || 'Default'} ${imageIdx + 1}`}
                     loading="lazy"
-                    className="h-16 w-16 sm:h-16 sm:w-16 rounded-lg object-cover border border-gray-200 dark:border-white/10 shrink-0 snap-start"
+                    // ✅ FIX: Clicking a thumbnail updates selectedImageIndex, which scrolls the carousel
+                    onClick={() => setSelectedImageIndex(imageIdx)}
+                    className={`h-16 w-16 sm:h-16 sm:w-16 rounded-lg object-cover border shrink-0 snap-start cursor-pointer transition-all duration-150 ${
+                      selectedImageIndex === imageIdx
+                        ? 'border-primary-600 ring-2 ring-primary-400'
+                        : 'border-gray-200 dark:border-white/10'
+                    }`}
                   />
                 ))}
               </div>

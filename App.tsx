@@ -174,7 +174,7 @@ const App: React.FC = () => {
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />
                 <CartDrawer />
-                <main className="flex-grow pb-16 md:pb-0">
+                <main className="flex-grow">
                   <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>}>
                     <Routes>
                       <Route path="/" element={<Home />} />

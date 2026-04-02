@@ -1,11 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-import { getCategories } from '../services/backend';
+import { getCategories, getProducts, toProductSlug } from '../services/backend';
 import { Button } from './ui/Button';
 import defaultBrandLogo from '../assets/images/untitled-design-51.webp';
+import { Product } from '../types';
 
 const NavbarComponent: React.FC = () => {
   const { user, logout, isAdmin } = useAuth();
@@ -14,6 +15,10 @@ const NavbarComponent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState<string[]>([
     'Smart Bands',
     'Smart Rings',
@@ -82,14 +87,37 @@ const NavbarComponent: React.FC = () => {
 
   const navLinks = [{ name: 'Home', path: '/' }, ...categoryLinks];
 
-  // Bottom nav items: home + categories + profile/login
-  const bottomNavItems = [
-    ...navLinks.slice(0, 5),
-    {
-      name: user ? 'Profile' : 'Login',
-      path: user ? '/profile' : '/login',
-    },
-  ];
+  // Fetch all products for search
+  useEffect(() => {
+    getProducts().then(setAllProducts).catch(() => {});
+  }, []);
+
+  // Focus search input when opened
+  useEffect(() => {
+    if (searchOpen) {
+      setTimeout(() => searchInputRef.current?.focus(), 50);
+    } else {
+      setSearchQuery('');
+    }
+  }, [searchOpen]);
+
+  // Close search on route change
+  useEffect(() => {
+    setSearchOpen(false);
+  }, [location.pathname]);
+
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return [];
+    return allProducts
+      .filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          p.category.toLowerCase().includes(q) ||
+          (p.description || '').toLowerCase().includes(q)
+      )
+      .slice(0, 8);
+  }, [searchQuery, allProducts]);
 
   return (
     <>
@@ -129,6 +157,23 @@ const NavbarComponent: React.FC = () => {
 
             {/* Right Section */}
             <div className="flex items-center gap-1 sm:gap-2">
+
+              {/* Search Button */}
+              <button
+                onClick={() => setSearchOpen((o) => !o)}
+                aria-label="Search products"
+                className="relative p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-white transition-colors outline-none"
+              >
+                {searchOpen ? (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                  </svg>
+                )}
+              </button>
 
               {/* Cart Button */}
               <button
@@ -218,11 +263,68 @@ const NavbarComponent: React.FC = () => {
           </div>
         </div>
 
+        {/* ─── Search Overlay ──────────────────────────────────────── */}
+        {searchOpen && (
+          <div className="border-t border-gray-200 dark:border-white/10 bg-white/98 dark:bg-dark-surface/98 backdrop-blur-md animate-slide-down">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+              <div className="relative">
+                <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
+                </svg>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setSearchOpen(false);
+                    if (e.key === 'Enter' && searchResults.length > 0) {
+                      navigate(`/product/${toProductSlug(searchResults[0].name)}`);
+                      setSearchOpen(false);
+                    }
+                  }}
+                  placeholder="Search products..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-gray-100 dark:bg-white/10 text-gray-900 dark:text-white placeholder-gray-400 border border-gray-200 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                />
+              </div>
+
+              {searchQuery.trim() && (
+                <div className="mt-2 space-y-1 max-h-72 overflow-y-auto">
+                  {searchResults.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400 px-2 py-3 text-center">No products found for "{searchQuery}"</p>
+                  ) : (
+                    searchResults.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          navigate(`/product/${toProductSlug(p.name)}`);
+                          setSearchOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10 transition-colors text-left"
+                      >
+                        <img
+                          src={p.images?.[0] || p.colors?.[0]?.images?.[0] || ''}
+                          alt={p.name}
+                          className="w-10 h-10 rounded-lg object-contain bg-gray-100 dark:bg-white/5 shrink-0"
+                        />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">{p.name}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">{p.category} · Rs {Number(p.salePrice || p.price || 0).toLocaleString()}</p>
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* ─── Mobile Dropdown Menu ──────────────────────────────────── */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md animate-slide-down">
             <div className="px-4 py-4 space-y-1">
-
               {/* Nav Links */}
               {navLinks.map((link) => {
                 const active = location.pathname === link.path;
@@ -285,26 +387,6 @@ const NavbarComponent: React.FC = () => {
         )}
       </nav>
 
-      {/* ─── Mobile Bottom Nav Bar ─────────────────────────────────── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 bg-dark-surface/95 backdrop-blur-md safe-area-bottom">
-        <div className="grid grid-cols-6 gap-0.5 px-1 py-1.5">
-          {bottomNavItems.map((item) => {
-            const active = location.pathname === item.path;
-            return (
-              <button
-                key={item.name}
-                type="button"
-                onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center rounded-xl py-1.5 px-0.5 transition-colors ${
-                  active ? 'bg-primary-600 text-white' : 'text-gray-400 hover:text-gray-200'
-                }`}
-              >
-                <span className="text-[9px] sm:text-[11px] font-semibold leading-tight mt-0.5">{item.name}</span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
     </>
   );
 };

@@ -615,9 +615,21 @@ export const getProducts = async (): Promise<Product[]> => {
   return productsInFlight.then((data) => [...data]);
 };
 
+// ─── Slug utility ─────────────────────────────────────────────────────────────
+export const toProductSlug = (name: string): string =>
+  name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
 export const getProductById = async (id: string): Promise<Product | undefined> => {
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
-  const localFound = products.find((p) => p.id === id);
+
+  // Support both raw ID (legacy) and slug (new pretty URL)
+  const localFound =
+    products.find((p) => p.id === id) ||
+    products.find((p) => toProductSlug(p.name) === id);
   if (localFound) return normalizeProductColors(localFound);
 
   try {
@@ -633,7 +645,11 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
 
   try {
       const allProducts = await getProducts();
-      return allProducts.find((p) => p.id === id);
+      // Match by ID or by slug
+      return (
+        allProducts.find((p) => p.id === id) ||
+        allProducts.find((p) => toProductSlug(p.name) === id)
+      );
   } catch (e) {
       return undefined;
   }

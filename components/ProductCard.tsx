@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
+import { toProductSlug } from '../services/backend';
 
 interface ProductCardProps {
   product: Product;
@@ -165,7 +166,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
   const handleAddToCart = () => {
     if (!user) {
-      openLogin(`/product/${product.id}`);
+      openLogin(`/product/${toProductSlug(product.name)}`);
       return;
     }
     addToCart(product);
@@ -199,7 +200,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         } ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
       />
       <div className={`pointer-events-none absolute inset-0 ${isLightCard ? 'bg-gradient-to-b from-white/10 via-transparent to-transparent opacity-70' : 'bg-gradient-to-b from-white/4 via-transparent to-transparent opacity-45 sm:opacity-60'}`} />
-      <Link to={`/product/${product.id}`} className={`block relative overflow-hidden ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
+      <Link to={`/product/${toProductSlug(product.name)}`} className={`block relative overflow-hidden ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
         <img
           src={activeImage}
           alt={product.name}
@@ -239,7 +240,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${toProductSlug(product.name)}`}>
           <h3
             className={`${compact ? 'text-[12px] sm:text-sm mb-1 min-h-[1.9rem]' : 'text-sm sm:text-lg mb-1.5 sm:mb-2 min-h-[2.4rem] sm:min-h-[3rem]'} font-bold ${cardTextClass} leading-tight transition-colors font-display overflow-hidden ${hoverTextClass}`}
             style={{ display: '-webkit-box', WebkitLineClamp: compact ? 2 : 2, WebkitBoxOrient: 'vertical' }}

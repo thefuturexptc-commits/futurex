@@ -11,6 +11,7 @@ import {
   getUserOrders,
   upsertSupportChat,
   updateSupportChatSession,
+  toProductSlug,
 } from '../services/backend';
 import { Order, Product, SupportChatMessage, SupportChatSession } from '../types';
 import supportAssistantLogo from '../assets/images/support-assistant-logo.webp';
@@ -883,7 +884,7 @@ export const SupportAssistant: React.FC = () => {
                               type="button"
                               className="flex-1 border border-primary-200 bg-white text-primary-700 text-xs py-2 rounded-lg hover:bg-primary-50 transition"
                               onClick={() => {
-                                window.location.href = `/product/${product.id}`;
+                                window.location.href = `/product/${toProductSlug(product.name)}`;
                               }}
                             >
                               View
