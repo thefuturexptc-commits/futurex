@@ -22,6 +22,10 @@ export const ProductDetail: React.FC = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [addedToCart, setAddedToCart] = useState(false);
 
+  const [activeDetailTab, setActiveDetailTab] = useState<'description' | 'features' | 'specs' | 'faq' | 'reviews'>('description');
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [visibleReviewCount, setVisibleReviewCount] = useState(4);
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -117,8 +121,11 @@ export const ProductDetail: React.FC = () => {
     );
   }
 
+  const displayedImages = activeImages.length > 0 ? activeImages : ['https://picsum.photos/600'];
+
   return (
     <div className="min-h-screen bg-dark-bg text-white">
+
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
         <nav className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
@@ -136,18 +143,37 @@ export const ProductDetail: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
 
-          {/* Left: Image Carousel */}
-          <div className="w-full">
+          {/* Left: Image Carousel + Thumbnails */}
+          <div className="space-y-4">
             <ProductImageCarousel
-              images={activeImages.length > 0 ? activeImages : ['https://picsum.photos/600']}
+              images={displayedImages}
               alt={product.name}
               selectedIndex={selectedImageIndex}
               onSelectIndex={setSelectedImageIndex}
             />
+            {displayedImages.length > 1 && (
+              <div className="flex gap-2 overflow-x-auto pb-1 snap-x snap-mandatory">
+                {displayedImages.map((imgUrl, imgIdx) => (
+                  <img
+                    key={imgIdx}
+                    src={imgUrl}
+                    alt={`${product.name} ${imgIdx + 1}`}
+                    loading="lazy"
+                    onClick={() => setSelectedImageIndex(imgIdx)}
+                    className={`h-16 w-16 rounded-lg object-cover border shrink-0 snap-start cursor-pointer transition-all duration-150 ${
+                      selectedImageIndex === imgIdx
+                        ? 'border-primary-500 ring-2 ring-primary-400'
+                        : 'border-white/10 hover:border-white/40'
+                    }`}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Right: Product Info */}
           <div className="flex flex-col gap-5">
+
             {/* Category + Rating */}
             <div className="flex items-center justify-between flex-wrap gap-2">
               <span className="text-xs font-bold uppercase tracking-widest text-primary-300 bg-primary-900/30 px-3 py-1 rounded-full">
@@ -155,9 +181,10 @@ export const ProductDetail: React.FC = () => {
               </span>
               {product.rating != null && (
                 <div className="flex items-center gap-1.5 text-amber-400">
-                  <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                  </svg>
+                  <span className="text-sm">
+                    {'★'.repeat(Math.round(Number(product.rating || 0)))}
+                    {'☆'.repeat(5 - Math.round(Number(product.rating || 0)))}
+                  </span>
                   <span className="text-sm font-bold">{product.rating}</span>
                   {product.reviewCount != null && (
                     <span className="text-xs text-gray-400">({product.reviewCount} reviews)</span>
@@ -191,30 +218,13 @@ export const ProductDetail: React.FC = () => {
               </p>
             )}
 
-            {/* Stock */}
-            <div>
-              {canAdd ? (
-                <div className="flex items-center gap-2">
-                  <span className="inline-block w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-sm font-semibold text-green-400">
-                    In Stock{stockCount <= 5 ? ' — Only ' + stockCount + ' left!' : ''}
-                  </span>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className="inline-block w-2 h-2 rounded-full bg-red-500" />
-                  <span className="text-sm font-semibold text-red-400">Out of Stock</span>
-                </div>
-              )}
-            </div>
-
-            {/* Color Selector */}
+            {/* Color Selector — card style from Code 2 */}
             {product.colors && product.colors.length > 0 && (
               <div>
                 <p className="text-sm font-semibold text-gray-300 mb-3">
-                  Color: <span className="text-white">{selectedColor?.name ?? 'Select a color'}</span>
+                  Select Color{selectedColor?.name ? ` — ${selectedColor.name}` : ''}
                 </p>
-                <div className="flex items-center gap-3 flex-wrap">
+                <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-3">
                   {product.colors.map((color) => {
                     const isSelected = selectedColor?.name === color.name;
                     const colorStock = Number(color.stock || 0) - Number(color.reservedStock || 0);
@@ -223,27 +233,57 @@ export const ProductDetail: React.FC = () => {
                         key={color.name}
                         type="button"
                         onClick={() => {
+                          if (colorStock <= 0) return;
                           setSelectedColor(color);
                           setSelectedImageIndex(0);
                         }}
-                        title={color.name}
+                        disabled={colorStock <= 0}
                         aria-label={color.name + (colorStock <= 0 ? ' — Out of stock' : '')}
                         className={[
-                          'w-10 h-10 rounded-full border-2 transition-all duration-200',
+                          'text-left rounded-xl border p-2.5 sm:p-3 transition-all duration-200 w-full sm:w-[170px] min-w-0',
                           'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
-                          isSelected ? 'border-white scale-110 shadow-lg shadow-white/20' : 'border-white/20 hover:border-white/60 hover:scale-105',
+                          isSelected
+                            ? 'border-primary-500 bg-primary-900/20 shadow-sm shadow-primary-500/20'
+                            : 'border-white/20 hover:border-white/50',
                           colorStock <= 0 ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer',
                         ].join(' ')}
-                        style={{ backgroundColor: color.hex }}
-                        disabled={colorStock <= 0}
-                      />
+                      >
+                        <div className="flex items-center gap-2">
+                          <span
+                            className="h-4 w-4 rounded-full border border-white/20 shrink-0"
+                            style={{ backgroundColor: color.hex }}
+                          />
+                          <p className="font-semibold text-sm text-white truncate">{color.name}</p>
+                        </div>
+                        <p className={`mt-1 text-xs font-medium ${colorStock > 0 ? 'text-gray-400' : 'text-red-400'}`}>
+                          {colorStock > 0 ? `${colorStock} left` : 'Out of Stock'}
+                        </p>
+                      </button>
                     );
                   })}
                 </div>
               </div>
             )}
 
-            {/* CTA Buttons */}
+            {/* Stock + Warranty Info Box — Code 2 style */}
+            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
+              <p className="text-sm font-semibold text-gray-200">Stock Info</p>
+              <div className="flex items-center gap-2">
+                <span className={`inline-block w-2 h-2 rounded-full ${canAdd ? 'bg-green-400' : 'bg-red-500'}`} />
+                <p className={`text-sm font-medium ${canAdd ? 'text-green-400' : 'text-red-400'}`}>
+                  {canAdd
+                    ? `In Stock${stockCount <= 5 ? ' — Only ' + stockCount + ' left!' : stockCount < 999 ? ` (${stockCount} available)` : ''}`
+                    : 'Out of Stock'}
+                </p>
+              </div>
+              {product.warranty && (
+                <p className="text-sm text-gray-300">
+                  <span className="font-semibold text-white">Warranty:</span> {product.warranty}
+                </p>
+              )}
+            </div>
+
+            {/* CTA Buttons — kept exactly in Code 1's position */}
             <div className="flex flex-col sm:flex-row gap-3 mt-2">
               <button
                 type="button"
@@ -277,89 +317,170 @@ export const ProductDetail: React.FC = () => {
               </button>
             </div>
 
-            {/* Warranty */}
-            {product.warranty && (
-              <div className="flex items-center gap-3 text-sm text-gray-300 bg-white/5 rounded-xl px-4 py-3 border border-white/10">
-                <svg className="w-5 h-5 text-primary-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
-                </svg>
-                <span><span className="font-semibold text-white">Warranty:</span> {product.warranty}</span>
-              </div>
-            )}
+          </div>
+        </div>
 
-            {/* Description */}
-            {product.description && (
-              <div>
-                <h2 className="text-lg font-bold mb-2 text-white">About this product</h2>
-                <p className="text-gray-300 text-sm leading-relaxed whitespace-pre-line">{product.description}</p>
-              </div>
-            )}
+        {/* ── Product Details Tabs (Code 2 style) ── */}
+        <section className="mt-14 border-t border-white/10 pt-8">
+          <h2 className="text-xl sm:text-2xl font-bold mb-4 text-white">Product Details</h2>
 
-            {/* Features */}
-            {product.features && product.features.length > 0 && (
-              <div>
-                <h2 className="text-lg font-bold mb-3 text-white">Key Features</h2>
-                <ul className="space-y-2">
+          {/* Tab Bar */}
+          <div className="mb-5 rounded-xl border border-white/10 bg-white/5 p-2 flex flex-wrap gap-2">
+            {(
+              [
+                { key: 'description', label: 'Description' },
+                { key: 'features', label: 'Key Features' },
+                { key: 'specs', label: 'Specs' },
+                { key: 'faq', label: 'FAQ' },
+                { key: 'reviews', label: 'Reviews' },
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActiveDetailTab(tab.key)}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                  activeDetailTab === tab.key
+                    ? 'bg-primary-600 text-white shadow shadow-primary-500/30'
+                    : 'text-gray-300 hover:bg-white/10'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Description Tab */}
+          {activeDetailTab === 'description' && (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+              {product.description ? (
+                <>
+                  <p
+                    className={`text-sm text-gray-300 leading-7 whitespace-pre-line ${
+                      !isDescriptionExpanded && product.description.length > 400 ? 'line-clamp-6' : ''
+                    }`}
+                  >
+                    {product.description}
+                  </p>
+                  {product.description.length > 400 && (
+                    <button
+                      type="button"
+                      onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                      className="mt-3 text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors"
+                    >
+                      {isDescriptionExpanded ? 'Show Less ↑' : 'Show More ↓'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-gray-500">No description available.</p>
+              )}
+            </div>
+          )}
+
+          {/* Features Tab */}
+          {activeDetailTab === 'features' && (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+              {product.features && product.features.length > 0 ? (
+                <ul className="space-y-3">
                   {product.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                    <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
                       <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary-400 shrink-0" />
                       {feature}
                     </li>
                   ))}
                 </ul>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-500">No key features added.</p>
+              )}
+            </div>
+          )}
 
-            {/* Specs */}
-            {product.specs && Object.keys(product.specs).length > 0 && (
-              <div>
-                <h2 className="text-lg font-bold mb-3 text-white">Specifications</h2>
-                <div className="rounded-2xl border border-white/10 overflow-hidden">
-                  {Object.entries(product.specs).map(([key, value], i) => (
-                    <div
-                      key={key}
-                      className={'flex gap-4 px-4 py-3 text-sm ' + (i % 2 === 0 ? 'bg-white/5' : 'bg-white/[0.02]')}
-                    >
-                      <span className="text-gray-400 font-medium min-w-[120px] shrink-0">{key}</span>
-                      <span className="text-gray-100">{value}</span>
+          {/* Specs Tab */}
+          {activeDetailTab === 'specs' && (
+            <div className="rounded-xl border border-white/10 bg-white/5 p-5">
+              {product.specs && Object.keys(product.specs).length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {Object.entries(product.specs).map(([key, value]) => (
+                    <div key={key} className="rounded-lg border border-white/10 p-3 bg-white/5">
+                      <p className="text-xs uppercase tracking-wider text-gray-500">{key}</p>
+                      <p className="mt-1 text-sm font-semibold text-gray-100">{value}</p>
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-500">No specifications added.</p>
+              )}
+            </div>
+          )}
 
-            {/* Reviews */}
-            {product.reviews && product.reviews.length > 0 && (
-              <div>
-                <h2 className="text-lg font-bold mb-3 text-white">Customer Reviews</h2>
-                <div className="space-y-3">
-                  {product.reviews.slice(0, 4).map((review, i) => (
-                    <div key={i} className="bg-white/5 rounded-2xl p-4 border border-white/10">
-                      <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
-                        <span className="font-semibold text-white text-sm">{review.name}</span>
-                        <div className="flex items-center gap-0.5">
-                          {Array.from({ length: 5 }).map((_, s) => (
-                            <svg
-                              key={s}
-                              className={'w-3.5 h-3.5 ' + (s < review.rating ? 'text-amber-400 fill-current' : 'text-gray-600 fill-current')}
-                              viewBox="0 0 20 20"
-                            >
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                            </svg>
-                          ))}
-                        </div>
+          {/* FAQ Tab */}
+          {activeDetailTab === 'faq' && (
+            <div className="space-y-3">
+              {[
+                { q: 'What is the delivery timeline?', a: 'Orders are typically delivered within 3 to 7 business days.' },
+                { q: 'Is there a replacement policy?', a: 'Eligible products can be replaced within policy terms for manufacturing defects.' },
+                { q: 'How do I claim warranty?', a: 'Contact support with your order ID and product details.' },
+              ].map((item, i) => (
+                <details key={i} className="rounded-xl border border-white/10 bg-white/5 p-4 group">
+                  <summary className="cursor-pointer font-medium text-sm text-white list-none flex items-center justify-between">
+                    {item.q}
+                    <span className="text-gray-400 group-open:rotate-180 transition-transform duration-200">↓</span>
+                  </summary>
+                  <p className="mt-3 text-sm text-gray-300 leading-relaxed">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          )}
+
+          {/* Reviews Tab */}
+          {activeDetailTab === 'reviews' && (
+            <div>
+              {product.reviews && product.reviews.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+                  {product.reviews.slice(0, visibleReviewCount).map((review, i) => (
+                    <article key={i} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                      <div className="flex items-center gap-0.5 text-amber-400 text-sm mb-2">
+                        {Array.from({ length: 5 }).map((_, s) => (
+                          <svg
+                            key={s}
+                            className={'w-3.5 h-3.5 ' + (s < review.rating ? 'fill-current' : 'text-gray-600 fill-current')}
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                          </svg>
+                        ))}
                       </div>
-                      {review.date && (
-                        <p className="text-xs text-gray-500 mb-1">{review.date}</p>
-                      )}
-                      <p className="text-gray-300 text-sm">{review.comment}</p>
-                    </div>
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <p className="font-semibold text-sm text-white truncate">{review.name}</p>
+                        {review.date && <p className="text-xs text-gray-500 shrink-0">{review.date}</p>}
+                      </div>
+                      <p className="text-sm text-gray-300 break-words leading-relaxed">{review.comment}</p>
+                    </article>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
+              ) : (
+                <p className="text-sm text-gray-500 mb-6">No reviews yet.</p>
+              )}
+
+              {product.reviews && product.reviews.length > 4 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleReviewCount((prev) =>
+                      prev < (product.reviews?.length ?? 0)
+                        ? Math.min(prev + 4, product.reviews?.length ?? 0)
+                        : 4
+                    )
+                  }
+                  className="rounded-xl border border-white/20 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition"
+                >
+                  {visibleReviewCount < (product.reviews?.length ?? 0) ? 'Show More Reviews' : 'Show Less'}
+                </button>
+              )}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

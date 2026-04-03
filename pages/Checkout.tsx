@@ -245,7 +245,7 @@ export const Checkout: React.FC = () => {
 
           {error && <p className="text-sm text-red-500">{error}</p>}
 
-          <Button type="submit" className="hidden sm:inline-flex w-full sm:w-auto" isLoading={verifyingPin}>
+          <Button type="submit" className="w-full sm:w-auto" isLoading={verifyingPin}>
             Continue
           </Button>
         </form>
@@ -263,14 +263,6 @@ export const Checkout: React.FC = () => {
             <span>Rs {totalPrice.toFixed(2)}</span>
           </div>
         </div>
-      </div>
-      <div className="sm:hidden fixed left-0 right-0 bottom-0 z-40 border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-bg/95 backdrop-blur px-4 py-3">
-        <Button type="button" className="w-full h-11 rounded-xl" isLoading={verifyingPin} onClick={() => {
-          const form = document.querySelector('form');
-          if (form) form.requestSubmit();
-        }}>
-          Continue
-        </Button>
       </div>
     </div>
   );
