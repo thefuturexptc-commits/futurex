@@ -167,7 +167,7 @@ const App: React.FC = () => {
       <AuthProvider>
         <CartProvider>
           <BrowserRouter>
-            <AuthModalProvider value={{ openLogin: () => {} }}>
+            <AuthModalProvider>
               <ScrollToTop />
               <MetaPixelPageTracker />
               <OrderSourceTracker />

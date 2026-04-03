@@ -180,24 +180,20 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className={`group relative h-full overflow-hidden transition-all duration-500 ease-out border flex flex-col ${
-        compact
+      className={`group relative h-full overflow-hidden transition-all duration-500 ease-out border flex flex-col ${compact
           ? `rounded-3xl ${enableHoverEffects ? 'sm:hover:-translate-y-1.5 sm:hover:shadow-[0_22px_48px_rgba(0,0,0,0.52)]' : ''} shadow-[0_8px_18px_rgba(0,0,0,0.26)] sm:shadow-[0_12px_28px_rgba(0,0,0,0.34)]`
           : `rounded-[2rem] ${enableHoverEffects ? 'sm:hover:-translate-y-3 sm:hover:shadow-[0_28px_58px_rgba(0,0,0,0.5)] sm:hover:scale-[1.03]' : ''} shadow-[0_10px_22px_rgba(0,0,0,0.28)] sm:shadow-[0_14px_30px_rgba(0,0,0,0.36)]`
-      } ${isLightCard ? 'border-gray-200' : 'border-white/10'}`}
+        } ${isLightCard ? 'border-gray-200' : 'border-white/10'}`}
       style={{ background: `linear-gradient(165deg, ${imageTint} 0%, ${imageDeepTint} 68%)` }}
     >
       <div
-        className={`pointer-events-none absolute inset-[1px] ${
-          isLightCard ? 'bg-gradient-to-b from-white/55 via-white/20 to-transparent' : 'bg-gradient-to-b from-white/8 via-white/[0.02] to-transparent sm:from-white/12 sm:via-white/[0.03]'
-        } ${
-          compact ? 'rounded-3xl' : 'rounded-[2rem]'
-        }`}
+        className={`pointer-events-none absolute inset-[1px] ${isLightCard ? 'bg-gradient-to-b from-white/55 via-white/20 to-transparent' : 'bg-gradient-to-b from-white/8 via-white/[0.02] to-transparent sm:from-white/12 sm:via-white/[0.03]'
+          } ${compact ? 'rounded-3xl' : 'rounded-[2rem]'
+          }`}
       />
       <div
-        className={`pointer-events-none absolute -inset-[1px] transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20 ${
-          compact ? 'rounded-3xl' : 'rounded-[2rem]'
-        } ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
+        className={`pointer-events-none absolute -inset-[1px] transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20 ${compact ? 'rounded-3xl' : 'rounded-[2rem]'
+          } ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
       />
       <div className={`pointer-events-none absolute inset-0 ${isLightCard ? 'bg-gradient-to-b from-white/10 via-transparent to-transparent opacity-70' : 'bg-gradient-to-b from-white/4 via-transparent to-transparent opacity-45 sm:opacity-60'}`} />
       <Link to={`/product/${toProductSlug(product.name)}`} className={`block relative overflow-hidden ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
@@ -209,14 +205,12 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           sizes={compact ? "(max-width: 640px) 45vw, 25vw" : "(max-width: 640px) 80vw, 35vw"}
           width={640}
           height={800}
-          className={`w-full h-full object-contain object-center transition-all duration-300 ease-out ${
-            enableHoverEffects ? 'group-hover:scale-105' : ''
-          } ${compact ? 'p-1.5' : 'p-2'}`}
+          className={`w-full h-full object-contain object-center transition-all duration-300 ease-out ${enableHoverEffects ? 'group-hover:scale-105' : ''
+            } ${compact ? 'p-1.5' : 'p-2'}`}
         />
         <div
-          className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-300 ${
-            enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
-          }`}
+          className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-300 ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
+            }`}
         />
       </Link>
 
@@ -251,21 +245,33 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
         {!!product.colors?.length && (
           <div className={compact ? 'flex items-center gap-2 mt-2' : 'flex items-center gap-2 mt-3'}>
-            {product.colors.slice(0, 5).map((color) => (
-              <button
-                key={`${product.id}_${color.name}`}
-                type="button"
-                className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} rounded-full border ${isLightCard ? 'border-gray-300' : 'border-white/30'} transition-transform ${enableHoverEffects ? 'hover:scale-110' : ''}`}
-                style={{ backgroundColor: color.hex }}
-                onMouseEnter={() => setPreviewImage(color.images?.[0] || null)}
-                onMouseLeave={() => setPreviewImage(null)}
-                aria-label={color.name}
-              />
-            ))}
+            {product.colors.slice(0, 5).map((color) => {
+              const isActive = previewImage === (color.images?.[0] || null) || (!previewImage && product.colors![0] === color);
+              return (
+                <button
+                  key={`${product.id}_${color.name}`}
+                  type="button"
+                  className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} rounded-full border-2 transition-transform ${
+                    isActive
+                      ? (isLightCard ? 'border-gray-700 scale-110' : 'border-white scale-110')
+                      : (isLightCard ? 'border-gray-300' : 'border-white/30')
+                  } ${enableHoverEffects ? 'hover:scale-110' : ''}`}
+                  style={{ backgroundColor: color.hex }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setPreviewImage(color.images?.[0] || null);
+                  }}
+                  onMouseEnter={() => supportsHover && setPreviewImage(color.images?.[0] || null)}
+                  onMouseLeave={() => supportsHover && setPreviewImage(null)}
+                  aria-label={color.name}
+                />
+              );
+            })}
           </div>
         )}
 
-        <div className={compact ? 'mt-auto pt-2 space-y-2.5' : 'flex items-center justify-between mt-auto pt-3 sm:pt-5'}>
+        <div className={compact ? 'mt-auto pt-2 space-y-2.5' : 'flex flex-col gap-2 mt-auto pt-3 sm:pt-5'}>
           <div className={`flex flex-col ${compact ? '' : ''}`}>
             <span className={`${compact ? 'text-base sm:text-lg' : 'text-xl sm:text-2xl'} font-bold ${cardTextClass} font-display leading-none`}>Rs {salePrice}</span>
             <div className="flex items-center gap-1.5">
@@ -278,21 +284,20 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
           <Button
             size="sm"
-            variant={compact ? 'primary' : 'outline'}
+            variant={compact ? 'primary' : 'primary'}
             onClick={(e) => {
               e.preventDefault();
+              e.stopPropagation();
               handleAddToCart();
             }}
             disabled={!canAdd}
             className={
               compact
                 ? 'w-full rounded-full px-4 py-2 text-xs font-semibold shadow-sm'
-                : `w-10 h-10 rounded-full p-0 flex items-center justify-center transition-all duration-300 shadow-sm ${
-                    isLightCard ? 'border-gray-300 text-gray-800' : 'border-white/20 text-white'
-                  } ${enableHoverEffects ? 'hover:border-primary-500 hover:bg-primary-500 hover:text-white' : ''}`
+                : 'w-full rounded-full px-4 py-2.5 text-xs font-semibold shadow-sm'
             }
           >
-            {compact ? 'Add to Cart' : <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>}
+            {compact ? 'Add to Cart' : 'Add to Cart'}
           </Button>
         </div>
       </div>

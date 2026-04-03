@@ -38,22 +38,25 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [items]);
 
   const addToCart = (product: Product, quantity = 1) => {
+    const normalizedPrice = Number(product.salePrice ?? product.price ?? 0);
+    const normalizedProduct = { ...product, price: normalizedPrice };
+
     setItems(prev => {
       const existing = prev.find(item =>
-        item.id === product.id &&
-        (item.selectedColorName || '') === (product.selectedColorName || '') &&
-        Number(item.price) === Number(product.price)
+        item.id === normalizedProduct.id &&
+        (item.selectedColorName || '') === (normalizedProduct.selectedColorName || '') &&
+        Number(item.price) === normalizedPrice
       );
       if (existing) {
-        return prev.map(item => 
+        return prev.map(item =>
           item.id === existing.id &&
           (item.selectedColorName || '') === (existing.selectedColorName || '') &&
           Number(item.price) === Number(existing.price)
-            ? { ...item, quantity: item.quantity + quantity } 
+            ? { ...item, quantity: item.quantity + quantity }
             : item
         );
       }
-      return [...prev, { ...product, quantity }];
+      return [...prev, { ...normalizedProduct, quantity }];
     });
 
     setIsCartOpen(true);
