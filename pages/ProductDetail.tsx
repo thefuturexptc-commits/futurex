@@ -161,8 +161,8 @@ export const ProductDetail: React.FC = () => {
                     loading="lazy"
                     onClick={() => setSelectedImageIndex(imgIdx)}
                     className={`h-16 w-16 rounded-lg object-cover border shrink-0 snap-start cursor-pointer transition-all duration-150 ${selectedImageIndex === imgIdx
-                        ? 'border-primary-500 ring-2 ring-primary-400'
-                        : 'border-white/10 hover:border-white/40'
+                      ? 'border-primary-500 ring-2 ring-primary-400'
+                      : 'border-white/10 hover:border-white/40'
                       }`}
                   />
                 ))}
@@ -339,8 +339,8 @@ export const ProductDetail: React.FC = () => {
                 type="button"
                 onClick={() => setActiveDetailTab(tab.key)}
                 className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-primary-500 ${activeDetailTab === tab.key
-                    ? 'bg-primary-600 text-white shadow shadow-primary-500/30'
-                    : 'text-gray-300 hover:bg-white/10'
+                  ? 'bg-primary-600 text-white shadow shadow-primary-500/30'
+                  : 'text-gray-300 hover:bg-white/10'
                   }`}
               >
                 {tab.label}
@@ -353,34 +353,37 @@ export const ProductDetail: React.FC = () => {
             <div className="rounded-xl border border-white/10 bg-white/5 p-5">
               {product.description ? (
                 <>
-                  {/* <p
-                    className={`text-sm text-gray-300 leading-7 whitespace-pre-line ${
-                      !isDescriptionExpanded && product.description.length > 400 ? 'line-clamp-6' : ''
-                    }`}
-                  >
-                    {product.description}
-                  </p> */}
-
-                  <div
-                    className="text-sm text-gray-300 leading-7 space-y-3 
-                      [&_p]:mb-3 
-                      [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-4
-                      [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-3
-                      [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1
-                      [&_strong]:text-white"
-                    dangerouslySetInnerHTML={{
-                      __html: product.description,
-                    }}
-                  />
-                  {product.description.length > 400 && (
-                    <button
-                      type="button"
-                      onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                      className="mt-3 text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors"
+                  <div className="relative">
+                    <div
+                      className={`text-sm text-gray-300 leading-7 space-y-3 overflow-hidden transition-all duration-300
+      ${!isDescriptionExpanded ? 'max-h-[180px]' : 'max-h-[1000px]'}`}
                     >
-                      {isDescriptionExpanded ? 'Show Less ↑' : 'Show More ↓'}
-                    </button>
-                  )}
+                      <div
+                        className="[&_p]:mb-3 
+      [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-4
+      [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-3
+      [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1
+      [&_strong]:text-white"
+                        dangerouslySetInnerHTML={{
+                          __html: product.description,
+                        }}
+                      />
+                    </div>
+
+                    {/* Fade effect when collapsed */}
+                    {!isDescriptionExpanded && (
+                      <div className="absolute bottom-0 left-0 w-full h-16 bg-gradient-to-t from-dark-bg to-transparent pointer-events-none" />
+                    )}
+                  </div>
+
+                  {/* Toggle button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsDescriptionExpanded(prev => !prev)}
+                    className="mt-4 text-sm font-semibold text-primary-400 hover:text-primary-300 transition-colors"
+                  >
+                    {isDescriptionExpanded ? 'Show Less ↑' : 'Show More ↓'}
+                  </button>
                 </>
               ) : (
                 <p className="text-sm text-gray-500">No description available.</p>
