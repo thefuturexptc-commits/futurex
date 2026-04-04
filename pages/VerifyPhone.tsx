@@ -1,14 +1,17 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { CheckoutStepper } from '../components/CheckoutStepper';
 import { CheckoutFlowState } from '../types';
 import { resetPhoneOtpFlow, sendPhoneOtp, verifyPhoneOtp } from '../services/backend';
 
+const RESEND_COOLDOWN_SECONDS = 30;
+
 export const VerifyPhone: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const flowState = location.state as CheckoutFlowState | undefined;
+  const recaptchaRef = useRef<HTMLDivElement>(null);
 
   const readPersistedFlow = (): CheckoutFlowState | null => {
     try {
@@ -29,6 +32,7 @@ export const VerifyPhone: React.FC = () => {
   const [otpSent, setOtpSent] = useState(false);
   const [editingPhone, setEditingPhone] = useState(false);
   const [draftPhone, setDraftPhone] = useState('');
+  const [cooldown, setCooldown] = useState(0);
 
   const phone = useMemo(() => currentFlow?.phone?.replace(/\D/g, '').slice(0, 10) || '', [currentFlow?.phone]);
 
@@ -52,6 +56,13 @@ export const VerifyPhone: React.FC = () => {
     };
   }, []);
 
+  // Resend cooldown countdown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
   useEffect(() => {
     if (!currentFlow || !phone) return;
     const verifiedPhone = window.sessionStorage.getItem('checkout_phone_verified') || '';
@@ -67,7 +78,7 @@ export const VerifyPhone: React.FC = () => {
   }
 
   const sendOtpForPhone = async (targetPhone: string) => {
-    if (sending) return;
+    if (sending || cooldown > 0) return;
     const normalizedTarget = targetPhone.replace(/\D/g, '').slice(0, 10);
     if (!/^[6-9]\d{9}$/.test(normalizedTarget)) {
       setError('Please check your phone number. Enter a valid 10-digit Indian mobile number starting with 6-9.');
@@ -77,6 +88,11 @@ export const VerifyPhone: React.FC = () => {
       return;
     }
 
+    // Ensure the recaptcha container div is in the DOM before calling sendPhoneOtp.
+    if (!document.getElementById('checkout-recaptcha-container')) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
     setError('');
     setMessage('');
     setSending(true);
@@ -84,10 +100,11 @@ export const VerifyPhone: React.FC = () => {
     try {
       await Promise.race([
         sendPhoneOtp(normalizedTarget, 'checkout-recaptcha-container'),
-        new Promise((_, reject) => setTimeout(() => reject(new Error('OTP request timed out. Please try again.')), 10000)),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('OTP request timed out. Please try again.')), 15000)),
       ]);
       setMessage(`OTP sent to +91 ${normalizedTarget}.`);
       setOtpSent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err: any) {
       const raw = String(err?.message || 'Failed to send OTP.');
       if (/recaptcha|captcha/i.test(raw)) {
@@ -95,6 +112,9 @@ export const VerifyPhone: React.FC = () => {
       } else if (/invalid phone number format|invalid indian phone number|auth\/invalid-phone-number/i.test(raw)) {
         setError('Please check your phone number. Enter a valid 10-digit Indian mobile number.');
         setEditingPhone(true);
+      } else if (/too.many/i.test(raw)) {
+        setError('Too many OTP requests. Please wait a few minutes before trying again.');
+        setCooldown(60);
       } else {
         setError(raw);
       }
@@ -127,6 +147,7 @@ export const VerifyPhone: React.FC = () => {
     setOtp('');
     setOtpSent(false);
     setError('');
+    setCooldown(0);
     setMessage('Phone updated. Click "Send OTP" to receive a new code.');
   };
 
@@ -157,10 +178,10 @@ export const VerifyPhone: React.FC = () => {
     } catch (err: any) {
       const errMsg = err?.message || 'Invalid OTP.';
       setError(errMsg);
-      setEditingPhone(true);
       if (/expired|invalid|resend/i.test(errMsg)) {
         setOtp('');
         setOtpSent(false);
+        setEditingPhone(true);
       }
     } finally {
       setVerifying(false);
@@ -179,8 +200,12 @@ export const VerifyPhone: React.FC = () => {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
-          <Button type="button" onClick={() => void sendOtpForPhone(phone)} disabled={sending}>
-            {sending ? 'Sending OTP...' : 'Send OTP'}
+          <Button
+            type="button"
+            onClick={() => void sendOtpForPhone(phone)}
+            disabled={sending || cooldown > 0}
+          >
+            {sending ? 'Sending OTP...' : cooldown > 0 ? `Resend in ${cooldown}s` : otpSent ? 'Resend OTP' : 'Send OTP'}
           </Button>
           <input
             type="text"
@@ -195,7 +220,9 @@ export const VerifyPhone: React.FC = () => {
         </div>
         {sending && <p className="text-sm text-gray-600 dark:text-gray-300">Sending OTP...</p>}
 
-        <div id="checkout-recaptcha-container" className="min-h-[78px]" />
+        {/* reCAPTCHA container — must stay mounted at all times while on this page */}
+        <div id="checkout-recaptcha-container" ref={recaptchaRef} className="min-h-[78px]" />
+
         {message && <p className="text-sm text-green-600">{message}</p>}
         {error && <p className="text-sm text-red-500">{error}</p>}
 

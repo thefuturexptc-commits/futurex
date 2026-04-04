@@ -871,14 +871,15 @@ export const registerUser = async (email: string, password: string, phone: strin
       // If Firestore read fails due network/permissions, continue with local checks.
     }
 
-    const newUser: User = {
+    const newUser: User & { createdAt?: string } = {
       id: `user_${Date.now()}`,
       name: (name && name.trim()) ? name.trim() : (normalizedEmail.split('@')[0] || 'User'),
       email: normalizedEmail,
       phone: normalizedPhone,
       role: 'user',
       addresses: [],
-      permissions: {}
+      permissions: {},
+      createdAt: new Date().toISOString(),
     };
     const cleanUser = deepSanitize(newUser);
 
@@ -890,6 +891,7 @@ export const registerUser = async (email: string, password: string, phone: strin
         throw new Error('Unable to create account right now.');
       }
       cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
+      const registeredAt = new Date().toISOString();
       await setDoc(doc(db, 'users', firebaseUser.uid), deepSanitize({
         uid: firebaseUser.uid,
         id: firebaseUser.uid,
@@ -899,9 +901,10 @@ export const registerUser = async (email: string, password: string, phone: strin
         role: 'user',
         addresses: [],
         permissions: {},
-        createdAt: new Date().toISOString(),
+        createdAt: registeredAt,
         offersSubscribed: true
       }));
+      cleanUser.createdAt = registeredAt;
     } catch (e: any) {
       const code = e?.code || '';
       if (code === 'auth/email-already-in-use') {
@@ -998,6 +1001,11 @@ export const loginUser = async (email: string, password: string, phone?: string)
           // If role sync fails, continue with in-app role to avoid blocking login.
         }
       }
+      // Sync into local cache so getAllUsers and order matching stay consistent
+      const localUsers1 = upsertSuperAdmin(getMockData<User[]>('users', []));
+      const idx1 = localUsers1.findIndex(u => u.id === remoteUser.id || (u.email || '').toLowerCase() === (remoteUser.email || '').toLowerCase());
+      if (idx1 >= 0) { localUsers1[idx1] = { ...localUsers1[idx1], ...remoteUser }; } else { localUsers1.push(remoteUser); }
+      setMockData('users', localUsers1);
       return remoteUser;
     }
 
@@ -1028,6 +1036,11 @@ export const loginUser = async (email: string, password: string, phone?: string)
       }
     }
 
+    // Sync into local cache
+    const localUsers2 = upsertSuperAdmin(getMockData<User[]>('users', []));
+    const idx2 = localUsers2.findIndex(u => u.id === fallbackUser.id || (u.email || '').toLowerCase() === (fallbackUser.email || '').toLowerCase());
+    if (idx2 >= 0) { localUsers2[idx2] = { ...localUsers2[idx2], ...fallbackUser }; } else { localUsers2.push(fallbackUser); }
+    setMockData('users', localUsers2);
     return fallbackUser;
   } catch (e: any) {
     const firebaseErrorCode = e?.code || '';
@@ -1105,9 +1118,11 @@ export const loginWithGoogle = async (): Promise<User> => {
     const userRef = doc(db, 'users', firebaseUser.uid);
     const userSnap = await getDoc(userRef);
 
+    let resolvedUser: User;
+
     if (userSnap.exists()) {
       const rawUser = userSnap.data() as User;
-      const normalizedUser = applyRoleByEmail(rawUser);
+      const normalizedUser = applyRoleByEmail({ ...rawUser, id: rawUser.id || firebaseUser.uid });
       if (rawUser.role !== normalizedUser.role) {
         try {
           await setDoc(
@@ -1122,7 +1137,7 @@ export const loginWithGoogle = async (): Promise<User> => {
           // Ignore role sync failure and continue with normalized role in app state.
         }
       }
-      return normalizedUser;
+      resolvedUser = normalizedUser;
     } else {
       const newUser: User = {
         id: firebaseUser.uid,
@@ -1133,9 +1148,21 @@ export const loginWithGoogle = async (): Promise<User> => {
         permissions: {}
       };
       const normalizedUser = applyRoleByEmail(newUser);
-      await setDoc(userRef, deepSanitize(normalizedUser));
-      return normalizedUser;
+      await setDoc(userRef, deepSanitize({ ...normalizedUser, createdAt: new Date().toISOString() }));
+      resolvedUser = normalizedUser;
     }
+
+    // Sync into local user cache so admin lists and order matching work correctly
+    const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+    const existingIdx = localUsers.findIndex(u => u.id === resolvedUser.id || (u.email || '').toLowerCase() === (resolvedUser.email || '').toLowerCase());
+    if (existingIdx >= 0) {
+      localUsers[existingIdx] = { ...localUsers[existingIdx], ...resolvedUser };
+    } else {
+      localUsers.push(resolvedUser);
+    }
+    setMockData('users', localUsers);
+
+    return resolvedUser;
   } catch (error: any) {
     const code = error?.code || '';
     if (code === 'auth/popup-closed-by-user') {
@@ -1243,7 +1270,7 @@ export const resetPhoneOtpFlow = () => {
   phoneVerificationId = null;
   recaptchaContainerInUse = null;
   if (recaptchaVerifier) {
-    recaptchaVerifier.clear();
+    try { recaptchaVerifier.clear(); } catch { /* ignore */ }
     recaptchaVerifier = null;
   }
   if (typeof window !== 'undefined') {
@@ -1255,6 +1282,15 @@ export const resetPhoneOtpFlow = () => {
       // no-op for restricted storage contexts
     }
     (window as any).recaptchaVerifier = null;
+
+    // Reset the global grecaptcha widget so the next render() call starts clean.
+    try {
+      const win = window as any;
+      if (win.grecaptcha && typeof win.grecaptcha.reset === 'function') {
+        win.grecaptcha.reset();
+      }
+    } catch { /* ignore */ }
+
     if (containerId) {
       const container = document.getElementById(containerId);
       if (container) {
@@ -1269,21 +1305,41 @@ const ensureRecaptchaVerifier = async (containerId: string): Promise<RecaptchaVe
     return recaptchaVerifier;
   }
 
+  // Clear any stale verifier instance first
   if (recaptchaVerifier) {
-    recaptchaVerifier.clear();
+    try { recaptchaVerifier.clear(); } catch { /* ignore */ }
     recaptchaVerifier = null;
+    recaptchaContainerInUse = null;
   }
 
   const container = document.getElementById(containerId);
   if (!container) {
     throw new Error(`reCAPTCHA container not found: #${containerId}`);
   }
-  // Defensive reset to avoid "reCAPTCHA has already been rendered in this element" on retries.
+
+  // Wipe any previously rendered grecaptcha widget inside the container.
+  // Without this, Firebase throws "reCAPTCHA has already been rendered in this element"
+  // on every retry, which causes auth/captcha-check-failed errors.
   container.innerHTML = '';
+
+  // Also reset the global grecaptcha instance if available — this clears any
+  // stale widget IDs that Firebase may have cached internally.
+  try {
+    const win = window as any;
+    if (win.grecaptcha && typeof win.grecaptcha.reset === 'function') {
+      win.grecaptcha.reset();
+    }
+  } catch { /* ignore — grecaptcha may not be loaded yet */ }
 
   recaptchaVerifier = new RecaptchaVerifier(auth, containerId, {
     size: 'invisible',
     callback: () => {},
+    'expired-callback': () => {
+      // When reCAPTCHA token expires, clear so the next sendOtp
+      // call creates a fresh verifier instead of reusing the expired token.
+      recaptchaVerifier = null;
+      recaptchaContainerInUse = null;
+    },
   });
 
   recaptchaContainerInUse = containerId;
@@ -1314,10 +1370,22 @@ export const sendPhoneOtp = async (phone: string, recaptchaContainerId: string):
   // Always start with a fresh verifier token per OTP send attempt.
   // Reusing older verifier sessions can trigger INVALID_APP_CREDENTIAL.
   if (recaptchaVerifier) {
-    recaptchaVerifier.clear();
+    try { recaptchaVerifier.clear(); } catch { /* ignore */ }
     recaptchaVerifier = null;
     recaptchaContainerInUse = null;
   }
+
+  // Also reset the global grecaptcha widget before re-rendering.
+  try {
+    const win = window as any;
+    if (win.grecaptcha && typeof win.grecaptcha.reset === 'function') {
+      win.grecaptcha.reset();
+    }
+  } catch { /* ignore */ }
+
+  // Small delay to let the browser flush the DOM after innerHTML reset
+  // before Firebase tries to attach a new widget to the container.
+  await new Promise(resolve => setTimeout(resolve, 150));
 
   try {
     const appVerifier = await ensureRecaptchaVerifier(recaptchaContainerId);
@@ -1490,6 +1558,21 @@ export const updateUserAddresses = async (userId: string, addresses: Address[]):
         await updateDoc(userRef, { addresses: deepSanitize(addresses) });
     } catch (e) {
         console.warn("Failed to update user address in Firebase:", e);
+    }
+
+    // 3. Sync the updated addresses into the active session (aura_active_user)
+    //    so the profile page reflects changes immediately without a full reload.
+    try {
+      const raw = typeof window !== 'undefined' ? window.localStorage.getItem('aura_active_user') : null;
+      if (raw) {
+        const sessionUser = JSON.parse(raw) as User;
+        if (sessionUser.id === userId) {
+          const updated = { ...sessionUser, addresses };
+          window.localStorage.setItem('aura_active_user', JSON.stringify(updated));
+        }
+      }
+    } catch {
+      // Ignore serialization failures.
     }
 };
 
@@ -1689,12 +1772,26 @@ export const getAllUsers = async (): Promise<User[]> => {
     setMockData('users', localUsers);
     try {
       await ensureFirebaseConnection();
-      const querySnapshot = await withTimeout(getDocs(collection(db, 'users')), 1500);
+      const querySnapshot = await withTimeout(getDocs(collection(db, 'users')), 5000);
       const fbUsers: User[] = [];
-      querySnapshot.forEach((userDoc) => fbUsers.push(applyRoleByEmail(userDoc.data() as User)));
+      querySnapshot.forEach((userDoc) => {
+        const data = userDoc.data() as User;
+        // Ensure id is always set from the document key
+        fbUsers.push(applyRoleByEmail({ ...data, id: data.id || userDoc.id }));
+      });
       const normalized = upsertSuperAdmin(fbUsers);
-      setMockData('users', normalized);
-      return normalized;
+
+      // Merge: Firebase is the source of truth for remote users.
+      // Preserve any local-only users (e.g. created offline) that don't exist remotely.
+      const mergedMap = new Map<string, User>();
+      normalized.forEach(u => mergedMap.set(u.id, u));
+      localUsers.forEach(u => {
+        if (!mergedMap.has(u.id)) mergedMap.set(u.id, u);
+      });
+      const merged = Array.from(mergedMap.values());
+
+      setMockData('users', merged);
+      return merged;
     } catch (error) {
       if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
         console.warn('Failed to fetch users from Firebase:', error);
@@ -1736,10 +1833,13 @@ export const createOrder = async (
     orderSource?: string;
   }
 ): Promise<Order> => {
+  // Always use the Firebase UID if the user is signed in — this ensures
+  // getUserOrders (which queries Firestore by userId) finds the correct orders.
+  const resolvedUserId = auth.currentUser?.uid || userId;
   const placedAt = new Date().toISOString();
   const newOrder: Order = {
     id: `ORD-${Date.now()}`,
-    userId,
+    userId: resolvedUserId,
     items,
     total,
     status: 'Processing',
@@ -1846,20 +1946,25 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   // 1. Get Local Orders
   const mockOrders = getMockData<Order[]>('orders', []);
   
-  // 2. Fetch Firebase Orders
+  // 2. Fetch Firebase Orders (with timeout to prevent hanging on slow connections)
   let fbOrders: Order[] = [];
   try {
       await ensureFirebaseConnection();
       const q = query(collection(db, 'orders'), where('userId', '==', userId));
-      const querySnapshot = await getDocs(q);
+      const querySnapshot = await withTimeout(getDocs(q), 5000);
       // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
-      querySnapshot.forEach((doc) => fbOrders.push({ ...(doc.data() as Order), id: doc.id }));
+      querySnapshot.forEach((orderDoc) => fbOrders.push({ ...(orderDoc.data() as Order), id: orderDoc.id }));
   } catch (e) { 
       console.warn("Failed to fetch user orders from Firebase", e);
   }
 
-  // 3. Filter Local Orders
-  const filteredMock = mockOrders.filter(o => o.userId === userId);
+  // 3. Filter Local Orders — match by userId OR by the Firebase UID (handles
+  //    orders created before the user's Firebase UID was resolved).
+  const firebaseUid = auth.currentUser?.uid;
+  const filteredMock = mockOrders.filter(o =>
+    o.userId === userId ||
+    (firebaseUid && o.userId === firebaseUid)
+  );
 
   // 4. Merge - Prioritize Firebase Orders (Source of truth for Status Updates)
   const combined = [...fbOrders];

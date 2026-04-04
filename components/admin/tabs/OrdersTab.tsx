@@ -65,10 +65,10 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
       order.paymentMethod === 'cod'
         ? 'Cash on Delivery'
         : order.paymentMethod === 'online'
-        ? 'Online Payment'
-        : order.paymentStatus === 'Pending'
-        ? 'Cash on Delivery'
-        : 'Online Payment';
+          ? 'Online Payment'
+          : order.paymentStatus === 'Pending'
+            ? 'Cash on Delivery'
+            : 'Online Payment';
     const customerName = shipping?.name || customer?.name || 'Unknown Customer';
     const customerEmail = customer?.email || order.userId || '-';
     const customerPhone = order.phoneNumber ? `+91 ${order.phoneNumber}` : '-';
@@ -489,8 +489,8 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
                   >
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">{order.id}</td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                      <p className="font-medium text-gray-900 dark:text-white">{customer?.name || 'Unknown'}</p>
-                      <p className="text-xs text-gray-500">{customer?.email || order.userId}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{order.shippingDetails?.name || customer?.name || 'Unknown'}</p>
+                      <p className="text-xs text-gray-500">{customer?.email || ''}</p>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                       <p>{new Date(order.date).toLocaleDateString()}</p>

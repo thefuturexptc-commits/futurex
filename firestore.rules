@@ -46,8 +46,8 @@ service cloud.firestore {
     }
 
     match /support_chats/{chatId} {
-      allow read, write: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow create: if signedIn();
+      allow read, update, delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
     }
 
     match /users/{userId} {
