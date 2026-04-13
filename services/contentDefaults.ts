@@ -48,7 +48,7 @@ Our vision is to become a trusted technology brand known for useful products, de
 
 If you have any questions or need assistance, our support team is always here to help.
 
-Email: thefuturex.ptc@gmail.com
+Email: supporttfxvital@gmail.com
 Location: Virar East, Maharashtra, India
 Website: https://thefuturex.in`,
   contact: `Contact Us
@@ -56,7 +56,7 @@ Website: https://thefuturex.in`,
 We are always here to help. If you have any questions about our products, orders, shipping, exchanges, or warranty support, please feel free to contact us. Our support team will assist you at every step.
 
 **CUSTOMER SUPPORT**
-Email: thefuturex.ptc@gmail.com
+Email: supporttfxvital@gmail.com
 Contact Number: +91 85303 40676
 
 For order-related queries, please include your Order ID in your email so we can assist you more quickly.
@@ -105,7 +105,7 @@ TheFutureX will not be responsible for orders delivered to an incorrect address 
 If your package arrives damaged or tampered, please take photos or videos while opening the package and contact our support team within 24 hours of delivery.
 
 **8. CONTACT US**
-Email: thefuturex.ptc@gmail.com
+Email: supporttfxvital@gmail.com
 Address: Virar East, Maharashtra, India
 Website: https://thefuturex.in`,
   'returns-refund': `Return, Exchange & Warranty Policy
@@ -214,7 +214,7 @@ India
 +91 8530340676
 
 **EMAIL**
-thefuturex.ptc@gmail.com
+supporttfxvital@gmail.com
 
 **WEBSITE**
 https://thefuturex.in`,
@@ -285,7 +285,7 @@ By accessing this website and placing an order, you accept these terms and condi
 TheFutureX is an online store that sells electronic products and accessories.
 Business Name: TheFutureX
 Website: https://thefuturex.in
-Email: thefuturex.ptc@gmail.com
+Email: supporttfxvital@gmail.com
 
 **2. USE OF WEBSITE**
 By using this website, you agree to:
@@ -345,14 +345,14 @@ We reserve the right to update or modify these Terms and Conditions at any time 
 
 **12. CONTACT US**
 If you have any questions about these Terms and Conditions, please contact us:
-Email: thefuturex.ptc@gmail.com
+Email: supporttfxvital@gmail.com
 Address: Virar East, Maharashtra, India
 
 Our support team remains available to assist you with order, exchange, and warranty-related concerns.`,
 };
 
 export const DEFAULT_SOCIAL_LINKS: NonNullable<WebsiteSettings['socialLinks']> = {
-  email: 'thefuturex.ptc@gmail.com',
+  email: 'supporttfxvital@gmail.com',
   twitter: '',
   facebook: 'https://www.facebook.com/people/The-Future-X-India/61585558692279/',
   instagram: 'https://www.instagram.com/thefuturex.in/',

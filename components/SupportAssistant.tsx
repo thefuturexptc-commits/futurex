@@ -22,7 +22,7 @@ type ChatProductCard = NonNullable<SupportChatMessage['products']>[number];
 const QUICK_CHIPS = ['price', 'stock', 'warranty', 'order status', 'new arrivals', 'best sellers'];
 const INFO_QUICK_CHIPS = ['about us', 'privacy', 'returns', 'contact'];
 const SUPPORT_PHONE = '+91 85303 40676';
-const SUPPORT_EMAIL = 'thefuturex.ptc@gmail.com';
+const SUPPORT_EMAIL = 'supporttfxvital@gmail.com';
 const DEFAULT_BOT_TEXT =
   "Hi! I'm TheFutureX Assistant.\n\nI can help with:\n- Product price\n- Stock availability\n- Warranty\n- Battery details\n- Product specs\n- Order status\n\nJust type your question below.";
 
