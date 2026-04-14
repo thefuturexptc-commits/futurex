@@ -25,6 +25,36 @@ interface CardPalette {
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
+const scheduleIdleWork = (work: () => void): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+
+  let cancelled = false;
+  const run = () => {
+    if (!cancelled) work();
+  };
+  const requestIdle = (window as Window & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  }).requestIdleCallback;
+  const cancelIdle = (window as Window & {
+    cancelIdleCallback?: (id: number) => void;
+  }).cancelIdleCallback;
+
+  if (requestIdle) {
+    const id = requestIdle(run, { timeout: 700 });
+    return () => {
+      cancelled = true;
+      cancelIdle?.(id);
+    };
+  }
+
+  const id = window.setTimeout(run, 90);
+  return () => {
+    cancelled = true;
+    window.clearTimeout(id);
+  };
+};
+
 const getImageTint = async (src: string): Promise<CardPalette> => {
   if (!src) return { tint: DEFAULT_TINT, deepTint: 'rgba(11, 16, 26, 0.98)', isLight: false };
   const cached = imageTintCache.get(src);
@@ -124,8 +154,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const [imageTint, setImageTint] = useState(DEFAULT_TINT);
   const [imageDeepTint, setImageDeepTint] = useState('rgba(11, 16, 26, 0.96)');
   const [isLightCard, setIsLightCard] = useState(false);
-  const supportsHover =
-    typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+  const supportsHover = useMemo(
+    () => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches,
+    []
+  );
   const enableHoverEffects = !disableHoverEffects && supportsHover;
 
   const salePrice = Number(product.salePrice || product.price || 0);
@@ -153,14 +185,17 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
   useEffect(() => {
     let cancelled = false;
-    void getImageTint(activeImage).then(({ tint, deepTint, isLight }) => {
-      if (cancelled) return;
-      setImageTint(tint);
-      setImageDeepTint(deepTint);
-      setIsLightCard(isLight);
+    const cancelIdle = scheduleIdleWork(() => {
+      void getImageTint(activeImage).then(({ tint, deepTint, isLight }) => {
+        if (cancelled) return;
+        setImageTint(tint);
+        setImageDeepTint(deepTint);
+        setIsLightCard(isLight);
+      });
     });
     return () => {
       cancelled = true;
+      cancelIdle();
     };
   }, [activeImage]);
 

@@ -62,7 +62,13 @@ export const CartDrawer: React.FC = () => {
               items.map(item => (
                 <div key={item.id} className="flex gap-4">
                   <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
-                    <img src={item.images[0]} alt={item.name} className="h-full w-full object-cover object-center" />
+                    <img
+                      src={item.images[0]}
+                      alt={item.name}
+                      loading="lazy"
+                      decoding="async"
+                      className="h-full w-full object-cover object-center"
+                    />
                   </div>
                   <div className="flex flex-1 flex-col">
                     <div>

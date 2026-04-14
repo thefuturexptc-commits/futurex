@@ -20,6 +20,31 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
 
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [snapPoints, setSnapPoints] = useState<number[]>([]);
+    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
+    useEffect(() => {
+      if (!emblaApi || images.length <= 1 || isPreviewOpen) return;
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+      const timer = window.setInterval(() => {
+        emblaApi.scrollNext();
+      }, 3500);
+
+      return () => window.clearInterval(timer);
+    }, [emblaApi, images.length, isPreviewOpen]);
+
+    useEffect(() => {
+      if (!isPreviewOpen) return;
+
+      const handleKeyDown = (event: KeyboardEvent) => {
+        if (event.key === 'Escape') {
+          setIsPreviewOpen(false);
+        }
+      };
+
+      document.addEventListener('keydown', handleKeyDown);
+      return () => document.removeEventListener('keydown', handleKeyDown);
+    }, [isPreviewOpen]);
 
     // Sync with external index (thumbnail click)
     useEffect(() => {
@@ -58,19 +83,24 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
         >
           <div className="flex touch-pan-y">
             {images.map((image, idx) => (
-              <div
+              <button
                 key={`${image}_${idx}`}
-                className="relative min-w-0 flex-[0_0_100%] aspect-square"
+                type="button"
+                onClick={() => setIsPreviewOpen(true)}
+                className="relative min-w-0 flex-[0_0_100%] aspect-square cursor-zoom-in overflow-hidden border-0 bg-transparent p-0"
+                aria-label={`View ${alt} image ${idx + 1}`}
               >
                 <img
                   src={image}
                   alt={alt}
                   className="h-full w-full object-cover transition-all duration-500 ease-out"
                   loading={idx === 0 ? 'eager' : 'lazy'}
+                  decoding={idx === 0 ? 'sync' : 'async'}
+                  fetchPriority={idx === 0 ? 'high' : 'auto'}
                   width={900}
                   height={900}
                 />
-              </div>
+              </button>
             ))}
           </div>
         </div>
@@ -91,6 +121,31 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                 }`}
               />
             ))}
+          </div>
+        )}
+
+        {isPreviewOpen && (
+          <div
+            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 px-4 py-6"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${alt} image preview`}
+            onClick={() => setIsPreviewOpen(false)}
+          >
+            <button
+              type="button"
+              className="absolute right-4 top-4 rounded-lg border border-white/30 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10"
+              onClick={() => setIsPreviewOpen(false)}
+            >
+              Close
+            </button>
+            <img
+              src={images[selectedIndex]}
+              alt={`${alt} enlarged view`}
+              decoding="async"
+              className="max-h-[86vh] w-auto max-w-full object-contain"
+              onClick={(event) => event.stopPropagation()}
+            />
           </div>
         )}
       </div>

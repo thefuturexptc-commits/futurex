@@ -6,9 +6,9 @@ import { CartProvider } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { CartDrawer } from './components/CartDrawer';
-import { SupportAssistant } from './components/SupportAssistant';
 import { AuthModalProvider } from './context/AuthModalContext';
 import { SiteFooter } from './components/SiteFooter';
+import { removeJsonLd, setSeoMetadata } from './services/seo';
 
 // ✅ META PIXEL
 import { initMetaPixel, trackPageView } from './services/Metapixel';
@@ -26,6 +26,7 @@ const Payment = React.lazy(() => import('./pages/Payment').then(module => ({ def
 const Profile = React.lazy(() => import('./pages/Profile').then(module => ({ default: module.Profile })));
 const OrderSuccess = React.lazy(() => import('./pages/OrderSuccess').then(module => ({ default: module.OrderSuccess })));
 const ProductDetail = React.lazy(() => import('./pages/ProductDetail').then(module => ({ default: module.ProductDetail })));
+const SupportAssistant = React.lazy(() => import('./components/SupportAssistant').then(module => ({ default: module.SupportAssistant })));
 const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard').then(module => ({ default: module.AdminDashboard })));
 const AdminEditProductPage = React.lazy(() => import('./pages/AdminEditProductPage').then(module => ({ default: module.AdminEditProductPage })));
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
@@ -47,6 +48,89 @@ const MetaPixelPageTracker: React.FC = () => {
   useEffect(() => {
     trackPageView();
   }, [pathname]);
+  return null;
+};
+
+const getRouteSeo = (pathname: string) => {
+  const cleanPath = pathname.replace(/\/+$/, '') || '/';
+  if (cleanPath.startsWith('/product/')) return null;
+
+  const routeSeo: Record<string, { title: string; description: string }> = {
+    '/': {
+      title: 'TheFutureX | Future of Wearables',
+      description: 'Shop smart bands, smart rings, smart fans, and health monitoring wearables from TheFutureX.',
+    },
+    '/smart-bands': {
+      title: 'Smart Bands',
+      description: 'Explore TheFutureX smart bands for activity tracking, everyday health insights, and connected living.',
+    },
+    '/smart-rings': {
+      title: 'Smart Rings',
+      description: 'Explore TheFutureX smart rings for compact wellness tracking, modern style, and everyday comfort.',
+    },
+    '/smart-fans': {
+      title: 'Smart Fans',
+      description: 'Shop TheFutureX smart fans built for connected comfort, energy-conscious cooling, and modern homes.',
+    },
+    '/smart-monitoring': {
+      title: 'Smart Monitoring',
+      description: 'Discover TheFutureX smart monitoring devices for health, wellness, and daily care.',
+    },
+    '/shop/all': {
+      title: 'Shop All Products',
+      description: 'Browse all TheFutureX smart wearables, smart fans, and health monitoring products.',
+    },
+    '/cart': {
+      title: 'Shopping Cart',
+      description: 'Review your selected TheFutureX products before checkout.',
+    },
+    '/checkout': {
+      title: 'Checkout',
+      description: 'Complete your TheFutureX order securely.',
+    },
+    '/login': {
+      title: 'Login',
+      description: 'Sign in to your TheFutureX account.',
+    },
+    '/signup': {
+      title: 'Sign Up',
+      description: 'Create your TheFutureX account.',
+    },
+  };
+
+  if (cleanPath.startsWith('/shop/')) {
+    const category = cleanPath.split('/').pop()?.replace(/-/g, ' ') || 'products';
+    const label = category.replace(/\b\w/g, (char) => char.toUpperCase());
+    return {
+      title: `${label} Products`,
+      description: `Browse ${label.toLowerCase()} from TheFutureX.`,
+      path: cleanPath,
+    };
+  }
+
+  if (cleanPath.startsWith('/info/')) {
+    const page = cleanPath.split('/').pop()?.replace(/-/g, ' ') || 'information';
+    const label = page.replace(/\b\w/g, (char) => char.toUpperCase());
+    return {
+      title: label,
+      description: `${label} information for TheFutureX customers.`,
+      path: cleanPath,
+    };
+  }
+
+  return { ...(routeSeo[cleanPath] || routeSeo['/']), path: cleanPath };
+};
+
+const RouteSeo: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const seo = getRouteSeo(pathname);
+    if (!seo) return;
+    removeJsonLd('product-json-ld');
+    setSeoMetadata(seo);
+  }, [pathname]);
+
   return null;
 };
 
@@ -169,6 +253,7 @@ const App: React.FC = () => {
           <BrowserRouter>
             <AuthModalProvider>
               <ScrollToTop />
+              <RouteSeo />
               <MetaPixelPageTracker />
               <OrderSourceTracker />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
@@ -206,7 +291,9 @@ const App: React.FC = () => {
                     </Routes>
                   </Suspense>
                 </main>
-                <SupportAssistant />
+                <Suspense fallback={null}>
+                  <SupportAssistant />
+                </Suspense>
                 <SiteFooter />
               </div>
             </AuthModalProvider>

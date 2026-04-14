@@ -265,7 +265,9 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
               <img
                 src={heroImage}
                 alt={category}
-                loading="lazy"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 width={960}
                 height={960}
                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"

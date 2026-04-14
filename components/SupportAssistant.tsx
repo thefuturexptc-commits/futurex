@@ -109,6 +109,9 @@ export const SupportAssistant: React.FC = () => {
   const userId = user?.id || 'guest';
 
   useEffect(() => {
+    if (!open && !pendingPrompt && !pendingAssistantHint) return;
+    if (products.length > 0 || loadingProducts) return;
+
     let active = true;
     setLoadingProducts(true);
     getProducts()
@@ -126,9 +129,12 @@ export const SupportAssistant: React.FC = () => {
     return () => {
       active = false;
     };
-  }, []);
+  }, [loadingProducts, open, pendingAssistantHint, pendingPrompt, products.length]);
 
   useEffect(() => {
+    if (!open && !pendingPrompt && !pendingAssistantHint) return;
+    if (session) return;
+
     let active = true;
     const loadSession = async () => {
       const sessionId = getSessionId(userId);
@@ -168,7 +174,7 @@ export const SupportAssistant: React.FC = () => {
     return () => {
       active = false;
     };
-  }, [userId, user?.email, user?.name]);
+  }, [open, pendingAssistantHint, pendingPrompt, session, userId, user?.email, user?.name]);
 
   useEffect(() => {
     if (!open) return;
@@ -771,6 +777,7 @@ export const SupportAssistant: React.FC = () => {
                     src={supportAssistantLogo}
                     alt="TheFutureX Assistant"
                     loading="lazy"
+                    decoding="async"
                     className="h-9 w-9 rounded-full object-cover border border-gray-200 shadow-sm"
                   />
                 </div>
@@ -842,6 +849,7 @@ export const SupportAssistant: React.FC = () => {
                               src={product.image}
                               alt={product.name}
                               loading="lazy"
+                              decoding="async"
                               className="w-full h-32 object-contain rounded-lg border border-gray-100 bg-gray-50"
                             />
                           ) : (
@@ -977,6 +985,7 @@ export const SupportAssistant: React.FC = () => {
                   src={supportAssistantLogo}
                   alt="Assistant logo"
                   loading="lazy"
+                  decoding="async"
                   className="h-5 w-5 sm:h-7 sm:w-7 rounded-full object-cover border border-slate-500"
                 />
                 <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full bg-emerald-500 border border-white" />

@@ -49,7 +49,7 @@ Our vision is to become a trusted technology brand known for useful products, de
 If you have any questions or need assistance, our support team is always here to help.
 
 Email: supporttfxvital@gmail.com
-Location: Virar East, Maharashtra, India
+Location: 201-202, Hirubhai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West, Maharashtra 401303, India
 Website: https://thefuturex.in`,
   contact: `Contact Us
 
@@ -63,8 +63,10 @@ For order-related queries, please include your Order ID in your email so we can 
 
 **BUSINESS ADDRESS**
 TheFutureX
-Office No. 322, Padmi Bai Tower
-Virar East, Maharashtra
+201-202, Hirubhai Residency
+Besides Vedant Hospital
+Near Virar East-West Flyover
+Virar West, Maharashtra 401303
 India
 
 **WORKING HOURS**
@@ -106,7 +108,7 @@ If your package arrives damaged or tampered, please take photos or videos while 
 
 **8. CONTACT US**
 Email: supporttfxvital@gmail.com
-Address: Virar East, Maharashtra, India
+Address: 201-202, Hirubhai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West, Maharashtra 401303, India
 Website: https://thefuturex.in`,
   'returns-refund': `Return, Exchange & Warranty Policy
 
@@ -205,9 +207,10 @@ For exchange requests, warranty claims, repair support, or any product-related a
 TheFutureX
 
 **ADDRESS**
-Office No. 310, Padmibai Tower
-Station Road, Virar East
-Palghar, Maharashtra 401305
+201-202, Hirubhai Residency
+Besides Vedant Hospital
+Near Virar East-West Flyover
+Virar West, Maharashtra 401303
 India
 
 **CUSTOMER SUPPORT PHONE**
@@ -346,7 +349,7 @@ We reserve the right to update or modify these Terms and Conditions at any time 
 **12. CONTACT US**
 If you have any questions about these Terms and Conditions, please contact us:
 Email: supporttfxvital@gmail.com
-Address: Virar East, Maharashtra, India
+Address: 201-202, Hirubhai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West, Maharashtra 401303, India
 
 Our support team remains available to assist you with order, exchange, and warranty-related concerns.`,
 };

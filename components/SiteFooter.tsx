@@ -4,6 +4,12 @@ import { useTheme } from '../context/ThemeContext';
 
 export const SiteFooter: React.FC = () => {
   const { footerSections, socialLinks } = useTheme();
+  const businessAddress = [
+    '201-202, Hirubhai Residency',
+    'Besides Vedant Hospital',
+    'Near Virar East-West Flyover',
+    'Virar West, Maharashtra 401303',
+  ];
   const toSlug = (value: string) =>
     value
       .toLowerCase()
@@ -29,6 +35,19 @@ export const SiteFooter: React.FC = () => {
               </ul>
             </div>
           ))}
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-white/10 text-center sm:text-left">
+          <h4 className="text-xs tracking-[0.2em] uppercase font-bold text-gray-400 mb-3">Address</h4>
+          <address className="not-italic text-sm leading-6 text-gray-300">
+            {businessAddress.map((line) => (
+              <React.Fragment key={line}>
+                {line}
+                <br />
+              </React.Fragment>
+            ))}
+            India
+          </address>
         </div>
 
         <div className="mt-8 pt-6 border-t border-white/10">

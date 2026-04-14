@@ -10,6 +10,29 @@ import { trackAddPaymentInfo, trackPurchase } from '../services/Metapixel';
 
 const LAST_ORDER_SUCCESS_KEY = 'last_order_success';
 const ORDER_SOURCE_SESSION_KEY = 'tfx_order_source';
+const RAZORPAY_SDK_URL = 'https://checkout.razorpay.com/v1/checkout.js';
+
+const loadRazorpaySdk = (): Promise<void> => {
+  const existingRazorpay = (window as any).Razorpay;
+  if (existingRazorpay) return Promise.resolve();
+
+  const existingScript = document.querySelector<HTMLScriptElement>(`script[src="${RAZORPAY_SDK_URL}"]`);
+  if (existingScript) {
+    return new Promise((resolve, reject) => {
+      existingScript.addEventListener('load', () => resolve(), { once: true });
+      existingScript.addEventListener('error', () => reject(new Error('Unable to load Razorpay. Please try again.')), { once: true });
+    });
+  }
+
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = RAZORPAY_SDK_URL;
+    script.async = true;
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Unable to load Razorpay. Please try again.'));
+    document.head.appendChild(script);
+  });
+};
 
 const getOrderSourceFromSession = (): string => {
   if (typeof window === 'undefined') return 'Website';
@@ -153,6 +176,8 @@ export const Payment: React.FC = () => {
         await placeOrder('Pending');
         return;
       }
+
+      await loadRazorpaySdk();
 
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,

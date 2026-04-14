@@ -4,8 +4,10 @@ import { Product, ProductColor } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
-import { getProductById } from '../services/backend';
+import { getProductById, getProducts, toProductSlug } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
+import { ProductCard } from '../components/ProductCard';
+import { absoluteUrl, removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
 
 export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +19,7 @@ export const ProductDetail: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
 
   const [selectedColor, setSelectedColor] = useState<ProductColor | null>(null);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -43,6 +46,26 @@ export const ProductDetail: React.FC = () => {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    if (!product) return;
+
+    let cancelled = false;
+    getProducts()
+      .then((products) => {
+        if (cancelled) return;
+        const sameCategory = products.filter((item) => item.id !== product.id && item.category === product.category);
+        const fallback = products.filter((item) => item.id !== product.id && item.category !== product.category);
+        setRelatedProducts([...sameCategory, ...fallback].slice(0, 6));
+      })
+      .catch(() => {
+        if (!cancelled) setRelatedProducts([]);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [product]);
+
   const activeImages = useMemo(() => {
     if (selectedColor?.images?.length) return selectedColor.images;
     return product?.images ?? [];
@@ -61,6 +84,58 @@ export const ProductDetail: React.FC = () => {
   }, [selectedColor, product]);
 
   const canAdd = stockCount > 0;
+
+  useEffect(() => {
+    if (!product) return;
+
+    const productPath = `/product/${toProductSlug(product.name)}`;
+    const image = product.images?.[0] || product.colors?.[0]?.images?.[0] || '/images/fav.webp';
+    const description =
+      stripHtml(product.description).slice(0, 155) ||
+      product.features?.slice(0, 3).join(', ') ||
+      `Shop ${product.name} from TheFutureX.`;
+    const price = Number(product.salePrice || product.price || 0);
+    const productImages = product.images?.length ? product.images : [image];
+
+    setSeoMetadata({
+      title: product.name,
+      description,
+      path: productPath,
+      image,
+      type: 'product',
+    });
+
+    setJsonLd('product-json-ld', {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description,
+      image: productImages.map((item) => absoluteUrl(item)),
+      brand: {
+        '@type': 'Brand',
+        name: 'TheFutureX',
+      },
+      sku: product.id,
+      category: product.category,
+      aggregateRating: product.rating
+        ? {
+            '@type': 'AggregateRating',
+            ratingValue: Number(product.rating),
+            reviewCount: Number(product.reviewCount || product.reviews?.length || 1),
+          }
+        : undefined,
+      offers: {
+        '@type': 'Offer',
+        url: absoluteUrl(productPath),
+        priceCurrency: 'INR',
+        price,
+        availability: canAdd ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        itemCondition: 'https://schema.org/NewCondition',
+      },
+    });
+
+    return () => removeJsonLd('product-json-ld');
+  }, [canAdd, product]);
 
   const handleAddToCart = useCallback(() => {
     if (!product) return;
@@ -494,6 +569,35 @@ export const ProductDetail: React.FC = () => {
             </div>
           )}
         </section>
+
+        {relatedProducts.length > 0 && (
+          <section className="mt-14 border-t border-white/10 pt-8">
+            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-300">You may also like</p>
+                <h2 className="mt-2 text-xl sm:text-2xl font-bold text-white">More Products</h2>
+              </div>
+              <Link
+                to="/shop/all"
+                className="text-sm font-semibold text-primary-300 transition-colors hover:text-primary-200"
+              >
+                Continue Shopping
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
+              {relatedProducts.map((item) => (
+                <ProductCard
+                  key={item.id}
+                  product={item}
+                  compact
+                  imageAspectClassName="aspect-[4/3]"
+                  disableHoverEffects
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
