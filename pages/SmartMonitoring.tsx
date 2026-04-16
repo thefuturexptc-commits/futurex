@@ -1,6 +1,6 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
-import heroImage from '../assets/images/smartmonitoring-hero.webp';
+import heroImage from '../assets/images/monitoring-phone-cutout.webp';
 import heroBackgroundImage from '../assets/images/smartrings-neon-bg.webp';
 export const SmartMonitoring: React.FC = () => {
   const features = [

@@ -78,14 +78,11 @@ const getSessionId = (userId: string) => {
 export const SupportAssistant: React.FC = () => {
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
-  const { addToCart, isCartOpen, closeCart } = useCart();
+  const { addToCart, isCartOpen } = useCart();
   const { footerSections, pageContent, socialLinks } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [isMobileViewport, setIsMobileViewport] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 639px)').matches
-  );
   const [input, setInput] = useState('');
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -204,21 +201,6 @@ export const SupportAssistant: React.FC = () => {
   }, [open]);
 
   useEffect(() => {
-    const onResize = () => {
-      setIsMobileViewport(window.matchMedia('(max-width: 639px)').matches);
-    };
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
-  }, []);
-
-  useEffect(() => {
-    // On mobile, let assistant replace cart drawer space.
-    if (isMobileViewport && isCartOpen && open) {
-      closeCart();
-    }
-  }, [isMobileViewport, isCartOpen, open, closeCart]);
-
-  useEffect(() => {
     if (!open) return;
 
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
@@ -286,7 +268,7 @@ export const SupportAssistant: React.FC = () => {
       const productName = customEvent.detail?.productName || 'this item';
       if (!action) return;
 
-      if (isCartOpen) closeCart();
+      if (isCartOpen) return;
       setOpen(true);
       setShouldAutoScroll(true);
 
@@ -308,7 +290,7 @@ export const SupportAssistant: React.FC = () => {
     return () => {
       window.removeEventListener('support-assistant:cart-action', onCartAction as EventListener);
     };
-  }, [closeCart, isCartOpen]);
+  }, [isCartOpen]);
 
   const addMessage = async (
     sender: Sender,

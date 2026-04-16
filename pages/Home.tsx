@@ -5,10 +5,59 @@ import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
 import { getProducts, seedDatabase, toProductSlug } from '../services/backend';
 import { useAuth } from '../context/AuthContext';
-import ringHomeImage from '../assets/images/smart-rings-home-new.webp';
-import bandHomeImage from '../assets/images/mainband.webp';
-import fanHomeImage from '../assets/images/mainfan.webp';
-import monitorHomeImage from '../assets/images/mainmonitor.webp';
+import fanShowcaseImage from '../assets/images/fan-hero-q8pro-cutout.webp';
+import bandHomeImage from '../assets/images/band-hero-cutout.webp';
+import ringHomeImage from '../assets/images/smartrings-hero.webp';
+import monitoringPhoneImage from '../assets/images/monitoring-phone-cutout.webp';
+
+const Galaxy = React.lazy(() => import('../components/Galaxy'));
+
+const DeferredGalaxy: React.FC = () => {
+  const [shouldLoad, setShouldLoad] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const load = () => setShouldLoad(true);
+    const idleCallback = (window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    }).requestIdleCallback;
+    const cancelIdleCallback = (window as Window & {
+      cancelIdleCallback?: (id: number) => void;
+    }).cancelIdleCallback;
+
+    if (idleCallback) {
+      const id = idleCallback(load, { timeout: 3000 });
+      return () => cancelIdleCallback?.(id);
+    }
+
+    const timeoutId = window.setTimeout(load, 1800);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  if (!shouldLoad) {
+    return <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12),transparent_46%)]" />;
+  }
+
+  return (
+    <React.Suspense fallback={<div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12),transparent_46%)]" />}>
+      <Galaxy
+        mouseRepulsion
+        mouseInteraction
+        density={0.9}
+        glowIntensity={0.2}
+        saturation={0}
+        hueShift={100}
+        twinkleIntensity={0.3}
+        rotationSpeed={0.1}
+        repulsionStrength={2}
+        autoCenterRepulsion={0}
+        starSpeed={0.5}
+        speed={1}
+      />
+    </React.Suspense>
+  );
+};
 
 export const Home: React.FC = () => {
   const colorMoods = useMemo(
@@ -68,7 +117,6 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const bestSellerScrollerRef = useRef<HTMLDivElement | null>(null);
   const featuredScrollerRef = useRef<HTMLDivElement | null>(null);
-  const [heroSpotlightIndex, setHeroSpotlightIndex] = useState(0);
   const [dealCountdown, setDealCountdown] = useState('00:00:00');
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
   const [compareProductIds, setCompareProductIds] = useState<string[]>([]);
@@ -112,22 +160,8 @@ export const Home: React.FC = () => {
   const featuredProducts = products.filter(p => p.isFeatured).slice(0, 4);
   const bestSellers = products.filter(p => p.isBestSeller).slice(0, 4);
   const bestSellersForSlider = bestSellers;
-  const featuredProductsForSlider = featuredProducts;
-  const heroSpotlights = useMemo(
-    () =>
-      [...featuredProducts, ...bestSellers].filter(
-        (product, index, arr) => arr.findIndex((item) => item.id === product.id) === index
-      ),
-    [featuredProducts, bestSellers]
-  );
-
   const handleShopNavigation = (path: string) => {
     navigate(path);
-  };
-
-  const handleProtectedCategoryClick = (event: MouseEvent<HTMLAnchorElement>, categoryPath: string) => {
-    event.preventDefault();
-    handleShopNavigation(categoryPath);
   };
 
   const handleHorizontalWheel = useCallback((event: React.WheelEvent<HTMLDivElement>) => {
@@ -274,36 +308,6 @@ export const Home: React.FC = () => {
   ];
   const primaryOfferPath = dealsToShow[0]?.href || '/offers/member-offer';
 
-  const categoryCardImages: Record<string, string> = {
-    'Smart Bands': bandHomeImage,
-    'Smart Rings': ringHomeImage,
-    'Smart Fans': fanHomeImage,
-    'Smart Monitoring': monitorHomeImage,
-  };
-  const heroExcludedCategories = new Set(['Smart Bands', 'Smart Fans']);
-  const heroSpotlightsForHero = useMemo(
-    () => heroSpotlights.filter((item) => !heroExcludedCategories.has(item.category)),
-    [heroSpotlights]
-  );
-  const spotlightProduct =
-    heroSpotlightsForHero.length > 0
-      ? heroSpotlightsForHero[heroSpotlightIndex % heroSpotlightsForHero.length]
-      : undefined;
-  useEffect(() => {
-    if (heroSpotlightsForHero.length <= 1) return;
-    const timer = window.setInterval(() => {
-      setHeroSpotlightIndex((prev) => (prev + 1) % heroSpotlightsForHero.length);
-    }, 3000);
-    return () => window.clearInterval(timer);
-  }, [heroSpotlightsForHero.length]);
-  const recentlyViewedProducts = useMemo(() => {
-    if (!recentlyViewedIds.length || !products.length) return [];
-    const byId = new Map(products.map((product) => [product.id, product]));
-    return recentlyViewedIds
-      .map((productId) => byId.get(productId))
-      .filter((item): item is Product => Boolean(item))
-      .slice(0, 4);
-  }, [recentlyViewedIds, products]);
   const compareProducts = useMemo(() => {
     if (!compareProductIds.length || !products.length) return [];
     const byId = new Map(products.map((product) => [product.id, product]));
@@ -322,33 +326,60 @@ export const Home: React.FC = () => {
   );
   const activeMood = colorMoods.find((mood) => mood.id === activeMoodId) || colorMoods[0];
 
-  const getArrivalHighlight = (product: Product) => {
-    const mrp = Number(product.mrp || 0);
-    const sale = Number(product.salePrice || product.price || 0);
-    const hasDrop = mrp > 0 && sale > 0 && mrp > sale;
-    const dropPct = hasDrop ? Math.round(((mrp - sale) / mrp) * 100) : 0;
-    if (hasDrop) {
-      return {
-        label: `${dropPct}% OFF`,
-        className: 'bg-rose-500 text-white shadow-[0_0_22px_rgba(244,63,94,0.6)] animate-pulse',
-      };
-    }
-    return {
-      label: 'LATEST ARRIVAL',
-      className: 'bg-emerald-500 text-white shadow-[0_0_22px_rgba(16,185,129,0.55)] animate-pulse',
-    };
-  };
-
-  // Helper to get route from category name
-  const getCategoryRoute = (cat: string) => {
-    const map: Record<string, string> = {
-      'Smart Bands': '/smart-bands',
-      'Smart Rings': '/smart-rings',
-      'Smart Fans': '/smart-fans',
-      'Smart Monitoring': '/smart-monitoring'
-    };
-    return map[cat] || '/shop/all';
-  };
+  const showcasePanels = [
+    {
+      category: 'Smart Fans',
+      route: '/smart-fans',
+      title: 'Air, Perfected.',
+      subtitle: 'Cool. Warm. Intelligent airflow.',
+      image: fanShowcaseImage,
+      theme: 'dark',
+      bannerClassName: 'bg-black text-white',
+      imageWrapClassName: 'sm:right-0 sm:top-16 sm:bottom-0 sm:w-[58%] lg:w-[54%]',
+      contentClassName: 'items-start text-left',
+      imageClassName: 'max-h-[330px] sm:max-h-[470px] lg:max-h-[540px]',
+      galaxyClassName: 'opacity-55',
+    },
+    {
+      category: 'Smart Rings',
+      route: '/smart-rings',
+      title: 'Your Health. On Your Finger.',
+      subtitle: 'Track. Sleep. Perform.',
+      image: ringHomeImage,
+      theme: 'light',
+      bannerClassName: 'bg-white text-gray-950',
+      imageWrapClassName: 'sm:left-0 sm:top-0 sm:bottom-0 sm:w-[60%] lg:w-[56%]',
+      contentClassName: 'items-start text-left sm:items-end sm:text-right',
+      imageClassName: 'max-h-[270px] sm:max-h-[380px] lg:max-h-[430px]',
+      galaxyClassName: 'opacity-[0.18] mix-blend-multiply',
+    },
+    {
+      category: 'Smart Bands',
+      route: '/smart-bands',
+      title: 'Every Beat Matters.',
+      subtitle: 'Real-time health insights.',
+      image: bandHomeImage,
+      theme: 'dark',
+      bannerClassName: 'bg-black text-white',
+      imageWrapClassName: 'sm:right-0 sm:top-0 sm:bottom-0 sm:w-[60%] lg:w-[56%]',
+      contentClassName: 'items-start text-left',
+      imageClassName: 'max-h-[270px] sm:max-h-[380px] lg:max-h-[430px]',
+      galaxyClassName: 'opacity-55',
+    },
+    {
+      category: 'Smart Monitoring',
+      route: '/smart-monitoring',
+      title: 'Know Your Body Better.',
+      subtitle: 'AI-powered health tracking.',
+      image: monitoringPhoneImage,
+      theme: 'light',
+      bannerClassName: 'bg-white text-gray-950',
+      imageWrapClassName: 'sm:left-0 sm:top-0 sm:bottom-0 sm:w-[58%] lg:w-[52%]',
+      contentClassName: 'items-start text-left sm:items-end sm:text-right',
+      imageClassName: 'max-h-[310px] sm:max-h-[460px] lg:max-h-[520px]',
+      galaxyClassName: 'opacity-[0.18] mix-blend-multiply',
+    },
+  ];
 
   return (
     <div className="min-h-screen overflow-x-hidden pb-24 sm:pb-0 text-gray-900 dark:text-white bg-white dark:bg-dark-bg">
@@ -373,141 +404,86 @@ export const Home: React.FC = () => {
 
 
 
-      {/* Hero Section */}
-       <section className="relative min-h-[500px] sm:min-h-[620px] py-14 sm:py-20 flex items-center justify-center overflow-hidden bg-black text-gray-900 dark:text-white animate-fade-in-up">
-
-        {/* Dynamic Background */}
-        <div className="absolute inset-0 bg-black transition-colors duration-500">
-          <div
-            className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-85 animate-pulse"
-            style={{ backgroundImage: "url('/hero-frame-tech.svg')", animationDuration: '9s' }}
-            aria-hidden="true"
-          ></div>
-          <div
-            className="absolute inset-0 bg-center bg-no-repeat bg-cover opacity-15 animate-pulse"
-            style={{ backgroundImage: "url('/hero-frame-tech.svg')" }}
-            aria-hidden="true"
-          ></div>
-          <div
-            className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-blue-300/5 to-cyan-400/0 animate-pulse"
-            style={{ animationDuration: '7s' }}
-            aria-hidden="true"
-          ></div>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/45 to-black/60"></div>
-          <div className="absolute -top-12 left-4 sm:left-10 w-40 sm:w-72 h-40 sm:h-72 rounded-full bg-cyan-300/10 blur-3xl animate-float-slow"></div>
-          <div className="absolute -bottom-10 right-2 sm:right-12 w-44 sm:w-80 h-44 sm:h-80 rounded-full bg-blue-400/12 blur-3xl animate-float-slow" style={{ animationDelay: '1.4s' }}></div>
-        </div>
-
-        {/* Hero Content */}
-        <div className="relative z-10 container mx-auto px-3 sm:px-4 text-center">
-          <div className="animate-fade-in-up space-y-4 sm:space-y-6 max-w-5xl mx-auto">
-
-            {/* Tech Badge */}
-            <div className="flex justify-center mb-5 sm:mb-8">
-              <div className="glass-card px-3 sm:px-6 py-2 rounded-full border border-primary-100 dark:border-white/10 flex items-center gap-2 sm:gap-3 shadow-lg max-w-full">
-                <div className={`w-2 h-2 rounded-full animate-pulse ${activeMood.dot}`}></div>
-                <span className="text-[9px] sm:text-xs font-bold tracking-[0.17em] sm:tracking-[0.25em] uppercase text-gray-800 dark:text-gray-200 font-display whitespace-normal sm:whitespace-nowrap">
-                  Future Ready - Series X
-                </span>
+      <section className="bg-white text-gray-950 dark:bg-black dark:text-white" aria-label="TheFutureX product collections">
+        {showcasePanels.map((panel, idx) => {
+          const isDark = panel.theme === 'dark';
+          const imageOnLeft = panel.imageWrapClassName.includes('left-0');
+          return (
+            <button
+              key={panel.category}
+              type="button"
+              onClick={() => handleShopNavigation(panel.route)}
+              className={`group relative block min-h-[610px] w-full overflow-hidden text-left transition-transform duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400 sm:min-h-[640px] lg:min-h-[700px] ${panel.bannerClassName}`}
+              aria-label={`Open ${panel.category}`}
+            >
+              <div className={`absolute inset-0 ${panel.galaxyClassName}`} aria-hidden="true">
+                <DeferredGalaxy />
               </div>
-            </div>
-
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter text-gray-100 dark:text-white leading-[0.95] font-display">
-              WEAR THE <br />
-              <span className={`text-transparent bg-clip-text bg-gradient-to-r ${activeMood.heroGradient} bg-[length:200%_200%] animate-gradient-x brightness-75 saturate-90`}>
-                FUTURE
-              </span>
-            </h1>
-
-            {/* Subtext */}
-            <p className="text-sm sm:text-lg md:text-xl text-gray-200/85 dark:text-gray-300 max-w-2xl mx-auto font-light leading-relaxed tracking-wide px-1">
-              Advanced biometrics. Seamless connectivity. Designed for the visionaries of tomorrow.
-            </p>
-            <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8 text-[11px] sm:text-sm md:text-base font-bold text-gray-100 dark:text-gray-200 tracking-wide">
-              <span className="animate-fade-in-up">14 Days Battery</span>
-              <span className={`hidden md:inline ${activeMood.bullet}`}>&bull;</span>
-              <span className="animate-fade-in-up" style={{ animationDelay: '120ms' }}>50m Water Proof</span>
-              <span className={`hidden md:inline ${activeMood.bullet}`}>&bull;</span>
-              <span className="animate-fade-in-up" style={{ animationDelay: '240ms' }}>99% Accuracy</span>
-            </div>
-            {/* {spotlightProduct && (
-              <div className="mx-auto mt-6 max-w-xl rounded-2xl border border-white/40 bg-white/70 dark:bg-black/20 backdrop-blur-md px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xl">
-                <div className="text-left w-full sm:w-auto">
-                  <p className={`text-[10px] uppercase tracking-[0.22em] font-bold ${activeMood.sectionText}`}>Live Spotlight</p>
-                  <p className="text-sm sm:text-base font-bold text-gray-900 dark:text-white">{spotlightProduct.name}</p>
-                </div>
-                <Button size="sm" className="rounded-full px-4 w-full sm:w-auto" onClick={() => navigate(`/product/${spotlightProduct.id}`)}>
-                  View
-                </Button>
+              <div
+                className={`absolute inset-0 ${
+                  isDark
+                    ? imageOnLeft
+                      ? 'bg-gradient-to-b from-black/15 via-black/20 to-black sm:bg-gradient-to-l sm:from-black sm:via-black/82 sm:to-black/22'
+                      : 'bg-gradient-to-b from-black/15 via-black/20 to-black sm:bg-gradient-to-r sm:from-black sm:via-black/82 sm:to-black/22'
+                    : imageOnLeft
+                      ? 'bg-gradient-to-b from-white/10 via-white/25 to-white sm:bg-gradient-to-l sm:from-white sm:via-white/88 sm:to-white/28'
+                      : 'bg-gradient-to-b from-white/10 via-white/25 to-white sm:bg-gradient-to-r sm:from-white sm:via-white/88 sm:to-white/28'
+                }`}
+                aria-hidden="true"
+              />
+              <div className={`absolute left-1/2 top-7 flex h-[300px] w-[90%] -translate-x-1/2 items-center justify-center sm:left-auto sm:top-auto sm:h-auto sm:w-auto sm:translate-x-0 ${panel.imageWrapClassName}`}>
+                <img
+                  src={panel.image}
+                  alt={`${panel.category} collection`}
+                  loading={idx === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                  fetchPriority={idx === 0 ? 'high' : 'auto'}
+                  sizes="(max-width: 640px) 90vw, 58vw"
+                  className={`h-full w-full object-contain drop-shadow-[0_34px_70px_rgba(0,0,0,0.38)] transition-transform duration-700 group-hover:scale-[1.035] sm:h-auto ${panel.imageClassName}`}
+                />
               </div>
-            )} */}
-
-          </div>
-        </div>
-
-        {/* Intentionally no extra floating overlays to preserve the clean horizon mesh look */}
-
-      </section>
-
-
-      
-
-      {/* Floating Category Cards - Overlapping Hero */}
-      <section className="relative z-20 pt-2 pb-12 sm:pb-14 px-4 text-gray-900 dark:text-white animate-fade-in-up">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-            {['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'].map((cat, idx) => (
-              <Link
-                key={cat}
-                to={getCategoryRoute(cat)}
-                onClick={(event) => handleProtectedCategoryClick(event, getCategoryRoute(cat))}
-                className={`group relative aspect-[4/3] rounded-2xl sm:rounded-3xl overflow-hidden cursor-pointer border border-cyan-500/20 bg-[#060b1a] transition-all duration-500 hover:-translate-y-1 sm:hover:-translate-y-2 hover:shadow-[0_18px_40px_-20px_rgba(34,211,238,0.45)] ${activeMood.categoryGlow} animate-fade-in-up`}
-                style={{ animationDelay: `${idx * 90}ms` }}
-              >
-                {/* Image */}
-                <div className="absolute inset-0 bg-gray-200 dark:bg-gray-800">
-                  <img
-                    src={categoryCardImages[cat] || `https://picsum.photos/seed/${cat}tech/500/700`}
-                    alt={cat}
-                    loading="lazy"
-                    decoding="async"
-                    sizes="(max-width: 640px) 88vw, (max-width: 1024px) 44vw, 25vw"
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 brightness-[0.7] saturate-125"
-                  />
+              <div className={`relative z-10 flex min-h-[610px] w-full flex-col justify-end px-5 pb-12 pt-[340px] sm:min-h-[640px] sm:justify-center sm:px-12 sm:py-20 lg:min-h-[700px] lg:px-24 ${panel.contentClassName}`}>
+                <p className={`mb-3 text-[10px] font-bold uppercase tracking-[0.28em] sm:text-xs ${isDark ? 'text-cyan-100/80' : 'text-gray-500'}`}>
+                  {panel.category}
+                </p>
+                {idx === 0 ? (
+                  <h1 className="max-w-3xl font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+                    {panel.title}
+                  </h1>
+                ) : (
+                  <h2 className="max-w-3xl font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+                    {panel.title}
+                  </h2>
+                )}
+                <p className={`mt-4 max-w-xl text-base font-medium sm:text-2xl ${isDark ? 'text-gray-200' : 'text-gray-600'}`}>
+                  {panel.subtitle}
+                </p>
+                <div className={`mt-8 flex flex-wrap gap-3 ${imageOnLeft ? 'sm:justify-end' : 'justify-start'}`}>
+                  <span className={`inline-flex min-w-[116px] items-center justify-center rounded-lg border px-5 py-2 text-sm font-semibold transition-colors ${isDark ? 'border-white/35 bg-black/20 text-white group-hover:bg-white group-hover:text-black' : 'border-gray-300 bg-white/70 text-gray-900 group-hover:border-gray-900'}`}>
+                    Learn more
+                  </span>
+                  <span className={`inline-flex min-w-[104px] items-center justify-center rounded-lg border px-5 py-2 text-sm font-semibold transition-colors ${isDark ? 'border-white/35 bg-white text-black group-hover:bg-cyan-100' : 'border-gray-900 bg-gray-950 text-white group-hover:bg-gray-800'}`}>
+                    Shop now
+                  </span>
                 </div>
-
-                {/* Gradient Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[#050910] via-[#070d18]/40 to-transparent opacity-100 transition-opacity"></div>
-                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/0 via-cyan-300/5 to-blue-400/0 opacity-70"></div>
-
-                {/* Content */}
-                <div className="absolute bottom-0 left-0 w-full p-3 sm:p-5">
-                  <div className="flex justify-between items-end">
-                    <div>
-                      <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5 font-display text-cyan-300/90">Series 0{idx + 1}</p>
-                      <h3 className="text-xs sm:text-lg md:text-2xl font-bold tracking-tight text-white leading-tight font-display">{cat}</h3>
-                    </div>
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-cyan-300/15 border border-cyan-200/40 flex items-center justify-center shadow-lg transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-cyan-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                    </div>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
+              </div>
+            </button>
+          );
+        })}
       </section>
 
       {/* Best Sellers Section */}
-      <section className="py-10 sm:py-16 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
+      <section className="py-10 sm:py-16 relative overflow-hidden bg-black text-white animate-fade-in-up">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.16),transparent_34%),linear-gradient(180deg,#050505,#101010)]" aria-hidden="true"></div>
+        <div className="max-w-6xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
             <div>
-              <span className={`font-bold tracking-widest uppercase text-xs font-display mb-2 block ${activeMood.sectionText}`}>Customer Favorites</span>
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">Best Sellers</h2>
+              <span className="inline-flex rounded-full border border-white/20 bg-white px-3 py-1 font-display text-[10px] font-bold uppercase tracking-[0.24em] text-black shadow-[0_12px_30px_-18px_rgba(255,255,255,0.75)]">
+                Customer Favorites
+              </span>
+              <h2 className="mt-3 text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white font-display">Best Sellers</h2>
             </div>
-            <button onClick={() => handleShopNavigation('/shop/all')} className={`group flex items-center gap-2 text-gray-600 dark:text-gray-300 ${activeMood.sectionHoverText} font-medium transition-colors font-display tracking-wide`}>
+            <button onClick={() => handleShopNavigation('/shop/all')} className="group flex items-center gap-2 text-gray-300 hover:text-white font-medium transition-colors font-display tracking-wide">
               VIEW ALL
               {/* <span className="group-hover:translate-x-1 transition-transform">{'->'}</span> */}
             </button>
@@ -519,24 +495,20 @@ export const Home: React.FC = () => {
             </div>
           ) : (
             <div className="relative">
-              <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
-              <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
+              <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-black to-transparent pointer-events-none z-10"></div>
+              <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-black to-transparent pointer-events-none z-10"></div>
               {/* <div
                 ref={bestSellerScrollerRef}
                 onWheel={handleHorizontalWheel}
                 className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
               > */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {bestSellersForSlider.map((product, idx) => (
+              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+                {bestSellersForSlider.map((product) => (
                   <div
-                    // key={`${product.id}_${idx}`}
-                    // className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide"
-
                     key={product.id}
-                    className="w-full opacity-0 home-product-slide"
-                    style={{ ['--reveal-delay' as string]: `${idx * 120}ms` }}
+                    className="w-full max-w-[260px] mx-auto"
                   >
-                    <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
+                    <ProductCard product={product} compact monochrome imageAspectClassName="aspect-[4/3]" disableHoverEffects />
                   </div>
                 ))}
               </div>
@@ -545,88 +517,6 @@ export const Home: React.FC = () => {
         </div>
       </section>
       <div className="h-10 bg-gradient-to-b from-transparent via-primary-100/40 to-transparent dark:via-primary-900/10" />
-
-      {/* Featured / New Arrivals Section */}
-      <section className="py-10 sm:py-16 bg-gray-50 dark:bg-dark-surface/40 relative border-y border-gray-200 dark:border-white/5 text-gray-900 dark:text-white animate-fade-in-up">
-        <div className="absolute inset-0 bg-grid-pattern opacity-30 pointer-events-none"></div>
-        <div className="max-w-7xl mx-auto px-4 relative z-10">
-          <div className="text-center mb-10">
-            <span className="inline-block py-1.5 px-4 rounded-full bg-gradient-to-r from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 text-purple-700 dark:text-purple-300 text-xs font-bold tracking-widest uppercase mb-4 shadow-sm border border-purple-200/50 dark:border-purple-700/30 font-display">
-              Just Dropped
-            </span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-gray-900 dark:text-white font-display">New Arrivals</h2>
-            <p className="mt-4 text-gray-600 dark:text-gray-300 max-w-2xl mx-auto font-light text-lg">
-              Cutting-edge technology designed to seamlessly integrate into your lifestyle.
-            </p>
-          </div>
-
-          {loading ? (
-            <div className="flex justify-center py-20">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-            </div>
-          ) : (
-            <div className="relative">
-              <div className="absolute left-0 top-0 h-full w-16 bg-gradient-to-r from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
-              <div className="absolute right-0 top-0 h-full w-16 bg-gradient-to-l from-white dark:from-dark-bg to-transparent pointer-events-none z-10"></div>
-              {/* <div
-                ref={featuredScrollerRef}
-                onWheel={handleHorizontalWheel}
-                className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
-              > */}
-              <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                {featuredProductsForSlider.map((product, idx) => (
-                  <div
-                    // key={`${product.id}_${idx}`}
-                    // className="w-[70vw] sm:w-[46vw] lg:w-[320px] min-w-[220px] max-w-[360px] shrink-0 snap-start opacity-0 home-product-slide relative"
-                    key={product.id}
-                    className="w-full opacity-0 home-product-slide"
-                    style={{ ['--reveal-delay' as string]: `${idx * 120}ms` }}
-                  >
-                    <div
-                      className={`absolute top-3 left-3 z-20 px-3 py-1 rounded-full text-[10px] font-bold tracking-wider ${getArrivalHighlight(product).className}`}
-                    >
-                      {getArrivalHighlight(product).label}
-                    </div>
-                    <div className="hidden sm:block absolute -inset-1 rounded-3xl bg-gradient-to-r from-rose-500/30 via-fuchsia-500/20 to-cyan-500/30 blur-xl opacity-80 pointer-events-none" />
-                    <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-          <div className="mt-10 flex justify-center">
-            <Button onClick={() => handleShopNavigation('/shop/all')} variant="outline" className="rounded-full px-8 py-3">
-              View All New Arrivals
-            </Button>
-          </div>
-        </div>
-      </section>
-      {recentlyViewedProducts.length > 0 && (
-        <section className="py-10 sm:py-16 bg-[#040813] dark:bg-[#03060f] border-y border-cyan-500/10 text-gray-100 dark:text-white animate-fade-in-up">
-          <div className="max-w-7xl mx-auto px-4">
-            <div className="flex items-center justify-between gap-4 mb-7">
-              <div>
-                <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Continue Shopping</p>
-                <h2 className="text-xl sm:text-3xl font-bold font-display mt-2">Recently Viewed</h2>
-              </div>
-              <Button variant="outline" size="sm" className="rounded-full shrink-0" onClick={() => navigate('/shop/all')}>
-                Browse All
-              </Button>
-            </div>
-            <div className="flex gap-3 overflow-x-auto pb-2 sm:grid sm:grid-cols-2 lg:grid-cols-4 sm:gap-5 sm:overflow-visible">
-              {recentlyViewedProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="w-[78vw] min-w-[240px] shrink-0 min-[420px]:w-[62vw] sm:w-auto sm:min-w-0 rounded-2xl border border-cyan-500/20 bg-[#060b1a] p-1.5 sm:p-2 shadow-[0_14px_34px_-20px_rgba(34,211,238,0.4)]"
-                >
-                  <ProductCard product={product} compact imageAspectClassName="aspect-[4/3]" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-      <div className="h-10 bg-gradient-to-b from-transparent via-cyan-100/40 to-transparent dark:via-cyan-900/10" />
 
       <section className="py-10 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-4xl mx-auto">
@@ -704,28 +594,6 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      {/* Newsletter / CTA */}
-      <section className="py-10 sm:py-20 px-4 relative overflow-hidden bg-white dark:bg-dark-bg text-gray-900 dark:text-white animate-fade-in-up">
-        {/* Background blobs for this section */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-gradient-to-r from-primary-100/30 to-purple-100/30 dark:from-primary-900/10 dark:to-purple-900/10 blur-[100px] rounded-full pointer-events-none"></div>
-
-        <div className="max-w-4xl mx-auto glass-card rounded-[2rem] sm:rounded-[3rem] p-6 sm:p-10 md:p-20 text-center relative border border-white/60 dark:border-white/10 shadow-2xl">
-          <div className="relative z-10">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6 font-display">Join the Revolution.</h2>
-            <p className="text-lg text-gray-600 dark:text-gray-300 mb-10 max-w-lg mx-auto leading-relaxed">
-              Be the first to experience the next generation of wearable tech. Exclusive drops for members.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-6 py-4 rounded-full border border-gray-300 bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-inner"
-              />
-              <Button onClick={() => (user ? navigate('/profile') : navigate('/shop/all'))} className="rounded-full px-10 py-4 font-display tracking-wide shadow-lg shadow-primary-500/20 hover:shadow-[0_0_25px_rgba(236,72,153,0.5)]">SUBSCRIBE</Button>
-            </div>
-          </div>
-        </div>
-      </section>
       {compareProducts.length > 0 && (
         <div
           className={`fixed left-3 right-3 sm:left-auto sm:right-5 sm:w-[420px] bottom-[74px] sm:bottom-5 z-50 transition-all duration-300 ${isCompareOpen ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0 pointer-events-none'

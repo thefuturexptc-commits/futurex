@@ -175,10 +175,7 @@ export const AdminEditProductPage: React.FC<AdminEditProductPageProps> = ({
       if (onSave) {
         await onSave(payload);
       } else {
-        // Fallback for local testing.
-        // eslint-disable-next-line no-console
-        console.log('Edit Product payload:', payload);
-        alert('Payload logged in console');
+        alert('Product form is ready, but no save handler is connected.');
       }
     } finally {
       setIsSaving(false);

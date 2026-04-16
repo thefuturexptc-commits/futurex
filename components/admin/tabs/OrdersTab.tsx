@@ -12,22 +12,69 @@ interface Props {
   users: User[];
   isLoading: boolean;
   onStatusUpdate: (orderId: string, status: Order['status']) => Promise<void> | void;
+  onDeleteOrder: (order: Order) => void;
 }
 
-export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusUpdate }) => {
+export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusUpdate, onDeleteOrder }) => {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | Order['status']>('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [page, setPage] = useState(1);
   const pageSize = 8;
+  const normalizeEmail = (value?: string) => (value || '').trim().toLowerCase();
+  const normalizePhone = (value?: string) => {
+    const digits = (value || '').replace(/\D/g, '');
+    if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+    if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+    return digits;
+  };
+
+  const getOrderCustomer = (order: Order) => {
+    const orderEmail = normalizeEmail(order.customerEmail);
+    const orderUserIdEmail = normalizeEmail(order.userId);
+    const orderPhone = normalizePhone(order.customerPhone || order.shippingDetails?.phoneNumber || order.phoneNumber);
+    return users.find((u) => {
+      const userEmail = normalizeEmail(u.email);
+      const userPhone = normalizePhone(u.phone);
+      return (
+        u.id === order.userId ||
+        Boolean(orderEmail && userEmail === orderEmail) ||
+        Boolean(orderUserIdEmail && userEmail === orderUserIdEmail) ||
+        Boolean(orderPhone && userPhone && userPhone === orderPhone)
+      );
+    });
+  };
+
+  const getCustomerDetails = (order: Order) => {
+    const customer = getOrderCustomer(order);
+    const shipping = order.shippingDetails;
+    return {
+      name: shipping?.name || order.customerName || customer?.name || 'Unknown Customer',
+      email: order.customerEmail || customer?.email || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(order.userId) ? order.userId : '-'),
+      phone: shipping?.phoneNumber || order.customerPhone || order.phoneNumber || customer?.phone || '-',
+      address: [
+        shipping?.address || order.shippingAddress.street || '',
+        shipping?.city || order.shippingAddress.city || '',
+        shipping?.state || '',
+        shipping?.pincode || order.shippingAddress.zip || '',
+        order.shippingAddress.country || 'India',
+      ].filter(Boolean),
+    };
+  };
 
   const filtered = useMemo(() => {
     const now = Date.now();
     const q = query.trim().toLowerCase();
     return orders.filter((order) => {
-      const email = users.find((u) => u.id === order.userId)?.email?.toLowerCase() || '';
-      const textMatch = !q || order.id.toLowerCase().includes(q) || email.includes(q);
+      const customer = getCustomerDetails(order);
+      const textMatch =
+        !q ||
+        order.id.toLowerCase().includes(q) ||
+        customer.email.toLowerCase().includes(q) ||
+        customer.name.toLowerCase().includes(q) ||
+        customer.phone.toLowerCase().includes(q);
       const statusMatch = statusFilter === 'all' || order.status === statusFilter;
       const source = (order.orderSource || 'Website').toLowerCase();
       const sourceMatch = sourceFilter === 'all' || source === sourceFilter.toLowerCase();
@@ -57,8 +104,8 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
   };
 
   const generateInvoice = (order: Order) => {
-    const customer = users.find((u) => u.id === order.userId);
     const shipping = order.shippingDetails;
+    const customerDetails = getCustomerDetails(order);
     const invoiceDate = new Date(order.date);
     const invoiceNumber = buildInvoiceNumber(order);
     const paymentMethodLabel =
@@ -69,9 +116,9 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
           : order.paymentStatus === 'Pending'
             ? 'Cash on Delivery'
             : 'Online Payment';
-    const customerName = shipping?.name || customer?.name || 'Unknown Customer';
-    const customerEmail = customer?.email || order.userId || '-';
-    const customerPhone = order.phoneNumber ? `+91 ${order.phoneNumber}` : '-';
+    const customerName = customerDetails.name;
+    const customerEmail = customerDetails.email;
+    const customerPhone = customerDetails.phone && customerDetails.phone !== '-' ? `+91 ${customerDetails.phone.replace(/^\+?91/, '')}` : '-';
     const addressLines = [
       shipping?.address || order.shippingAddress.street || '',
       shipping?.city || order.shippingAddress.city || '',
@@ -408,6 +455,14 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
     }, 250);
   };
 
+  const openOrderStatus = (order: Order) => {
+    const params = new URLSearchParams({
+      orderId: order.id,
+      paymentMethod: order.paymentMethod === 'cod' ? 'cod' : 'online',
+    });
+    window.open(`/order-success?${params.toString()}`, '_blank', 'noopener,noreferrer');
+  };
+
   React.useEffect(() => {
     setPage(1);
   }, [query, statusFilter, sourceFilter, dateFilter]);
@@ -481,16 +536,22 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
             </thead>
             <tbody>
               {paged.map((order, idx) => {
-                const customer = users.find((u) => u.id === order.userId);
+                const customerDetails = getCustomerDetails(order);
                 return (
                   <tr
                     key={order.id}
-                    className={`${idx % 2 === 0 ? 'bg-white dark:bg-dark-surface' : 'bg-gray-50/60 dark:bg-white/5'} hover:bg-primary-50/40 dark:hover:bg-primary-900/10`}
+                    onClick={() => setSelectedOrder(order)}
+                    className={`${idx % 2 === 0 ? 'bg-white dark:bg-dark-surface' : 'bg-gray-50/60 dark:bg-white/5'} cursor-pointer hover:bg-primary-50/40 dark:hover:bg-primary-900/10`}
                   >
-                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">{order.id}</td>
+                    <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
+                      <p>Order ID</p>
+                      <p className="mt-1 font-mono text-xs text-primary-600 dark:text-primary-300">{order.id}</p>
+                      <p className="mt-1 text-xs font-normal text-gray-500">Tap to view details</p>
+                    </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
-                      <p className="font-medium text-gray-900 dark:text-white">{order.shippingDetails?.name || customer?.name || 'Unknown'}</p>
-                      <p className="text-xs text-gray-500">{customer?.email || ''}</p>
+                      <p className="font-medium text-gray-900 dark:text-white">{customerDetails.name}</p>
+                      <p className="text-xs text-gray-500 break-all">{customerDetails.email}</p>
+                      <p className="text-xs text-gray-500">{customerDetails.phone !== '-' ? `+91 ${customerDetails.phone.replace(/^\+?91/, '')}` : '-'}</p>
                     </td>
                     <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
                       <p>{new Date(order.date).toLocaleDateString()}</p>
@@ -501,6 +562,7 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
                       <StatusBadge status={order.status} />
                       <select
                         value={order.status}
+                        onClick={(event) => event.stopPropagation()}
                         onChange={(e) => onStatusUpdate(order.id, e.target.value as Order['status'])}
                         className="mt-2 h-9 rounded-lg border border-gray-300 bg-white px-2 text-sm text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600"
                       >
@@ -513,7 +575,49 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
                     </td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">Rs {order.total.toFixed(2)}</td>
                     <td className="px-4 py-3 text-right">
-                      <Button size="sm" variant="outline" onClick={() => generateInvoice(order)}>Generate Invoice PDF</Button>
+                      <div className="flex flex-col items-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedOrder(order);
+                          }}
+                        >
+                          View Details
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            openOrderStatus(order);
+                          }}
+                        >
+                          Open Status
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            generateInvoice(order);
+                          }}
+                        >
+                          Invoice PDF
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-900/20"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onDeleteOrder(order);
+                          }}
+                        >
+                          Delete
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -529,6 +633,123 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
       )}
 
       <Pagination page={page} pageSize={pageSize} total={filtered.length} onChange={setPage} />
+
+      {selectedOrder && (() => {
+        const customerDetails = getCustomerDetails(selectedOrder);
+        return (
+          <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true">
+            <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-dark-surface">
+              <div className="flex flex-col gap-3 border-b border-gray-200 p-4 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between sm:p-5">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-gray-500">Order Details</p>
+                  <h3 className="mt-1 font-mono text-lg font-bold text-gray-900 dark:text-white">{selectedOrder.id}</h3>
+                  <p className="mt-1 text-sm text-gray-500">
+                    {new Date(selectedOrder.date).toLocaleString()} · {selectedOrder.orderSource || 'Website'}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <Button size="sm" variant="outline" onClick={() => openOrderStatus(selectedOrder)}>
+                    Open Status
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => generateInvoice(selectedOrder)}>
+                    Invoice PDF
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setSelectedOrder(null)}>
+                    Close
+                  </Button>
+                </div>
+              </div>
+
+              <div className="max-h-[calc(90vh-96px)] overflow-y-auto p-4 sm:p-5">
+                <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
+                  <section className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                    <h4 className="font-bold text-gray-900 dark:text-white">Customer Information</h4>
+                    <div className="mt-4 space-y-3 text-sm">
+                      <div>
+                        <p className="text-xs uppercase tracking-widest text-gray-500">Name</p>
+                        <p className="font-semibold text-gray-900 dark:text-white">{customerDetails.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-widest text-gray-500">Email</p>
+                        <p className="break-all text-gray-700 dark:text-gray-300">{customerDetails.email}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-widest text-gray-500">Phone</p>
+                        <p className="text-gray-700 dark:text-gray-300">{customerDetails.phone}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs uppercase tracking-widest text-gray-500">Shipping Address</p>
+                        <address className="mt-1 not-italic leading-6 text-gray-700 dark:text-gray-300">
+                          {customerDetails.address.length ? customerDetails.address.map((line) => (
+                            <React.Fragment key={line}>
+                              {line}
+                              <br />
+                            </React.Fragment>
+                          )) : '-'}
+                        </address>
+                      </div>
+                    </div>
+                  </section>
+
+                  <section className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                    <h4 className="font-bold text-gray-900 dark:text-white">Order Summary</h4>
+                    <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
+                      <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                        <p className="text-xs text-gray-500">Status</p>
+                        <div className="mt-1"><StatusBadge status={selectedOrder.status} /></div>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                        <p className="text-xs text-gray-500">Payment</p>
+                        <p className="mt-1 font-semibold text-gray-900 dark:text-white">{selectedOrder.paymentMethod === 'cod' ? 'COD' : 'Online'}</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                        <p className="text-xs text-gray-500">Payment Status</p>
+                        <p className="mt-1 font-semibold text-gray-900 dark:text-white">{selectedOrder.paymentStatus || '-'}</p>
+                      </div>
+                      <div className="rounded-lg bg-gray-50 p-3 dark:bg-white/5">
+                        <p className="text-xs text-gray-500">Total</p>
+                        <p className="mt-1 font-semibold text-gray-900 dark:text-white">Rs {selectedOrder.total.toFixed(2)}</p>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <section className="mt-4 rounded-xl border border-gray-200 p-4 dark:border-white/10">
+                  <h4 className="font-bold text-gray-900 dark:text-white">Products Ordered</h4>
+                  <div className="mt-4 divide-y divide-gray-200 dark:divide-white/10">
+                    {selectedOrder.items.map((item) => {
+                      const image = item.colors?.[0]?.images?.[0] || item.images?.[0] || '';
+                      const variants = [
+                        item.selectedColorName ? `Color: ${item.selectedColorName}` : '',
+                        item.selectedSize ? `Size: ${item.selectedSize}` : '',
+                      ].filter(Boolean);
+                      return (
+                        <div key={`${selectedOrder.id}_${item.id}_${item.selectedColorName || ''}_${item.selectedSize || ''}`} className="flex gap-3 py-3">
+                          <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-gray-100 dark:bg-white/5">
+                            {image ? (
+                              <img src={image} alt={item.name} loading="lazy" decoding="async" className="h-full w-full object-contain" />
+                            ) : null}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-gray-900 dark:text-white">{item.name}</p>
+                            <p className="mt-1 text-xs text-gray-500">{item.category}</p>
+                            {variants.length > 0 && <p className="mt-1 text-xs text-gray-500">{variants.join(' · ')}</p>}
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-gray-700 dark:text-gray-300">
+                              <span>Qty: {item.quantity}</span>
+                              <span>Price: Rs {Number(item.price || 0).toFixed(2)}</span>
+                              <span className="font-semibold">Total: Rs {(Number(item.price || 0) * item.quantity).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </section>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 };

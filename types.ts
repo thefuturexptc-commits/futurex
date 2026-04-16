@@ -189,6 +189,9 @@ export interface Order {
   shippingDetails?: CheckoutShippingDetails;
   createdAt?: string;
   orderSource?: string;
+  customerName?: string;
+  customerEmail?: string;
+  customerPhone?: string;
 }
 
 export interface WebsiteSettings {

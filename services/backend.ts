@@ -27,6 +27,18 @@ import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSe
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 
+const logDevWarning = (...args: unknown[]) => {
+  if (import.meta.env.DEV) {
+    console.warn(...args);
+  }
+};
+
+const logDevError = (...args: unknown[]) => {
+  if (import.meta.env.DEV) {
+    console.error(...args);
+  }
+};
+
 // 🔒 ADDED: Production Safe URL Validator
 const isValidProductionUrl = (url: string): boolean => {
     if (!url) return false;
@@ -410,7 +422,7 @@ const ensureFirebaseConnection = async () => {
       anonymousAuthBlocked = true;
       return;
     }
-    console.warn('Anonymous auth failed or timed out (Database might be unreachable):', e);
+    logDevWarning('Anonymous auth failed or timed out (Database might be unreachable):', e);
   }
 };
 
@@ -444,7 +456,7 @@ export const addAuditLog = async (entry: {
     });
   } catch (error) {
     if (!isPermissionDeniedError(error)) {
-      console.warn('Failed to write admin audit log to Firebase:', error);
+      logDevWarning('Failed to write admin audit log to Firebase:', error);
     }
   }
 };
@@ -490,7 +502,7 @@ export const getAuditLogs = async (): Promise<Array<{
     return remoteLogs;
   } catch (error) {
     if (!isPermissionDeniedError(error)) {
-      console.warn('Failed to read admin audit logs from Firebase:', error);
+      logDevWarning('Failed to read admin audit logs from Firebase:', error);
     }
     return [...localLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
@@ -519,7 +531,7 @@ export const seedDatabase = async () => {
             }
         }
     } catch (e) {
-        console.warn("Seed failed (likely permission or offline):", e);
+        logDevWarning("Seed failed (likely permission or offline):", e);
     }
 };
 
@@ -556,7 +568,7 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
 
         return downloadURL;
     } catch (error) {
-        console.error("Firebase Storage Upload Failed or Timed Out:", error);
+        logDevError("Firebase Storage Upload Failed or Timed Out:", error);
         
         // --- Fallback Protection ---
         // Firestore documents are limited to 1 MB. 
@@ -566,7 +578,7 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
         const MAX_FALLBACK_SIZE = 500 * 1024; // 500 KB
 
         if (file.size > MAX_FALLBACK_SIZE) {
-            console.warn(`File ${file.name} is too large for local DB storage. Using temporary Blob URL.`);
+            logDevWarning(`File ${file.name} is too large for local DB storage. Using temporary Blob URL.`);
             // Use Blob URL for immediate session playback (works for video/large images)
             // NOTE: This URL will expire on page refresh, but allows the demo to work without crashing.
             return URL.createObjectURL(file);
@@ -674,7 +686,7 @@ export const addProduct = async (product: Product): Promise<void> => {
 
    // 🔒 ADDED: Prevent corrupted image URLs from reaching Firestore
    if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any).imageUrl)) {
-       console.warn("Blocked invalid image URL from Firestore save.");
+       logDevWarning("Blocked invalid image URL from Firestore save.");
        delete (cleanProduct as any).imageUrl;
    }
 
@@ -682,14 +694,14 @@ export const addProduct = async (product: Product): Promise<void> => {
 } else {
 
    if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any).imageUrl)) {
-       console.warn("Blocked invalid image URL from Firestore save.");
+       logDevWarning("Blocked invalid image URL from Firestore save.");
        delete (cleanProduct as any).imageUrl;
    }
 
    await addDoc(collection(db, 'products'), cleanProduct);
 }
   } catch (e: any) { 
-      console.warn("Firebase save failed:", e);
+      logDevWarning("Firebase save failed:", e);
       if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
           alert("Database Error: Product data size is too large (likely due to offline images/videos). Product saved locally only.");
       }
@@ -713,13 +725,13 @@ export const updateProduct = async (product: Product): Promise<void> => {
       const docRef = doc(db, 'products', cleanProduct.id);
      // 🔒 ADDED: Prevent corrupted image URLs from Firestore update
 if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any).imageUrl)) {
-    console.warn("Blocked invalid image URL from Firestore update.");
+    logDevWarning("Blocked invalid image URL from Firestore update.");
     delete (cleanProduct as any).imageUrl;
 }
 
 await updateDoc(docRef, { ...cleanProduct });
   } catch (e: any) {
-      console.warn("Firebase update failed:", e);
+      logDevWarning("Firebase update failed:", e);
       if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
           alert("Database Error: Product data size is too large. Product updated locally only.");
       }
@@ -752,7 +764,7 @@ export const getCategories = async (): Promise<string[]> => {
     }
   } catch (error) {
     if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
-      console.warn('Failed to fetch categories from Firebase:', error);
+      logDevWarning('Failed to fetch categories from Firebase:', error);
     }
   }
   return localCats;
@@ -972,7 +984,7 @@ export const loginUser = async (email: string, password: string, phone?: string)
       const remoteUser = resolvePreferredUserProfile({
         ...rawRemoteUser,
         id: rawRemoteUser.id || firebaseUser.uid,
-        email: rawRemoteUser.email || firebaseUser.email || normalizedEmail,
+        email: firebaseUser.email || rawRemoteUser.email || normalizedEmail,
       });
       const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
       if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
@@ -1012,7 +1024,7 @@ export const loginUser = async (email: string, password: string, phone?: string)
     const fallbackUser = resolvePreferredUserProfile({
       id: firebaseUser.uid,
       name: firebaseUser.displayName || 'User',
-      email: firebaseUser.email || '',
+      email: firebaseUser.email || normalizedEmail,
       role: 'user',
       addresses: [],
       permissions: {}
@@ -1557,7 +1569,7 @@ export const updateUserAddresses = async (userId: string, addresses: Address[]):
         // We only update the addresses field
         await updateDoc(userRef, { addresses: deepSanitize(addresses) });
     } catch (e) {
-        console.warn("Failed to update user address in Firebase:", e);
+        logDevWarning("Failed to update user address in Firebase:", e);
     }
 
     // 3. Sync the updated addresses into the active session (aura_active_user)
@@ -1711,7 +1723,7 @@ export const addNewAdmin = async (email: string, name: string, password: string,
         }
 
     } catch(e: any) { 
-        console.error("Error adding admin to Firebase:", e);
+        logDevError("Error adding admin to Firebase:", e);
         const code = e?.code || '';
         if (code === 'auth/email-already-in-use') {
           throw new Error('This email already has an account. Use the same password as that account to repair and attach the admin profile, or choose a different email.');
@@ -1763,7 +1775,7 @@ export const deleteAdmin = async (adminId: string): Promise<void> => {
         const userRef = doc(db, 'users', adminId);
         await updateDoc(userRef, { role: 'user', permissions: {} });
     } catch (e) {
-        console.warn("Failed to demote admin in Firebase:", e);
+        logDevWarning("Failed to demote admin in Firebase:", e);
     }
 };
 
@@ -1794,7 +1806,7 @@ export const getAllUsers = async (): Promise<User[]> => {
       return merged;
     } catch (error) {
       if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
-        console.warn('Failed to fetch users from Firebase:', error);
+        logDevWarning('Failed to fetch users from Firebase:', error);
       }
       return localUsers;
     }
@@ -1831,12 +1843,22 @@ export const createOrder = async (
     paymentMethod?: 'online' | 'cod';
     shippingDetails?: CheckoutShippingDetails;
     orderSource?: string;
+    customerName?: string;
+    customerEmail?: string;
+    customerPhone?: string;
   }
 ): Promise<Order> => {
   // Always use the Firebase UID if the user is signed in — this ensures
   // getUserOrders (which queries Firestore by userId) finds the correct orders.
-  const resolvedUserId = auth.currentUser?.uid || userId;
+  const resolvedUserId = userId || auth.currentUser?.uid || `guest_${Date.now()}`;
   const placedAt = new Date().toISOString();
+  const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+  const matchingUser = localUsers.find((u) => u.id === resolvedUserId || u.id === userId);
+  const currentAuthEmail = auth.currentUser?.email || '';
+  const candidateEmail = (meta?.customerEmail || currentAuthEmail || matchingUser?.email || '').trim().toLowerCase();
+  const verifiedCustomerEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidateEmail) ? candidateEmail : '';
+  const customerName = meta?.shippingDetails?.name || meta?.customerName || matchingUser?.name || 'Customer';
+  const customerPhone = meta?.shippingDetails?.phoneNumber || meta?.customerPhone || matchingUser?.phone || meta?.phoneNumber || '';
   const newOrder: Order = {
     id: `ORD-${Date.now()}`,
     userId: resolvedUserId,
@@ -1851,6 +1873,9 @@ export const createOrder = async (
     paymentMethod: meta?.paymentMethod,
     createdAt: placedAt,
     orderSource: meta?.orderSource || 'Website',
+    customerName,
+    customerEmail: verifiedCustomerEmail,
+    customerPhone,
   };
 
   const cleanOrder = deepSanitize(newOrder);
@@ -1890,11 +1915,11 @@ export const createOrder = async (
                 await updateDoc(pRef, deepSanitize(nextProduct));
             }
         } catch(invError) {
-            console.warn("Failed to update inventory for item", item.id, invError);
+            logDevWarning("Failed to update inventory for item", item.id, invError);
         }
     }
   } catch (error) {
-    console.error("FIREBASE SAVE FAILED (Data might be undefined or Permissions denied):", error);
+    logDevError("FIREBASE SAVE FAILED (Data might be undefined or Permissions denied):", error);
   }
   
   // Local inventory reserve
@@ -1920,25 +1945,78 @@ export const createOrder = async (
 // New: Explicitly fetch all orders for Admin
 export const getAllOrders = async (): Promise<Order[]> => {
     const localOrders = getMockData<Order[]>('orders', []);
+    const normalizeEmailValue = (value?: string) => (value || '').trim().toLowerCase();
+    const resolveOrderCustomer = (order: Order, users: User[]): Order => {
+      const normalizePhoneDigits = (value?: string) => {
+        const raw = (value || '').trim();
+        if (!raw) return '';
+        try {
+          return getIndianNationalPhone(raw);
+        } catch {
+          const digits = raw.replace(/\D/g, '');
+          if (digits.length === 12 && digits.startsWith('91')) return digits.slice(2);
+          if (digits.length === 11 && digits.startsWith('0')) return digits.slice(1);
+          return digits;
+        }
+      };
+
+      const orderEmail = normalizeEmailValue(order.customerEmail);
+      const orderUserIdEmail = normalizeEmailValue(order.userId);
+      const orderPhone = normalizePhoneDigits(order.customerPhone || order.shippingDetails?.phoneNumber || order.phoneNumber);
+      const matchedUser = users.find((u) => {
+        const userEmail = normalizeEmailValue(u.email);
+        const userPhone = normalizePhoneDigits(u.phone);
+        return (
+          u.id === order.userId ||
+          Boolean(orderEmail && userEmail === orderEmail) ||
+          Boolean(orderUserIdEmail && userEmail === orderUserIdEmail) ||
+          Boolean(orderPhone && userPhone && userPhone === orderPhone)
+        );
+      });
+
+      const emailCandidate = order.customerEmail || matchedUser?.email || (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(order.userId) ? order.userId : '');
+      return {
+        ...order,
+        customerName: order.customerName || order.shippingDetails?.name || matchedUser?.name,
+        customerEmail: emailCandidate ? emailCandidate.trim().toLowerCase() : order.customerEmail,
+        customerPhone: order.customerPhone || order.shippingDetails?.phoneNumber || order.phoneNumber || matchedUser?.phone,
+      };
+    };
+
     try {
       await ensureFirebaseConnection();
-      const ordersQuery = query(collection(db, 'orders'));
-      const querySnapshot = await withTimeout(getDocs(ordersQuery), 2500);
+      const [querySnapshot, usersSnapshot] = await Promise.all([
+        withTimeout(getDocs(query(collection(db, 'orders'))), 2500),
+        withTimeout(getDocs(collection(db, 'users')), 2500).catch(() => null),
+      ]);
+      const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+      const remoteUsers: User[] = [];
+      usersSnapshot?.forEach((userDoc) => {
+        const data = userDoc.data() as User;
+        remoteUsers.push(applyRoleByEmail({ ...data, id: data.id || userDoc.id }));
+      });
+      const allUsers = [...remoteUsers, ...localUsers].reduce<User[]>((acc, user) => {
+        if (!acc.some((u) => u.id === user.id || normalizeEmailValue(u.email) === normalizeEmailValue(user.email))) {
+          acc.push(user);
+        }
+        return acc;
+      }, []);
       const fbOrders: Order[] = [];
-      querySnapshot.forEach((orderDoc) => fbOrders.push({ ...(orderDoc.data() as Order), id: orderDoc.id }));
+      querySnapshot.forEach((orderDoc) => fbOrders.push(resolveOrderCustomer({ ...(orderDoc.data() as Order), id: orderDoc.id }, allUsers)));
 
       const combined = [...fbOrders];
       localOrders.forEach((localOrder) => {
         if (!combined.find((remoteOrder) => remoteOrder.id === localOrder.id)) {
-          combined.push(localOrder);
+          combined.push(resolveOrderCustomer(localOrder, allUsers));
         }
       });
       return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     } catch (error) {
       if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
-        console.warn('Failed to fetch orders from Firebase:', error);
+        logDevWarning('Failed to fetch orders from Firebase:', error);
       }
-      return [...localOrders].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+      return [...localOrders].map((order) => resolveOrderCustomer(order, localUsers)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
 };
 
@@ -1955,7 +2033,7 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
       // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
       querySnapshot.forEach((orderDoc) => fbOrders.push({ ...(orderDoc.data() as Order), id: orderDoc.id }));
   } catch (e) { 
-      console.warn("Failed to fetch user orders from Firebase", e);
+      logDevWarning("Failed to fetch user orders from Firebase", e);
   }
 
   // 3. Filter Local Orders — match by userId OR by the Firebase UID (handles
@@ -2065,6 +2143,20 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
         }
       }
   } catch (e) { }
+};
+
+export const deleteOrder = async (orderId: string): Promise<void> => {
+  const orders = getMockData<Order[]>('orders', []);
+  setMockData('orders', orders.filter((order) => order.id !== orderId));
+
+  try {
+    await ensureFirebaseConnection();
+    await deleteDoc(doc(db, 'orders', orderId));
+  } catch (error) {
+    if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
+      logDevWarning('Failed to delete order from Firebase:', error);
+    }
+  }
 };
 
 // --- Support Chat Service ---

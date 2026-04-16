@@ -3,11 +3,13 @@ import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-route
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
+import { useCart } from './context/CartContext';
 import { useAuth } from './context/AuthContext';
 import { Header } from './components/Header';
 import { CartDrawer } from './components/CartDrawer';
 import { AuthModalProvider } from './context/AuthModalContext';
 import { SiteFooter } from './components/SiteFooter';
+import { LoadingFallback } from './components/LoadingFallback';
 import { removeJsonLd, setSeoMetadata } from './services/seo';
 
 // ✅ META PIXEL
@@ -19,6 +21,7 @@ const SmartBands = React.lazy(() => import('./pages/SmartBands').then(module => 
 const SmartRings = React.lazy(() => import('./pages/SmartRings').then(module => ({ default: module.SmartRings })));
 const SmartFans = React.lazy(() => import('./pages/SmartFans').then(module => ({ default: module.SmartFans })));
 const SmartMonitoring = React.lazy(() => import('./pages/SmartMonitoring').then(module => ({ default: module.SmartMonitoring })));
+const NewArrivals = React.lazy(() => import('./pages/NewArrivals').then(module => ({ default: module.NewArrivals })));
 const Cart = React.lazy(() => import('./pages/Cart').then(module => ({ default: module.Cart })));
 const Checkout = React.lazy(() => import('./pages/Checkout').then(module => ({ default: module.Checkout })));
 const VerifyPhone = React.lazy(() => import('./pages/VerifyPhone').then(module => ({ default: module.VerifyPhone })));
@@ -79,6 +82,10 @@ const getRouteSeo = (pathname: string) => {
     '/shop/all': {
       title: 'Shop All Products',
       description: 'Browse all TheFutureX smart wearables, smart fans, and health monitoring products.',
+    },
+    '/new-arrivals': {
+      title: 'New Arrivals',
+      description: 'Shop the latest TheFutureX smart bands, rings, fans, and monitoring products.',
     },
     '/cart': {
       title: 'Shopping Cart',
@@ -210,7 +217,7 @@ const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) =
   const location = useLocation();
 
   if (!isAuthReady) {
-    return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>;
+    return <LoadingFallback minHeightClassName="min-h-[40vh]" />;
   }
 
   if (!user) {
@@ -225,7 +232,7 @@ const RequireAdmin: React.FC<{ children: React.ReactElement }> = ({ children }) 
   const location = useLocation();
 
   if (!isAuthReady) {
-    return <div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>;
+    return <LoadingFallback minHeightClassName="min-h-[40vh]" />;
   }
 
   if (!user) {
@@ -238,6 +245,48 @@ const RequireAdmin: React.FC<{ children: React.ReactElement }> = ({ children }) 
   }
 
   return children;
+};
+
+const DeferredSupportAssistant: React.FC = () => {
+  const { isCartOpen } = useCart();
+  const { pathname } = useLocation();
+  const [shouldLoad, setShouldLoad] = useState(false);
+  const shouldHideAssistant =
+    isCartOpen ||
+    pathname === '/cart' ||
+    pathname === '/checkout' ||
+    pathname === '/verify-phone' ||
+    pathname === '/payment' ||
+    pathname === '/order-success';
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const load = () => setShouldLoad(true);
+    const idleCallback = (window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    }).requestIdleCallback;
+    const cancelIdleCallback = (window as Window & {
+      cancelIdleCallback?: (id: number) => void;
+    }).cancelIdleCallback;
+
+    if (idleCallback) {
+      const id = idleCallback(load, { timeout: 3500 });
+      return () => cancelIdleCallback?.(id);
+    }
+
+    const timeoutId = window.setTimeout(load, 2500);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+  if (!shouldLoad || shouldHideAssistant) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <SupportAssistant />
+    </Suspense>
+  );
 };
 
 const App: React.FC = () => {
@@ -260,7 +309,7 @@ const App: React.FC = () => {
                 <Header />
                 <CartDrawer />
                 <main className="flex-grow">
-                  <Suspense fallback={<div className="min-h-[40vh] flex items-center justify-center text-gray-400">Loading...</div>}>
+                  <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       <Route path="/" element={<Home />} />
 
@@ -269,6 +318,7 @@ const App: React.FC = () => {
                       <Route path="/smart-rings" element={<SmartRings />} />
                       <Route path="/smart-fans" element={<SmartFans />} />
                       <Route path="/smart-monitoring" element={<SmartMonitoring />} />
+                      <Route path="/new-arrivals" element={<NewArrivals />} />
 
                       {/* Legacy/General Shop Route for Search/View All */}
                       <Route path="/shop/all" element={<Shop />} />
@@ -291,9 +341,7 @@ const App: React.FC = () => {
                     </Routes>
                   </Suspense>
                 </main>
-                <Suspense fallback={null}>
-                  <SupportAssistant />
-                </Suspense>
+                <DeferredSupportAssistant />
                 <SiteFooter />
               </div>
             </AuthModalProvider>

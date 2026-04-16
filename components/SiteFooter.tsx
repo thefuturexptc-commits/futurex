@@ -4,24 +4,24 @@ import { useTheme } from '../context/ThemeContext';
 
 export const SiteFooter: React.FC = () => {
   const { footerSections, socialLinks } = useTheme();
-  const businessAddress = [
-    '201-202, Hirubhai Residency',
-    'Besides Vedant Hospital',
-    'Near Virar East-West Flyover',
-    'Virar West, Maharashtra 401303',
-  ];
   const toSlug = (value: string) =>
     value
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
+  const visibleFooterSections = footerSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) => toSlug(item) !== 'address'),
+    }))
+    .filter((section) => section.items.length > 0);
 
   return (
     <footer className="bg-dark-surface border-t border-white/10 py-10 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
-          {footerSections.map((section) => (
+          {visibleFooterSections.map((section) => (
             <div key={section.title}>
               <h4 className="text-xs tracking-[0.2em] uppercase font-bold text-gray-400 mb-3">{section.title}</h4>
               <ul className="space-y-2">
@@ -35,19 +35,6 @@ export const SiteFooter: React.FC = () => {
               </ul>
             </div>
           ))}
-        </div>
-
-        <div className="mt-8 pt-6 border-t border-white/10 text-center sm:text-left">
-          <h4 className="text-xs tracking-[0.2em] uppercase font-bold text-gray-400 mb-3">Address</h4>
-          <address className="not-italic text-sm leading-6 text-gray-300">
-            {businessAddress.map((line) => (
-              <React.Fragment key={line}>
-                {line}
-                <br />
-              </React.Fragment>
-            ))}
-            India
-          </address>
         </div>
 
         <div className="mt-8 pt-6 border-t border-white/10">

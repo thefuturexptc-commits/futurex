@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Product } from '../types';
 import { getProducts } from '../services/backend';
 import { ProductCard } from './ProductCard';
+import DarkVeil from './DarkVeil';
 
 interface Feature {
   title: string;
@@ -208,7 +209,9 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
   const modelCardBaseClass = modelCardClassName || 'w-[62vw] sm:w-[36vw] lg:w-[24vw] xl:w-[20vw] min-w-[180px] max-w-[280px]';
   const modelSkeletonBaseClass = modelCardSkeletonClassName || 'h-72';
   const modelImageAspectClass = modelCardImageAspectClassName || 'aspect-[4/3]';
-  const featureCards = features.length > 1 ? [...features, ...features] : features;
+  const normalizedHeroCategory = category.toLowerCase();
+  const isFanHero = normalizedHeroCategory.includes('fan');
+  const isBandHero = normalizedHeroCategory.includes('band');
 
   // On mobile, always duplicate products for infinite scroll feel
   const mobileProducts = filteredProducts.length > 1
@@ -219,99 +222,50 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-white transition-colors duration-500">
 
       {/* Immersive Hero Section */}
-      <div className={`relative ${heroBackgroundImage ? 'bg-black' : heroGradient} min-h-[60vh] flex items-center overflow-hidden text-white`}>
-        {heroBackgroundImage && (
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-85 animate-pulse"
-            style={{ backgroundImage: `url(${heroBackgroundImage})`, animationDuration: '10s' }}
-            aria-hidden="true"
+      <section className="relative left-1/2 min-h-screen w-screen -translate-x-1/2 overflow-hidden bg-[#020817] text-white">
+        <div className="absolute inset-0 opacity-100" aria-hidden="true">
+          <DarkVeil
+            hueShift={35}
+            noiseIntensity={0.02}
+            scanlineIntensity={0}
+            speed={0.8}
+            scanlineFrequency={1.9}
+            warpAmount={0}
+            resolutionScale={1}
           />
-        )}
-        {heroBackgroundImage && (
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20 animate-pulse mix-blend-screen"
-            style={{ backgroundImage: `url(${heroBackgroundImage})`, animationDuration: '7s' }}
-            aria-hidden="true"
+        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.12)_48%,rgba(0,0,0,0.64)_100%)]" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/8 via-transparent to-black/72" aria-hidden="true" />
+
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center justify-center px-4 pb-14 pt-16 text-center">
+          <img
+            src={heroImage}
+            alt={category}
+            loading="eager"
+            decoding="async"
+            fetchPriority="high"
+            width={1100}
+            height={760}
+            className={`mb-8 h-auto w-full object-contain drop-shadow-[0_36px_90px_rgba(80,150,255,0.22)] ${
+              isFanHero
+                ? 'max-h-[52vh] max-w-[860px] sm:max-h-[60vh]'
+                : isBandHero
+                  ? 'max-h-[52vh] max-w-[860px] brightness-110 contrast-110 sm:max-h-[60vh]'
+                  : 'max-h-[52vh] max-w-[860px] sm:max-h-[60vh]'
+            }`}
           />
-        )}
-        {/* Abstract Background Patterns */}
-        {showHeroGridPattern && <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>}
-        <div className={`absolute inset-0 ${heroOverlayClassName || 'bg-gradient-to-b from-black/52 via-black/68 to-black/80'}`}></div>
-        <div className={`absolute inset-0 ${heroTintClassName || 'bg-black/22'}`}></div>
-        <div className={`absolute top-0 right-0 w-1/2 h-full ${heroSideOverlayClassName || 'bg-gradient-to-l from-black/55 to-transparent'}`}></div>
-        <div className="absolute -top-20 left-8 w-72 h-72 rounded-full bg-cyan-300/8 blur-3xl animate-float-slow"></div>
-        <div className="absolute bottom-8 right-16 w-80 h-80 rounded-full bg-blue-400/10 blur-3xl animate-float-slow" style={{ animationDelay: '1.5s' }}></div>
-
-        <div className="max-w-7xl mx-auto px-4 w-full relative z-10 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          {/* Text Content */}
-          <div className="text-center lg:text-left animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md text-white/90 text-xs font-bold tracking-[0.2em] uppercase mb-6 font-display">
-              <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-              {category} Series
-            </div>
-            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 font-display tracking-tight leading-none">
-              {title}
-            </h1>
-            <p className="text-lg md:text-xl text-white/80 max-w-xl mx-auto lg:mx-0 leading-relaxed font-light">
-              {subtitle}
-            </p>
-          </div>
-
-          {/* Hero Image */}
-          <div className="relative flex justify-center lg:justify-end animate-float">
-            <div className="absolute -inset-6 rounded-[3.5rem] bg-cyan-300/20 blur-3xl animate-pulse-slow"></div>
-            <div className="relative z-10 w-full max-w-md aspect-square rounded-[3rem] overflow-hidden glass-card border border-cyan-300/25 shadow-2xl shadow-cyan-700/25 animate-float-slow group">
-              <div className="absolute inset-0 bg-gradient-to-tr from-black/35 via-transparent to-cyan-200/10 z-10"></div>
-              <img
-                src={heroImage}
-                alt={category}
-                loading="eager"
-                decoding="async"
-                fetchPriority="high"
-                width={960}
-                height={960}
-                className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
-              />
-            </div>
-            {/* Decorative Blur Behind Image */}
-            <div className="absolute inset-0 bg-cyan-100/20 blur-[100px] rounded-full transform scale-75 animate-pulse-slow"></div>
-          </div>
+          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-white/45">Introducing</p>
+          <h1 className="font-display text-4xl font-bold leading-none tracking-tight text-white sm:text-6xl lg:text-7xl">
+            {title}
+          </h1>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
+            {subtitle}
+          </p>
         </div>
-      </div>
-
-      {/* Feature Highlights Strip (Overlapping Hero) */}
-      <div className="max-w-7xl mx-auto px-4 -mt-8 sm:-mt-14 lg:-mt-20 relative z-20 text-gray-900 dark:text-white">
-        <div
-          ref={featureScrollerRef}
-          onWheel={handleHorizontalWheel}
-          onMouseEnter={() => {
-            pauseFeatureAutoSlideRef.current = true;
-          }}
-          onMouseLeave={() => {
-            pauseFeatureAutoSlideRef.current = false;
-          }}
-          onTouchStart={() => {
-            pauseFeatureAutoSlideRef.current = true;
-          }}
-          onTouchEnd={() => {
-            pauseFeatureAutoSlideRef.current = false;
-          }}
-          className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 px-1 select-none [-webkit-overflow-scrolling:touch]"
-        >
-          {featureCards.map((feature, idx) => (
-            <div key={`${feature.title}_${idx}`} className="glass-card bg-white/90 dark:bg-dark-surface/90 backdrop-blur-xl p-5 sm:p-8 rounded-2xl shadow-xl border border-white/50 dark:border-white/10 hover:-translate-y-1 sm:hover:-translate-y-2 transition-transform duration-300 w-[74vw] sm:w-[52vw] md:w-[320px] lg:w-[360px] shrink-0">
-              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl mb-3 sm:mb-4 flex items-center justify-center bg-gray-50 dark:bg-white/5 ${accentColor}`}>
-                {feature.icon}
-              </div>
-              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white font-display mb-1.5 sm:mb-2">{feature.title}</h3>
-              <p className="text-[13px] sm:text-sm text-gray-600 dark:text-gray-300 leading-relaxed">{feature.description}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      </section>
 
       {/* Product Section */}
-      <div className="max-w-7xl mx-auto px-4 py-24 text-gray-900 dark:text-white">
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:py-20 text-gray-900 dark:text-white">
         {loadError && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
             {loadError}

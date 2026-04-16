@@ -27,6 +27,14 @@ export const InfoPage: React.FC = () => {
   }, [footerSections, slug]);
 
   const content = pageContent[slug] || 'Content will be updated soon.';
+  const showBusinessAddress = slug === 'about-us' || slug === 'contact';
+  const businessAddress = [
+    '201-202, Hirubhai Residency',
+    'Besides Vedant Hospital',
+    'Near Virar East-West Flyover',
+    'Virar West, Maharashtra 401303',
+    'India',
+  ];
 
   return (
     <div className="min-h-screen max-w-5xl mx-auto px-4 py-10 text-gray-900 dark:text-white">
@@ -40,6 +48,19 @@ export const InfoPage: React.FC = () => {
         <div className="whitespace-pre-wrap text-sm sm:text-base leading-7 sm:leading-8 text-gray-700 dark:text-gray-300">
           {content}
         </div>
+        {showBusinessAddress && (
+          <div className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/5">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Business Address</h2>
+            <address className="mt-3 not-italic text-sm leading-7 text-gray-700 dark:text-gray-300">
+              {businessAddress.map((line) => (
+                <React.Fragment key={line}>
+                  {line}
+                  <br />
+                </React.Fragment>
+              ))}
+            </address>
+          </div>
+        )}
       </div>
     </div>
   );

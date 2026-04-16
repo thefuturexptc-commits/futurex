@@ -20,9 +20,9 @@ const NavbarComponent: React.FC = () => {
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState<string[]>([
-    'Smart Bands',
-    'Smart Rings',
     'Smart Fans',
+    'Smart Rings',
+    'Smart Bands',
     'Smart Monitoring',
   ]);
 
@@ -77,15 +77,26 @@ const NavbarComponent: React.FC = () => {
   }, [location.pathname]);
 
   const categoryLinks = useMemo(
-    () =>
-      categories.map((category) => ({
+    () => {
+      const preferredOrder = ['smart fans', 'smart rings', 'smart bands', 'smart monitoring'];
+      const sortedCategories = [...categories].sort((a, b) => {
+        const aIndex = preferredOrder.indexOf(a.trim().toLowerCase());
+        const bIndex = preferredOrder.indexOf(b.trim().toLowerCase());
+        if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        return aIndex - bIndex;
+      });
+
+      return sortedCategories.map((category) => ({
         name: getCategoryLabel(category),
         path: getCategoryPath(category),
-      })),
+      }));
+    },
     [categories]
   );
 
-  const navLinks = [{ name: 'Home', path: '/' }, ...categoryLinks];
+  const navLinks = [{ name: 'Home', path: '/' }, { name: 'New Arrivals', path: '/new-arrivals' }, ...categoryLinks];
 
   // Fetch all products for search
   useEffect(() => {
@@ -139,14 +150,19 @@ const NavbarComponent: React.FC = () => {
             <div className="hidden md:flex items-baseline space-x-6 lg:space-x-8">
               {navLinks.map((link) => {
                 const active = location.pathname === link.path;
+                const isNewArrival = link.path === '/new-arrivals';
                 return (
                   <button
                     key={link.name}
                     onClick={() => openCategory(link.path)}
                     className={`text-sm font-semibold tracking-wide uppercase transition-colors font-display ${
-                      active
-                        ? 'text-primary-600 dark:text-primary-400'
-                        : 'text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400'
+                      isNewArrival
+                        ? active
+                          ? 'rounded-full bg-gray-950 px-3 py-1.5 text-white shadow-sm dark:bg-white dark:text-gray-950'
+                          : 'rounded-full border border-gray-950/15 bg-gray-950 px-3 py-1.5 text-white shadow-sm hover:bg-black dark:border-white/20 dark:bg-white dark:text-gray-950 dark:hover:bg-cyan-100'
+                        : active
+                          ? 'text-primary-600 dark:text-primary-400'
+                          : 'text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400'
                     }`}
                   >
                     {link.name}
@@ -328,14 +344,19 @@ const NavbarComponent: React.FC = () => {
               {/* Nav Links */}
               {navLinks.map((link) => {
                 const active = location.pathname === link.path;
+                const isNewArrival = link.path === '/new-arrivals';
                 return (
                   <button
                     key={link.name}
                     onClick={() => openCategory(link.path)}
                     className={`block w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      active
-                        ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
+                      isNewArrival
+                        ? active
+                          ? 'bg-gray-950 text-white dark:bg-white dark:text-gray-950'
+                          : 'bg-gray-950 text-white hover:bg-black dark:bg-white dark:text-gray-950 dark:hover:bg-cyan-100'
+                        : active
+                          ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
+                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
                     }`}
                   >
                     {link.name}

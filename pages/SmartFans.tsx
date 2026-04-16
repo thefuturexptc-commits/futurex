@@ -1,6 +1,6 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
-import heroImage from '../assets/images/smartfans-hero.webp';
+import heroImage from '../assets/images/fan-hero-q8pro-cutout.webp';
 import heroBackgroundImage from '../assets/images/smartrings-neon-bg.webp';
 
 export const SmartFans: React.FC = () => {

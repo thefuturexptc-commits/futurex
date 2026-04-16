@@ -9,6 +9,7 @@ import {
   addProduct,
   deleteAdmin,
   deleteCategory,
+  deleteOrder,
   deleteProduct,
   getAllOrders,
   getAllUsers,
@@ -721,6 +722,20 @@ export const AdminDashboard: React.FC = () => {
     await refreshData();
   };
 
+  const handleDeleteOrder = (order: Order) => {
+    setConfirmState({
+      open: true,
+      title: 'Delete Order',
+      message: `Delete order ${order.id}? This removes it from the admin order list.`,
+      confirmLabel: 'Delete Order',
+      onConfirm: async () => {
+        await deleteOrder(order.id);
+        pushAudit('Order Deleted', order.id);
+        await refreshData();
+      },
+    });
+  };
+
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
     try {
@@ -959,7 +974,7 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
       {activeTab === 'orders' && (
-        <OrdersTab orders={orders} users={users} isLoading={isLoading} onStatusUpdate={handleStatusUpdate} />
+        <OrdersTab orders={orders} users={users} isLoading={isLoading} onStatusUpdate={handleStatusUpdate} onDeleteOrder={handleDeleteOrder} />
       )}
       {activeTab === 'categories' && (
         <CategoriesTab

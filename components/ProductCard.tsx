@@ -12,6 +12,8 @@ interface ProductCardProps {
   compact?: boolean;
   imageAspectClassName?: string;
   disableHoverEffects?: boolean;
+  monochrome?: boolean;
+  imageFit?: 'cover' | 'contain';
 }
 
 const imageTintCache = new Map<string, string>();
@@ -146,6 +148,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   compact = false,
   imageAspectClassName,
   disableHoverEffects = false,
+  monochrome = true,
+  imageFit = 'contain',
 }) => {
   const { addToCart } = useCart();
   const { user } = useAuth();
@@ -184,6 +188,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const activeImage = previewImage || defaultImage;
 
   useEffect(() => {
+    if (monochrome) return;
     let cancelled = false;
     const cancelIdle = scheduleIdleWork(() => {
       void getImageTint(activeImage).then(({ tint, deepTint, isLight }) => {
@@ -197,7 +202,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       cancelled = true;
       cancelIdle();
     };
-  }, [activeImage]);
+  }, [activeImage, monochrome]);
 
   const handleAddToCart = () => {
     if (!user) {
@@ -207,31 +212,40 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     addToCart(product);
   };
 
-  const cardTextClass = isLightCard ? 'text-gray-900' : 'text-white';
-  const mutedTextClass = isLightCard ? 'text-gray-500' : 'text-gray-400';
-  const categoryChipClass = isLightCard ? 'text-cyan-700 bg-cyan-100/90' : 'text-primary-300 bg-primary-900/30';
-  const ratingClass = isLightCard ? 'text-amber-500' : 'text-amber-400';
-  const hoverTextClass = enableHoverEffects ? 'group-hover:text-primary-300' : '';
+  const cardTextClass = monochrome ? 'text-white' : isLightCard ? 'text-gray-900' : 'text-white';
+  const mutedTextClass = monochrome ? 'text-gray-400' : isLightCard ? 'text-gray-500' : 'text-gray-400';
+  const categoryChipClass = monochrome ? 'text-gray-950 bg-white' : isLightCard ? 'text-cyan-700 bg-cyan-100/90' : 'text-primary-300 bg-primary-900/30';
+  const ratingClass = monochrome ? 'text-gray-200' : isLightCard ? 'text-amber-500' : 'text-amber-400';
+  const hoverTextClass = enableHoverEffects ? (monochrome ? 'group-hover:text-white' : 'group-hover:text-primary-300') : '';
+  const cardBackground = monochrome
+    ? 'linear-gradient(155deg, #050505 0%, #171717 62%, #f3f4f6 185%)'
+    : `linear-gradient(165deg, ${imageTint} 0%, ${imageDeepTint} 68%)`;
+  const cardBorderClass = monochrome ? 'border-white/15' : isLightCard ? 'border-gray-200' : 'border-white/10';
 
   return (
     <div
       className={`group relative h-full overflow-hidden transition-all duration-500 ease-out border flex flex-col ${compact
           ? `rounded-3xl ${enableHoverEffects ? 'sm:hover:-translate-y-1.5 sm:hover:shadow-[0_22px_48px_rgba(0,0,0,0.52)]' : ''} shadow-[0_8px_18px_rgba(0,0,0,0.26)] sm:shadow-[0_12px_28px_rgba(0,0,0,0.34)]`
           : `rounded-[2rem] ${enableHoverEffects ? 'sm:hover:-translate-y-3 sm:hover:shadow-[0_28px_58px_rgba(0,0,0,0.5)] sm:hover:scale-[1.03]' : ''} shadow-[0_10px_22px_rgba(0,0,0,0.28)] sm:shadow-[0_14px_30px_rgba(0,0,0,0.36)]`
-        } ${isLightCard ? 'border-gray-200' : 'border-white/10'}`}
-      style={{ background: `linear-gradient(165deg, ${imageTint} 0%, ${imageDeepTint} 68%)` }}
+        } ${cardBorderClass}`}
+      style={{ background: cardBackground }}
     >
       <div
-        className={`pointer-events-none absolute inset-[1px] ${isLightCard ? 'bg-gradient-to-b from-white/55 via-white/20 to-transparent' : 'bg-gradient-to-b from-white/8 via-white/[0.02] to-transparent sm:from-white/12 sm:via-white/[0.03]'
+        className={`pointer-events-none absolute inset-[1px] ${monochrome ? 'bg-gradient-to-b from-white/12 via-white/[0.03] to-transparent' : isLightCard ? 'bg-gradient-to-b from-white/55 via-white/20 to-transparent' : 'bg-gradient-to-b from-white/8 via-white/[0.02] to-transparent sm:from-white/12 sm:via-white/[0.03]'
           } ${compact ? 'rounded-3xl' : 'rounded-[2rem]'
           }`}
       />
       <div
-        className={`pointer-events-none absolute -inset-[1px] transition-opacity duration-500 bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20 ${compact ? 'rounded-3xl' : 'rounded-[2rem]'
+        className={`pointer-events-none absolute -inset-[1px] transition-opacity duration-500 ${monochrome ? 'bg-gradient-to-br from-white/25 via-transparent to-white/10' : 'bg-gradient-to-br from-rose-400/20 via-transparent to-cyan-400/20'} ${compact ? 'rounded-3xl' : 'rounded-[2rem]'
           } ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
       />
-      <div className={`pointer-events-none absolute inset-0 ${isLightCard ? 'bg-gradient-to-b from-white/10 via-transparent to-transparent opacity-70' : 'bg-gradient-to-b from-white/4 via-transparent to-transparent opacity-45 sm:opacity-60'}`} />
-      <Link to={`/product/${toProductSlug(product.name)}`} className={`block relative overflow-hidden ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
+      <div className={`pointer-events-none absolute inset-0 ${monochrome ? 'bg-gradient-to-b from-white/5 via-transparent to-black/30 opacity-80' : isLightCard ? 'bg-gradient-to-b from-white/10 via-transparent to-transparent opacity-70' : 'bg-gradient-to-b from-white/4 via-transparent to-transparent opacity-45 sm:opacity-60'}`} />
+      {product.isBestSeller && (
+        <div className="absolute right-3 top-3 z-20 rounded-full border border-white/25 bg-white px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-black shadow-[0_10px_22px_-14px_rgba(255,255,255,0.9)]">
+          Best Seller
+        </div>
+      )}
+      <Link to={`/product/${toProductSlug(product.name)}`} className={`relative flex items-center justify-center overflow-hidden bg-black/25 ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
         <img
           src={activeImage}
           alt={product.name}
@@ -240,8 +254,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           sizes={compact ? "(max-width: 640px) 45vw, 25vw" : "(max-width: 640px) 80vw, 35vw"}
           width={640}
           height={800}
-          className={`w-full h-full object-contain object-center transition-all duration-300 ease-out ${enableHoverEffects ? 'group-hover:scale-105' : ''
-            } ${compact ? 'p-1.5' : 'p-2'}`}
+          className={`h-full w-full ${imageFit === 'cover' ? 'object-cover' : 'object-contain'} object-center transition-all duration-300 ease-out ${enableHoverEffects ? 'group-hover:scale-105' : ''
+            }`}
         />
         <div
           className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-300 ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
@@ -328,8 +342,8 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             disabled={!canAdd}
             className={
               compact
-                ? 'w-full rounded-full px-4 py-2 text-xs font-semibold shadow-sm'
-                : 'w-full rounded-full px-4 py-2.5 text-xs font-semibold shadow-sm'
+                ? 'h-9 w-full rounded-full px-4 text-xs font-semibold shadow-sm sm:h-10'
+                : 'h-10 w-full rounded-full px-4 text-xs font-semibold shadow-sm'
             }
           >
             {compact ? 'Add to Cart' : 'Add to Cart'}

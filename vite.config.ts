@@ -15,7 +15,11 @@ export default defineConfig(({ mode }) => {
           output: {
             manualChunks: {
               router: ['react-router-dom'],
-              firebase: ['firebase/app', 'firebase/auth', 'firebase/firestore', 'firebase/storage'],
+              firebaseApp: ['firebase/app'],
+              firebaseAuth: ['firebase/auth'],
+              firebaseDb: ['firebase/firestore'],
+              firebaseStorage: ['firebase/storage'],
+              editor: ['@tiptap/react', '@tiptap/starter-kit', '@tiptap/extension-underline'],
             },
           },
         },

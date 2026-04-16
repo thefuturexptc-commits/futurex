@@ -10,7 +10,9 @@ const PIXEL_ID = import.meta.env.VITE_META_PIXEL_ID as string;
 // ── Initialize Pixel ──────────────────────────────────────────
 export const initMetaPixel = (): void => {
   if (!PIXEL_ID) {
-    console.warn('[MetaPixel] VITE_META_PIXEL_ID is not set. Pixel will not fire.');
+    if (import.meta.env.DEV) {
+      console.warn('[MetaPixel] VITE_META_PIXEL_ID is not set. Pixel will not fire.');
+    }
     return;
   }
 
@@ -40,10 +42,6 @@ export const initMetaPixel = (): void => {
 
   (window as any).fbq('init', PIXEL_ID);
   (window as any).fbq('track', 'PageView');
-
-  if (import.meta.env.DEV) {
-    console.log(`[MetaPixel] Initialized with Pixel ID: ${PIXEL_ID}`);
-  }
 };
 
 // ── Helper: safe fbq call ─────────────────────────────────────
@@ -51,9 +49,6 @@ const fbq = (...args: any[]): void => {
   const win = window as any;
   if (typeof win.fbq === 'function') {
     win.fbq(...args);
-    if (import.meta.env.DEV) {
-      console.log('[MetaPixel] Event fired:', ...args);
-    }
   }
 };
 

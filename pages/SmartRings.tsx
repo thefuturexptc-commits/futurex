@@ -57,16 +57,14 @@ export const SmartRings: React.FC = () => {
       category="Smart Rings"
       title="Wellness, Simplified."
       subtitle="Elegance meets intelligence. Monitor your vital signs 24/7 without screens, vibrations, or distractions."
-      heroGradient="bg-gradient-to-br from-gray-900 via-purple-900 to-indigo-900"
+      heroGradient="bg-gradient-to-br from-gray-950 via-emerald-950 to-slate-900"
       heroImage={heroImage}
       heroBackgroundImage={heroBackgroundImage}
-      heroOverlayClassName="bg-gradient-to-b from-black/20 via-black/34 to-black/50"
-      heroTintClassName="bg-black/8"
-      heroSideOverlayClassName="bg-gradient-to-l from-black/22 to-transparent"
-      showHeroGridPattern={false}
-      accentColor="text-purple-400"
+      accentColor="text-emerald-400"
       features={features}
       autoSlideModels={false}
+      modelCardSkeletonClassName="h-72"
+      modelCardImageAspectClassName="aspect-[4/3]"
     />
   );
 };

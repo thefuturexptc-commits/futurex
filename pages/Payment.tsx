@@ -106,6 +106,7 @@ export const Payment: React.FC = () => {
   };
 
   const finalizeSuccessfulOrder = async (paymentStatus: 'Pending' | 'Paid') => {
+    if (orderSubmitting) return;
     setOrderSubmitting(true);
     const verifiedFlow: CheckoutFlowState = {
       ...(flowState as CheckoutFlowState),
@@ -124,6 +125,9 @@ export const Payment: React.FC = () => {
         paymentMethod,
         shippingDetails: flowState.shippingDetails,
         orderSource: getOrderSourceFromSession(),
+        customerName: user.name,
+        customerEmail: user.email,
+        customerPhone: flowState.shippingDetails.phoneNumber,
       }
     );
 
@@ -142,7 +146,9 @@ export const Payment: React.FC = () => {
     try {
       await saveAddressIfNeeded(addressForOrder);
     } catch (addressError) {
-      console.warn('Order placed, but address save failed:', addressError);
+      if (import.meta.env.DEV) {
+        console.warn('Order placed, but address save failed:', addressError);
+      }
     }
 
     window.sessionStorage.removeItem('checkout_flow_state');
@@ -162,6 +168,7 @@ export const Payment: React.FC = () => {
   };
 
   const handlePayment = async () => {
+    if (loading || orderSubmitting) return;
     setError('');
     setLoading(true);
 
@@ -257,7 +264,7 @@ export const Payment: React.FC = () => {
           </div>
 
           {error && <p className="text-sm text-red-500">{error}</p>}
-          <Button type="button" className="w-full sm:w-auto" onClick={handlePayment} isLoading={loading}>
+          <Button type="button" className="w-full sm:w-auto" onClick={handlePayment} isLoading={loading || orderSubmitting} disabled={loading || orderSubmitting}>
             {paymentMethod === 'cod' ? `Place COD Order (Rs ${totalPrice.toFixed(2)})` : `Pay Now (Rs ${totalPrice.toFixed(2)})`}
           </Button>
         </div>
