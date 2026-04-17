@@ -16,21 +16,30 @@ const toProductSlug = (name: string): string =>
 
 const runWhenIdle = (work: () => void, timeout = 1800): (() => void) => {
   if (typeof window === 'undefined') return () => {};
-  const requestIdle = (window as Window & {
-    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-    cancelIdleCallback?: (id: number) => void;
-  }).requestIdleCallback;
-  const cancelIdle = (window as Window & {
-    cancelIdleCallback?: (id: number) => void;
-  }).cancelIdleCallback;
+  let cleanup = () => {};
+  const delayId = window.setTimeout(() => {
+    const requestIdle = (window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    }).requestIdleCallback;
+    const cancelIdle = (window as Window & {
+      cancelIdleCallback?: (id: number) => void;
+    }).cancelIdleCallback;
 
-  if (requestIdle) {
-    const id = requestIdle(work, { timeout });
-    return () => cancelIdle?.(id);
-  }
+    if (requestIdle) {
+      const idleId = requestIdle(work, { timeout: 2500 });
+      cleanup = () => cancelIdle?.(idleId);
+      return;
+    }
 
-  const id = window.setTimeout(work, timeout);
-  return () => window.clearTimeout(id);
+    const id = window.setTimeout(work, 300);
+    cleanup = () => window.clearTimeout(id);
+  }, timeout);
+
+  return () => {
+    window.clearTimeout(delayId);
+    cleanup();
+  };
 };
 
 const NavbarComponent: React.FC = () => {
@@ -92,7 +101,7 @@ const NavbarComponent: React.FC = () => {
         .catch(() => {
           // Keep fallback categories when backend fetch is unavailable.
         });
-    });
+    }, 6500);
 
     return () => {
       isMounted = false;
@@ -137,7 +146,7 @@ const NavbarComponent: React.FC = () => {
           if (isMounted) setAllProducts(items);
         })
         .catch(() => {});
-    }, 2600);
+    }, 9000);
     return () => {
       isMounted = false;
       cancel();

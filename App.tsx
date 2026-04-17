@@ -13,7 +13,6 @@ import { LoadingFallback } from './components/LoadingFallback';
 import { removeJsonLd, setSeoMetadata } from './services/seo';
 
 // ✅ META PIXEL
-import { initMetaPixel, trackPageView } from './services/Metapixel';
 
 const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Shop = React.lazy(() => import('./pages/Shop').then(module => ({ default: module.Shop })));
@@ -37,6 +36,35 @@ const Signup = React.lazy(() => import('./pages/Signup').then(module => ({ defau
 const InfoPage = React.lazy(() => import('./pages/InfoPage').then(module => ({ default: module.InfoPage })));
 const OfferPage = React.lazy(() => import('./pages/OfferPage').then(module => ({ default: module.OfferPage })));
 
+const runAfterPageSettles = (work: () => void, timeout = 8000): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+
+  let cleanup = () => {};
+  const timeoutId = window.setTimeout(() => {
+    const requestIdle = (window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    }).requestIdleCallback;
+    const cancelIdle = (window as Window & {
+      cancelIdleCallback?: (id: number) => void;
+    }).cancelIdleCallback;
+
+    if (requestIdle) {
+      const idleId = requestIdle(work, { timeout: 2500 });
+      cleanup = () => cancelIdle?.(idleId);
+      return;
+    }
+
+    const fallbackId = window.setTimeout(work, 1200);
+    cleanup = () => window.clearTimeout(fallbackId);
+  }, timeout);
+
+  return () => {
+    window.clearTimeout(timeoutId);
+    cleanup();
+  };
+};
+
 const ScrollToTop: React.FC = () => {
   const { pathname } = useLocation();
   useLayoutEffect(() => {
@@ -49,7 +77,9 @@ const ScrollToTop: React.FC = () => {
 const MetaPixelPageTracker: React.FC = () => {
   const { pathname } = useLocation();
   useEffect(() => {
-    trackPageView();
+    return runAfterPageSettles(() => {
+      void import('./services/Metapixel').then(({ trackPageView }) => trackPageView());
+    }, 9000);
   }, [pathname]);
   return null;
 };
@@ -260,24 +290,7 @@ const DeferredSupportAssistant: React.FC = () => {
     pathname === '/order-success';
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const load = () => setShouldLoad(true);
-    const idleCallback = (window as Window & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    }).requestIdleCallback;
-    const cancelIdleCallback = (window as Window & {
-      cancelIdleCallback?: (id: number) => void;
-    }).cancelIdleCallback;
-
-    if (idleCallback) {
-      const id = idleCallback(load, { timeout: 3500 });
-      return () => cancelIdleCallback?.(id);
-    }
-
-    const timeoutId = window.setTimeout(load, 2500);
-    return () => window.clearTimeout(timeoutId);
+    return runAfterPageSettles(() => setShouldLoad(true), 12000);
   }, []);
 
   if (!shouldLoad || shouldHideAssistant) return null;
@@ -292,7 +305,9 @@ const DeferredSupportAssistant: React.FC = () => {
 const App: React.FC = () => {
   // ✅ Initialize Meta Pixel once on app mount
   useEffect(() => {
-    initMetaPixel();
+    return runAfterPageSettles(() => {
+      void import('./services/Metapixel').then(({ initMetaPixel }) => initMetaPixel());
+    }, 9000);
   }, []);
 
   return (

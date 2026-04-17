@@ -213,7 +213,11 @@ export default function Galaxy({
     const container = containerRef.current;
     if (!container || reducedMotion) return;
 
-    const renderer = new Renderer({ alpha: transparent, premultipliedAlpha: false });
+    const renderer = new Renderer({
+      alpha: transparent,
+      premultipliedAlpha: false,
+      dpr: Math.min(1.5, window.devicePixelRatio || 1),
+    });
     const gl = renderer.gl;
     if (transparent) {
       gl.enable(gl.BLEND);
@@ -260,6 +264,7 @@ export default function Galaxy({
     let animationFrame = 0;
     const update = (time: number) => {
       animationFrame = requestAnimationFrame(update);
+      if (document.hidden) return;
       if (!disableAnimation) {
         program.uniforms.uTime.value = time * 0.001;
         program.uniforms.uStarSpeed.value = (time * 0.001 * starSpeed) / 10.0;

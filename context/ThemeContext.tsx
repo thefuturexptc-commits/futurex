@@ -5,21 +5,30 @@ const SETTINGS_DRAFT_KEY = 'aura_settings_draft';
 
 const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
   if (typeof window === 'undefined') return () => {};
-  const requestIdle = (window as Window & {
-    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-    cancelIdleCallback?: (id: number) => void;
-  }).requestIdleCallback;
-  const cancelIdle = (window as Window & {
-    cancelIdleCallback?: (id: number) => void;
-  }).cancelIdleCallback;
+  let cleanup = () => {};
+  const delayId = window.setTimeout(() => {
+    const requestIdle = (window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    }).requestIdleCallback;
+    const cancelIdle = (window as Window & {
+      cancelIdleCallback?: (id: number) => void;
+    }).cancelIdleCallback;
 
-  if (requestIdle) {
-    const id = requestIdle(work, { timeout });
-    return () => cancelIdle?.(id);
-  }
+    if (requestIdle) {
+      const idleId = requestIdle(work, { timeout: 2500 });
+      cleanup = () => cancelIdle?.(idleId);
+      return;
+    }
 
-  const id = window.setTimeout(work, timeout);
-  return () => window.clearTimeout(id);
+    const id = window.setTimeout(work, 300);
+    cleanup = () => window.clearTimeout(id);
+  }, timeout);
+
+  return () => {
+    window.clearTimeout(delayId);
+    cleanup();
+  };
 };
 
 interface ThemeContextType {
@@ -114,7 +123,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           });
         })
         .catch(() => {});
-    });
+    }, 7500);
 
     const onSettingsUpdated = (event: Event) => {
       const customEvent = event as CustomEvent<Partial<WebsiteSettings>>;

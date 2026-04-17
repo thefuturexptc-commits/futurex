@@ -18,69 +18,106 @@ const toProductSlug = (name: string): string =>
 
 const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
   if (typeof window === 'undefined') return () => {};
-  const requestIdle = (window as Window & {
-    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-    cancelIdleCallback?: (id: number) => void;
-  }).requestIdleCallback;
-  const cancelIdle = (window as Window & {
-    cancelIdleCallback?: (id: number) => void;
-  }).cancelIdleCallback;
+  let cleanup = () => {};
+  const delayId = window.setTimeout(() => {
+    const requestIdle = (window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    }).requestIdleCallback;
+    const cancelIdle = (window as Window & {
+      cancelIdleCallback?: (id: number) => void;
+    }).cancelIdleCallback;
 
-  if (requestIdle) {
-    const id = requestIdle(work, { timeout });
-    return () => cancelIdle?.(id);
-  }
+    if (requestIdle) {
+      const idleId = requestIdle(work, { timeout: 2500 });
+      cleanup = () => cancelIdle?.(idleId);
+      return;
+    }
 
-  const id = window.setTimeout(work, timeout);
-  return () => window.clearTimeout(id);
+    const id = window.setTimeout(work, 300);
+    cleanup = () => window.clearTimeout(id);
+  }, timeout);
+
+  return () => {
+    window.clearTimeout(delayId);
+    cleanup();
+  };
 };
 
 const Galaxy = React.lazy(() => import('../components/Galaxy'));
+const galaxyFallbackClass = 'h-full w-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12),transparent_46%)]';
+
+const canUseAnimatedGalaxy = () => {
+  if (typeof window === 'undefined') return false;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
+
+  const nav = window.navigator as Navigator & { deviceMemory?: number };
+  if ((nav.hardwareConcurrency || 4) <= 2) return false;
+  if (nav.deviceMemory && nav.deviceMemory <= 2) return false;
+
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    return Boolean(gl);
+  } catch {
+    return false;
+  }
+};
 
 const DeferredGalaxy: React.FC = () => {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const [shouldLoad, setShouldLoad] = useState(false);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const load = () => setShouldLoad(true);
-    const idleCallback = (window as Window & {
-      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
-      cancelIdleCallback?: (id: number) => void;
-    }).requestIdleCallback;
-    const cancelIdleCallback = (window as Window & {
-      cancelIdleCallback?: (id: number) => void;
-    }).cancelIdleCallback;
+    const target = containerRef.current;
+    if (!target) return;
 
-    if (idleCallback) {
-      const id = idleCallback(load, { timeout: 3000 });
-      return () => cancelIdleCallback?.(id);
+    if (!('IntersectionObserver' in window)) {
+      setIsVisible(true);
+      return;
     }
 
-    const timeoutId = window.setTimeout(load, 1800);
-    return () => window.clearTimeout(timeoutId);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsVisible(entry.isIntersecting);
+      },
+      { rootMargin: '180px 0px', threshold: 0.01 }
+    );
+    observer.observe(target);
+
+    return () => observer.disconnect();
   }, []);
 
-  if (!shouldLoad) {
-    return <div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12),transparent_46%)]" />;
+  useEffect(() => {
+    if (!isVisible || shouldLoad || !canUseAnimatedGalaxy()) return;
+    return runWhenIdle(() => setShouldLoad(true), 2200);
+  }, [isVisible, shouldLoad]);
+
+  if (!shouldLoad || !isVisible) {
+    return <div ref={containerRef} className={galaxyFallbackClass} />;
   }
 
   return (
-    <React.Suspense fallback={<div className="h-full w-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12),transparent_46%)]" />}>
+    <div ref={containerRef} className="h-full w-full">
+      <React.Suspense fallback={<div className={galaxyFallbackClass} />}>
       <Galaxy
         mouseRepulsion
-        mouseInteraction
-        density={0.9}
-        glowIntensity={0.2}
+        mouseInteraction={false}
+        density={0.65}
+        glowIntensity={0.16}
         saturation={0}
         hueShift={100}
-        twinkleIntensity={0.3}
-        rotationSpeed={0.1}
-        repulsionStrength={2}
+        twinkleIntensity={0.22}
+        rotationSpeed={0.06}
+        repulsionStrength={1.5}
         autoCenterRepulsion={0}
-        starSpeed={0.5}
-        speed={1}
+        starSpeed={0.35}
+        speed={0.75}
       />
-    </React.Suspense>
+      </React.Suspense>
+    </div>
   );
 };
 
@@ -166,7 +203,7 @@ export const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const cancel = runWhenIdle(() => void loadProducts());
+    const cancel = runWhenIdle(() => void loadProducts(), 6500);
     return cancel;
   }, [loadProducts]);
 
