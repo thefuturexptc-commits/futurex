@@ -230,7 +230,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
   return (
     <div
-      className={`group relative h-full overflow-hidden transition-all duration-500 ease-out border flex flex-col ${compact
+      className={`product-card-dark group relative h-full overflow-hidden transition-all duration-500 ease-out border flex flex-col ${compact
           ? `rounded-3xl ${enableHoverEffects ? 'sm:hover:-translate-y-1.5 sm:hover:shadow-[0_22px_48px_rgba(0,0,0,0.52)]' : ''} shadow-[0_8px_18px_rgba(0,0,0,0.26)] sm:shadow-[0_12px_28px_rgba(0,0,0,0.34)]`
           : `rounded-[2rem] ${enableHoverEffects ? 'sm:hover:-translate-y-3 sm:hover:shadow-[0_28px_58px_rgba(0,0,0,0.5)] sm:hover:scale-[1.03]' : ''} shadow-[0_10px_22px_rgba(0,0,0,0.28)] sm:shadow-[0_14px_30px_rgba(0,0,0,0.36)]`
         } ${cardBorderClass}`}

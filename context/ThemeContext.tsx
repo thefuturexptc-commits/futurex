@@ -83,7 +83,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   useEffect(() => {
     const root = window.document.documentElement;
-    const savedTheme = (localStorage.getItem('aura_theme') as Theme) || 'dark';
+    const savedTheme: Theme = 'dark';
+    localStorage.setItem('aura_theme', savedTheme);
     setTheme(savedTheme);
     root.classList.remove('light', 'dark');
     root.classList.add(savedTheme);

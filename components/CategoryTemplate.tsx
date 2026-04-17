@@ -226,7 +226,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     : filteredProducts;
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-dark-bg text-gray-900 dark:text-white transition-colors duration-500">
+    <div className="min-h-screen bg-dark-bg text-white transition-colors duration-500">
 
       {/* Immersive Hero Section */}
       <section className="relative left-1/2 min-h-screen w-screen -translate-x-1/2 overflow-hidden bg-[#020817] text-white">
@@ -272,25 +272,25 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
       </section>
 
       {/* Product Section */}
-      <div className="max-w-7xl mx-auto px-4 py-16 sm:py-20 text-gray-900 dark:text-white">
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:py-20 text-white">
         {loadError && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
             {loadError}
           </div>
         )}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-gray-200 dark:border-white/10 pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-white/10 pb-6">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 dark:text-white font-display">Available Models</h2>
-            <p className="text-gray-600 dark:text-gray-300 mt-2">Explore the latest generation of {category}.</p>
+            <h2 className="text-3xl font-bold text-white font-display">Available Models</h2>
+            <p className="text-gray-300 mt-2">Explore the latest generation of {category}.</p>
           </div>
 
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500 dark:text-gray-400 font-medium whitespace-nowrap hidden sm:inline">Sort by:</span>
+            <span className="text-sm text-gray-400 font-medium whitespace-nowrap hidden sm:inline">Sort by:</span>
             <div className="relative">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="appearance-none bg-white text-gray-900 border border-gray-300 dark:bg-gray-800 dark:text-white dark:border-gray-600 py-2.5 pl-4 pr-10 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[160px]"
+                className="appearance-none bg-gray-900 text-white border border-white/15 py-2.5 pl-4 pr-10 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[160px]"
               >
                 <option value="featured">Featured</option>
                 <option value="rating">Top Rated</option>

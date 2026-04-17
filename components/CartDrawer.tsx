@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 
 export const CartDrawer: React.FC = () => {
-  const { isCartOpen, closeCart, items, removeFromCart, updateQuantity, totalPrice } = useCart();
+  const { isCartOpen, closeCart, items, removeFromCart, updateQuantity, totalItems, totalPrice } = useCart();
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
   const navigate = useNavigate();
@@ -32,11 +32,14 @@ export const CartDrawer: React.FC = () => {
 
       {/* Drawer */}
       <div className="absolute inset-y-0 right-0 w-full sm:max-w-md flex">
-        <div className="h-full w-full bg-white dark:bg-dark-surface shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col border-l border-gray-200 dark:border-white/10">
+        <div
+          className="cart-drawer-panel h-full w-full bg-dark-surface text-white shadow-2xl transform transition-transform duration-300 ease-in-out flex flex-col border-l border-white/10"
+          style={{ backgroundColor: '#0a0a0a', color: '#ffffff' }}
+        >
           
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-white/10">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white font-display">Shopping Cart</h2>
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
+            <h2 className="text-xl font-bold text-white font-display">Shopping Cart ({totalItems})</h2>
             <button 
               onClick={closeCart}
               className="p-2 -mr-2 text-gray-400 hover:text-gray-500 dark:hover:text-gray-300"
@@ -49,19 +52,19 @@ export const CartDrawer: React.FC = () => {
           <div className="flex-1 overflow-y-auto p-6 space-y-6">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center space-y-4">
-                <div className="w-16 h-16 bg-gray-100 dark:bg-white/5 rounded-full flex items-center justify-center text-gray-400">
+                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-gray-400">
                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
                 </div>
                 <div>
-                   <p className="text-lg font-medium text-gray-900 dark:text-white">Your cart is empty</p>
+                   <p className="text-lg font-medium text-white">Your cart is empty</p>
                    <p className="text-gray-500 text-sm mt-1">Looks like you haven't added anything yet.</p>
                 </div>
                 <Button variant="outline" onClick={closeCart} className="mt-4">Continue Shopping</Button>
               </div>
             ) : (
               items.map(item => (
-                <div key={item.id} className="flex gap-4">
-                  <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-gray-200 dark:border-white/10">
+                <div key={`${item.id}_${item.selectedColorName || ''}_${item.price}`} className="flex gap-4">
+                  <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-white/10">
                     <img
                       src={item.images[0]}
                       alt={item.name}
@@ -72,23 +75,23 @@ export const CartDrawer: React.FC = () => {
                   </div>
                   <div className="flex flex-1 flex-col">
                     <div>
-                      <div className="flex justify-between text-base font-medium text-gray-900 dark:text-white">
+                      <div className="flex justify-between text-base font-medium text-white">
                         <h3>{item.name}</h3>
                         <p className="ml-4">₹{(item.price * item.quantity).toFixed(2)}</p>
                       </div>
                       <p className="mt-1 text-sm text-gray-500">{item.category}</p>
                     </div>
                     <div className="flex flex-1 items-end justify-between text-sm">
-                      <div className="flex items-center border border-gray-300 dark:border-white/20 rounded-md">
+                      <div className="flex items-center border border-white/20 rounded-md">
                          <button onClick={() => {
-                           if (item.quantity - 1 < 1) {
+                           if (Number(item.quantity || 0) - 1 < 1) {
                              removeFromCart(item.id, item.selectedColorName, item.price);
                            } else {
-                             updateQuantity(item.id, item.quantity - 1, item.selectedColorName, item.price);
+                             updateQuantity(item.id, Number(item.quantity || 0) - 1, item.selectedColorName, item.price);
                            }
-                         }} className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300">-</button>
-                         <span className="px-2 font-medium text-gray-900 dark:text-white">{item.quantity}</span>
-                         <button onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedColorName, item.price)} className="px-2 py-1 hover:bg-gray-100 dark:hover:bg-white/10 text-gray-600 dark:text-gray-300">+</button>
+                         }} className="px-2 py-1 hover:bg-white/10 text-gray-300">-</button>
+                         <span className="px-2 font-medium text-white">{Number(item.quantity || 0)}</span>
+                         <button onClick={() => updateQuantity(item.id, Number(item.quantity || 0) + 1, item.selectedColorName, item.price)} className="px-2 py-1 hover:bg-white/10 text-gray-300">+</button>
                       </div>
                       <button 
                         type="button" 
@@ -106,8 +109,8 @@ export const CartDrawer: React.FC = () => {
 
           {/* Footer */}
           {items.length > 0 && (
-            <div className="border-t border-gray-200 dark:border-white/10 px-6 py-6 bg-gray-50 dark:bg-white/5">
-              <div className="flex justify-between text-base font-bold text-gray-900 dark:text-white mb-4">
+            <div className="border-t border-white/10 px-6 py-6 bg-white/5">
+              <div className="flex justify-between text-base font-bold text-white mb-4">
                 <p>Subtotal</p>
                 <p>₹{totalPrice.toFixed(2)}</p>
               </div>

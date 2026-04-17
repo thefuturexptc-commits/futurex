@@ -206,7 +206,7 @@ export const ProductDetail: React.FC = () => {
   const displayedImages = activeImages.length > 0 ? activeImages : ['https://picsum.photos/600'];
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white">
+    <div className="product-detail-dark min-h-screen bg-dark-bg text-white">
 
       {/* Breadcrumb */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">

@@ -261,6 +261,98 @@ svg {
   }
 }
 
+/* Dark fallback for Tailwind CDN loading delays or blocked CDN requests. */
+html.dark,
+html.dark body,
+body {
+  background: #050505;
+  color: #f8fafc;
+}
+
+a {
+  color: inherit;
+}
+
+button {
+  font-family: inherit;
+}
+
+.site-navbar {
+  background: rgba(5, 5, 5, 0.92);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: #f8fafc;
+}
+
+.home-showcase-panel {
+  border: 0;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.home-showcase-light {
+  background: #ffffff;
+  color: #111827;
+}
+
+.home-showcase-light p,
+.home-showcase-light h1,
+.home-showcase-light h2,
+.home-showcase-light span {
+  color: inherit;
+}
+
+.home-showcase-dark {
+  background: #050505;
+  color: #ffffff;
+}
+
+.product-detail-dark {
+  background: #050505;
+  color: #ffffff;
+}
+
+.product-detail-dark section,
+.product-detail-dark nav,
+.product-detail-dark h1,
+.product-detail-dark h2,
+.product-detail-dark h3,
+.product-detail-dark p,
+.product-detail-dark span,
+.product-detail-dark li {
+  color: inherit;
+}
+
+.product-detail-dark button,
+.product-detail-dark a {
+  color: inherit;
+}
+
+.product-card-dark {
+  background: linear-gradient(155deg, #050505 0%, #171717 62%, #f3f4f6 185%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1.5rem;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.product-card-dark img {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+.product-card-dark button {
+  color: #ffffff;
+}
+
+.product-card-dark a {
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.cart-drawer-panel {
+  background: #0a0a0a;
+  color: #ffffff;
+}
+
 
 
 /* ______________

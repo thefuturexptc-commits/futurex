@@ -44,83 +44,6 @@ const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
   };
 };
 
-const Galaxy = React.lazy(() => import('../components/Galaxy'));
-const galaxyFallbackClass = 'h-full w-full bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.12),transparent_46%)]';
-
-const canUseAnimatedGalaxy = () => {
-  if (typeof window === 'undefined') return false;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false;
-
-  const nav = window.navigator as Navigator & { deviceMemory?: number };
-  if ((nav.hardwareConcurrency || 4) <= 2) return false;
-  if (nav.deviceMemory && nav.deviceMemory <= 2) return false;
-
-  try {
-    const canvas = document.createElement('canvas');
-    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-    return Boolean(gl);
-  } catch {
-    return false;
-  }
-};
-
-const DeferredGalaxy: React.FC = () => {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
-  const [shouldLoad, setShouldLoad] = useState(false);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const target = containerRef.current;
-    if (!target) return;
-
-    if (!('IntersectionObserver' in window)) {
-      setIsVisible(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { rootMargin: '180px 0px', threshold: 0.01 }
-    );
-    observer.observe(target);
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!isVisible || shouldLoad || !canUseAnimatedGalaxy()) return;
-    return runWhenIdle(() => setShouldLoad(true), 2200);
-  }, [isVisible, shouldLoad]);
-
-  if (!shouldLoad || !isVisible) {
-    return <div ref={containerRef} className={galaxyFallbackClass} />;
-  }
-
-  return (
-    <div ref={containerRef} className="h-full w-full">
-      <React.Suspense fallback={<div className={galaxyFallbackClass} />}>
-      <Galaxy
-        mouseRepulsion
-        mouseInteraction={false}
-        density={0.65}
-        glowIntensity={0.16}
-        saturation={0}
-        hueShift={100}
-        twinkleIntensity={0.22}
-        rotationSpeed={0.06}
-        repulsionStrength={1.5}
-        autoCenterRepulsion={0}
-        starSpeed={0.35}
-        speed={0.75}
-      />
-      </React.Suspense>
-    </div>
-  );
-};
-
 export const Home: React.FC = () => {
   const colorMoods = useMemo(
     () => [
@@ -403,7 +326,6 @@ export const Home: React.FC = () => {
       imageWrapClassName: 'sm:right-0 sm:top-16 sm:bottom-0 sm:w-[58%] lg:w-[54%]',
       contentClassName: 'items-start text-left',
       imageClassName: 'max-h-[330px] sm:max-h-[470px] lg:max-h-[540px]',
-      galaxyClassName: 'opacity-55',
     },
     {
       category: 'Smart Rings',
@@ -416,7 +338,6 @@ export const Home: React.FC = () => {
       imageWrapClassName: 'sm:left-0 sm:top-0 sm:bottom-0 sm:w-[60%] lg:w-[56%]',
       contentClassName: 'items-start text-left sm:items-end sm:text-right',
       imageClassName: 'max-h-[270px] sm:max-h-[380px] lg:max-h-[430px]',
-      galaxyClassName: 'opacity-[0.18] mix-blend-multiply',
     },
     {
       category: 'Smart Bands',
@@ -429,7 +350,6 @@ export const Home: React.FC = () => {
       imageWrapClassName: 'sm:right-0 sm:top-0 sm:bottom-0 sm:w-[60%] lg:w-[56%]',
       contentClassName: 'items-start text-left',
       imageClassName: 'max-h-[270px] sm:max-h-[380px] lg:max-h-[430px]',
-      galaxyClassName: 'opacity-55',
     },
     {
       category: 'Smart Monitoring',
@@ -442,7 +362,6 @@ export const Home: React.FC = () => {
       imageWrapClassName: 'sm:left-0 sm:top-0 sm:bottom-0 sm:w-[58%] lg:w-[52%]',
       contentClassName: 'items-start text-left sm:items-end sm:text-right',
       imageClassName: 'max-h-[310px] sm:max-h-[460px] lg:max-h-[520px]',
-      galaxyClassName: 'opacity-[0.18] mix-blend-multiply',
     },
   ];
 
@@ -478,12 +397,9 @@ export const Home: React.FC = () => {
               key={panel.category}
               type="button"
               onClick={() => handleShopNavigation(panel.route)}
-              className={`group relative block min-h-[610px] w-full overflow-hidden text-left transition-transform duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400 sm:min-h-[640px] lg:min-h-[700px] ${panel.bannerClassName}`}
+              className={`home-showcase-panel ${isDark ? 'home-showcase-dark' : 'home-showcase-light'} group relative block min-h-[610px] w-full overflow-hidden text-left transition-transform duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400 sm:min-h-[640px] lg:min-h-[700px] ${panel.bannerClassName}`}
               aria-label={`Open ${panel.category}`}
             >
-              <div className={`absolute inset-0 ${panel.galaxyClassName}`} aria-hidden="true">
-                <DeferredGalaxy />
-              </div>
               <div
                 className={`absolute inset-0 ${
                   isDark

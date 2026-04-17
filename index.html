@@ -36,14 +36,9 @@
       window.addEventListener('pointerdown', window.loadGtmWhenReady, { once: true, passive: true });
       window.addEventListener('keydown', window.loadGtmWhenReady, { once: true });
     </script>
-    <script defer src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
-      tailwind.config = {
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
@@ -113,6 +108,12 @@
         }
       }
     </script>
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
       :root {
         /* Cyan/Electric Blue default */

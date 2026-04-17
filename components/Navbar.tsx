@@ -183,7 +183,7 @@ const NavbarComponent: React.FC = () => {
   return (
     <>
       {/* ─── Top Sticky Navbar ─────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 w-full glass-nav transition-all duration-300">
+      <nav className="site-navbar sticky top-0 z-50 w-full glass-nav transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
 
