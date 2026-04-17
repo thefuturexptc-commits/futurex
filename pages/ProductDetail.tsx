@@ -29,7 +29,7 @@ export const ProductDetail: React.FC = () => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [visibleReviewCount, setVisibleReviewCount] = useState(4);
 
-  useEffect(() => {
+  const loadProduct = useCallback(() => {
     if (!id) return;
     setLoading(true);
     setError(null);
@@ -45,6 +45,13 @@ export const ProductDetail: React.FC = () => {
       .catch(() => setError('Failed to load product'))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => loadProduct(), [loadProduct]);
+
+  useEffect(() => {
+    window.addEventListener('products-updated', loadProduct);
+    return () => window.removeEventListener('products-updated', loadProduct);
+  }, [loadProduct]);
 
   useEffect(() => {
     if (!product) return;

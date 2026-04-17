@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Product } from '../types';
 import { getProducts } from '../services/backend';
@@ -13,13 +13,23 @@ export const Shop: React.FC = () => {
   const [sortBy, setSortBy] = useState('featured');
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
+  const loadProducts = useCallback(() => {
     setLoading(true);
     getProducts().then(data => {
       setProducts(data);
       setLoading(false);
+    }).catch(() => {
+      setProducts([]);
+      setLoading(false);
     });
   }, []);
+
+  useEffect(() => loadProducts(), [loadProducts]);
+
+  useEffect(() => {
+    window.addEventListener('products-updated', loadProducts);
+    return () => window.removeEventListener('products-updated', loadProducts);
+  }, [loadProducts]);
 
   useEffect(() => {
     let result = [...products];

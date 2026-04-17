@@ -46,28 +46,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      // Only clear the local session if Firebase explicitly signs the user out
-      // (firebaseUser is null) AND auth is fully initialized (not still loading).
-      // We guard with isAuthReady to avoid wiping a valid local session on
-      // the very first emission before Firebase has resolved its state.
-      //
-      // IMPORTANT: We also skip clearing if the current Firebase user is anonymous.
-      // ensureFirebaseConnection() may sign in anonymously as a connectivity check,
-      // which should never evict a real logged-in user from the local session.
-      if (!firebaseUser && isAuthReady) {
-        const storedUser = localStorage.getItem('aura_active_user');
-        if (storedUser) {
-          setUser(null);
-          localStorage.removeItem('aura_active_user');
-        }
-      }
-      // If Firebase returns an anonymous user, do NOT overwrite the real local session.
+      // Keep the app session until the user explicitly signs out.
+      // Firebase can emit null after a browser/app restart, token refresh failure,
+      // or when anonymous connectivity checks are unavailable. That should not
+      // force a visible logout if we still have the saved app user in storage.
+      if (!firebaseUser) return;
+
+      // If Firebase returns an anonymous user, do not overwrite the real local session.
       if (firebaseUser?.isAnonymous) {
         return;
       }
     });
     return () => unsubscribe();
-  }, [isAuthReady]);
+  }, []);
 
   const login = (userData: User) => {
     const sanitized = sanitizeUserForStorage(userData);

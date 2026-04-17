@@ -100,7 +100,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     pauseAutoSlideRef.current = false;
   }, [isDraggingModels]);
 
-  useEffect(() => {
+  const loadProducts = useCallback(() => {
     let cancelled = false;
     setLoading(true);
     setLoadError('');
@@ -128,6 +128,13 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
       cancelled = true;
     };
   }, [category]);
+
+  useEffect(() => loadProducts(), [loadProducts]);
+
+  useEffect(() => {
+    window.addEventListener('products-updated', loadProducts);
+    return () => window.removeEventListener('products-updated', loadProducts);
+  }, [loadProducts]);
 
   const filteredProducts = useMemo(() => {
     const result = [...products];

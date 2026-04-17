@@ -5,7 +5,13 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
-import { toProductSlug } from '../services/backend';
+
+const toProductSlug = (name: string): string =>
+  name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 interface ProductCardProps {
   product: Product;

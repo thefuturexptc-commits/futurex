@@ -1,8 +1,26 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Theme, WebsiteSettings } from '../types';
-import { getWebsiteSettings, subscribeWebsiteSettings } from '../services/backend';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from '../services/contentDefaults';
 const SETTINGS_DRAFT_KEY = 'aura_settings_draft';
+
+const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+  const requestIdle = (window as Window & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  }).requestIdleCallback;
+  const cancelIdle = (window as Window & {
+    cancelIdleCallback?: (id: number) => void;
+  }).cancelIdleCallback;
+
+  if (requestIdle) {
+    const id = requestIdle(work, { timeout });
+    return () => cancelIdle?.(id);
+  }
+
+  const id = window.setTimeout(work, timeout);
+  return () => window.clearTimeout(id);
+};
 
 interface ThemeContextType {
   theme: Theme;
@@ -72,20 +90,30 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Ignore malformed local draft and continue with remote settings.
     }
 
-    getWebsiteSettings()
-      .then((settings) =>
-        applyWebsiteSettings({
-          ...localDraft,
-          ...settings,
-          socialLinks: { ...(localDraft.socialLinks || {}), ...(settings.socialLinks || {}) },
-          footerSections: settings.footerSections?.length ? settings.footerSections : localDraft.footerSections,
-          pageContent: { ...(localDraft.pageContent || {}), ...(settings.pageContent || {}) },
-        })
-      )
-      .catch(() => {});
+    let isMounted = true;
+    let unsubscribeRealtime = () => {};
+    const cancelSettingsLoad = runWhenIdle(() => {
+      import('../services/backend')
+        .then(({ getWebsiteSettings, subscribeWebsiteSettings }) => {
+          if (!isMounted) return;
+          getWebsiteSettings()
+            .then((settings) => {
+              if (!isMounted) return;
+              applyWebsiteSettings({
+                ...localDraft,
+                ...settings,
+                socialLinks: { ...(localDraft.socialLinks || {}), ...(settings.socialLinks || {}) },
+                footerSections: settings.footerSections?.length ? settings.footerSections : localDraft.footerSections,
+                pageContent: { ...(localDraft.pageContent || {}), ...(settings.pageContent || {}) },
+              });
+            })
+            .catch(() => {});
 
-    const unsubscribeRealtime = subscribeWebsiteSettings((settings) => {
-      applyWebsiteSettings(settings);
+          unsubscribeRealtime = subscribeWebsiteSettings((settings) => {
+            if (isMounted) applyWebsiteSettings(settings);
+          });
+        })
+        .catch(() => {});
     });
 
     const onSettingsUpdated = (event: Event) => {
@@ -95,6 +123,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
     window.addEventListener('website-settings-updated', onSettingsUpdated as EventListener);
     return () => {
+      isMounted = false;
+      cancelSettingsLoad();
       window.removeEventListener('website-settings-updated', onSettingsUpdated as EventListener);
       unsubscribeRealtime();
     };

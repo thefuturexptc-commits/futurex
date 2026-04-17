@@ -2,13 +2,38 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { ProductCard } from '../components/ProductCard';
-import { Product } from '../types';
-import { getProducts, seedDatabase, toProductSlug } from '../services/backend';
+import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
 import fanShowcaseImage from '../assets/images/fan-hero-q8pro-cutout.webp';
 import bandHomeImage from '../assets/images/band-hero-cutout.webp';
 import ringHomeImage from '../assets/images/smartrings-hero.webp';
 import monitoringPhoneImage from '../assets/images/monitoring-phone-cutout.webp';
+
+const toProductSlug = (name: string): string =>
+  name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+  const requestIdle = (window as Window & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  }).requestIdleCallback;
+  const cancelIdle = (window as Window & {
+    cancelIdleCallback?: (id: number) => void;
+  }).cancelIdleCallback;
+
+  if (requestIdle) {
+    const id = requestIdle(work, { timeout });
+    return () => cancelIdle?.(id);
+  }
+
+  const id = window.setTimeout(work, timeout);
+  return () => window.clearTimeout(id);
+};
 
 const Galaxy = React.lazy(() => import('../components/Galaxy'));
 
@@ -128,6 +153,7 @@ export const Home: React.FC = () => {
     setLoading(true);
     setLoadError('');
     try {
+      const { getProducts } = await import('../services/backend');
       const data = await getProducts();
       setProducts(data);
     } catch (error) {
@@ -140,13 +166,15 @@ export const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    void loadProducts();
+    const cancel = runWhenIdle(() => void loadProducts());
+    return cancel;
   }, [loadProducts]);
 
   const handleSeedDefaults = async () => {
     setSeeding(true);
     setLoadError('');
     try {
+      const { seedDatabase } = await import('../services/backend');
       await seedDatabase();
       await loadProducts();
     } catch (error) {

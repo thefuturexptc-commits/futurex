@@ -143,6 +143,13 @@ const PRODUCTS_CACHE_TTL_MS = 15000;
 let productsCache: { data: Product[]; ts: number } | null = null;
 let productsInFlight: Promise<Product[]> | null = null;
 
+const refreshProductsCache = (products?: Product[]) => {
+  productsCache = products ? { data: products.map(normalizeProductColors), ts: Date.now() } : null;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('products-updated'));
+  }
+};
+
 const DEFAULT_ADMIN_PERMISSIONS: UserPermissions = {
   analytics: true,
   products: true,
@@ -610,6 +617,7 @@ export const getProducts = async (): Promise<Product[]> => {
         fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
       });
       const normalized = fbProducts.map(normalizeProductColors);
+      setMockData('products', normalized);
       productsCache = { data: normalized, ts: Date.now() };
       return normalized;
     } catch (error) {
@@ -636,13 +644,15 @@ export const toProductSlug = (name: string): string =>
     .replace(/^-+|-+$/g, '');
 
 export const getProductById = async (id: string): Promise<Product | undefined> => {
-  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  try {
+      const allProducts = await getProducts();
+      const remoteFound =
+        allProducts.find((p) => p.id === id) ||
+        allProducts.find((p) => toProductSlug(p.name) === id);
+      if (remoteFound) return remoteFound;
+  } catch (e) { }
 
-  // Support both raw ID (legacy) and slug (new pretty URL)
-  const localFound =
-    products.find((p) => p.id === id) ||
-    products.find((p) => toProductSlug(p.name) === id);
-  if (localFound) return normalizeProductColors(localFound);
+  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
 
   try {
       const docRef = doc(db, 'products', id);
@@ -651,20 +661,16 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
         const remoteProduct = normalizeProductColors({ ...(docSnap.data() as Product), id: docSnap.id });
         const nextProducts = [remoteProduct, ...products.filter((p) => p.id !== id)];
         setMockData('products', nextProducts);
+        refreshProductsCache(nextProducts);
         return remoteProduct;
       }
   } catch (e) { }
 
-  try {
-      const allProducts = await getProducts();
-      // Match by ID or by slug
-      return (
-        allProducts.find((p) => p.id === id) ||
-        allProducts.find((p) => toProductSlug(p.name) === id)
-      );
-  } catch (e) {
-      return undefined;
-  }
+  // Support both raw ID (legacy) and slug (new pretty URL)
+  const localFound =
+    products.find((p) => p.id === id) ||
+    products.find((p) => toProductSlug(p.name) === id);
+  return localFound ? normalizeProductColors(localFound) : undefined;
 };
 
 export const addProduct = async (product: Product): Promise<void> => {
@@ -678,6 +684,7 @@ export const addProduct = async (product: Product): Promise<void> => {
   
   products.push(cleanProduct);
   setMockData('products', products);
+  refreshProductsCache(products);
 
   // Firebase
   try {
@@ -690,7 +697,7 @@ export const addProduct = async (product: Product): Promise<void> => {
        delete (cleanProduct as any).imageUrl;
    }
 
-   await setDoc(doc(db, 'products', newId), cleanProduct);
+    await setDoc(doc(db, 'products', newId), cleanProduct, { merge: true });
 } else {
 
    if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any).imageUrl)) {
@@ -717,6 +724,7 @@ export const updateProduct = async (product: Product): Promise<void> => {
   if (idx !== -1) {
       products[idx] = cleanProduct;
       setMockData('products', products);
+      refreshProductsCache(products);
   }
 
   // Firebase
@@ -728,13 +736,20 @@ if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any
     logDevWarning("Blocked invalid image URL from Firestore update.");
     delete (cleanProduct as any).imageUrl;
 }
-
-await updateDoc(docRef, { ...cleanProduct });
+ 
+await setDoc(docRef, { ...cleanProduct }, { merge: true });
   } catch (e: any) {
       logDevWarning("Firebase update failed:", e);
       if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
-          alert("Database Error: Product data size is too large. Product updated locally only.");
+           alert("Database Error: Product data size is too large. Product updated locally only.");
       }
+      if (isPermissionDeniedError(e)) {
+        throw new Error('Saved locally, but backend sync failed. Log in again with an admin account and retry.');
+      }
+      if (isAbortLikeError(e)) {
+        throw new Error('Saved locally, but backend sync timed out. Please retry.');
+      }
+      throw e instanceof Error ? e : new Error('Product updated locally, but backend sync failed.');
   }
 };
 
@@ -742,6 +757,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
   // Local
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
   setMockData('products', products.filter(p => p.id !== id));
+  refreshProductsCache();
 
   // Firebase
   try {

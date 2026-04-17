@@ -3,13 +3,38 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
-import { getCategories, getProducts, toProductSlug } from '../services/backend';
 import { Button } from './ui/Button';
 import defaultBrandLogo from '../assets/images/untitled-design-51.webp';
-import { Product } from '../types';
+import type { Product } from '../types';
+
+const toProductSlug = (name: string): string =>
+  name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+const runWhenIdle = (work: () => void, timeout = 1800): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+  const requestIdle = (window as Window & {
+    requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+    cancelIdleCallback?: (id: number) => void;
+  }).requestIdleCallback;
+  const cancelIdle = (window as Window & {
+    cancelIdleCallback?: (id: number) => void;
+  }).cancelIdleCallback;
+
+  if (requestIdle) {
+    const id = requestIdle(work, { timeout });
+    return () => cancelIdle?.(id);
+  }
+
+  const id = window.setTimeout(work, timeout);
+  return () => window.clearTimeout(id);
+};
 
 const NavbarComponent: React.FC = () => {
-  const { user, logout, isAdmin } = useAuth();
+  const { user, logout, isAdmin, isAuthReady } = useAuth();
   const { totalItems, openCart } = useCart();
   const { logoUrl } = useTheme();
   const navigate = useNavigate();
@@ -57,17 +82,21 @@ const NavbarComponent: React.FC = () => {
 
   useEffect(() => {
     let isMounted = true;
-    getCategories()
-      .then((items) => {
-        if (!isMounted || !items.length) return;
-        setCategories(items);
-      })
-      .catch(() => {
-        // Keep fallback categories when backend fetch is unavailable.
-      });
+    const cancel = runWhenIdle(() => {
+      import('../services/backend')
+        .then(({ getCategories }) => getCategories())
+        .then((items) => {
+          if (!isMounted || !items.length) return;
+          setCategories(items);
+        })
+        .catch(() => {
+          // Keep fallback categories when backend fetch is unavailable.
+        });
+    });
 
     return () => {
       isMounted = false;
+      cancel();
     };
   }, []);
 
@@ -100,7 +129,19 @@ const NavbarComponent: React.FC = () => {
 
   // Fetch all products for search
   useEffect(() => {
-    getProducts().then(setAllProducts).catch(() => {});
+    let isMounted = true;
+    const cancel = runWhenIdle(() => {
+      import('../services/backend')
+        .then(({ getProducts }) => getProducts())
+        .then((items) => {
+          if (isMounted) setAllProducts(items);
+        })
+        .catch(() => {});
+    }, 2600);
+    return () => {
+      isMounted = false;
+      cancel();
+    };
   }, []);
 
   // Focus search input when opened
@@ -208,7 +249,7 @@ const NavbarComponent: React.FC = () => {
               </button>
 
               {/* User Menu — Desktop */}
-              {user ? (
+              {!isAuthReady ? null : user ? (
                 <div className="relative group hidden md:block">
                   <button className="flex items-center text-sm font-medium text-gray-700 dark:text-gray-200 hover:text-primary-600 dark:hover:text-white">
                     <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 flex items-center justify-center border border-primary-200 dark:border-primary-700 shadow-sm font-bold font-display">
@@ -366,7 +407,7 @@ const NavbarComponent: React.FC = () => {
 
               {/* Divider */}
               <div className="border-t border-gray-100 dark:border-white/5 pt-3 mt-3 space-y-2">
-                {user ? (
+                {!isAuthReady ? null : user ? (
                   <>
                     {/* User Info */}
                     <div className="flex items-center gap-3 px-3 py-2">
