@@ -247,7 +247,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       />
       <div className={`pointer-events-none absolute inset-0 ${monochrome ? 'bg-gradient-to-b from-white/5 via-transparent to-black/30 opacity-80' : isLightCard ? 'bg-gradient-to-b from-white/10 via-transparent to-transparent opacity-70' : 'bg-gradient-to-b from-white/4 via-transparent to-transparent opacity-45 sm:opacity-60'}`} />
       {product.isBestSeller && (
-        <div className="absolute right-3 top-3 z-20 rounded-full border border-white/25 bg-white px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-black shadow-[0_10px_22px_-14px_rgba(255,255,255,0.9)]">
+        <div className="product-best-seller-badge absolute right-3 top-3 z-20 rounded-full border border-white/25 bg-white px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-black shadow-[0_10px_22px_-14px_rgba(255,255,255,0.9)]">
           Best Seller
         </div>
       )}

@@ -42,23 +42,23 @@ export const NewArrivals: React.FC = () => {
   }, [products, sortBy]);
 
   return (
-    <div className="min-h-screen bg-white px-4 py-10 text-gray-950 dark:bg-dark-bg dark:text-white sm:py-16">
+    <div className="min-h-screen bg-dark-bg px-4 py-10 text-white sm:py-16">
       <div className="mx-auto max-w-6xl">
-        <div className="mb-8 flex flex-col gap-5 border-b border-gray-200 pb-6 dark:border-white/10 md:flex-row md:items-end md:justify-between">
+        <div className="mb-8 flex flex-col gap-5 border-b border-white/10 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-gray-500 dark:text-gray-400">Just Dropped</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-gray-400">Just Dropped</p>
             <h1 className="mt-2 font-display text-4xl font-bold tracking-tight sm:text-6xl">New Arrivals</h1>
-            <p className="mt-3 max-w-2xl text-sm text-gray-600 dark:text-gray-300 sm:text-base">
+            <p className="mt-3 max-w-2xl text-sm text-gray-300 sm:text-base">
               Latest TheFutureX products, updated as new models go live.
             </p>
           </div>
 
-          <label className="flex w-full items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm font-semibold dark:border-white/10 dark:bg-black md:w-auto">
-            <span className="text-xs uppercase tracking-[0.2em] text-gray-500">Sort</span>
+          <label className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-black px-4 py-3 text-sm font-semibold md:w-auto">
+            <span className="text-xs uppercase tracking-[0.2em] text-gray-400">Sort</span>
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
-              className="min-w-[150px] bg-transparent text-gray-950 outline-none dark:text-white"
+              className="min-w-[150px] bg-transparent text-white outline-none"
             >
               <option value="featured">Featured</option>
               <option value="rating">Top Rated</option>
@@ -70,7 +70,7 @@ export const NewArrivals: React.FC = () => {
 
         {loading ? (
           <div className="flex h-64 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-300 border-t-black dark:border-white/20 dark:border-t-white" />
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-white/20 border-t-white" />
           </div>
         ) : newArrivals.length > 0 ? (
           <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
@@ -85,9 +85,9 @@ export const NewArrivals: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="rounded-3xl border border-dashed border-gray-300 bg-white p-12 text-center dark:border-white/15 dark:bg-black">
+          <div className="rounded-3xl border border-dashed border-white/15 bg-black p-12 text-center">
             <h2 className="font-display text-2xl font-bold">No new arrivals yet</h2>
-            <p className="mt-2 text-gray-600 dark:text-gray-300">New products will appear here when they are marked featured.</p>
+            <p className="mt-2 text-gray-300">New products will appear here when they are marked featured.</p>
           </div>
         )}
       </div>

@@ -371,13 +371,13 @@ export const ProductDetail: React.FC = () => {
                 onClick={handleAddToCart}
                 disabled={!canAdd}
                 className={[
-                  'flex-1 py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200',
+                  'product-detail-add-cart-btn flex-1 py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200',
                   'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
                   !canAdd
                     ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                     : addedToCart
                       ? 'bg-green-500 text-white scale-[0.98]'
-                      : 'bg-white/10 border border-white/20 text-white hover:bg-white/20 active:scale-[0.98]',
+                      : 'border border-cyan-800/40 bg-gradient-to-r from-[#0b1224] to-[#122342] text-cyan-100 shadow-lg shadow-black/35 hover:from-[#101a32] hover:to-[#17305a] active:scale-[0.98]',
                 ].join(' ')}
               >
                 {addedToCart ? '✓ Added to Cart!' : canAdd ? 'Add to Cart' : 'Out of Stock'}
@@ -387,11 +387,11 @@ export const ProductDetail: React.FC = () => {
                 onClick={handleBuyNow}
                 disabled={!canAdd}
                 className={[
-                  'flex-1 py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200',
+                  'product-detail-buy-now-btn flex-1 py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200',
                   'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
                   !canAdd
                     ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
-                    : 'bg-primary-600 text-white hover:bg-primary-500 active:scale-[0.98] shadow-lg shadow-primary-500/30',
+                    : 'border border-cyan-400/30 bg-gradient-to-r from-[#0b2a6e] via-[#0d3f9f] to-[#1167c7] text-white shadow-lg shadow-cyan-700/30 hover:from-[#0f3384] hover:via-[#1552be] hover:to-[#1678e6] active:scale-[0.98]',
                 ].join(' ')}
               >
                 Buy Now
