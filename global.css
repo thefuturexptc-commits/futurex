@@ -306,6 +306,18 @@ button {
   color: #ffffff;
 }
 
+.home-showcase-light .home-shop-now-button {
+  background: #000000;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+.home-showcase-dark .home-shop-now-button {
+  background: #ffffff;
+  border-color: rgba(255, 255, 255, 0.35);
+  color: #000000;
+}
+
 .product-detail-dark {
   background: #050505;
   color: #ffffff;

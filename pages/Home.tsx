@@ -443,7 +443,7 @@ export const Home: React.FC = () => {
                   <span className={`inline-flex min-w-[116px] items-center justify-center rounded-lg border px-5 py-2 text-sm font-semibold transition-colors ${isDark ? 'border-white/35 bg-black/20 text-white group-hover:bg-white group-hover:text-black' : 'border-gray-300 bg-white/70 text-gray-900 group-hover:border-gray-900'}`}>
                     Learn more
                   </span>
-                  <span className={`inline-flex min-w-[104px] items-center justify-center rounded-lg border px-5 py-2 text-sm font-semibold transition-colors ${isDark ? 'border-white/35 bg-white text-black group-hover:bg-cyan-100' : 'border-gray-900 bg-gray-950 text-white group-hover:bg-gray-800'}`}>
+                  <span className={`home-shop-now-button inline-flex min-w-[104px] items-center justify-center rounded-lg border px-5 py-2 text-sm font-semibold shadow-sm transition-colors ${isDark ? 'border-white/35 bg-white text-black group-hover:bg-cyan-100' : 'border-black bg-black text-white group-hover:bg-gray-800'}`}>
                     Shop now
                   </span>
                 </div>
