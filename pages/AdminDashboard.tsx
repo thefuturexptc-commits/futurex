@@ -61,6 +61,26 @@ interface AdminVariantCard {
 const inputClass =
   'w-full p-2 border border-white/15 bg-gray-900 text-white rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
 const createProductId = () => `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+const isPermanentImageUrl = (url: string): boolean => {
+  if (!url) return false;
+  const lowered = url.trim().toLowerCase();
+  return (
+    /^https?:\/\//i.test(lowered) &&
+    !lowered.startsWith('http://localhost') &&
+    !lowered.includes('localhost') &&
+    !lowered.startsWith('blob:') &&
+    !lowered.startsWith('data:')
+  );
+};
+
+const uploadPermanentProductImage = async (file: File, path: string): Promise<string> => {
+  const url = await uploadFile(file, path);
+  if (!isPermanentImageUrl(url)) {
+    throw new Error(`Image "${file.name}" could not be saved to cloud storage. Please retry with a smaller WebP/JPG image or check Firebase Storage access.`);
+  }
+  return url;
+};
 const createVariantSizeRow = () => ({ id: `sz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, size: '', stock: 0 });
 const ADMIN_ACTIVE_TAB_KEY = 'aura_admin_active_tab';
 
@@ -571,13 +591,17 @@ export const AdminDashboard: React.FC = () => {
       const uploadedImageUrls: string[] = [];
       for (const file of selectedImageFiles) {
         const path = `products/${Date.now()}_${file.name}`;
-        const url = await uploadFile(file, path);
+        const url = await uploadPermanentProductImage(file, path);
         if (url) uploadedImageUrls.push(url);
       }
 
       const finalVideoUrl = productForm.videoUrl || '';
 
       const finalImages = [...(productForm.images || []), ...uploadedImageUrls];
+      const invalidSimpleImages = finalImages.filter((url) => !isPermanentImageUrl(url));
+      if (invalidSimpleImages.length > 0) {
+        throw new Error('One or more product images are temporary or invalid. Please remove them and upload the images again.');
+      }
       if (!hasVariants && finalImages.length === 0) finalImages.push('https://picsum.photos/400');
 
       const cleanFeatures = featuresString
@@ -600,10 +624,14 @@ export const AdminDashboard: React.FC = () => {
           const uploadedVariantUrls: string[] = [];
           for (const file of variant.selectedFiles) {
             const path = `products/variants/${Date.now()}_${variant.variantId}_${file.name}`;
-            const url = await uploadFile(file, path);
+            const url = await uploadPermanentProductImage(file, path);
             if (url) uploadedVariantUrls.push(url);
           }
           const mergedImages = [...variant.images, ...uploadedVariantUrls];
+          const invalidVariantImages = mergedImages.filter((url) => !isPermanentImageUrl(url));
+          if (invalidVariantImages.length > 0) {
+            throw new Error(`One or more images for "${variant.color || `Variant ${idx + 1}`}" are temporary or invalid. Please remove them and upload again.`);
+          }
           const normalizedSizes = (variant.sizes || [])
             .map((sizeRow) => ({ ...sizeRow, size: String(sizeRow.size || '').trim(), stock: Number(sizeRow.stock || 0) }))
             .filter((sizeRow) => sizeRow.size !== '');
@@ -695,8 +723,8 @@ export const AdminDashboard: React.FC = () => {
       setShowProductModal(false);
       await refreshData();
     } catch (error) {
-      void error;
-      alert('Failed to save product. Please retry.');
+      const message = error instanceof Error ? error.message : 'Failed to save product. Please retry.';
+      alert(message);
     } finally {
       setIsUploading(false);
     }
