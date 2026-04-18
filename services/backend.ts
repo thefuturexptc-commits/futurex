@@ -55,6 +55,22 @@ const isValidProductionUrl = (url: string): boolean => {
     return true;
 };
 
+const sanitizeImageUrlsForCloud = (urls?: string[]): string[] =>
+  (Array.isArray(urls) ? urls : []).filter((url) => typeof url === 'string' && isValidProductionUrl(url));
+
+const sanitizeProductImagesForCloud = (product: Product): Product => ({
+  ...product,
+  images: sanitizeImageUrlsForCloud(product.images),
+  colors: (product.colors || []).map((color) => ({
+    ...color,
+    images: sanitizeImageUrlsForCloud(color.images),
+  })),
+  variants: (product.variants || []).map((variant) => ({
+    ...variant,
+    images: sanitizeImageUrlsForCloud(variant.images),
+  })),
+});
+
 // --- Helper: Data Sanitization (Crucial for Firestore) ---
 const deepSanitize = (obj: any): any => {
     if (obj === undefined) return null; // Firestore doesn't like undefined
@@ -129,6 +145,12 @@ const isAbortLikeError = (error: unknown): boolean => {
   }
   const message = String(error).toLowerCase();
   return message.includes('abort');
+};
+
+const isTimeoutLikeError = (error: unknown): boolean => {
+  if (!error) return false;
+  const message = error instanceof Error ? error.message : String(error);
+  return message.toLowerCase().includes('timed out') || message.toLowerCase().includes('timeout');
 };
 
 const isPermissionDeniedError = (error: unknown): boolean => {
@@ -758,6 +780,7 @@ export const deleteProductReview = async (productId: string, reviewId: string): 
 
 export const addProduct = async (product: Product): Promise<void> => {
   const cleanProduct = deepSanitize(normalizeProductColors(product));
+  const cloudProduct = deepSanitize(sanitizeProductImagesForCloud(cleanProduct));
   
   // Local - SAVE HERE FIRST (Source of truth for immediate UI update)
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
@@ -780,7 +803,7 @@ export const addProduct = async (product: Product): Promise<void> => {
        delete (cleanProduct as any).imageUrl;
    }
 
-    await setDoc(doc(db, 'products', newId), cleanProduct, { merge: true });
+    await withTimeout(setDoc(doc(db, 'products', newId), cloudProduct, { merge: true }), 4500);
 } else {
 
    if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any).imageUrl)) {
@@ -788,7 +811,7 @@ export const addProduct = async (product: Product): Promise<void> => {
        delete (cleanProduct as any).imageUrl;
    }
 
-   await addDoc(collection(db, 'products'), cleanProduct);
+   await withTimeout(addDoc(collection(db, 'products'), cloudProduct), 4500);
 }
   } catch (e: any) { 
       logDevWarning("Firebase save failed:", e);
@@ -800,6 +823,7 @@ export const addProduct = async (product: Product): Promise<void> => {
 
 export const updateProduct = async (product: Product): Promise<void> => {
   const cleanProduct = deepSanitize(normalizeProductColors(product));
+  const cloudProduct = deepSanitize(sanitizeProductImagesForCloud(cleanProduct));
   
   // Local
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
@@ -820,7 +844,7 @@ if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any
     delete (cleanProduct as any).imageUrl;
 }
  
-await setDoc(docRef, { ...cleanProduct }, { merge: true });
+await withTimeout(setDoc(docRef, { ...cloudProduct }, { merge: true }), 4500);
   } catch (e: any) {
       logDevWarning("Firebase update failed:", e);
       if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
@@ -829,8 +853,9 @@ await setDoc(docRef, { ...cleanProduct }, { merge: true });
       if (isPermissionDeniedError(e)) {
         throw new Error('Saved locally, but backend sync failed. Log in again with an admin account and retry.');
       }
-      if (isAbortLikeError(e)) {
-        throw new Error('Saved locally, but backend sync timed out. Please retry.');
+      if (isAbortLikeError(e) || isTimeoutLikeError(e)) {
+        logDevWarning('Product updated locally; backend sync is still slow or timed out:', e);
+        return;
       }
       throw e instanceof Error ? e : new Error('Product updated locally, but backend sync failed.');
   }

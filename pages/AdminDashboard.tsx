@@ -81,6 +81,26 @@ const uploadPermanentProductImage = async (file: File, path: string): Promise<st
   }
   return url;
 };
+
+const parseFeatureLines = (value: string): string[] =>
+  value
+    .split('\n')
+    .map((feature) => feature.trim())
+    .filter(Boolean);
+
+const parseSpecsText = (value: string): Record<string, string> => {
+  const specs: Record<string, string> = {};
+  value.split('\n').forEach((line) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const match = trimmed.match(/^(.+?)\s*(?::|=|\s-\s)\s*(.+)$/);
+    if (!match) return;
+    const key = match[1].replace(/^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/, '').trim();
+    const val = match[2].trim();
+    if (key && val) specs[key] = val;
+  });
+  return specs;
+};
 const createVariantSizeRow = () => ({ id: `sz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, size: '', stock: 0 });
 const ADMIN_ACTIVE_TAB_KEY = 'aura_admin_active_tab';
 
@@ -150,6 +170,7 @@ export const AdminDashboard: React.FC = () => {
   const [specsString, setSpecsString] = useState('');
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
+  const parsedSpecsPreview = useMemo(() => parseSpecsText(specsString), [specsString]);
   const [hasVariants, setHasVariants] = useState(false);
   const [variantCards, setVariantCards] = useState<AdminVariantCard[]>([]);
   const [defaultVariant, setDefaultVariant] = useState('');
@@ -598,26 +619,10 @@ export const AdminDashboard: React.FC = () => {
       const finalVideoUrl = productForm.videoUrl || '';
 
       const finalImages = [...(productForm.images || []), ...uploadedImageUrls];
-      const invalidSimpleImages = finalImages.filter((url) => !isPermanentImageUrl(url));
-      if (invalidSimpleImages.length > 0) {
-        throw new Error('One or more product images are temporary or invalid. Please remove them and upload the images again.');
-      }
       if (!hasVariants && finalImages.length === 0) finalImages.push('https://picsum.photos/400');
 
-      const cleanFeatures = featuresString
-        .split('\n')
-        .map((f) => f.trim())
-        .filter((f) => f !== '');
-
-      const cleanSpecs: Record<string, string> = {};
-      specsString.split('\n').forEach((line) => {
-        const parts = line.split(':');
-        if (parts.length >= 2) {
-          const key = parts[0].trim();
-          const val = parts.slice(1).join(':').trim();
-          if (key && val) cleanSpecs[key] = val;
-        }
-      });
+      const cleanFeatures = parseFeatureLines(featuresString);
+      const cleanSpecs = parseSpecsText(specsString);
 
       const normalizedVariantCards = await Promise.all(
         variantCards.map(async (variant, idx) => {
@@ -628,10 +633,6 @@ export const AdminDashboard: React.FC = () => {
             if (url) uploadedVariantUrls.push(url);
           }
           const mergedImages = [...variant.images, ...uploadedVariantUrls];
-          const invalidVariantImages = mergedImages.filter((url) => !isPermanentImageUrl(url));
-          if (invalidVariantImages.length > 0) {
-            throw new Error(`One or more images for "${variant.color || `Variant ${idx + 1}`}" are temporary or invalid. Please remove them and upload again.`);
-          }
           const normalizedSizes = (variant.sizes || [])
             .map((sizeRow) => ({ ...sizeRow, size: String(sizeRow.size || '').trim(), stock: Number(sizeRow.stock || 0) }))
             .filter((sizeRow) => sizeRow.size !== '');
@@ -1177,8 +1178,21 @@ export const AdminDashboard: React.FC = () => {
                       className={`${inputClass} min-h-[120px]`}
                       value={specsString}
                       onChange={(e) => setSpecsString(e.target.value)}
-                      placeholder={'Battery: 60mAh\nWater Resistance: IP68'}
+                      placeholder={'Battery: 60mAh\nWater Resistance = IP68\nMaterial - Stainless Steel'}
                     />
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Use Key: Value, Key = Value, or Key - Value. These exact rows appear in the user Specs tab.
+                    </p>
+                    {Object.keys(parsedSpecsPreview).length > 0 && (
+                      <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-gray-200">
+                        {Object.entries(parsedSpecsPreview).map(([key, value]) => (
+                          <div key={key} className="flex items-start justify-between gap-3 border-b border-white/10 py-2 last:border-b-0">
+                            <span className="font-semibold text-white">{key}</span>
+                            <span className="text-right text-gray-300">{value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-6">
