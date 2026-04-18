@@ -39,7 +39,7 @@ export const Cart: React.FC = () => {
         <div className="lg:col-span-2 space-y-4">
           {items.map((item) => (
             <div key={item.id} className="bg-white dark:bg-dark-surface p-3.5 sm:p-4 rounded-xl shadow-sm border border-gray-100 dark:border-white/5 flex items-center space-x-3 sm:space-x-4">
-              <img src={item.images[0]} alt={item.name} loading="lazy" className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg bg-gray-100" />
+              <img src={item.images[0]} alt={item.name} loading="lazy" decoding="async" width={96} height={96} className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-lg bg-gray-100" />
 
               <div className="flex-1">
                 <h3 className="font-bold text-sm sm:text-lg text-gray-900 dark:text-white line-clamp-2">{item.name}</h3>

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Order, User } from '../../../types';
 import { Button } from '../../ui/Button';
 import { Pagination } from '../common/Pagination';
@@ -13,14 +13,16 @@ interface Props {
   isLoading: boolean;
   onStatusUpdate: (orderId: string, status: Order['status']) => Promise<void> | void;
   onDeleteOrder: (order: Order) => void;
+  onDeleteOrders: (orders: Order[]) => void;
 }
 
-export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusUpdate, onDeleteOrder }) => {
+export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusUpdate, onDeleteOrder, onDeleteOrders }) => {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | Order['status']>('all');
   const [dateFilter, setDateFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const pageSize = 8;
   const normalizeEmail = (value?: string) => (value || '').trim().toLowerCase();
@@ -92,6 +94,14 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
     const start = (page - 1) * pageSize;
     return filtered.slice(start, start + pageSize);
   }, [filtered, page]);
+
+  const filteredOrderIds = useMemo(() => filtered.map((order) => order.id), [filtered]);
+  const selectedOrders = useMemo(
+    () => orders.filter((order) => selectedOrderIds.includes(order.id)),
+    [orders, selectedOrderIds]
+  );
+  const allFilteredSelected =
+    filteredOrderIds.length > 0 && filteredOrderIds.every((orderId) => selectedOrderIds.includes(orderId));
 
   const buildInvoiceNumber = (order: Order) => {
     const date = new Date(order.date);
@@ -455,6 +465,71 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
     }, 250);
   };
 
+  const escapeExcelCell = (value: unknown) => {
+    const normalized = value === null || value === undefined ? '' : String(value);
+    return normalized
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  };
+
+  const formatAddress = (order: Order) => getCustomerDetails(order).address.join(', ');
+
+  const formatProducts = (order: Order) =>
+    order.items
+      .map((item) => {
+        const variants = [item.selectedColorName, item.selectedSize].filter(Boolean).join(' / ');
+        const variantText = variants ? ` (${variants})` : '';
+        return `${item.name}${variantText} x ${item.quantity}`;
+      })
+      .join(' | ');
+
+  const downloadOrdersExcel = (rows: Order[], filename: string) => {
+    const headers = ['Order ID', 'Name', 'Phone', 'Address', 'Product', 'Amount', 'Date', 'Status'];
+    const tableRows = [
+      `<tr>${headers.map((header) => `<th>${escapeExcelCell(header)}</th>`).join('')}</tr>`,
+      ...rows.map((order) => {
+        const customer = getCustomerDetails(order);
+        const cells = [
+          order.id,
+          customer.name,
+          customer.phone,
+          formatAddress(order),
+          formatProducts(order),
+          Number(order.total || 0).toFixed(2),
+          new Date(order.date).toLocaleString(),
+          order.status,
+        ];
+        return `<tr>${cells.map((cell) => `<td>${escapeExcelCell(cell)}</td>`).join('')}</tr>`;
+      }),
+    ];
+    const excelHtml = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel">
+        <head>
+          <meta charset="UTF-8" />
+          <style>
+            table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px; }
+            th { background: #0a0a0a; color: #ffffff; font-weight: 700; }
+            th, td { border: 1px solid #d1d5db; padding: 8px; mso-number-format:"\\@"; vertical-align: top; }
+          </style>
+        </head>
+        <body>
+          <table>${tableRows.join('')}</table>
+        </body>
+      </html>
+    `;
+    const blob = new Blob([excelHtml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+  };
+
   const openOrderStatus = (order: Order) => {
     const params = new URLSearchParams({
       orderId: order.id,
@@ -467,11 +542,31 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
     setPage(1);
   }, [query, statusFilter, sourceFilter, dateFilter]);
 
+  useEffect(() => {
+    setSelectedOrderIds((current) => current.filter((orderId) => orders.some((order) => order.id === orderId)));
+  }, [orders]);
+
+  const toggleSelectAllFiltered = () => {
+    setSelectedOrderIds((current) => {
+      if (allFilteredSelected) {
+        return current.filter((orderId) => !filteredOrderIds.includes(orderId));
+      }
+      return Array.from(new Set([...current, ...filteredOrderIds]));
+    });
+  };
+
+  const toggleOrderSelection = (orderId: string) => {
+    setSelectedOrderIds((current) =>
+      current.includes(orderId) ? current.filter((id) => id !== orderId) : [...current, orderId]
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fade-in-up">
       <SectionHeader title="Orders" subtitle="Track fulfillment and customer transactions" />
 
-      <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-white/10 p-4 grid grid-cols-1 md:grid-cols-5 gap-3">
+      <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-white/10 p-4 space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -515,16 +610,52 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
           <option value="youtube">YouTube</option>
           <option value="referral">Referral</option>
         </select>
-        <div className="text-sm text-gray-500 dark:text-gray-400 flex items-center">{filtered.length} orders</div>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-gray-200 pt-4 dark:border-white/10 sm:flex-row sm:items-center sm:justify-between">
+          <div className="text-sm text-gray-500 dark:text-gray-400">
+            {filtered.length} orders · {selectedOrderIds.length} selected
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="outline" onClick={() => downloadOrdersExcel(orders, 'all-orders.xls')} disabled={orders.length === 0}>
+              Download All Orders Excel
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => downloadOrdersExcel(selectedOrders, 'selected-orders.xls')}
+              disabled={selectedOrders.length === 0}
+            >
+              Download Selected Excel
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-red-200 text-red-600 hover:bg-red-50 dark:border-red-900/40 dark:text-red-300 dark:hover:bg-red-900/20"
+              onClick={() => onDeleteOrders(selectedOrders)}
+              disabled={selectedOrders.length === 0}
+            >
+              Delete Selected Orders
+            </Button>
+          </div>
+        </div>
       </div>
 
       {isLoading ? (
-        <TableSkeleton rows={8} cols={7} />
+        <TableSkeleton rows={8} cols={8} />
       ) : (
-        <div className="bg-white dark:bg-dark-surface rounded-xl border border-gray-200 dark:border-white/10 overflow-x-auto">
+        <div className="max-h-[500px] overflow-auto rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-dark-surface">
           <table className="min-w-full">
-            <thead className="bg-gray-50 dark:bg-white/5">
+            <thead className="sticky top-0 z-10 bg-gray-50 shadow-sm dark:bg-[#0a0a0a]">
               <tr>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleSelectAllFiltered}
+                    aria-label="Select all matching orders"
+                    className="h-4 w-4 rounded border-gray-300 accent-primary-600"
+                  />
+                </th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Order</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Customer</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Date</th>
@@ -543,6 +674,16 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
                     onClick={() => setSelectedOrder(order)}
                     className={`${idx % 2 === 0 ? 'bg-white dark:bg-dark-surface' : 'bg-gray-50/60 dark:bg-white/5'} cursor-pointer hover:bg-primary-50/40 dark:hover:bg-primary-900/10`}
                   >
+                    <td className="px-4 py-3 align-top">
+                      <input
+                        type="checkbox"
+                        checked={selectedOrderIds.includes(order.id)}
+                        onChange={() => toggleOrderSelection(order.id)}
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label={`Select order ${order.id}`}
+                        className="h-4 w-4 rounded border-gray-300 accent-primary-600"
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white">
                       <p>Order ID</p>
                       <p className="mt-1 font-mono text-xs text-primary-600 dark:text-primary-300">{order.id}</p>
@@ -624,7 +765,7 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
               })}
               {paged.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-10 text-center text-sm text-gray-500">No matching orders.</td>
+                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-gray-500">No matching orders.</td>
                 </tr>
               )}
             </tbody>
@@ -638,7 +779,7 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
         const customerDetails = getCustomerDetails(selectedOrder);
         return (
           <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4 py-6 backdrop-blur-sm" role="dialog" aria-modal="true">
-            <div className="max-h-[90vh] w-full max-w-5xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-dark-surface">
+            <div className="max-h-[88vh] w-full max-w-6xl overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-dark-surface">
               <div className="flex flex-col gap-3 border-b border-gray-200 p-4 dark:border-white/10 sm:flex-row sm:items-start sm:justify-between sm:p-5">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-gray-500">Order Details</p>
@@ -660,7 +801,7 @@ export const OrdersTab: React.FC<Props> = ({ orders, users, isLoading, onStatusU
                 </div>
               </div>
 
-              <div className="max-h-[calc(90vh-96px)] overflow-y-auto p-4 sm:p-5">
+              <div className="max-h-[calc(88vh-96px)] overflow-y-auto p-4 sm:p-5">
                 <div className="grid gap-4 lg:grid-cols-[1fr_1.2fr]">
                   <section className="rounded-xl border border-gray-200 p-4 dark:border-white/10">
                     <h4 className="font-bold text-gray-900 dark:text-white">Customer Information</h4>

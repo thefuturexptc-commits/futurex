@@ -143,6 +143,8 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
               src={images[selectedIndex]}
               alt={`${alt} enlarged view`}
               decoding="async"
+              width={1200}
+              height={1200}
               className="max-h-[86vh] w-auto max-w-full object-contain"
               onClick={(event) => event.stopPropagation()}
             />

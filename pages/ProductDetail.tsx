@@ -4,10 +4,14 @@ import { Product, ProductColor } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
-import { getProductById, getProducts, toProductSlug } from '../services/backend';
+import { addProductReview, getProductById, getProductReviews, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
 import { ProductCard } from '../components/ProductCard';
 import { absoluteUrl, removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
+
+const featureMarkerPattern = /^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/;
+const numberedFeaturePattern = /^\s*\d+[.)]\s*/;
+const cleanFeatureText = (feature: string) => feature.replace(featureMarkerPattern, '').trim();
 
 export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,17 +32,37 @@ export const ProductDetail: React.FC = () => {
   const [activeDetailTab, setActiveDetailTab] = useState<'description' | 'features' | 'specs' | 'faq' | 'reviews'>('description');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [visibleReviewCount, setVisibleReviewCount] = useState(4);
+  const [reviewName, setReviewName] = useState('');
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewImages, setReviewImages] = useState<File[]>([]);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState('');
+  const reviewImagePreviews = useMemo(
+    () => reviewImages.map((file) => ({ file, url: URL.createObjectURL(file) })),
+    [reviewImages]
+  );
 
   const loadProduct = useCallback(() => {
     if (!id) return;
     setLoading(true);
     setError(null);
     getProductById(id)
-      .then((p) => {
+      .then(async (p) => {
         if (!p) {
           setError('Product not found');
         } else {
-          setProduct(p);
+          const publicReviews = await getProductReviews(p.id);
+          const embeddedReviews = p.reviews || [];
+          const mergedReviews = [
+            ...publicReviews,
+            ...embeddedReviews.filter((embedded) => !publicReviews.some((review) => review.id && review.id === embedded.id)),
+          ];
+          const nextReviewCount = mergedReviews.length;
+          const nextRating = nextReviewCount
+            ? Number((mergedReviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / nextReviewCount).toFixed(1))
+            : Number(p.rating || 0);
+          setProduct({ ...p, reviews: mergedReviews, reviewCount: nextReviewCount, rating: nextRating });
           setSelectedColor(p.colors?.[0] ?? null);
         }
       })
@@ -144,6 +168,18 @@ export const ProductDetail: React.FC = () => {
     return () => removeJsonLd('product-json-ld');
   }, [canAdd, product]);
 
+  useEffect(() => {
+    if (user?.name && !reviewName) {
+      setReviewName(user.name);
+    }
+  }, [reviewName, user]);
+
+  useEffect(() => {
+    return () => {
+      reviewImagePreviews.forEach((preview) => URL.revokeObjectURL(preview.url));
+    };
+  }, [reviewImagePreviews]);
+
   const handleAddToCart = useCallback(() => {
     if (!product) return;
     if (!user) {
@@ -176,6 +212,76 @@ export const ProductDetail: React.FC = () => {
     addToCart(productToAdd);
     navigate('/checkout');
   }, [product, user, openLogin, id, selectedColor, activeImages, addToCart, navigate]);
+
+  const handleReviewImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith('image/')).slice(0, 2);
+    setReviewImages(files);
+    if ((event.target.files?.length || 0) > 2) {
+      setReviewMessage('Only 2 images are allowed for one review.');
+    }
+  };
+
+  const handleSubmitReview = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!product) return;
+    const cleanName = reviewName.trim();
+    const cleanComment = reviewComment.trim();
+    if (!cleanName || !cleanComment) {
+      setReviewMessage('Please enter your name and review.');
+      return;
+    }
+
+    setReviewSubmitting(true);
+    setReviewMessage('');
+    try {
+      let verifiedBuyer = false;
+      if (user) {
+        try {
+          const orders = await getUserOrders(user.id);
+          verifiedBuyer = orders.some((order) => order.items.some((item) => item.id === product.id));
+        } catch {
+          verifiedBuyer = false;
+        }
+      }
+
+      const imageUrls: string[] = [];
+      for (const file of reviewImages.slice(0, 2)) {
+        const url = await uploadFile(file, `reviews/${product.id}/${Date.now()}_${file.name}`);
+        if (url) imageUrls.push(url);
+      }
+
+      const savedReview = await addProductReview(product.id, {
+        productId: product.id,
+        name: cleanName,
+        rating: reviewRating,
+        comment: cleanComment,
+        images: imageUrls,
+        userId: user?.id,
+        userEmail: user?.email,
+        verifiedBuyer,
+        date: new Date().toISOString(),
+      });
+
+      setProduct((current) => {
+        if (!current) return current;
+        const nextReviews = [savedReview, ...(current.reviews || [])];
+        return {
+          ...current,
+          reviews: nextReviews,
+          reviewCount: nextReviews.length,
+          rating: Number((nextReviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / nextReviews.length).toFixed(1)),
+        };
+      });
+      setReviewComment('');
+      setReviewImages([]);
+      setReviewRating(5);
+      setReviewMessage(verifiedBuyer ? 'Review submitted as Genuine Buyer.' : 'Review submitted. Admin can review it.');
+    } catch {
+      setReviewMessage('Unable to submit review. Please try again.');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -241,6 +347,9 @@ export const ProductDetail: React.FC = () => {
                     src={imgUrl}
                     alt={`${product.name} ${imgIdx + 1}`}
                     loading="lazy"
+                    decoding="async"
+                    width={64}
+                    height={64}
                     onClick={() => setSelectedImageIndex(imgIdx)}
                     className={`h-16 w-16 rounded-lg object-cover border shrink-0 snap-start cursor-pointer transition-all duration-150 ${selectedImageIndex === imgIdx
                       ? 'border-primary-500 ring-2 ring-primary-400'
@@ -477,14 +586,23 @@ export const ProductDetail: React.FC = () => {
           {activeDetailTab === 'features' && (
             <div className="rounded-xl border border-white/10 bg-white/5 p-5">
               {product.features && product.features.length > 0 ? (
-                <ul className="space-y-3">
-                  {product.features.map((feature, i) => (
-                    <li key={i} className="flex items-start gap-2.5 text-sm text-gray-300">
-                      <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary-400 shrink-0" />
-                      {feature}
-                    </li>
-                  ))}
-                </ul>
+                product.features.some((feature) => numberedFeaturePattern.test(feature)) ? (
+                  <ol className="list-decimal space-y-3 pl-5 text-sm text-gray-300 marker:text-primary-400">
+                    {product.features.map((feature, i) => (
+                      <li key={i} className="pl-1">
+                        {cleanFeatureText(feature)}
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <ul className="list-disc space-y-3 pl-5 text-sm text-gray-300 marker:text-primary-400">
+                    {product.features.map((feature, i) => (
+                      <li key={i} className="pl-1">
+                        {cleanFeatureText(feature)}
+                      </li>
+                    ))}
+                  </ul>
+                )
               ) : (
                 <p className="text-sm text-gray-500">No key features added.</p>
               )}
@@ -531,10 +649,98 @@ export const ProductDetail: React.FC = () => {
           {/* Reviews Tab */}
           {activeDetailTab === 'reviews' && (
             <div>
+              <form onSubmit={handleSubmitReview} className="mb-6 rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Write a Review</h3>
+                    <p className="mt-1 text-sm text-gray-400">Share your experience with this product.</p>
+                  </div>
+                  <div className="flex items-center gap-1 text-amber-400">
+                    {Array.from({ length: 5 }).map((_, index) => {
+                      const star = index + 1;
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setReviewRating(star)}
+                          className="text-2xl leading-none transition hover:scale-110"
+                          aria-label={`Rate ${star} star${star === 1 ? '' : 's'}`}
+                        >
+                          {star <= reviewRating ? '★' : '☆'}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Name</span>
+                    <input
+                      value={reviewName}
+                      onChange={(event) => setReviewName(event.target.value)}
+                      placeholder="Eg: Rahul Sharma"
+                      className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      required
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Images</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleReviewImageSelect}
+                      className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-gray-300 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-sm file:font-semibold file:text-black"
+                    />
+                  </label>
+                </div>
+                <p className="mt-2 text-xs text-gray-500">You can add only 2 images.</p>
+                {reviewImagePreviews.length > 0 && (
+                  <div className="mt-3 flex gap-2">
+                    {reviewImagePreviews.map(({ file, url }) => (
+                      <img
+                        key={`${file.name}_${file.size}`}
+                        src={url}
+                        alt={file.name}
+                        width={64}
+                        height={64}
+                        className="h-16 w-16 rounded-lg border border-white/10 object-cover"
+                      />
+                    ))}
+                  </div>
+                )}
+                <label className="mt-3 block">
+                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Review Description</span>
+                  <textarea
+                    value={reviewComment}
+                    onChange={(event) => setReviewComment(event.target.value)}
+                    placeholder="Eg: The product quality is good, delivery was fast, and it works smoothly."
+                    className="min-h-[110px] w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    required
+                  />
+                </label>
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                  {reviewMessage ? <p className="text-sm text-cyan-300">{reviewMessage}</p> : <span />}
+                  <button
+                    type="submit"
+                    disabled={reviewSubmitting}
+                    className="rounded-lg bg-primary-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
+                  </button>
+                </div>
+              </form>
+
               {product.reviews && product.reviews.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
                   {product.reviews.slice(0, visibleReviewCount).map((review, i) => (
                     <article key={i} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                      {review.verifiedBuyer && (
+                        <span className="mb-2 inline-flex rounded-full bg-green-500/15 px-2.5 py-1 text-xs font-semibold text-green-300">
+                          Genuine Buyer
+                        </span>
+                      )}
                       <div className="flex items-center gap-0.5 text-amber-400 text-sm mb-2">
                         {Array.from({ length: 5 }).map((_, s) => (
                           <svg
@@ -551,6 +757,22 @@ export const ProductDetail: React.FC = () => {
                         {review.date && <p className="text-xs text-gray-500 shrink-0">{review.date}</p>}
                       </div>
                       <p className="text-sm text-gray-300 break-words leading-relaxed">{review.comment}</p>
+                      {review.images && review.images.length > 0 && (
+                        <div className="mt-3 flex gap-2">
+                          {review.images.slice(0, 2).map((image) => (
+                            <img
+                              key={image}
+                              src={image}
+                              alt={`${review.name} review`}
+                              loading="lazy"
+                              decoding="async"
+                              width={64}
+                              height={64}
+                              className="h-16 w-16 rounded-lg border border-white/10 object-cover"
+                            />
+                          ))}
+                        </div>
+                      )}
                     </article>
                   ))}
                 </div>

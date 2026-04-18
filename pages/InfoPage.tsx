@@ -37,21 +37,21 @@ export const InfoPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen max-w-5xl mx-auto px-4 py-10 text-gray-900 dark:text-white">
-      <div className="rounded-2xl border border-gray-200 dark:border-white/10 bg-white dark:bg-dark-surface p-6 sm:p-8">
+    <div className="info-page-dark min-h-screen max-w-5xl mx-auto px-4 py-10 text-white">
+      <div className="rounded-2xl border border-white/10 bg-dark-surface p-6 sm:p-8">
         <div className="flex items-center justify-between gap-3 mb-4">
           <h1 className="text-2xl sm:text-3xl font-bold">{pageLabel || 'Information'}</h1>
           <Button type="button" variant="outline" size="sm" onClick={() => navigate(-1)}>
             Back
           </Button>
         </div>
-        <div className="whitespace-pre-wrap text-sm sm:text-base leading-7 sm:leading-8 text-gray-700 dark:text-gray-300">
+        <div className="whitespace-pre-wrap text-sm sm:text-base leading-7 sm:leading-8 text-gray-300">
           {content}
         </div>
         {showBusinessAddress && (
-          <div className="mt-8 rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-white/10 dark:bg-white/5">
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Business Address</h2>
-            <address className="mt-3 not-italic text-sm leading-7 text-gray-700 dark:text-gray-300">
+          <div className="mt-8 rounded-2xl border border-white/10 bg-white/5 p-5">
+            <h2 className="text-lg font-bold text-white">Business Address</h2>
+            <address className="mt-3 not-italic text-sm leading-7 text-gray-300">
               {businessAddress.map((line) => (
                 <React.Fragment key={line}>
                   {line}

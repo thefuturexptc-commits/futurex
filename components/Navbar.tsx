@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -51,6 +51,7 @@ const NavbarComponent: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchLoading, setSearchLoading] = useState(false);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [categories, setCategories] = useState<string[]>([
@@ -135,6 +136,17 @@ const NavbarComponent: React.FC = () => {
   );
 
   const navLinks = [{ name: 'Home', path: '/' }, { name: 'New Arrivals', path: '/new-arrivals' }, ...categoryLinks];
+  const mobileNavLinks = [{ name: 'New Arrivals', path: '/new-arrivals' }, { name: 'Home', path: '/' }, ...categoryLinks];
+
+  const loadSearchProductsNow = useCallback(() => {
+    if (allProducts.length > 0 || searchLoading) return;
+    setSearchLoading(true);
+    import('../services/backend')
+      .then(({ getProducts }) => getProducts())
+      .then((items) => setAllProducts(items))
+      .catch(() => {})
+      .finally(() => setSearchLoading(false));
+  }, [allProducts.length, searchLoading]);
 
   // Fetch all products for search
   useEffect(() => {
@@ -171,12 +183,21 @@ const NavbarComponent: React.FC = () => {
     const q = searchQuery.trim().toLowerCase();
     if (!q) return [];
     return allProducts
-      .filter(
-        (p) =>
-          p.name.toLowerCase().includes(q) ||
-          p.category.toLowerCase().includes(q) ||
-          (p.description || '').toLowerCase().includes(q)
-      )
+      .map((p) => {
+        const name = p.name.toLowerCase();
+        const category = p.category.toLowerCase();
+        const description = (p.description || '').toLowerCase();
+        let score = 0;
+        if (name === q) score += 120;
+        if (name.startsWith(q)) score += 90;
+        if (name.includes(q)) score += 70;
+        if (category === q || category === `smart ${q}` || category.includes(q)) score += 100;
+        if (description.includes(q)) score += 10;
+        return { product: p, score };
+      })
+      .filter((item) => item.score > 0)
+      .sort((a, b) => b.score - a.score || a.product.name.localeCompare(b.product.name))
+      .map((item) => item.product)
       .slice(0, 8);
   }, [searchQuery, allProducts]);
 
@@ -192,6 +213,11 @@ const NavbarComponent: React.FC = () => {
               <img
                 src={logoUrl || defaultBrandLogo}
                 alt="TheFutureX"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                width={200}
+                height={80}
                 className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[200px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
               />
             </Link>
@@ -226,9 +252,12 @@ const NavbarComponent: React.FC = () => {
 
               {/* Search Button */}
               <button
-                onClick={() => setSearchOpen((o) => !o)}
+                onClick={() => {
+                  setSearchOpen((o) => !o);
+                  loadSearchProductsNow();
+                }}
                 aria-label="Search products"
-                className="relative p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-white transition-colors outline-none"
+                className="relative inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-2.5 py-2 text-white hover:bg-white/15 transition-colors outline-none"
               >
                 {searchOpen ? (
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -239,6 +268,7 @@ const NavbarComponent: React.FC = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
                   </svg>
                 )}
+                <span className="hidden sm:inline text-xs font-semibold uppercase tracking-wide">Search</span>
               </button>
 
               {/* Cart Button */}
@@ -307,6 +337,14 @@ const NavbarComponent: React.FC = () => {
                 </div>
               )}
 
+              <button
+                type="button"
+                onClick={() => openCategory('/new-arrivals')}
+                className="md:hidden rounded-full border border-cyan-300/40 bg-cyan-300 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-black shadow-sm"
+              >
+                New
+              </button>
+
               {/* Mobile Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -356,7 +394,9 @@ const NavbarComponent: React.FC = () => {
 
               {searchQuery.trim() && (
                 <div className="mt-2 space-y-1 max-h-72 overflow-y-auto">
-                  {searchResults.length === 0 ? (
+                  {searchLoading ? (
+                    <p className="text-sm text-gray-400 px-2 py-3 text-center">Loading products...</p>
+                  ) : searchResults.length === 0 ? (
                     <p className="text-sm text-gray-500 dark:text-gray-400 px-2 py-3 text-center">No products found for "{searchQuery}"</p>
                   ) : (
                     searchResults.map((p) => (
@@ -372,6 +412,10 @@ const NavbarComponent: React.FC = () => {
                         <img
                           src={p.images?.[0] || p.colors?.[0]?.images?.[0] || ''}
                           alt={p.name}
+                          loading="lazy"
+                          decoding="async"
+                          width={40}
+                          height={40}
                           className="w-10 h-10 rounded-lg object-contain bg-gray-100 dark:bg-white/5 shrink-0"
                         />
                         <div className="min-w-0">
@@ -392,7 +436,7 @@ const NavbarComponent: React.FC = () => {
           <div className="md:hidden border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md animate-slide-down">
             <div className="px-4 py-4 space-y-1">
               {/* Nav Links */}
-              {navLinks.map((link) => {
+               {mobileNavLinks.map((link) => {
                 const active = location.pathname === link.path;
                 const isNewArrival = link.path === '/new-arrivals';
                 return (

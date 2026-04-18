@@ -1,6 +1,6 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Product, ProductPublicReview } from '../../../types';
-import { updateProduct } from '../../../services/backend';
+import { deleteProductReview, getProductReviews, updateProduct } from '../../../services/backend';
 import { Button } from '../../ui/Button';
 import { SectionHeader } from '../common/SectionHeader';
 
@@ -30,6 +30,9 @@ interface FlatReview {
   source: 'product' | 'local';
   productReviewIndex?: number;
   localReviewId?: string;
+  reviewDocId?: string;
+  images?: string[];
+  verifiedBuyer?: boolean;
 }
 
 const DELETED_PRODUCT_REVIEWS_KEY = 'admin_deleted_product_reviews_v1';
@@ -38,6 +41,26 @@ export const ReviewsTab: React.FC<Props> = ({ products }) => {
   const [activeFilter, setActiveFilter] = useState<'all' | 'genuine' | 'normal'>('all');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [hiddenReviewIds, setHiddenReviewIds] = useState<string[]>([]);
+  const [publicReviewsByProduct, setPublicReviewsByProduct] = useState<Record<string, ProductPublicReview[]>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all(
+      products.map(async (product) => {
+        const reviews = await getProductReviews(product.id);
+        return [product.id, reviews] as const;
+      })
+    )
+      .then((entries) => {
+        if (!cancelled) setPublicReviewsByProduct(Object.fromEntries(entries));
+      })
+      .catch(() => {
+        if (!cancelled) setPublicReviewsByProduct({});
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [products]);
 
   const allReviews = useMemo<FlatReview[]>(() => {
     const rows: FlatReview[] = [];
@@ -51,9 +74,14 @@ export const ReviewsTab: React.FC<Props> = ({ products }) => {
     })();
 
     products.forEach((product) => {
-      const productReviews = product.reviews || [];
+      const productReviews = [
+        ...(publicReviewsByProduct[product.id] || []),
+        ...(product.reviews || []).filter(
+          (embedded) => !(publicReviewsByProduct[product.id] || []).some((review) => review.id && review.id === embedded.id)
+        ),
+      ];
       productReviews.forEach((review: ProductPublicReview, index) => {
-        const stableKey = `${product.id}::${review.name || ''}::${review.comment || ''}::${review.date || ''}`;
+        const stableKey = `${product.id}::${review.id || review.name || ''}::${review.comment || ''}::${review.date || ''}`;
         if (deletedProductReviewKeys.includes(stableKey)) return;
         rows.push({
           id: `${product.id}_product_${index}_${review.name}_${review.date || ''}`,
@@ -67,6 +95,9 @@ export const ReviewsTab: React.FC<Props> = ({ products }) => {
           createdAt: review.date || '',
           source: 'product',
           productReviewIndex: index,
+          reviewDocId: review.id,
+          images: review.images || [],
+          verifiedBuyer: Boolean(review.verifiedBuyer),
         });
       });
 
@@ -87,6 +118,8 @@ export const ReviewsTab: React.FC<Props> = ({ products }) => {
             createdAt: review.createdAt || '',
             source: 'local',
             localReviewId: review.id,
+            images: review.images || [],
+            verifiedBuyer: false,
           });
         });
       } catch {
@@ -97,9 +130,10 @@ export const ReviewsTab: React.FC<Props> = ({ products }) => {
     return rows
       .filter((review) => !hiddenReviewIds.includes(review.id))
       .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-  }, [products, hiddenReviewIds]);
+  }, [products, hiddenReviewIds, publicReviewsByProduct]);
 
   const isGenuineBuyer = (review: FlatReview) =>
+    Boolean(review.verifiedBuyer) ||
     /genuine buyer|verified buyer|verified purchase/i.test(review.comment) ||
     /genuine buyer|verified buyer|verified purchase/i.test(review.reviewerName);
 
@@ -137,58 +171,58 @@ export const ReviewsTab: React.FC<Props> = ({ products }) => {
 
     setDeletingId(review.id);
     try {
-      if (review.source === 'local' && review.localReviewId) {
+      if (review.reviewDocId) {
+        await deleteProductReview(review.productId, review.reviewDocId);
+      } else if (review.source === 'local' && review.localReviewId) {
         const key = `product_reviews_${review.productId}`;
         const raw = localStorage.getItem(key);
         const parsed = raw ? (JSON.parse(raw) as StoredReview[]) : [];
         const next = parsed.filter((item) => item.id !== review.localReviewId);
         localStorage.setItem(key, JSON.stringify(next));
-      } else {
-        // Keep a local tombstone so deleted seeded/product reviews stay deleted
-        // even if remote sync fails or the page reloads.
-        const existingDeleted: string[] = (() => {
-          try {
-            const raw = localStorage.getItem(DELETED_PRODUCT_REVIEWS_KEY);
-            return raw ? (JSON.parse(raw) as string[]) : [];
-          } catch {
-            return [];
-          }
-        })();
-        if (!existingDeleted.includes(review.stableKey)) {
-          localStorage.setItem(
-            DELETED_PRODUCT_REVIEWS_KEY,
-            JSON.stringify([...existingDeleted, review.stableKey])
-          );
-        }
+      }
 
-        const targetProduct = products.find((p) => p.id === review.productId);
-        if (targetProduct) {
-          const currentReviews = [...(targetProduct.reviews || [])];
-          if (typeof review.productReviewIndex === 'number') {
-            currentReviews.splice(review.productReviewIndex, 1);
-          } else {
-            const matchIndex = currentReviews.findIndex(
-              (entry) => entry.name === review.reviewerName && entry.comment === review.comment
-            );
-            if (matchIndex >= 0) currentReviews.splice(matchIndex, 1);
-          }
-          const nextReviewCount = currentReviews.length;
-          const nextRating = nextReviewCount
-            ? Number(
-                (
-                  currentReviews.reduce((sum, entry) => sum + Number(entry.rating || 0), 0) /
-                  nextReviewCount
-                ).toFixed(1)
-              )
-            : 0;
-
-          await updateProduct({
-            ...targetProduct,
-            reviews: currentReviews,
-            reviewCount: nextReviewCount,
-            rating: nextRating,
-          });
+      // Keep a local tombstone so deleted seeded/product reviews stay deleted
+      // even if remote sync fails or the page reloads.
+      const existingDeleted: string[] = (() => {
+        try {
+          const raw = localStorage.getItem(DELETED_PRODUCT_REVIEWS_KEY);
+          return raw ? (JSON.parse(raw) as string[]) : [];
+        } catch {
+          return [];
         }
+      })();
+      if (!existingDeleted.includes(review.stableKey)) {
+        localStorage.setItem(
+          DELETED_PRODUCT_REVIEWS_KEY,
+          JSON.stringify([...existingDeleted, review.stableKey])
+        );
+      }
+
+      const targetProduct = products.find((p) => p.id === review.productId);
+      if (targetProduct) {
+        const currentReviews = [...(targetProduct.reviews || [])];
+        const matchIndex = currentReviews.findIndex(
+          (entry) =>
+            (review.reviewDocId && entry.id === review.reviewDocId) ||
+            (entry.name === review.reviewerName && entry.comment === review.comment)
+        );
+        if (matchIndex >= 0) currentReviews.splice(matchIndex, 1);
+        const nextReviewCount = currentReviews.length;
+        const nextRating = nextReviewCount
+          ? Number(
+              (
+                currentReviews.reduce((sum, entry) => sum + Number(entry.rating || 0), 0) /
+                nextReviewCount
+              ).toFixed(1)
+            )
+          : 0;
+
+        await updateProduct({
+          ...targetProduct,
+          reviews: currentReviews,
+          reviewCount: nextReviewCount,
+          rating: nextRating,
+        });
       }
 
       setHiddenReviewIds((prev) => [...prev, review.id]);
@@ -260,6 +294,19 @@ export const ReviewsTab: React.FC<Props> = ({ products }) => {
               <p className="text-xs text-gray-500 dark:text-gray-400">{formatReviewDate(review.createdAt)}</p>
               <p className="mt-2 text-amber-500 text-sm">{renderStars(review.rating)}</p>
               <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 break-words [overflow-wrap:anywhere]">{review.comment || 'No comment'}</p>
+              {review.images && review.images.length > 0 && (
+                <div className="mt-3 flex gap-2">
+                  {review.images.slice(0, 2).map((image) => (
+                    <img
+                      key={image}
+                      src={image}
+                      alt={`${review.reviewerName} review`}
+                      loading="lazy"
+                      className="h-16 w-16 rounded-lg border border-gray-200 object-cover dark:border-white/10"
+                    />
+                  ))}
+                </div>
+              )}
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-gray-100 text-gray-700 dark:bg-white/10 dark:text-gray-300">
                   {typeLabel}

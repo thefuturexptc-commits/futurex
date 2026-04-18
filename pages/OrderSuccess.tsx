@@ -37,7 +37,7 @@ export const OrderSuccess: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-dark-bg">
+    <div className="order-success-dark min-h-screen flex items-center justify-center p-4 bg-dark-bg text-white">
       <div className="bg-white dark:bg-dark-surface p-8 md:p-12 rounded-3xl shadow-2xl border border-gray-200 dark:border-white/5 text-center max-w-lg w-full">
         
         {/* Animated Checkmark */}

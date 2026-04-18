@@ -37,7 +37,7 @@ export const Profile: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="p-10 text-center dark:text-white space-y-4">
+      <div className="profile-dark min-h-screen p-10 text-center text-white space-y-4">
         <p>Please log in to view your profile, orders, and saved addresses.</p>
         <Link
           to="/login?redirect=%2Fprofile"
@@ -118,7 +118,7 @@ export const Profile: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen max-w-7xl mx-auto px-4 py-12">
+    <div className="profile-dark min-h-screen max-w-7xl mx-auto px-4 py-12 text-white">
       {/* Header Profile Card */}
       <div className="bg-white dark:bg-dark-surface shadow-sm rounded-xl overflow-hidden mb-8 border border-gray-200 dark:border-white/5">
         <div className="bg-gradient-to-r from-primary-600 to-primary-800 h-32"></div>

@@ -18,7 +18,7 @@ export const SiteFooter: React.FC = () => {
     .filter((section) => section.items.length > 0);
 
   return (
-    <footer className="bg-dark-surface border-t border-white/10 py-10 text-gray-300">
+    <footer className="site-footer-dark bg-dark-surface border-t border-white/10 py-10 text-gray-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 text-center sm:text-left">
           {visibleFooterSections.map((section) => (

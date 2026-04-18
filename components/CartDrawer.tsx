@@ -70,6 +70,8 @@ export const CartDrawer: React.FC = () => {
                       alt={item.name}
                       loading="lazy"
                       decoding="async"
+                      width={80}
+                      height={80}
                       className="h-full w-full object-cover object-center"
                     />
                   </div>

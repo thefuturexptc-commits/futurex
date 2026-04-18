@@ -736,6 +736,25 @@ export const AdminDashboard: React.FC = () => {
     });
   };
 
+  const handleDeleteOrders = (targetOrders: Order[]) => {
+    const uniqueOrders = targetOrders.filter(
+      (order, index, list) => list.findIndex((item) => item.id === order.id) === index
+    );
+    if (uniqueOrders.length === 0) return;
+
+    setConfirmState({
+      open: true,
+      title: 'Delete Selected Orders',
+      message: `Delete ${uniqueOrders.length} selected order${uniqueOrders.length === 1 ? '' : 's'}? This removes them from the admin order list.`,
+      confirmLabel: 'Delete Selected',
+      onConfirm: async () => {
+        await Promise.all(uniqueOrders.map((order) => deleteOrder(order.id)));
+        pushAudit('Orders Bulk Deleted', uniqueOrders.map((order) => order.id).join(', '));
+        await refreshData();
+      },
+    });
+  };
+
   const handleAddCategory = async () => {
     if (!newCategory.trim()) return;
     try {
@@ -974,7 +993,14 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
       {activeTab === 'orders' && (
-        <OrdersTab orders={orders} users={users} isLoading={isLoading} onStatusUpdate={handleStatusUpdate} onDeleteOrder={handleDeleteOrder} />
+        <OrdersTab
+          orders={orders}
+          users={users}
+          isLoading={isLoading}
+          onStatusUpdate={handleStatusUpdate}
+          onDeleteOrder={handleDeleteOrder}
+          onDeleteOrders={handleDeleteOrders}
+        />
       )}
       {activeTab === 'categories' && (
         <CategoriesTab
@@ -1100,8 +1126,22 @@ export const AdminDashboard: React.FC = () => {
                       className={`${inputClass} min-h-[120px]`}
                       value={featuresString}
                       onChange={(e) => setFeaturesString(e.target.value)}
-                      placeholder={'Add one feature per line\nExample: IP68 Waterproof'}
+                      placeholder={'Add one bullet per line\nExample:\n- IP68 Waterproof\n- 10-Day Battery'}
                     />
+                    <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                      Each line becomes one point on the product page. Use - or * for dots, or 1. 2. 3. for a numbered list.
+                    </p>
+                    {featuresString.trim() && (
+                      <ul className={`mt-3 space-y-2 rounded-lg border border-white/10 bg-black/20 p-3 pl-7 text-sm text-gray-200 ${featuresString.split('\n').some((feature) => /^\s*\d+[.)]\s*/.test(feature)) ? 'list-decimal' : 'list-disc'}`}>
+                        {featuresString
+                          .split('\n')
+                          .map((feature) => feature.replace(/^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/, '').trim())
+                          .filter(Boolean)
+                          .map((feature, idx) => (
+                            <li key={`${feature}_${idx}`}>{feature}</li>
+                          ))}
+                      </ul>
+                    )}
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Specifications (Key: Value)</label>
@@ -1370,3 +1410,5 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
+
+

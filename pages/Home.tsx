@@ -44,6 +44,28 @@ const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
   };
 };
 
+const DealCountdown: React.FC = () => {
+  const [dealCountdown, setDealCountdown] = useState('00:00:00');
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const now = new Date();
+      const target = new Date(now);
+      target.setHours(23, 59, 59, 999);
+      const diff = Math.max(0, target.getTime() - now.getTime());
+      const hh = String(Math.floor(diff / 3600000)).padStart(2, '0');
+      const mm = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+      setDealCountdown(`${hh}:${mm}:${ss}`);
+    };
+    updateCountdown();
+    const timer = window.setInterval(updateCountdown, 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  return <>Flash window ends in {dealCountdown}</>;
+};
+
 export const Home: React.FC = () => {
   const colorMoods = useMemo(
     () => [
@@ -102,7 +124,6 @@ export const Home: React.FC = () => {
   const navigate = useNavigate();
   const bestSellerScrollerRef = useRef<HTMLDivElement | null>(null);
   const featuredScrollerRef = useRef<HTMLDivElement | null>(null);
-  const [dealCountdown, setDealCountdown] = useState('00:00:00');
   const [recentlyViewedIds, setRecentlyViewedIds] = useState<string[]>([]);
   const [compareProductIds, setCompareProductIds] = useState<string[]>([]);
   const [isCompareOpen, setIsCompareOpen] = useState(false);
@@ -126,7 +147,7 @@ export const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const cancel = runWhenIdle(() => void loadProducts(), 6500);
+    const cancel = runWhenIdle(() => void loadProducts(), 2500);
     return cancel;
   }, [loadProducts]);
 
@@ -212,22 +233,6 @@ export const Home: React.FC = () => {
   //     cleanupFeatured();
   //   };
   // }, [loading, bestSellersForSlider.length, featuredProductsForSlider.length]);
-
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const target = new Date(now);
-      target.setHours(23, 59, 59, 999);
-      const diff = Math.max(0, target.getTime() - now.getTime());
-      const hh = String(Math.floor(diff / 3600000)).padStart(2, '0');
-      const mm = String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
-      const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
-      setDealCountdown(`${hh}:${mm}:${ss}`);
-    };
-    updateCountdown();
-    const timer = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   useEffect(() => {
     const loadRecentlyViewed = () => {
@@ -420,6 +425,8 @@ export const Home: React.FC = () => {
                   decoding="async"
                   fetchPriority={idx === 0 ? 'high' : 'auto'}
                   sizes="(max-width: 640px) 90vw, 58vw"
+                  width={900}
+                  height={900}
                   className={`h-full w-full object-contain drop-shadow-[0_34px_70px_rgba(0,0,0,0.38)] transition-transform duration-700 group-hover:scale-[1.035] sm:h-auto ${panel.imageClassName}`}
                 />
               </div>
@@ -454,7 +461,7 @@ export const Home: React.FC = () => {
       </section>
 
       {/* Best Sellers Section */}
-      <section className="py-10 sm:py-16 relative overflow-hidden bg-black text-white animate-fade-in-up">
+      <section className="home-deferred-section py-10 sm:py-16 relative overflow-hidden bg-black text-white animate-fade-in-up">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.16),transparent_34%),linear-gradient(180deg,#050505,#101010)]" aria-hidden="true"></div>
         <div className="max-w-6xl mx-auto px-4 relative z-10">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
@@ -499,7 +506,7 @@ export const Home: React.FC = () => {
       </section>
       <div className="h-10 bg-gradient-to-b from-transparent via-primary-100/40 to-transparent dark:via-primary-900/10" />
 
-      <section className="py-10 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="home-deferred-section py-10 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Customer Stories</p>
@@ -533,12 +540,12 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="py-10 sm:py-16 px-4 bg-[#040813] dark:bg-[#03060f] border-y border-cyan-500/10 text-gray-100 dark:text-white animate-fade-in-up">
+      <section className="home-deferred-section py-10 sm:py-16 px-4 bg-[#040813] dark:bg-[#03060f] border-y border-cyan-500/10 text-gray-100 dark:text-white animate-fade-in-up">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
             <p className={`text-xs uppercase tracking-[0.3em] font-bold ${activeMood.sectionText}`}>Live Offers</p>
             <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-white font-display mt-2">Deals & Benefits</h2>
-            <p className="mt-3 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300">Flash window ends in {dealCountdown}</p>
+            <p className="mt-3 text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300"><DealCountdown /></p>
             <div className="mt-4">
               <Link
                 to={primaryOfferPath}

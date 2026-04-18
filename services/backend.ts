@@ -23,7 +23,7 @@ import {
 } from 'firebase/storage';
 import { initializeApp, deleteApp, FirebaseApp, getApps, getApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
-import { Product, ProductColor, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails } from '../types';
+import { Product, ProductColor, ProductPublicReview, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 
@@ -671,6 +671,89 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
     products.find((p) => p.id === id) ||
     products.find((p) => toProductSlug(p.name) === id);
   return localFound ? normalizeProductColors(localFound) : undefined;
+};
+
+export const getProductReviews = async (productId: string): Promise<ProductPublicReview[]> => {
+  const localReviews = getMockData<ProductPublicReview[]>(`product_reviews_${productId}`, []);
+  let remoteReviews: ProductPublicReview[] = [];
+
+  try {
+    await ensureFirebaseConnection();
+    const q = query(collection(db, 'product_reviews'), where('productId', '==', productId));
+    const snapshot = await withTimeout(getDocs(q), 4500);
+    snapshot.forEach((reviewDoc) => {
+      remoteReviews.push({ ...(reviewDoc.data() as ProductPublicReview), id: reviewDoc.id });
+    });
+  } catch (error) {
+    if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
+      logDevWarning('Failed to fetch product reviews:', error);
+    }
+  }
+
+  const combined = [...remoteReviews];
+  localReviews.forEach((localReview) => {
+    if (!combined.some((review) => review.id === localReview.id)) {
+      combined.push(localReview);
+    }
+  });
+
+  return combined.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+};
+
+export const addProductReview = async (productId: string, review: ProductPublicReview): Promise<ProductPublicReview> => {
+  const reviewId = review.id || `review_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const cleanReview = deepSanitize({
+    ...review,
+    id: reviewId,
+    productId,
+    date: review.date || new Date().toISOString(),
+    images: (review.images || []).slice(0, 2),
+    rating: Math.max(1, Math.min(5, Number(review.rating || 0))),
+    verifiedBuyer: Boolean(review.verifiedBuyer),
+  }) as ProductPublicReview;
+
+  const localReviews = getMockData<ProductPublicReview[]>(`product_reviews_${productId}`, []);
+  setMockData(`product_reviews_${productId}`, [cleanReview, ...localReviews.filter((item) => item.id !== reviewId)]);
+
+  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  const productIndex = products.findIndex((product) => product.id === productId);
+  if (productIndex >= 0) {
+    const existingReviews = products[productIndex].reviews || [];
+    const nextReviews = [cleanReview, ...existingReviews.filter((item) => item.id !== reviewId)];
+    products[productIndex] = normalizeProductColors({
+      ...products[productIndex],
+      reviews: nextReviews,
+      reviewCount: nextReviews.length,
+      rating: Number((nextReviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / nextReviews.length).toFixed(1)),
+    });
+    setMockData('products', products);
+    refreshProductsCache(products);
+  }
+
+  try {
+    await ensureFirebaseConnection();
+    await setDoc(doc(db, 'product_reviews', reviewId), cleanReview, { merge: true });
+  } catch (error) {
+    if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
+      logDevWarning('Failed to sync product review:', error);
+    }
+  }
+
+  return cleanReview;
+};
+
+export const deleteProductReview = async (productId: string, reviewId: string): Promise<void> => {
+  const localReviews = getMockData<ProductPublicReview[]>(`product_reviews_${productId}`, []);
+  setMockData(`product_reviews_${productId}`, localReviews.filter((review) => review.id !== reviewId));
+
+  try {
+    await ensureFirebaseConnection();
+    await deleteDoc(doc(db, 'product_reviews', reviewId));
+  } catch (error) {
+    if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
+      logDevWarning('Failed to delete product review:', error);
+    }
+  }
 };
 
 export const addProduct = async (product: Product): Promise<void> => {

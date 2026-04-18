@@ -31,10 +31,16 @@ export interface ProductVariantOption {
 }
 
 export interface ProductPublicReview {
+  id?: string;
+  productId?: string;
   name: string;
   rating: number;
   date?: string;
   comment: string;
+  images?: string[];
+  userId?: string;
+  userEmail?: string;
+  verifiedBuyer?: boolean;
 }
 
 export interface SupportChatMessage {
