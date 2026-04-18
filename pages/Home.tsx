@@ -66,6 +66,55 @@ const DealCountdown: React.FC = () => {
   return <>Flash window ends in {dealCountdown}</>;
 };
 
+interface ShowcaseImageProps {
+  src: string;
+  alt: string;
+  className: string;
+  priority: boolean;
+}
+
+const ShowcaseImage: React.FC<ShowcaseImageProps> = ({ src, alt, className, priority }) => {
+  const imageRef = useRef<HTMLImageElement | null>(null);
+  const [shouldLoad, setShouldLoad] = useState(priority);
+
+  useEffect(() => {
+    if (priority || shouldLoad) return;
+    const image = imageRef.current;
+    if (!image) return;
+
+    if (!('IntersectionObserver' in window)) {
+      setShouldLoad(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShouldLoad(true);
+        observer.disconnect();
+      },
+      { rootMargin: '280px 0px' }
+    );
+    observer.observe(image);
+    return () => observer.disconnect();
+  }, [priority, shouldLoad]);
+
+  return (
+    <img
+      ref={imageRef}
+      src={shouldLoad ? src : undefined}
+      alt={alt}
+      loading={priority ? 'eager' : 'lazy'}
+      decoding="async"
+      fetchPriority={priority ? 'high' : 'low'}
+      sizes="(max-width: 640px) 90vw, 58vw"
+      width={900}
+      height={900}
+      className={className}
+    />
+  );
+};
+
 export const Home: React.FC = () => {
   const colorMoods = useMemo(
     () => [
@@ -418,15 +467,10 @@ export const Home: React.FC = () => {
                 aria-hidden="true"
               />
               <div className={`absolute left-1/2 top-7 flex h-[300px] w-[90%] -translate-x-1/2 items-center justify-center sm:left-auto sm:top-auto sm:h-auto sm:w-auto sm:translate-x-0 ${panel.imageWrapClassName}`}>
-                <img
+                <ShowcaseImage
                   src={panel.image}
                   alt={`${panel.category} collection`}
-                  loading={idx === 0 ? 'eager' : 'lazy'}
-                  decoding="async"
-                  fetchPriority={idx === 0 ? 'high' : 'auto'}
-                  sizes="(max-width: 640px) 90vw, 58vw"
-                  width={900}
-                  height={900}
+                  priority={idx === 0}
                   className={`h-full w-full object-contain drop-shadow-[0_34px_70px_rgba(0,0,0,0.38)] transition-transform duration-700 group-hover:scale-[1.035] sm:h-auto ${panel.imageClassName}`}
                 />
               </div>
