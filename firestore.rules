@@ -21,13 +21,13 @@ service cloud.firestore {
     // If you need strict admin-only reads for variant/size stock, change read to: allow read: if isAdmin();
     match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isAdmin() || isSuperAdminEmail();
     }
 
     match /product_reviews/{reviewId} {
       allow read: if true;
       allow create: if true;
-      allow update, delete: if isAdmin();
+      allow update, delete: if isAdmin() || isSuperAdminEmail();
     }
 
     // Settings & categories are admin-managed.
@@ -38,17 +38,17 @@ service cloud.firestore {
 
     match /categories/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin() || isSuperAdminEmail();
     }
 
     match /admin_audit_logs/{logId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isAdmin() || isSuperAdminEmail();
     }
 
     match /orders/{orderId} {
       allow create: if signedIn();
-      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow update, delete: if isAdmin();
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin() || isSuperAdminEmail());
+      allow update, delete: if isAdmin() || isSuperAdminEmail();
     }
 
     match /support_chats/{chatId} {

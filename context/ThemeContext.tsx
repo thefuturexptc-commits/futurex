@@ -3,6 +3,24 @@ import { Theme, WebsiteSettings } from '../types';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from '../services/contentDefaults';
 const SETTINGS_DRAFT_KEY = 'aura_settings_draft';
 
+const applyCurrentContactDetails = (content: Record<string, string>) =>
+  Object.fromEntries(
+    Object.entries(content).map(([key, value]) => [
+      key,
+      value
+        .replace(/supporttfxvital@gmail\.com/gi, 'thefuturex.ptc@gmail.com')
+        .replace(/Hirubhai Residency/g, 'Hirubai Residency')
+        .replace(
+          /201-202, Hirubai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West, Maharashtra 401303, India/g,
+          'Office No: 201-202, Hirubai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West'
+        )
+        .replace(/201-202, Hirubai Residency/g, 'Office No: 201-202, Hirubai Residency')
+        .replace(/Virar West, Maharashtra 401303\s*India/g, 'Virar West')
+        .replace(/\+91\s*85303\s*40676/g, '8530340676')
+        .replace(/\+91\s*8530340676/g, '8530340676'),
+    ])
+  );
+
 const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
   if (typeof window === 'undefined') return () => {};
   let cleanup = () => {};
@@ -70,12 +88,12 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       setFooterSections(DEFAULT_FOOTER_SECTIONS);
     }
     if (settings.pageContent) {
-      setPageContent({ ...DEFAULT_PAGE_CONTENT, ...settings.pageContent });
+      setPageContent(applyCurrentContactDetails({ ...DEFAULT_PAGE_CONTENT, ...settings.pageContent }));
     } else {
       setPageContent(DEFAULT_PAGE_CONTENT);
     }
     if (settings.socialLinks) {
-      setSocialLinks({ ...DEFAULT_SOCIAL_LINKS, ...settings.socialLinks });
+      setSocialLinks({ ...DEFAULT_SOCIAL_LINKS, ...settings.socialLinks, email: DEFAULT_SOCIAL_LINKS.email });
     } else {
       setSocialLinks(DEFAULT_SOCIAL_LINKS);
     }

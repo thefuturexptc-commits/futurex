@@ -299,7 +299,7 @@ const normalizeProductColors = (product: Product): Product => {
   );
 
   const rawVariants = Array.isArray(product.variants) ? product.variants : [];
-  const mappedFromVariants = rawVariants
+  const mappedFromVariants: NonNullable<Product['variants']> = rawVariants
     .map((variant: any) => {
       const colorName = String(variant?.colorName || variant?.color || '').trim();
       if (!colorName) return null;
@@ -332,9 +332,9 @@ const normalizeProductColors = (product: Product): Product => {
         videoUrl: String(variant?.videoUrl || ''),
       };
     })
-    .filter(Boolean) as Product['variants'];
+    .filter(Boolean) as NonNullable<Product['variants']>;
 
-  const mappedVariants: Product['variants'] =
+  const mappedVariants: NonNullable<Product['variants']> =
     mappedFromVariants.length > 0
       ? mappedFromVariants
       : rawColors
@@ -355,7 +355,7 @@ const normalizeProductColors = (product: Product): Product => {
               sizes: [{ size: 'Standard', stock }],
             };
           })
-          .filter(Boolean) as Product['variants'];
+          .filter(Boolean) as NonNullable<Product['variants']>;
 
   const mappedColors: ProductColor[] = mappedVariants.map((variant) => {
     const normalizedName = String(variant.colorName || '').trim().toLowerCase();
@@ -858,6 +858,45 @@ await withTimeout(setDoc(docRef, { ...cloudProduct }, { merge: true }), 4500);
         return;
       }
       throw e instanceof Error ? e : new Error('Product updated locally, but backend sync failed.');
+  }
+};
+
+export const updateProductContentFields = async (
+  productId: string,
+  fields: Pick<Product, 'features' | 'specs'> & Partial<Pick<Product, 'description'>>
+): Promise<void> => {
+  const cleanFields = deepSanitize({
+    features: Array.isArray(fields.features) ? fields.features : [],
+    specs: fields.specs && typeof fields.specs === 'object' ? fields.specs : {},
+    ...(fields.description !== undefined ? { description: fields.description } : {}),
+  }) as Partial<Product>;
+
+  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  const idx = products.findIndex((p) => p.id === productId);
+  if (idx !== -1) {
+    products[idx] = normalizeProductColors({ ...products[idx], ...cleanFields } as Product);
+    setMockData('products', products);
+    refreshProductsCache(products);
+  }
+
+  try {
+    await ensureFirebaseConnection();
+    const productRef = doc(db, 'products', productId);
+    const productSnap = await withTimeout(getDoc(productRef), 8000);
+    if (productSnap.exists()) {
+      await withTimeout(updateDoc(productRef, cleanFields), 8000);
+    } else {
+      await withTimeout(setDoc(productRef, cleanFields, { merge: true }), 8000);
+    }
+  } catch (e: any) {
+    logDevWarning('Product content fields sync failed:', e);
+    if (isPermissionDeniedError(e)) {
+      throw new Error('Specifications/key features were saved locally, but Firebase rejected the update. Deploy the Firestore rules and log in again as admin.');
+    }
+    if (isAbortLikeError(e) || isTimeoutLikeError(e)) {
+      throw new Error('Specifications/key features were saved locally, but cloud sync timed out. Please retry once.');
+    }
+    throw e instanceof Error ? e : new Error('Specifications/key features cloud sync failed.');
   }
 };
 

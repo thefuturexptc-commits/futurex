@@ -19,6 +19,7 @@ import {
   seedDatabase,
   updateOrderStatus,
   updateProduct,
+  updateProductContentFields,
   updateWebsiteSettings,
   uploadFile,
 } from '../services/backend';
@@ -713,16 +714,48 @@ export const AdminDashboard: React.FC = () => {
         specs: cleanSpecs,
       } as Product;
 
+      const savedProduct = isEditing && productData.id
+        ? productData
+        : { ...productData, id: createProductId(), rating: 0, reviewCount: 0 };
+
+      setProducts((prev) => {
+        const exists = prev.some((item) => item.id === savedProduct.id);
+        return exists
+          ? prev.map((item) => (item.id === savedProduct.id ? savedProduct : item))
+          : [savedProduct, ...prev];
+      });
+
+      let backendSyncWarning = '';
       if (isEditing && productData.id) {
-        await updateProduct(productData);
-        pushAudit('Product Updated', `${productData.name} (${productData.id})`);
+        try {
+          await updateProductContentFields(savedProduct.id, {
+            description: savedProduct.description || '',
+            features: cleanFeatures,
+            specs: cleanSpecs,
+          });
+        } catch (syncError) {
+          backendSyncWarning = syncError instanceof Error ? syncError.message : 'Content fields backend sync failed after local save.';
+        }
+        try {
+          await updateProduct(savedProduct);
+        } catch (syncError) {
+          const updateWarning = syncError instanceof Error ? syncError.message : 'Backend sync failed after local save.';
+          backendSyncWarning = backendSyncWarning ? `${backendSyncWarning} ${updateWarning}` : updateWarning;
+        }
+        pushAudit('Product Updated', `${savedProduct.name} (${savedProduct.id})`);
       } else {
-        await addProduct({ ...productData, id: createProductId(), rating: 0, reviewCount: 0 });
-        pushAudit('Product Created', productData.name);
+        try {
+          await addProduct(savedProduct);
+        } catch (syncError) {
+          backendSyncWarning = syncError instanceof Error ? syncError.message : 'Backend sync failed after local save.';
+        }
+        pushAudit('Product Created', savedProduct.name);
       }
 
       setShowProductModal(false);
-      await refreshData();
+      if (backendSyncWarning) {
+        alert(`Product updated on this device. Backend sync warning: ${backendSyncWarning}`);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Failed to save product. Please retry.';
       alert(message);

@@ -21,8 +21,9 @@ type ChatProductCard = NonNullable<SupportChatMessage['products']>[number];
 
 const QUICK_CHIPS = ['price', 'stock', 'warranty', 'order status', 'new arrivals', 'best sellers'];
 const INFO_QUICK_CHIPS = ['about us', 'privacy', 'returns', 'contact'];
-const SUPPORT_PHONE = '+91 85303 40676';
-const SUPPORT_EMAIL = 'supporttfxvital@gmail.com';
+const SUPPORT_PHONE = '8530340676';
+const SUPPORT_EMAIL = 'thefuturex.ptc@gmail.com';
+const SUPPORT_ADDRESS = 'Office No: 201-202, Hirubai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West';
 const DEFAULT_BOT_TEXT =
   "Hi! I'm TheFutureX Assistant.\n\nI can help with:\n- Product price\n- Stock availability\n- Warranty\n- Battery details\n- Product specs\n- Order status\n\nJust type your question below.";
 
@@ -79,7 +80,7 @@ export const SupportAssistant: React.FC = () => {
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
   const { addToCart, isCartOpen } = useCart();
-  const { footerSections, pageContent, socialLinks } = useTheme();
+  const { footerSections, pageContent } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -732,7 +733,7 @@ export const SupportAssistant: React.FC = () => {
     if (!match) return null;
     const content = match.content || `${match.label} details will be updated soon.`;
     if (match.slug === 'contact') {
-      const contactDetails = [socialLinks?.email ? `Email: ${socialLinks.email}` : ''].filter(Boolean).join('\n');
+      const contactDetails = [`Email: ${SUPPORT_EMAIL}`, `Phone: ${SUPPORT_PHONE}`, `Address: ${SUPPORT_ADDRESS}`].join('\n');
       return contactDetails ? `${content}\n\n${contactDetails}` : content;
     }
     return content;

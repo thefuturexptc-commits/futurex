@@ -29,12 +29,13 @@ export const InfoPage: React.FC = () => {
   const content = pageContent[slug] || 'Content will be updated soon.';
   const showBusinessAddress = slug === 'about-us' || slug === 'contact';
   const businessAddress = [
-    '201-202, Hirubhai Residency',
+    'Office No: 201-202, Hirubai Residency',
     'Besides Vedant Hospital',
     'Near Virar East-West Flyover',
-    'Virar West, Maharashtra 401303',
-    'India',
+    'Virar West',
   ];
+  const supportEmail = 'thefuturex.ptc@gmail.com';
+  const supportPhone = '8530340676';
 
   return (
     <div className="info-page-dark min-h-screen max-w-5xl mx-auto px-4 py-10 text-white">
@@ -59,6 +60,10 @@ export const InfoPage: React.FC = () => {
                 </React.Fragment>
               ))}
             </address>
+            <div className="mt-4 space-y-1 text-sm text-gray-300">
+              <p>Email: <a href={`mailto:${supportEmail}`} className="hover:text-white">{supportEmail}</a></p>
+              <p>Contact No: <a href={`tel:${supportPhone}`} className="hover:text-white">{supportPhone}</a></p>
+            </div>
           </div>
         )}
       </div>

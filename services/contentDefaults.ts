@@ -48,26 +48,26 @@ Our vision is to become a trusted technology brand known for useful products, de
 
 If you have any questions or need assistance, our support team is always here to help.
 
-Email: supporttfxvital@gmail.com
-Location: 201-202, Hirubhai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West, Maharashtra 401303, India
+Email: thefuturex.ptc@gmail.com
+Contact Number: 8530340676
+Location: Office No: 201-202, Hirubai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West
 Website: https://thefuturex.in`,
   contact: `Contact Us
 
 We are always here to help. If you have any questions about our products, orders, shipping, exchanges, or warranty support, please feel free to contact us. Our support team will assist you at every step.
 
 **CUSTOMER SUPPORT**
-Email: supporttfxvital@gmail.com
-Contact Number: +91 85303 40676
+Email: thefuturex.ptc@gmail.com
+Contact Number: 8530340676
 
 For order-related queries, please include your Order ID in your email so we can assist you more quickly.
 
 **BUSINESS ADDRESS**
 TheFutureX
-201-202, Hirubhai Residency
+Office No: 201-202, Hirubai Residency
 Besides Vedant Hospital
 Near Virar East-West Flyover
-Virar West, Maharashtra 401303
-India
+Virar West
 
 **WORKING HOURS**
 Monday - Saturday: 10:00 AM - 6:00 PM
@@ -107,8 +107,9 @@ TheFutureX will not be responsible for orders delivered to an incorrect address 
 If your package arrives damaged or tampered, please take photos or videos while opening the package and contact our support team within 24 hours of delivery.
 
 **8. CONTACT US**
-Email: supporttfxvital@gmail.com
-Address: 201-202, Hirubhai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West, Maharashtra 401303, India
+Email: thefuturex.ptc@gmail.com
+Contact Number: 8530340676
+Address: Office No: 201-202, Hirubai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West
 Website: https://thefuturex.in`,
   'returns-refund': `Return, Exchange & Warranty Policy
 
@@ -207,17 +208,16 @@ For exchange requests, warranty claims, repair support, or any product-related a
 TheFutureX
 
 **ADDRESS**
-201-202, Hirubhai Residency
+Office No: 201-202, Hirubai Residency
 Besides Vedant Hospital
 Near Virar East-West Flyover
-Virar West, Maharashtra 401303
-India
+Virar West
 
 **CUSTOMER SUPPORT PHONE**
-+91 8530340676
+8530340676
 
 **EMAIL**
-supporttfxvital@gmail.com
+thefuturex.ptc@gmail.com
 
 **WEBSITE**
 https://thefuturex.in`,
@@ -288,7 +288,7 @@ By accessing this website and placing an order, you accept these terms and condi
 TheFutureX is an online store that sells electronic products and accessories.
 Business Name: TheFutureX
 Website: https://thefuturex.in
-Email: supporttfxvital@gmail.com
+Email: thefuturex.ptc@gmail.com
 
 **2. USE OF WEBSITE**
 By using this website, you agree to:
@@ -348,14 +348,15 @@ We reserve the right to update or modify these Terms and Conditions at any time 
 
 **12. CONTACT US**
 If you have any questions about these Terms and Conditions, please contact us:
-Email: supporttfxvital@gmail.com
-Address: 201-202, Hirubhai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West, Maharashtra 401303, India
+Email: thefuturex.ptc@gmail.com
+Contact Number: 8530340676
+Address: Office No: 201-202, Hirubai Residency, Besides Vedant Hospital, Near Virar East-West Flyover, Virar West
 
 Our support team remains available to assist you with order, exchange, and warranty-related concerns.`,
 };
 
 export const DEFAULT_SOCIAL_LINKS: NonNullable<WebsiteSettings['socialLinks']> = {
-  email: 'supporttfxvital@gmail.com',
+  email: 'thefuturex.ptc@gmail.com',
   twitter: '',
   facebook: 'https://www.facebook.com/people/The-Future-X-India/61585558692279/',
   instagram: 'https://www.instagram.com/thefuturex.in/',
