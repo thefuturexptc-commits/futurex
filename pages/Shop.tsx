@@ -80,7 +80,7 @@ export const Shop: React.FC = () => {
             <span className="text-xs font-bold tracking-[0.2em] uppercase text-gray-500 dark:text-gray-400 font-display mb-2 block">
                 {category === 'all' ? 'Catalogue' : 'Collection'}
             </span>
-            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-gray-900 dark:text-white capitalize font-display break-words">
+            <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white capitalize font-display break-words">
             {normalizedRouteCategory === 'all' ? 'All Products' : category}
             </h1>
         </div>
@@ -110,7 +110,7 @@ export const Shop: React.FC = () => {
               <select 
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="block w-full md:w-48 pl-2 pr-8 py-2 text-sm rounded-lg border border-gray-300 bg-white text-gray-900 dark:bg-gray-800 dark:text-white dark:border-gray-600 font-bold font-display cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="block w-full md:w-48 pl-2 pr-8 py-2 text-sm rounded-lg border border-white/15 bg-gray-900 text-white font-bold font-display cursor-pointer focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="featured">New & Featured</option>
                 <option value="rating">Top Rated</option>
@@ -147,7 +147,7 @@ export const Shop: React.FC = () => {
            <svg className="mx-auto h-12 w-12 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
            </svg>
-           <h3 className="mt-4 text-xl font-bold text-gray-900 dark:text-white font-display">No products found</h3>
+           <h3 className="mt-4 text-xl font-bold text-white font-display">No products found</h3>
            <p className="mt-2 text-gray-500 dark:text-gray-400">Try adjusting your search or filters.</p>
         </div>
       )}

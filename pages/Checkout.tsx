@@ -5,7 +5,6 @@ import { CheckoutFlowState, CheckoutShippingDetails } from '../types';
 import { Button } from '../components/ui/Button';
 import { CheckoutStepper } from '../components/CheckoutStepper';
 import { verifyIndianPincode } from '../services/backend';
-import { trackInitiateCheckout } from '../services/Metapixel';
 
 const emptyShipping: CheckoutShippingDetails = {
   name: '',
@@ -139,11 +138,6 @@ export const Checkout: React.FC = () => {
     window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(flowState));
 
     // ✅ META PIXEL: InitiateCheckout
-    trackInitiateCheckout({
-      items: items.map((i) => ({ id: i.id, quantity: i.quantity ?? 1, price: i.salePrice ?? i.price })),
-      totalValue: totalPrice,
-    });
-
     if (flowState.phoneVerified) {
       navigate('/payment', { replace: true, state: flowState });
       return;

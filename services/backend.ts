@@ -275,6 +275,114 @@ let recaptchaContainerInUse: string | null = null;
 let anonymousAuthAttempted = false;
 let anonymousAuthBlocked = false;
 
+const clampNumber = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
+
+const getDefaultReviewRating = (product: Product): number => {
+  const price = Number(product.salePrice || product.price || 0);
+  if (price >= 250) return 4.2;
+  if (price >= 150) return 4;
+  if (price >= 80) return 3.6;
+  return 3.3;
+};
+
+const getDefaultReviewRatings = (product: Product): number[] => {
+  const baseRating = getDefaultReviewRating(product);
+  const price = Number(product.salePrice || product.price || 0);
+  const offsets = price >= 150 ? [0, -0.2, 0.1] : [0, -0.1, 0.2];
+  return offsets.map((offset) => Number(clampNumber(baseRating + offset, 3.1, 4.4).toFixed(1)));
+};
+
+const getDefaultReviewComments = (product: Product): string[] => {
+  const category = String(product.category || '').toLowerCase();
+  if (category.includes('fan')) {
+    return [
+      'Cooling is good for daily use and the design looks premium.',
+      'Quiet enough at night, setup was easy, and the airflow feels smooth.',
+      'Good product overall. I wish the app controls were a little faster.',
+    ];
+  }
+  if (category.includes('ring')) {
+    return [
+      'Comfortable to wear and the health readings are useful for daily tracking.',
+      'Battery backup is decent and wireless charging works well.',
+      'Looks stylish, but sizing needs to be checked carefully before ordering.',
+    ];
+  }
+  if (category.includes('band')) {
+    return [
+      'Good display and tracking for the price. Battery life is reliable.',
+      'Useful for workouts and notifications, with a comfortable strap.',
+      'Value for money. Some readings can vary but overall it works well.',
+    ];
+  }
+  if (category.includes('monitor')) {
+    return [
+      'Helpful for checking vitals at home and easy for family members to use.',
+      'Readings are clear and syncing works fine after setup.',
+      'Good device for regular monitoring, though the manual could be simpler.',
+    ];
+  }
+  return [
+    'Good quality for the price and works as expected.',
+    'Design feels nice and delivery experience was smooth.',
+    'Useful product overall with decent performance.',
+  ];
+};
+
+const toSeedReviewProductId = (product: Product): string =>
+  String(product.id || product.name || 'product')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+const toSeedReviewDate = (day: number): string => `2026-01-${String(day).padStart(2, '0')}`;
+
+const buildDefaultProductReviews = (product: Product): ProductPublicReview[] => {
+  const ratings = getDefaultReviewRatings(product);
+  const comments = getDefaultReviewComments(product);
+  const names = ['Aarav S.', 'Neha K.', 'Rohan M.'];
+  return comments.map((comment, index) => ({
+    id: `${toSeedReviewProductId(product)}_seed_review_${index + 1}`,
+    productId: product.id,
+    name: names[index],
+    rating: ratings[index],
+    date: toSeedReviewDate(11 + index),
+    comment,
+    images: [],
+    verifiedBuyer: true,
+  }));
+};
+
+const ensureProductReviews = (product: Product): Product => {
+  const existingReviews = Array.isArray(product.reviews) ? product.reviews : [];
+  if (existingReviews.length >= 2) {
+    const rating = Number(
+      (existingReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / existingReviews.length).toFixed(1)
+    );
+    return {
+      ...product,
+      reviews: existingReviews,
+      reviewCount: existingReviews.length,
+      rating,
+    };
+  }
+
+  const defaultReviews = buildDefaultProductReviews(product);
+  const reviews = [
+    ...existingReviews,
+    ...defaultReviews.filter((review) => !existingReviews.some((existing) => existing.id === review.id)),
+  ].slice(0, 3);
+  const rating = Number((reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length).toFixed(1));
+
+  return {
+    ...product,
+    reviews,
+    reviewCount: reviews.length,
+    rating,
+  };
+};
+
 const normalizeProductColors = (product: Product): Product => {
   const rawColors = Array.isArray(product.colors) ? product.colors : [];
   const existingColorMap = new Map<string, ProductColor>(
@@ -399,7 +507,7 @@ const normalizeProductColors = (product: Product): Product => {
     mappedVariants[0]?.colorName ||
     '';
 
-  return {
+  return ensureProductReviews({
     ...product,
     variants: mappedVariants,
     defaultVariant,
@@ -409,7 +517,7 @@ const normalizeProductColors = (product: Product): Product => {
     reservedStock: aggregateReserved,
     sold: aggregateSold,
     inStock: aggregateStock - aggregateReserved > 0,
-  };
+  });
 };
 
 const upsertSuperAdmin = (users: User[]): User[] => {

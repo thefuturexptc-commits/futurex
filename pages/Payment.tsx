@@ -6,7 +6,6 @@ import { Button } from '../components/ui/Button';
 import { CheckoutStepper } from '../components/CheckoutStepper';
 import { Address, CheckoutFlowState } from '../types';
 import { createOrder, updateUserAddresses } from '../services/backend';
-import { trackAddPaymentInfo, trackPurchase } from '../services/Metapixel';
 
 const LAST_ORDER_SUCCESS_KEY = 'last_order_success';
 const ORDER_SOURCE_SESSION_KEY = 'tfx_order_source';
@@ -132,17 +131,6 @@ export const Payment: React.FC = () => {
     );
 
     // ✅ META PIXEL: Purchase — fires after order is successfully created
-    trackPurchase({
-      orderId: order.id,
-      items: items.map((i) => ({
-        id: i.id,
-        name: i.name,
-        quantity: i.quantity ?? 1,
-        price: i.salePrice ?? i.price,
-      })),
-      totalValue: totalPrice,
-    });
-
     try {
       await saveAddressIfNeeded(addressForOrder);
     } catch (addressError) {
@@ -173,11 +161,6 @@ export const Payment: React.FC = () => {
     setLoading(true);
 
     // ✅ META PIXEL: AddPaymentInfo — user initiates payment
-    trackAddPaymentInfo({
-      items: items.map((i) => ({ id: i.id, quantity: i.quantity ?? 1, price: i.salePrice ?? i.price })),
-      totalValue: totalPrice,
-    });
-
     try {
       if (paymentMethod === 'cod') {
         await placeOrder('Pending');

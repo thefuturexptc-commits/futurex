@@ -78,7 +78,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
       <div className="w-full">
         {/* Carousel */}
         <div
-          className="product-card-dark overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl"
+          className="product-card-dark overflow-hidden rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),rgba(0,0,0,0.82)_58%,#000_100%)] shadow-2xl"
           ref={emblaRef}
         >
           <div className="flex touch-pan-y">
@@ -87,13 +87,13 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                 key={`${image}_${idx}`}
                 type="button"
                 onClick={() => setIsPreviewOpen(true)}
-                className="relative min-w-0 flex-[0_0_100%] aspect-square cursor-zoom-in overflow-hidden border-0 bg-transparent p-0"
+                className="relative min-w-0 flex-[0_0_100%] aspect-square cursor-zoom-in overflow-hidden border-0 bg-transparent p-4 sm:p-6"
                 aria-label={`View ${alt} image ${idx + 1}`}
               >
                 <img
                   src={image}
                   alt={alt}
-                  className="h-full w-full object-cover transition-all duration-500 ease-out"
+                  className="h-full w-full object-contain transition-all duration-500 ease-out"
                   loading={idx === 0 ? 'eager' : 'lazy'}
                   decoding={idx === 0 ? 'sync' : 'async'}
                   fetchPriority={idx === 0 ? 'high' : 'auto'}
@@ -145,7 +145,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
               decoding="async"
               width={1200}
               height={1200}
-              className="max-h-[86vh] w-auto max-w-full object-contain"
+            className="max-h-[86vh] w-auto max-w-full rounded-2xl bg-black/80 object-contain p-3"
               onClick={(event) => event.stopPropagation()}
             />
           </div>

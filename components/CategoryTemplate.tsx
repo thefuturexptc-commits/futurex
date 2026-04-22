@@ -321,7 +321,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
-                  className={`bg-white dark:bg-white/5 rounded-[2rem] ${modelSkeletonBaseClass} ${modelCardBaseClass} shrink-0 animate-pulse snap-start`}
+                  className={`rounded-[2rem] bg-white/5 ${modelSkeletonBaseClass} ${modelCardBaseClass} shrink-0 animate-pulse snap-start`}
                 />
               ))}
             </div>
@@ -329,7 +329,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
             // 💻 DESKTOP LOADING (grid skeleton — w-full, let grid cols handle sizing)
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className={`bg-white dark:bg-white/5 rounded-[2rem] ${modelSkeletonBaseClass} w-full animate-pulse`} />
+                <div key={i} className={`rounded-[2rem] bg-white/5 ${modelSkeletonBaseClass} w-full animate-pulse`} />
               ))}
             </div>
           )
@@ -379,7 +379,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
           )
         ) : (
           // EMPTY STATE
-          <div className="text-center py-20 bg-white dark:bg-white/5 rounded-3xl border border-gray-200 dark:border-white/5">
+          <div className="text-center py-20 rounded-3xl border border-white/10 bg-white/5">
             <p className="text-xl font-bold">Coming Soon</p>
           </div>
         )}

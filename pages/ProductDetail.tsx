@@ -391,7 +391,7 @@ export const ProductDetail: React.FC = () => {
                     width={64}
                     height={64}
                     onClick={() => setSelectedImageIndex(imgIdx)}
-                    className={`h-16 w-16 rounded-lg object-cover border shrink-0 snap-start cursor-pointer transition-all duration-150 ${selectedImageIndex === imgIdx
+                    className={`h-16 w-16 rounded-lg bg-black/70 object-contain p-1.5 border shrink-0 snap-start cursor-pointer transition-all duration-150 ${selectedImageIndex === imgIdx
                       ? 'border-primary-500 ring-2 ring-primary-400'
                       : 'border-white/10 hover:border-white/40'
                       }`}
@@ -772,9 +772,9 @@ export const ProductDetail: React.FC = () => {
               </form>
 
               {product.reviews && product.reviews.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+                <div className="-mx-5 mb-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 [-webkit-overflow-scrolling:touch] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-4">
                   {product.reviews.slice(0, visibleReviewCount).map((review, i) => (
-                    <article key={i} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                    <article key={i} className="w-[82vw] max-w-[320px] shrink-0 snap-start rounded-xl border border-white/10 bg-white/5 p-4 sm:w-auto sm:max-w-none">
                       {review.verifiedBuyer && (
                         <span className="mb-2 inline-flex rounded-full bg-green-500/15 px-2.5 py-1 text-xs font-semibold text-green-300">
                           Genuine Buyer

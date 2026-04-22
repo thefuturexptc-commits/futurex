@@ -74,16 +74,6 @@ const ScrollToTop: React.FC = () => {
 };
 
 // ✅ Fires PageView on every route change
-const MetaPixelPageTracker: React.FC = () => {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    return runAfterPageSettles(() => {
-      void import('./services/Metapixel').then(({ trackPageView }) => trackPageView());
-    }, 9000);
-  }, [pathname]);
-  return null;
-};
-
 const getRouteSeo = (pathname: string) => {
   const cleanPath = pathname.replace(/\/+$/, '') || '/';
   if (cleanPath.startsWith('/product/')) return null;
@@ -304,12 +294,6 @@ const DeferredSupportAssistant: React.FC = () => {
 
 const App: React.FC = () => {
   // ✅ Initialize Meta Pixel once on app mount
-  useEffect(() => {
-    return runAfterPageSettles(() => {
-      void import('./services/Metapixel').then(({ initMetaPixel }) => initMetaPixel());
-    }, 9000);
-  }, []);
-
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -318,7 +302,6 @@ const App: React.FC = () => {
             <AuthModalProvider>
               <ScrollToTop />
               <RouteSeo />
-              <MetaPixelPageTracker />
               <OrderSourceTracker />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />

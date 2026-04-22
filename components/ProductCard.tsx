@@ -260,7 +260,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
   const cardTextClass = monochrome ? 'text-white' : isLightCard ? 'text-gray-900' : 'text-white';
   const mutedTextClass = monochrome ? 'text-gray-400' : isLightCard ? 'text-gray-500' : 'text-gray-400';
-  const categoryChipClass = monochrome ? 'text-gray-950 bg-white' : isLightCard ? 'text-cyan-700 bg-cyan-100/90' : 'text-primary-300 bg-primary-900/30';
+  const categoryChipClass = monochrome ? 'border border-cyan-300/30 bg-cyan-300/12 text-cyan-100' : isLightCard ? 'text-cyan-700 bg-cyan-100/90' : 'text-primary-300 bg-primary-900/30';
   const ratingClass = monochrome ? 'text-gray-200' : isLightCard ? 'text-amber-500' : 'text-amber-400';
   const hoverTextClass = enableHoverEffects ? (monochrome ? 'group-hover:text-white' : 'group-hover:text-primary-300') : '';
   const cardBackground = monochrome
@@ -292,7 +292,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           Best Seller
         </div>
       )}
-      <Link to={`/product/${toProductSlug(product.name)}`} className={`product-card-media relative flex items-center justify-center overflow-hidden bg-black/20 ${imageAspectClassName || (compact ? 'aspect-[4/3] p-3 sm:p-4' : 'aspect-[4/5] p-4')}`}>
+      <Link to={`/product/${toProductSlug(product.name)}`} className={`product-card-media relative flex items-center justify-center overflow-hidden bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),rgba(0,0,0,0.82)_58%,#000_100%)] ${imageAspectClassName || (compact ? 'aspect-[4/3] p-3 sm:p-4' : 'aspect-[4/5] p-4')}`}>
         <img
           src={activeImage}
           alt={product.name}
