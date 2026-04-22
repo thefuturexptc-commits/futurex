@@ -30,6 +30,11 @@ service cloud.firestore {
       allow update, delete: if isAdmin() || isSuperAdminEmail();
     }
 
+    match /product_notify_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
     // Settings & categories are admin-managed.
     match /settings/{docId} {
       allow read: if true;

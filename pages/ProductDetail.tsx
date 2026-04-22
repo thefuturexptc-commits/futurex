@@ -4,7 +4,7 @@ import { Product, ProductColor } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
-import { addProductReview, getProductById, getProductReviews, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
+import { addProductNotifyRequest, addProductReview, getProductById, getProductReviews, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
 import { ProductCard } from '../components/ProductCard';
 import { absoluteUrl, removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
@@ -38,6 +38,9 @@ export const ProductDetail: React.FC = () => {
   const [reviewImages, setReviewImages] = useState<File[]>([]);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewMessage, setReviewMessage] = useState('');
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifySubmitting, setNotifySubmitting] = useState(false);
+  const [notifyMessage, setNotifyMessage] = useState('');
   const reviewImagePreviews = useMemo(
     () => reviewImages.map((file) => ({ file, url: URL.createObjectURL(file) })),
     [reviewImages]
@@ -213,6 +216,43 @@ export const ProductDetail: React.FC = () => {
     navigate('/checkout');
   }, [product, user, openLogin, id, selectedColor, activeImages, addToCart, navigate]);
 
+  const handleOpenNotify = useCallback(async () => {
+    if (!product) return;
+    if (!user) {
+      openLogin('/product/' + id);
+      return;
+    }
+
+    const contact = (user.email || user.phone || '').trim();
+    if (!contact) {
+      setNotifyMessage('Please add an email or phone number to your profile so we can notify you.');
+      setShowNotifyModal(true);
+      return;
+    }
+
+    setNotifySubmitting(true);
+    setNotifyMessage('');
+    try {
+      await addProductNotifyRequest({
+        productId: product.id,
+        productName: product.name,
+        contact,
+        userId: user?.id,
+        userEmail: user?.email,
+        userName: user?.name,
+        selectedColorName: selectedColor?.name,
+      });
+      setNotifyMessage('Done. We will notify you when this product is back in stock.');
+      setShowNotifyModal(true);
+      window.setTimeout(() => setShowNotifyModal(false), 1600);
+    } catch (error) {
+      setNotifyMessage(error instanceof Error ? error.message : 'Unable to save your request.');
+      setShowNotifyModal(true);
+    } finally {
+      setNotifySubmitting(false);
+    }
+  }, [id, openLogin, product, selectedColor?.name, user]);
+
   const handleReviewImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []).filter((file) => file.type.startsWith('image/')).slice(0, 2);
     setReviewImages(files);
@@ -329,10 +369,10 @@ export const ProductDetail: React.FC = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
 
           {/* Left: Image Carousel + Thumbnails */}
-          <div className="space-y-4">
+          <div className="w-full self-center space-y-4">
             <ProductImageCarousel
               images={displayedImages}
               alt={product.name}
@@ -362,7 +402,7 @@ export const ProductDetail: React.FC = () => {
           </div>
 
           {/* Right: Product Info */}
-          <div className="flex flex-col gap-5">
+          <div className="flex flex-col justify-center gap-5 self-center">
 
             {/* Category + Rating */}
             <div className="flex items-center justify-between flex-wrap gap-2">
@@ -477,19 +517,18 @@ export const ProductDetail: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3 mt-2">
               <button
                 type="button"
-                onClick={handleAddToCart}
-                disabled={!canAdd}
+                onClick={canAdd ? handleAddToCart : handleOpenNotify}
                 className={[
                   'product-detail-add-cart-btn flex-1 py-4 px-6 rounded-2xl font-bold text-base transition-all duration-200',
                   'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
                   !canAdd
-                    ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                    ? 'border border-violet-300/40 bg-white text-black hover:bg-violet-100 active:scale-[0.98]'
                     : addedToCart
                       ? 'bg-green-500 text-white scale-[0.98]'
                       : 'border border-cyan-800/40 bg-gradient-to-r from-[#0b1224] to-[#122342] text-cyan-100 shadow-lg shadow-black/35 hover:from-[#101a32] hover:to-[#17305a] active:scale-[0.98]',
                 ].join(' ')}
               >
-                {addedToCart ? '✓ Added to Cart!' : canAdd ? 'Add to Cart' : 'Out of Stock'}
+                {notifySubmitting ? 'Saving...' : addedToCart ? '✓ Added to Cart!' : canAdd ? 'Add to Cart' : 'Notify me'}
               </button>
               <button
                 type="button"
@@ -827,7 +866,44 @@ export const ProductDetail: React.FC = () => {
             </div>
           </section>
         )}
+        {showNotifyModal && product && (
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+            <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#080910] p-5 text-white shadow-2xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-violet-200">Out of stock</p>
+                  <h3 className="mt-2 text-xl font-bold">Notify me</h3>
+                  <p className="mt-1 text-sm text-gray-300">
+                    {product.name}
+                    {selectedColor?.name ? ` - ${selectedColor.name}` : ''}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowNotifyModal(false)}
+                  className="rounded-full border border-white/10 px-2 py-1 text-sm text-gray-300 hover:bg-white/10"
+                  aria-label="Close notify me popup"
+                >
+                  X
+                </button>
+              </div>
+              {notifyMessage && (
+                <p className={`mt-3 text-sm ${notifyMessage.startsWith('Done') ? 'text-green-300' : 'text-rose-300'}`}>
+                  {notifyMessage}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowNotifyModal(false)}
+                className="mt-5 w-full rounded-xl bg-white px-4 py-3 text-sm font-bold text-black transition hover:bg-violet-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+

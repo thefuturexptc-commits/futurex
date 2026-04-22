@@ -1,6 +1,6 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
-import heroImage from '../assets/images/smartrings-hero.webp';
+import heroImage from '../assets/images/smart-ring-rotating.gif';
 import heroBackgroundImage from '../assets/images/smartrings-neon-bg.webp';
 
 export const SmartRings: React.FC = () => {

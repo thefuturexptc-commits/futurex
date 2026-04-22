@@ -43,6 +43,19 @@ export interface ProductPublicReview {
   verifiedBuyer?: boolean;
 }
 
+export interface ProductNotifyRequest {
+  id: string;
+  productId: string;
+  productName: string;
+  contact: string;
+  contactType: 'email' | 'phone';
+  userId?: string;
+  userEmail?: string;
+  userName?: string;
+  selectedColorName?: string;
+  createdAt: string;
+}
+
 export interface SupportChatMessage {
   id: string;
   sender: 'user' | 'bot' | 'admin';

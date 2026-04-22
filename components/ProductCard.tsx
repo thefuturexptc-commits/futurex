@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
+import { addProductNotifyRequest } from '../services/backend';
 
 const toProductSlug = (name: string): string =>
   name
@@ -164,6 +165,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const [imageTint, setImageTint] = useState(DEFAULT_TINT);
   const [imageDeepTint, setImageDeepTint] = useState('rgba(11, 16, 26, 0.96)');
   const [isLightCard, setIsLightCard] = useState(false);
+  const [showNotifyModal, setShowNotifyModal] = useState(false);
+  const [notifySubmitting, setNotifySubmitting] = useState(false);
+  const [notifyMessage, setNotifyMessage] = useState('');
   const supportsHover = useMemo(
     () => typeof window !== 'undefined' && window.matchMedia('(hover: hover) and (pointer: fine)').matches,
     []
@@ -218,17 +222,54 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     addToCart(product);
   };
 
+  const handleOpenNotify = async () => {
+    if (!user) {
+      openLogin(`/product/${toProductSlug(product.name)}`);
+      return;
+    }
+
+    const contact = (user.email || user.phone || '').trim();
+    if (!contact) {
+      setNotifyMessage('Please add an email or phone number to your profile so we can notify you.');
+      setShowNotifyModal(true);
+      return;
+    }
+
+    setNotifySubmitting(true);
+    setNotifyMessage('');
+    try {
+      await addProductNotifyRequest({
+        productId: product.id,
+        productName: product.name,
+        contact,
+        userId: user?.id,
+        userEmail: user?.email,
+        userName: user?.name,
+        selectedColorName: product.colors?.[0]?.name,
+      });
+      setNotifyMessage('Done. We will notify you when this product is back in stock.');
+      setShowNotifyModal(true);
+      window.setTimeout(() => setShowNotifyModal(false), 1600);
+    } catch (error) {
+      setNotifyMessage(error instanceof Error ? error.message : 'Unable to save your request.');
+      setShowNotifyModal(true);
+    } finally {
+      setNotifySubmitting(false);
+    }
+  };
+
   const cardTextClass = monochrome ? 'text-white' : isLightCard ? 'text-gray-900' : 'text-white';
   const mutedTextClass = monochrome ? 'text-gray-400' : isLightCard ? 'text-gray-500' : 'text-gray-400';
   const categoryChipClass = monochrome ? 'text-gray-950 bg-white' : isLightCard ? 'text-cyan-700 bg-cyan-100/90' : 'text-primary-300 bg-primary-900/30';
   const ratingClass = monochrome ? 'text-gray-200' : isLightCard ? 'text-amber-500' : 'text-amber-400';
   const hoverTextClass = enableHoverEffects ? (monochrome ? 'group-hover:text-white' : 'group-hover:text-primary-300') : '';
   const cardBackground = monochrome
-    ? 'linear-gradient(155deg, #050505 0%, #171717 62%, #f3f4f6 185%)'
+    ? 'radial-gradient(540px 260px at 86% 4%, rgba(88, 94, 112, 0.34), transparent 64%), radial-gradient(460px 260px at 54% 26%, rgba(150, 164, 190, 0.14), transparent 54%), linear-gradient(135deg, #03050a 0%, #10141d 42%, #05070d 100%)'
     : `linear-gradient(165deg, ${imageTint} 0%, ${imageDeepTint} 68%)`;
   const cardBorderClass = monochrome ? 'border-white/15' : isLightCard ? 'border-gray-200' : 'border-white/10';
 
   return (
+    <>
     <div
       className={`product-card-dark group relative h-full overflow-hidden transition-all duration-500 ease-out border flex flex-col ${compact
           ? `rounded-3xl ${enableHoverEffects ? 'sm:hover:-translate-y-1.5 sm:hover:shadow-[0_22px_48px_rgba(0,0,0,0.52)]' : ''} shadow-[0_8px_18px_rgba(0,0,0,0.26)] sm:shadow-[0_12px_28px_rgba(0,0,0,0.34)]`
@@ -251,7 +292,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           Best Seller
         </div>
       )}
-      <Link to={`/product/${toProductSlug(product.name)}`} className={`relative flex items-center justify-center overflow-hidden bg-black/25 ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>
+      <Link to={`/product/${toProductSlug(product.name)}`} className={`product-card-media relative flex items-center justify-center overflow-hidden bg-black/20 ${imageAspectClassName || (compact ? 'aspect-[4/3] p-3 sm:p-4' : 'aspect-[4/5] p-4')}`}>
         <img
           src={activeImage}
           alt={product.name}
@@ -260,7 +301,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           sizes={compact ? "(max-width: 640px) 45vw, 25vw" : "(max-width: 640px) 80vw, 35vw"}
           width={640}
           height={800}
-          className={`h-full w-full ${imageFit === 'cover' ? 'object-cover' : 'object-contain'} object-center transition-all duration-300 ease-out ${enableHoverEffects ? 'group-hover:scale-105' : ''
+          className={`h-full max-h-full w-full max-w-full ${imageFit === 'cover' ? 'object-cover' : 'object-contain'} object-center transition-all duration-300 ease-out ${enableHoverEffects ? 'group-hover:scale-[1.025]' : ''
             }`}
         />
         <div
@@ -343,20 +384,53 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              handleAddToCart();
+              if (canAdd) {
+                handleAddToCart();
+              } else {
+                handleOpenNotify();
+              }
             }}
-            disabled={!canAdd}
             className={
               compact
                 ? 'h-9 w-full rounded-full px-4 text-xs font-semibold shadow-sm sm:h-10'
                 : 'h-10 w-full rounded-full px-4 text-xs font-semibold shadow-sm'
             }
           >
-            {compact ? 'Add to Cart' : 'Add to Cart'}
+            {notifySubmitting ? 'Saving...' : canAdd ? 'Add to Cart' : 'Notify me'}
           </Button>
         </div>
       </div>
     </div>
+    {showNotifyModal && (
+      <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+        <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-[#080910] p-5 text-white shadow-2xl">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-violet-200">Out of stock</p>
+              <h3 className="mt-2 text-xl font-bold">Notify me</h3>
+              <p className="mt-1 text-sm text-gray-300">{product.name}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowNotifyModal(false)}
+              className="rounded-full border border-white/10 px-2 py-1 text-sm text-gray-300 hover:bg-white/10"
+              aria-label="Close notify me popup"
+            >
+              X
+            </button>
+          </div>
+          {notifyMessage && (
+            <p className={`mt-3 text-sm ${notifyMessage.startsWith('Done') ? 'text-green-300' : 'text-rose-300'}`}>
+              {notifyMessage}
+            </p>
+          )}
+          <Button type="button" size="sm" className="mt-5 w-full rounded-xl" onClick={() => setShowNotifyModal(false)}>
+            Close
+          </Button>
+        </div>
+      </div>
+    )}
+    </>
   );
 };
 

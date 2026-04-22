@@ -15,6 +15,7 @@ import {
   getAllUsers,
   getAuditLogs,
   getCategories,
+  getProductNotifyRequests,
   getProducts,
   seedDatabase,
   updateOrderStatus,
@@ -23,7 +24,7 @@ import {
   updateWebsiteSettings,
   uploadFile,
 } from '../services/backend';
-import { Order, Product, User, UserPermissions } from '../types';
+import { Order, Product, ProductNotifyRequest, User, UserPermissions } from '../types';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
 import { ConfirmModal } from '../components/admin/common/ConfirmModal';
@@ -57,6 +58,11 @@ interface AdminVariantCard {
   images: string[];
   selectedFiles: File[];
   dragImageIndex: number | null;
+}
+
+interface BulkStockUndoState {
+  amount: number;
+  products: Array<{ id: string; name: string; previousStock: number; nextStock: number }>;
 }
 
 const inputClass =
@@ -104,6 +110,7 @@ const parseSpecsText = (value: string): Record<string, string> => {
 };
 const createVariantSizeRow = () => ({ id: `sz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, size: '', stock: 0 });
 const ADMIN_ACTIVE_TAB_KEY = 'aura_admin_active_tab';
+const ADMIN_LAST_BULK_STOCK_UNDO_KEY = 'aura_admin_last_bulk_stock_undo';
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -131,6 +138,16 @@ export const AdminDashboard: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [notifyRequests, setNotifyRequests] = useState<ProductNotifyRequest[]>([]);
+  const [lastBulkStockUpdate, setLastBulkStockUpdate] = useState<BulkStockUndoState | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const raw = window.localStorage.getItem(ADMIN_LAST_BULK_STOCK_UNDO_KEY);
+      return raw ? (JSON.parse(raw) as BulkStockUndoState) : null;
+    } catch {
+      return null;
+    }
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [dataError, setDataError] = useState('');
   const [auditError, setAuditError] = useState('');
@@ -266,8 +283,8 @@ export const AdminDashboard: React.FC = () => {
   const refreshData = useCallback(async () => {
     setIsLoading(true);
     setDataError('');
-    const results = await Promise.allSettled([getProducts(), getAllOrders(), getCategories(), getAllUsers()]);
-    const [productsResult, ordersResult, categoriesResult, usersResult] = results;
+    const results = await Promise.allSettled([getProducts(), getAllOrders(), getCategories(), getAllUsers(), getProductNotifyRequests()]);
+    const [productsResult, ordersResult, categoriesResult, usersResult, notifyRequestsResult] = results;
 
     const errors: string[] = [];
 
@@ -293,6 +310,12 @@ export const AdminDashboard: React.FC = () => {
       setUsers(usersResult.value);
     } else {
       errors.push(`Users: ${usersResult.reason?.message || 'Failed to load'}`);
+    }
+
+    if (notifyRequestsResult.status === 'fulfilled') {
+      setNotifyRequests(notifyRequestsResult.value);
+    } else {
+      errors.push(`Notify requests: ${notifyRequestsResult.reason?.message || 'Failed to load'}`);
     }
 
     if (errors.length > 0) {
@@ -329,6 +352,15 @@ export const AdminDashboard: React.FC = () => {
     if (typeof window === 'undefined') return;
     window.localStorage.setItem(ADMIN_ACTIVE_TAB_KEY, activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (lastBulkStockUpdate) {
+      window.localStorage.setItem(ADMIN_LAST_BULK_STOCK_UNDO_KEY, JSON.stringify(lastBulkStockUpdate));
+    } else {
+      window.localStorage.removeItem(ADMIN_LAST_BULK_STOCK_UNDO_KEY);
+    }
+  }, [lastBulkStockUpdate]);
 
   useEffect(() => {
     if (!canManageSettings || activeTab !== 'settings') {
@@ -858,16 +890,59 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const handleBulkStockUpdate = async (amount: number, productIds: string[]) => {
+    const affectedProducts = products.filter((p) => productIds.includes(p.id));
+    if (affectedProducts.length === 0) {
+      alert('No low-stock products are eligible for bulk update.');
+      return;
+    }
+
+    const undoState: BulkStockUndoState = {
+      amount,
+      products: affectedProducts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        previousStock: Number(p.stock || 0),
+        nextStock: Math.max(0, Number(p.stock || 0) + amount),
+      })),
+    };
+
     await Promise.all(
-      products
-        .filter((p) => productIds.includes(p.id))
+      affectedProducts
         .map((p) => {
           const newStock = Math.max(0, p.stock + amount);
           const available = newStock - (p.reservedStock || 0);
           return updateProduct({ ...p, stock: newStock, inStock: available > 0 });
         })
     );
+    setLastBulkStockUpdate(undoState);
     pushAudit('Bulk Stock Updated', `${productIds.length} products, amount ${amount}`);
+    await refreshData();
+  };
+
+  const handleUndoBulkStockUpdate = async () => {
+    if (!lastBulkStockUpdate) {
+      alert('There is no bulk stock update to undo.');
+      return;
+    }
+
+    const affectedIds = new Set(lastBulkStockUpdate.products.map((item) => item.id));
+    const previousById = new Map(lastBulkStockUpdate.products.map((item) => [item.id, item.previousStock]));
+
+    await Promise.all(
+      products
+        .filter((p) => affectedIds.has(p.id))
+        .map((p) => {
+          const restoredStock = previousById.get(p.id) ?? p.stock;
+          const available = restoredStock - (p.reservedStock || 0);
+          return updateProduct({ ...p, stock: restoredStock, inStock: available > 0 });
+        })
+    );
+
+    pushAudit(
+      'Bulk Stock Update Undone',
+      `${lastBulkStockUpdate.products.length} products, reverted amount ${lastBulkStockUpdate.amount}`
+    );
+    setLastBulkStockUpdate(null);
     await refreshData();
   };
 
@@ -1039,9 +1114,12 @@ export const AdminDashboard: React.FC = () => {
       {activeTab === 'inventory' && (
         <InventoryTab
           products={products}
+          notifyRequests={notifyRequests}
           isLoading={isLoading}
+          lastBulkStockUpdate={lastBulkStockUpdate}
           onQuickStockUpdate={handleQuickStockUpdate}
           onBulkStockUpdate={handleBulkStockUpdate}
+          onUndoBulkStockUpdate={handleUndoBulkStockUpdate}
         />
       )}
       {activeTab === 'products' && (

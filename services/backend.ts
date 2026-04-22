@@ -23,7 +23,7 @@ import {
 } from 'firebase/storage';
 import { initializeApp, deleteApp, FirebaseApp, getApps, getApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
-import { Product, ProductColor, ProductPublicReview, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails } from '../types';
+import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 
@@ -775,6 +775,69 @@ export const deleteProductReview = async (productId: string, reviewId: string): 
     if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
       logDevWarning('Failed to delete product review:', error);
     }
+  }
+};
+
+const normalizeNotifyContactType = (contact: string): ProductNotifyRequest['contactType'] =>
+  contact.includes('@') ? 'email' : 'phone';
+
+export const addProductNotifyRequest = async (
+  request: Omit<ProductNotifyRequest, 'id' | 'contactType' | 'createdAt'> & { id?: string; createdAt?: string }
+): Promise<ProductNotifyRequest> => {
+  const contact = request.contact.trim();
+  if (!contact) {
+    throw new Error('Please enter your email or phone number.');
+  }
+
+  const notifyRequest: ProductNotifyRequest = {
+    ...request,
+    id: request.id || `notify_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    contact,
+    contactType: normalizeNotifyContactType(contact),
+    createdAt: request.createdAt || new Date().toISOString(),
+  };
+
+  const localRequests = getMockData<ProductNotifyRequest[]>('product_notify_requests', []);
+  const nextLocal = [
+    notifyRequest,
+    ...localRequests.filter(
+      (item) => !(item.productId === notifyRequest.productId && item.contact.toLowerCase() === notifyRequest.contact.toLowerCase())
+    ),
+  ];
+  setMockData('product_notify_requests', nextLocal);
+
+  try {
+    await ensureFirebaseConnection();
+    await setDoc(doc(db, 'product_notify_requests', notifyRequest.id), deepSanitize(notifyRequest), { merge: true });
+  } catch (error) {
+    if (!isPermissionDeniedError(error) && !isAbortLikeError(error) && !isTimeoutLikeError(error)) {
+      logDevWarning('Failed to sync notify request:', error);
+    }
+  }
+
+  return notifyRequest;
+};
+
+export const getProductNotifyRequests = async (): Promise<ProductNotifyRequest[]> => {
+  const localRequests = getMockData<ProductNotifyRequest[]>('product_notify_requests', []);
+
+  try {
+    await ensureFirebaseConnection();
+    const snapshot = await withTimeout(
+      getDocs(query(collection(db, 'product_notify_requests'), orderBy('createdAt', 'desc'))),
+      4500
+    );
+    const remoteRequests = snapshot.docs.map((notifyDoc) => ({
+      ...(notifyDoc.data() as ProductNotifyRequest),
+      id: notifyDoc.id,
+    }));
+    setMockData('product_notify_requests', remoteRequests);
+    return remoteRequests;
+  } catch (error) {
+    if (!isPermissionDeniedError(error) && !isAbortLikeError(error) && !isTimeoutLikeError(error)) {
+      logDevWarning('Failed to fetch notify requests:', error);
+    }
+    return [...localRequests].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   }
 };
 

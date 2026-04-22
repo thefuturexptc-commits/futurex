@@ -5,8 +5,10 @@ import { ProductCard } from '../components/ProductCard';
 import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
 import fanShowcaseImage from '../assets/images/fan-hero-q8pro-cutout.webp';
+import fanTp09CutoutImage from '../assets/images/fan-hero-tp09-cutout.webp';
+import redFanHomeImage from '../assets/images/red-fan-home.webp';
 import bandHomeImage from '../assets/images/band-hero-cutout.webp';
-import ringHomeImage from '../assets/images/smartrings-hero.webp';
+import ringHomeImage from '../assets/images/smart-ring-rotating.gif';
 import monitoringPhoneImage from '../assets/images/monitoring-phone-cutout.webp';
 
 const toProductSlug = (name: string): string =>
@@ -64,55 +66,6 @@ const DealCountdown: React.FC = () => {
   }, []);
 
   return <>Flash window ends in {dealCountdown}</>;
-};
-
-interface ShowcaseImageProps {
-  src: string;
-  alt: string;
-  className: string;
-  priority: boolean;
-}
-
-const ShowcaseImage: React.FC<ShowcaseImageProps> = ({ src, alt, className, priority }) => {
-  const imageRef = useRef<HTMLImageElement | null>(null);
-  const [shouldLoad, setShouldLoad] = useState(priority);
-
-  useEffect(() => {
-    if (priority || shouldLoad) return;
-    const image = imageRef.current;
-    if (!image) return;
-
-    if (!('IntersectionObserver' in window)) {
-      setShouldLoad(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        setShouldLoad(true);
-        observer.disconnect();
-      },
-      { rootMargin: '280px 0px' }
-    );
-    observer.observe(image);
-    return () => observer.disconnect();
-  }, [priority, shouldLoad]);
-
-  return (
-    <img
-      ref={imageRef}
-      src={shouldLoad ? src : undefined}
-      alt={alt}
-      loading={priority ? 'eager' : 'lazy'}
-      decoding="async"
-      fetchPriority={priority ? 'high' : 'low'}
-      sizes="(max-width: 640px) 90vw, 58vw"
-      width={900}
-      height={900}
-      className={className}
-    />
-  );
 };
 
 export const Home: React.FC = () => {
@@ -178,6 +131,8 @@ export const Home: React.FC = () => {
   const [isCompareOpen, setIsCompareOpen] = useState(false);
   const [testimonialIndex, setTestimonialIndex] = useState(0);
   const [activeMoodId] = useState('neon');
+  const [fanIndex, setFanIndex] = useState(0);
+  const fanImages = useMemo(() => [fanShowcaseImage, fanTp09CutoutImage, redFanHomeImage], []);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -320,6 +275,17 @@ export const Home: React.FC = () => {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const interval = window.setInterval(() => {
+      if (document.hidden) return;
+      setFanIndex((prev) => (prev + 1) % fanImages.length);
+    }, 2000);
+
+    return () => window.clearInterval(interval);
+  }, [fanImages.length]);
+
   const dynamicDeals = [
     ...topPriceDrops.map((p) => {
       const mrp = Number(p.mrp || 0);
@@ -376,10 +342,11 @@ export const Home: React.FC = () => {
       subtitle: 'Cool. Warm. Intelligent airflow.',
       image: fanShowcaseImage,
       theme: 'dark',
-      bannerClassName: 'bg-black text-white',
-      imageWrapClassName: 'sm:right-0 sm:top-16 sm:bottom-0 sm:w-[58%] lg:w-[54%]',
-      contentClassName: 'items-start text-left',
-      imageClassName: 'max-h-[330px] sm:max-h-[470px] lg:max-h-[540px]',
+      bannerClassName: '',
+      imageWrapClassName: 'home-showcase-media-right home-showcase-media-tall home-reference-fan-media',
+      contentClassName: 'home-showcase-copy-left home-reference-fan-copy items-start text-left',
+      imageClassName: 'home-reference-fan-image max-h-[300px] sm:max-h-[560px] lg:max-h-[700px]',
+      motionClassName: '',
     },
     {
       category: 'Smart Rings',
@@ -387,11 +354,12 @@ export const Home: React.FC = () => {
       title: 'Your Health. On Your Finger.',
       subtitle: 'Track. Sleep. Perform.',
       image: ringHomeImage,
-      theme: 'light',
-      bannerClassName: 'bg-white text-gray-950',
-      imageWrapClassName: 'sm:left-0 sm:top-0 sm:bottom-0 sm:w-[60%] lg:w-[56%]',
-      contentClassName: 'items-start text-left sm:items-end sm:text-right',
-      imageClassName: 'max-h-[270px] sm:max-h-[380px] lg:max-h-[430px]',
+      theme: 'dark',
+      bannerClassName: '',
+      imageWrapClassName: 'home-showcase-media-right home-showcase-media-regular home-ring-media',
+      contentClassName: 'home-showcase-copy-left items-start text-left',
+      imageClassName: 'home-ring-image max-h-[300px] sm:max-h-[560px] lg:max-h-[700px]',
+      motionClassName: '',
     },
     {
       category: 'Smart Bands',
@@ -400,10 +368,11 @@ export const Home: React.FC = () => {
       subtitle: 'Real-time health insights.',
       image: bandHomeImage,
       theme: 'dark',
-      bannerClassName: 'bg-black text-white',
-      imageWrapClassName: 'sm:right-0 sm:top-0 sm:bottom-0 sm:w-[60%] lg:w-[56%]',
-      contentClassName: 'items-start text-left',
-      imageClassName: 'max-h-[270px] sm:max-h-[380px] lg:max-h-[430px]',
+      bannerClassName: '',
+      imageWrapClassName: 'home-showcase-media-right home-showcase-media-regular',
+      contentClassName: 'home-showcase-copy-left items-start text-left',
+      imageClassName: 'max-h-[300px] sm:max-h-[560px] lg:max-h-[700px]',
+      motionClassName: '',
     },
     {
       category: 'Smart Monitoring',
@@ -411,16 +380,17 @@ export const Home: React.FC = () => {
       title: 'Know Your Body Better.',
       subtitle: 'AI-powered health tracking.',
       image: monitoringPhoneImage,
-      theme: 'light',
-      bannerClassName: 'bg-white text-gray-950',
-      imageWrapClassName: 'sm:left-0 sm:top-0 sm:bottom-0 sm:w-[58%] lg:w-[52%]',
-      contentClassName: 'items-start text-left sm:items-end sm:text-right',
-      imageClassName: 'max-h-[310px] sm:max-h-[460px] lg:max-h-[520px]',
+      theme: 'dark',
+      bannerClassName: '',
+      imageWrapClassName: 'home-showcase-media-left home-showcase-media-tall',
+      contentClassName: 'home-showcase-copy-right items-start text-left',
+      imageClassName: 'max-h-[300px] sm:max-h-[560px] lg:max-h-[700px]',
+      motionClassName: '',
     },
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden pb-24 sm:pb-0 text-gray-900 dark:text-white bg-white dark:bg-dark-bg">
+    <div className="min-h-screen overflow-x-hidden pb-24 sm:pb-0 text-white bg-black dark:bg-dark-bg">
       {loadError && (
         <div className="max-w-7xl mx-auto px-4 pt-6">
           <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200 p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
@@ -442,66 +412,77 @@ export const Home: React.FC = () => {
 
 
 
-      <section className="bg-white text-gray-950 dark:bg-black dark:text-white" aria-label="TheFutureX product collections">
-        {showcasePanels.map((panel, idx) => {
-          const isDark = panel.theme === 'dark';
-          const imageOnLeft = panel.imageWrapClassName.includes('left-0');
-          return (
-            <button
-              key={panel.category}
-              type="button"
-              onClick={() => handleShopNavigation(panel.route)}
-              className={`home-showcase-panel ${isDark ? 'home-showcase-dark' : 'home-showcase-light'} group relative block min-h-[610px] w-full overflow-hidden text-left transition-transform duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-cyan-400 sm:min-h-[640px] lg:min-h-[700px] ${panel.bannerClassName}`}
-              aria-label={`Open ${panel.category}`}
-            >
-              <div
-                className={`absolute inset-0 ${
-                  isDark
-                    ? imageOnLeft
-                      ? 'bg-gradient-to-b from-black/15 via-black/20 to-black sm:bg-gradient-to-l sm:from-black sm:via-black/82 sm:to-black/22'
-                      : 'bg-gradient-to-b from-black/15 via-black/20 to-black sm:bg-gradient-to-r sm:from-black sm:via-black/82 sm:to-black/22'
-                    : imageOnLeft
-                      ? 'bg-gradient-to-b from-white/10 via-white/25 to-white sm:bg-gradient-to-l sm:from-white sm:via-white/88 sm:to-white/28'
-                      : 'bg-gradient-to-b from-white/10 via-white/25 to-white sm:bg-gradient-to-r sm:from-white sm:via-white/88 sm:to-white/28'
-                }`}
-                aria-hidden="true"
-              />
-              <div className={`absolute left-1/2 top-7 flex h-[300px] w-[90%] -translate-x-1/2 items-center justify-center sm:left-auto sm:top-auto sm:h-auto sm:w-auto sm:translate-x-0 ${panel.imageWrapClassName}`}>
-                <ShowcaseImage
-                  src={panel.image}
-                  alt={`${panel.category} collection`}
-                  priority={idx === 0}
-                  className={`h-full w-full object-contain drop-shadow-[0_34px_70px_rgba(0,0,0,0.38)] transition-transform duration-700 group-hover:scale-[1.035] sm:h-auto ${panel.imageClassName}`}
+      <section className="home-showcase-shell text-white" aria-label="TheFutureX product collections">
+        <div className="flex w-full flex-col">
+          {showcasePanels.map((panel, idx) => {
+            const isDark = panel.theme === 'dark';
+            const imageOnLeft = panel.imageWrapClassName.includes('home-showcase-media-left');
+            return (
+              <button
+                key={panel.category}
+                type="button"
+                onClick={() => handleShopNavigation(panel.route)}
+                className={`home-showcase-panel ${isDark ? 'home-showcase-dark' : 'home-showcase-light'} ${'cardClassName' in panel ? panel.cardClassName : ''} group relative block h-[420px] w-full overflow-hidden bg-black text-left transition duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-400 sm:h-[520px] ${panel.bannerClassName}`}
+                aria-label={`Open ${panel.category}`}
+              >
+                <div
+                  className={`absolute inset-0 z-[1] ${
+                    imageOnLeft
+                      ? 'bg-gradient-to-b from-black/5 via-black/20 to-black sm:bg-gradient-to-l sm:from-black sm:via-black/70 sm:to-black/10'
+                      : 'bg-gradient-to-b from-black/5 via-black/20 to-black sm:bg-gradient-to-r sm:from-black sm:via-black/70 sm:to-black/10'
+                  }`}
+                  aria-hidden="true"
                 />
-              </div>
-              <div className={`relative z-10 flex min-h-[610px] w-full flex-col justify-end px-5 pb-12 pt-[340px] sm:min-h-[640px] sm:justify-center sm:px-12 sm:py-20 lg:min-h-[700px] lg:px-24 ${panel.contentClassName}`}>
-                <p className={`mb-3 text-[10px] font-bold uppercase tracking-[0.28em] sm:text-xs ${isDark ? 'text-cyan-100/80' : 'text-gray-500'}`}>
-                  {panel.category}
-                </p>
-                {idx === 0 ? (
-                  <h1 className="max-w-3xl font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-                    {panel.title}
-                  </h1>
-                ) : (
-                  <h2 className="max-w-3xl font-display text-4xl font-bold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
-                    {panel.title}
-                  </h2>
-                )}
-                <p className={`mt-4 max-w-xl text-base font-medium sm:text-2xl ${isDark ? 'text-gray-200' : 'text-gray-600'}`}>
-                  {panel.subtitle}
-                </p>
-                <div className={`mt-8 flex flex-wrap gap-3 ${imageOnLeft ? 'sm:justify-end' : 'justify-start'}`}>
-                  <span className={`inline-flex min-w-[116px] items-center justify-center rounded-lg border px-5 py-2 text-sm font-semibold transition-colors ${isDark ? 'border-white/35 bg-black/20 text-white group-hover:bg-white group-hover:text-black' : 'border-gray-300 bg-white/70 text-gray-900 group-hover:border-gray-900'}`}>
-                    Learn more
-                  </span>
-                  <span className={`home-shop-now-button inline-flex min-w-[104px] items-center justify-center rounded-lg border px-5 py-2 text-sm font-semibold shadow-sm transition-colors ${isDark ? 'border-white/35 bg-white text-black group-hover:bg-cyan-100' : 'border-black bg-black text-white group-hover:bg-gray-800'}`}>
-                    Shop now
-                  </span>
+                <div
+                  className={`relative z-10 flex h-full w-full items-center justify-between px-5 sm:px-12 lg:px-24 ${
+                    idx % 2 !== 0 ? 'flex-row-reverse' : 'flex-row'
+                  }`}
+                >
+                  <div className="z-10 flex w-1/2 max-w-[500px] flex-col items-start justify-center text-left">
+                    <p className="mb-2 text-xs uppercase tracking-wider text-white/60">
+                      {panel.category}
+                    </p>
+                    {idx === 0 ? (
+                      <h1 className="text-2xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+                        {panel.title}
+                      </h1>
+                    ) : (
+                      <h2 className="text-2xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+                        {panel.title}
+                      </h2>
+                    )}
+                    <p className="mt-3 text-sm text-gray-300 sm:text-lg">
+                      {panel.subtitle}
+                    </p>
+                    <div className="mt-5 flex gap-3">
+                      <span className="rounded-lg bg-white/10 px-4 py-2 text-sm">
+                        Learn more
+                      </span>
+                      <span className="rounded-lg bg-white px-4 py-2 text-sm text-black">
+                        Shop now
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex w-1/2 items-center justify-end">
+                    <div className="relative h-[300px] w-[300px] sm:h-[380px] sm:w-[380px] lg:h-[440px] lg:w-[440px]">
+                      <img
+                        src={idx === 0 ? fanImages[fanIndex] : panel.image}
+                        alt={panel.category}
+                        loading={idx === 0 ? 'eager' : 'lazy'}
+                        decoding="async"
+                        fetchPriority={idx === 0 ? 'high' : 'low'}
+                        width={900}
+                        height={900}
+                        sizes="(max-width: 640px) 50vw, 440px"
+                        className="absolute inset-0 m-auto max-h-full max-w-full object-contain"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </button>
-          );
-        })}
+              </button>
+            );
+          })}
+        </div>
       </section>
 
       {/* Best Sellers Section */}

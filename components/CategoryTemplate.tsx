@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Product } from '../types';
 import { getProducts } from '../services/backend';
 import { ProductCard } from './ProductCard';
-import DarkVeil from './DarkVeil';
 
 interface Feature {
   title: string;
@@ -16,6 +15,7 @@ interface CategoryTemplateProps {
   subtitle: string;
   heroGradient: string; // CSS class for gradient background
   heroImage: string; // URL for the hero image
+  heroVideo?: string; // Optional looping hero animation
   heroBackgroundImage?: string; // optional URL for immersive hero backdrop
   heroOverlayClassName?: string;
   heroTintClassName?: string;
@@ -35,6 +35,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
   subtitle,
   heroGradient,
   heroImage,
+  heroVideo,
   heroBackgroundImage,
   heroOverlayClassName,
   heroTintClassName,
@@ -226,71 +227,80 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     : filteredProducts;
 
   return (
-    <div className="min-h-screen bg-dark-bg text-white transition-colors duration-500">
+    <div className="category-crescent-page min-h-screen bg-dark-bg text-white transition-colors duration-500">
 
       {/* Immersive Hero Section */}
-      <section className="relative left-1/2 min-h-screen w-screen -translate-x-1/2 overflow-hidden bg-[#020817] text-white">
-        <div className="absolute inset-0 opacity-100" aria-hidden="true">
-          <DarkVeil
-            hueShift={35}
-            noiseIntensity={0.02}
-            scanlineIntensity={0}
-            speed={0.8}
-            scanlineFrequency={1.9}
-            warpAmount={0}
-            resolutionScale={1}
-          />
-        </div>
+      <section className="category-crescent-bg relative left-1/2 min-h-[420px] w-screen -translate-x-1/2 overflow-hidden text-white sm:min-h-[460px] lg:min-h-[500px]">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_0%,rgba(0,0,0,0.12)_48%,rgba(0,0,0,0.64)_100%)]" aria-hidden="true" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/8 via-transparent to-black/72" aria-hidden="true" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/8 via-transparent to-[#05060d]" aria-hidden="true" />
 
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-7xl flex-col items-center justify-center px-4 pb-14 pt-16 text-center">
-          <img
-            src={heroImage}
-            alt={category}
-            loading="eager"
-            decoding="async"
-            fetchPriority="high"
-            width={1100}
-            height={760}
-            className={`mb-8 h-auto w-full object-contain drop-shadow-[0_36px_90px_rgba(80,150,255,0.22)] ${
-              isFanHero
-                ? 'max-h-[52vh] max-w-[860px] sm:max-h-[60vh]'
-                : isBandHero
-                  ? 'max-h-[52vh] max-w-[860px] brightness-110 contrast-110 sm:max-h-[60vh]'
-                  : 'max-h-[52vh] max-w-[860px] sm:max-h-[60vh]'
-            }`}
-          />
-          <p className="mb-2 text-sm font-semibold uppercase tracking-[0.18em] text-white/45">Introducing</p>
-          <h1 className="font-display text-4xl font-bold leading-none tracking-tight text-white sm:text-6xl lg:text-7xl">
+        <div className="relative z-10 mx-auto flex min-h-[420px] max-w-7xl flex-col items-center justify-center px-4 pb-10 pt-16 text-center sm:min-h-[460px] lg:min-h-[500px]">
+          {heroVideo ? (
+            <video
+              className={`mb-5 h-auto w-full object-contain drop-shadow-[0_24px_56px_rgba(80,150,255,0.18)] ${
+                isFanHero
+                  ? 'max-h-[190px] max-w-[520px] sm:max-h-[230px] lg:max-h-[260px]'
+                  : isBandHero
+                    ? 'max-h-[190px] max-w-[520px] brightness-110 contrast-110 sm:max-h-[230px] lg:max-h-[260px]'
+                    : 'max-h-[190px] max-w-[520px] sm:max-h-[230px] lg:max-h-[260px]'
+              }`}
+              src={heroVideo}
+              poster={heroImage}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="metadata"
+              aria-label={`${category} animation`}
+            />
+          ) : (
+            <img
+              src={heroImage}
+              alt={category}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              width={1100}
+              height={760}
+              className={`mb-5 h-auto w-full object-contain drop-shadow-[0_24px_56px_rgba(80,150,255,0.18)] ${
+                isFanHero
+                  ? 'max-h-[190px] max-w-[520px] sm:max-h-[230px] lg:max-h-[260px]'
+                  : isBandHero
+                    ? 'max-h-[190px] max-w-[520px] brightness-110 contrast-110 sm:max-h-[230px] lg:max-h-[260px]'
+                    : 'max-h-[190px] max-w-[520px] sm:max-h-[230px] lg:max-h-[260px]'
+              }`}
+            />
+          )}
+          <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/45 sm:text-xs">Introducing</p>
+          <h1 className="font-display text-3xl font-bold leading-none tracking-tight text-white sm:text-4xl lg:text-5xl">
             {title}
           </h1>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-white/70 sm:text-lg">
+          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/70 sm:text-base">
             {subtitle}
           </p>
         </div>
       </section>
 
       {/* Product Section */}
-      <div className="max-w-7xl mx-auto px-4 py-16 sm:py-20 text-white">
+      <div className="category-product-surface max-w-7xl mx-auto px-4 py-8 sm:py-10 text-white">
         {loadError && (
           <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
             {loadError}
           </div>
         )}
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6 border-b border-white/10 pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-end mb-6 gap-3 border-b border-white/10 pb-4">
           <div>
-            <h2 className="text-3xl font-bold text-white font-display">Available Models</h2>
-            <p className="text-gray-300 mt-2">Explore the latest generation of {category}.</p>
+            <h2 className="text-xl font-bold text-white font-display sm:text-2xl">Available Models</h2>
+            <p className="text-xs text-gray-300 mt-1 sm:text-sm">Explore the latest generation of {category}.</p>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-400 font-medium whitespace-nowrap hidden sm:inline">Sort by:</span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-gray-400 font-medium whitespace-nowrap hidden sm:inline">Sort by:</span>
             <div className="relative">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="appearance-none bg-gray-900 text-white border border-white/15 py-2.5 pl-4 pr-10 rounded-lg text-sm font-bold focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[160px]"
+                className="appearance-none bg-gray-900 text-white border border-white/15 py-2 pl-3 pr-9 rounded-lg text-xs font-bold focus:outline-none focus:ring-2 focus:ring-primary-500 cursor-pointer min-w-[140px]"
               >
                 <option value="featured">Featured</option>
                 <option value="rating">Top Rated</option>
@@ -348,7 +358,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                   <ProductCard
                     product={p}
                     compact
-                    imageAspectClassName={modelImageAspectClass}
+                    imageAspectClassName={`${modelImageAspectClass} p-4 sm:p-5`}
                     disableHoverEffects
                   />
                 </div>
@@ -362,7 +372,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                   key={p.id}
                   product={p}
                   compact
-                  imageAspectClassName={modelImageAspectClass}
+                  imageAspectClassName={`${modelImageAspectClass} p-4 sm:p-5`}
                 />
               ))}
             </div>

@@ -28,7 +28,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
 
       const timer = window.setInterval(() => {
         emblaApi.scrollNext();
-      }, 3500);
+      }, 40000);
 
       return () => window.clearInterval(timer);
     }, [emblaApi, images.length, isPreviewOpen]);
@@ -78,7 +78,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
       <div className="w-full">
         {/* Carousel */}
         <div
-          className="overflow-hidden rounded-[2rem] border border-white/10 bg-dark-surface shadow-2xl"
+          className="product-card-dark overflow-hidden rounded-[2rem] border border-white/10 shadow-2xl"
           ref={emblaRef}
         >
           <div className="flex touch-pan-y">
