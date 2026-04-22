@@ -222,21 +222,21 @@ export const Payment: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen max-w-5xl mx-auto px-4 py-8 sm:py-12">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">Checkout</h1>
+    <div className="min-h-screen max-w-5xl mx-auto px-4 py-8 sm:py-12 text-white">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Checkout</h1>
       <CheckoutStepper current="payment" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-4 bg-white dark:bg-white/5 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-white/10">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Payment</h2>
+        <div className="lg:col-span-2 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-white">Payment</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
               onClick={() => setPaymentMethod('online')}
               className={`rounded-xl border p-4 text-left transition-colors ${
                 paymentMethod === 'online'
-                  ? 'border-primary-500 bg-primary-50 text-gray-900 dark:bg-primary-500/10 dark:text-white'
-                  : 'border-gray-200 bg-white text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-white/10 bg-black/30 text-gray-300'
               }`}
             >
               <p className="font-semibold">Online Payment</p>
@@ -247,15 +247,15 @@ export const Payment: React.FC = () => {
               onClick={() => setPaymentMethod('cod')}
               className={`rounded-xl border p-4 text-left transition-colors ${
                 paymentMethod === 'cod'
-                  ? 'border-primary-500 bg-primary-50 text-gray-900 dark:bg-primary-500/10 dark:text-white'
-                  : 'border-gray-200 bg-white text-gray-700 dark:border-white/10 dark:bg-white/5 dark:text-gray-300'
+                  ? 'border-primary-500 bg-primary-500/10 text-white'
+                  : 'border-white/10 bg-black/30 text-gray-300'
               }`}
             >
               <p className="font-semibold">Cash on Delivery</p>
               <p className="mt-1 text-sm opacity-80">Pay when your order arrives.</p>
             </button>
           </div>
-          <div className="text-sm text-gray-700 dark:text-gray-200 space-y-1">
+          <div className="text-sm text-gray-200 space-y-1">
             <p><span className="font-semibold">Name:</span> {flowState.shippingDetails.name}</p>
             <p><span className="font-semibold">Phone:</span> +91 {flowState.shippingDetails.phoneNumber}</p>
             <p><span className="font-semibold">Address:</span> {flowState.shippingDetails.address}</p>
@@ -269,15 +269,15 @@ export const Payment: React.FC = () => {
           </Button>
         </div>
 
-        <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 sm:p-6 h-fit border border-gray-200 dark:border-white/10">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Summary</h2>
+        <div className="h-fit rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Order Summary</h2>
           {items.map((item) => (
-            <div key={item.id} className="flex justify-between text-sm mb-2 text-gray-700 dark:text-gray-200">
+            <div key={item.id} className="flex justify-between text-sm mb-2 text-gray-200">
               <span className="pr-3">{item.name} x {item.quantity}</span>
               <span>Rs {(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
-          <div className="border-t mt-4 pt-4 font-bold flex justify-between text-gray-900 dark:text-white">
+          <div className="border-t border-white/10 mt-4 pt-4 font-bold flex justify-between text-white">
             <span>Total</span>
             <span>Rs {totalPrice.toFixed(2)}</span>
           </div>

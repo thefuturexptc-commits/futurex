@@ -189,14 +189,14 @@ export const VerifyPhone: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen max-w-3xl mx-auto px-4 py-8 sm:py-12">
-      <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">Checkout</h1>
+    <div className="min-h-screen max-w-3xl mx-auto px-4 py-8 sm:py-12 text-white">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Checkout</h1>
       <CheckoutStepper current="verify" />
 
-      <div className="bg-white dark:bg-white/5 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-white/10 space-y-5">
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 space-y-5">
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Verify Phone Number</h2>
-          <p className="text-gray-600 dark:text-gray-300 mt-1">+91 {phone}</p>
+          <h2 className="text-xl font-semibold text-white">Verify Phone Number</h2>
+          <p className="text-gray-300 mt-1">+91 {phone}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -212,13 +212,13 @@ export const VerifyPhone: React.FC = () => {
             placeholder="Enter 6-digit OTP"
             value={otp}
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-            className="flex-1 rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+            className="flex-1 rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
           />
           <Button type="button" onClick={handleVerifyOtp} disabled={verifying || otp.length !== 6 || !otpSent}>
             {verifying ? 'Verifying...' : 'Verify OTP'}
           </Button>
         </div>
-        {sending && <p className="text-sm text-gray-600 dark:text-gray-300">Sending OTP...</p>}
+        {sending && <p className="text-sm text-gray-300">Sending OTP...</p>}
 
         {/* reCAPTCHA container — must stay mounted at all times while on this page */}
         <div id="checkout-recaptcha-container" ref={recaptchaRef} className="min-h-[78px]" />
@@ -227,7 +227,7 @@ export const VerifyPhone: React.FC = () => {
         {error && <p className="text-sm text-red-500">{error}</p>}
 
         <div className="pt-1">
-          <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">Didn't receive OTP?</p>
+          <p className="text-sm text-gray-300 mb-2">Didn't receive OTP?</p>
           <button
             type="button"
             onClick={() => setEditingPhone((prev) => !prev)}
@@ -238,16 +238,16 @@ export const VerifyPhone: React.FC = () => {
         </div>
 
         {editingPhone && (
-          <div className="rounded-xl border border-gray-200 dark:border-white/10 p-4 space-y-3 bg-gray-50/60 dark:bg-white/5">
-            <p className="text-sm font-medium text-gray-900 dark:text-white">Correct Phone Number</p>
+          <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
+            <p className="text-sm font-medium text-white">Correct Phone Number</p>
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700 dark:text-gray-300">+91</span>
+              <span className="text-sm text-gray-300">+91</span>
               <input
                 type="tel"
                 value={draftPhone}
                 onChange={(e) => setDraftPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 placeholder="Enter 10-digit number"
-                className="flex-1 rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+                className="flex-1 rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
               />
             </div>
             <Button type="button" onClick={handleUpdatePhone}>

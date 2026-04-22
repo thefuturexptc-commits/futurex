@@ -156,13 +156,13 @@ export const Checkout: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen max-w-5xl mx-auto px-4 py-10 sm:py-12 pb-24 sm:pb-12">
-      <h1 className="text-xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">Checkout</h1>
+    <div className="min-h-screen max-w-5xl mx-auto px-4 py-10 sm:py-12 pb-24 sm:pb-12 text-white">
+      <h1 className="text-xl sm:text-3xl font-bold text-white mb-3">Checkout</h1>
       <CheckoutStepper current="address" />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <form onSubmit={handleContinue} className="lg:col-span-2 space-y-4 bg-white dark:bg-white/5 rounded-2xl p-4 sm:p-6 border border-gray-200 dark:border-white/10">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Shipping Details</h2>
+        <form onSubmit={handleContinue} className="lg:col-span-2 space-y-4 rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-white">Shipping Details</h2>
 
           <input
             required
@@ -170,7 +170,7 @@ export const Checkout: React.FC = () => {
             placeholder="Name"
             value={shippingDetails.name}
             onChange={(e) => setShippingDetails((prev) => ({ ...prev, name: e.target.value }))}
-            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+            className="w-full rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
           />
 
           <input
@@ -184,9 +184,9 @@ export const Checkout: React.FC = () => {
                 phoneNumber: e.target.value.replace(/\D/g, '').slice(0, 12),
               }))
             }
-            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+            className="w-full rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
           />
-          <p className="text-xs text-gray-500 dark:text-gray-400">Autofill-friendly: 10-digit, `0xxxxxxxxxx`, or `91xxxxxxxxxx` are accepted.</p>
+          <p className="text-xs text-gray-400">Autofill-friendly: 10-digit, `0xxxxxxxxxx`, or `91xxxxxxxxxx` are accepted.</p>
 
           <input
             required
@@ -194,7 +194,7 @@ export const Checkout: React.FC = () => {
             placeholder="Address"
             value={shippingDetails.address}
             onChange={(e) => setShippingDetails((prev) => ({ ...prev, address: e.target.value }))}
-            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+            className="w-full rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
           />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -204,7 +204,7 @@ export const Checkout: React.FC = () => {
               placeholder="City"
               value={shippingDetails.city}
               onChange={(e) => setShippingDetails((prev) => ({ ...prev, city: e.target.value }))}
-              className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+              className="w-full rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
             />
             <input
               required
@@ -212,7 +212,7 @@ export const Checkout: React.FC = () => {
               placeholder="State"
               value={shippingDetails.state}
               onChange={(e) => setShippingDetails((prev) => ({ ...prev, state: e.target.value }))}
-              className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+              className="w-full rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
             />
           </div>
 
@@ -230,7 +230,7 @@ export const Checkout: React.FC = () => {
                 setPinMessage('');
               }
             }
-            className="w-full rounded-lg p-3 border border-gray-300 dark:border-white/20 dark:bg-white/5 dark:text-white"
+            className="w-full rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
           />
           <div className="flex items-center gap-3">
             <Button type="button" variant="outline" onClick={() => void handleVerifyPincode()} disabled={verifyingPin}>
@@ -250,15 +250,15 @@ export const Checkout: React.FC = () => {
           </Button>
         </form>
 
-        <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-4 sm:p-6 h-fit border border-gray-200 dark:border-white/10">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Order Summary</h2>
+        <div className="h-fit rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6">
+          <h2 className="text-lg font-semibold text-white mb-4">Order Summary</h2>
           {items.map((item) => (
-            <div key={item.id} className="flex justify-between text-sm mb-2 text-gray-700 dark:text-gray-200">
+            <div key={item.id} className="flex justify-between text-sm mb-2 text-gray-200">
               <span className="pr-3">{item.name} x {item.quantity}</span>
               <span>Rs {(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
-          <div className="border-t mt-4 pt-4 font-bold flex justify-between text-gray-900 dark:text-white">
+          <div className="border-t border-white/10 mt-4 pt-4 font-bold flex justify-between text-white">
             <span>Total</span>
             <span>Rs {totalPrice.toFixed(2)}</span>
           </div>
