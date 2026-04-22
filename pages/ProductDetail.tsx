@@ -299,7 +299,7 @@ export const ProductDetail: React.FC = () => {
         userId: user?.id,
         userEmail: user?.email,
         verifiedBuyer,
-        date: new Date().toISOString(),
+        date: new Date().toISOString().slice(0, 10),
       });
 
       setProduct((current) => {

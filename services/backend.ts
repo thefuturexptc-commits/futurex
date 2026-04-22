@@ -279,40 +279,68 @@ const clampNumber = (value: number, min: number, max: number): number => Math.mi
 
 const getDefaultReviewRating = (product: Product): number => {
   const price = Number(product.salePrice || product.price || 0);
-  if (price >= 250) return 4.2;
-  if (price >= 150) return 4;
-  if (price >= 80) return 3.6;
-  return 3.3;
+  if (price >= 3000) return 4.4;
+  if (price >= 1500) return 4.2;
+  if (price >= 700) return 3.8;
+  return 3.4;
+};
+
+const getDefaultReviewCount = (product: Product): number => {
+  const price = Number(product.salePrice || product.price || 0);
+  if (price >= 3000) return 6;
+  if (price >= 1500) return 5;
+  if (price >= 700) return 4;
+  return 3;
 };
 
 const getDefaultReviewRatings = (product: Product): number[] => {
   const baseRating = getDefaultReviewRating(product);
   const price = Number(product.salePrice || product.price || 0);
-  const offsets = price >= 150 ? [0, -0.2, 0.1] : [0, -0.1, 0.2];
-  return offsets.map((offset) => Number(clampNumber(baseRating + offset, 3.1, 4.4).toFixed(1)));
+  const offsets = price >= 1500 ? [0, -0.1, 0.1, -0.2, 0, 0.2] : [0, -0.2, 0.1, -0.1];
+  return offsets.slice(0, getDefaultReviewCount(product)).map((offset) =>
+    Number(clampNumber(baseRating + offset, 3.1, 4.6).toFixed(1))
+  );
+};
+
+const getDefaultReviewNames = (product: Product): string[] => {
+  const category = String(product.category || '').toLowerCase();
+  if (category.includes('fan')) return ['Karan M.', 'Priya S.', 'Dev R.', 'Aisha N.', 'Rohit K.', 'Meera P.'];
+  if (category.includes('ring')) return ['Arjun K.', 'Ritika S.', 'Nikhil V.', 'Sana P.', 'Kabir A.', 'Isha M.'];
+  if (category.includes('band')) return ['Neha P.', 'Aman G.', 'Kriti R.', 'Vivek S.', 'Tanya B.', 'Manav D.'];
+  if (category.includes('monitor')) return ['Shalini R.', 'Gaurav M.', 'Pooja K.', 'Harsh V.', 'Anita S.', 'Ramesh P.'];
+  return ['Aarav S.', 'Neha K.', 'Rohan M.', 'Ira P.', 'Yash G.', 'Diya R.'];
 };
 
 const getDefaultReviewComments = (product: Product): string[] => {
   const category = String(product.category || '').toLowerCase();
   if (category.includes('fan')) {
     return [
-      'Cooling is good for daily use and the design looks premium.',
-      'Quiet enough at night, setup was easy, and the airflow feels smooth.',
-      'Good product overall. I wish the app controls were a little faster.',
+      'Cooling feels strong for a bedroom and the bladeless design looks clean.',
+      'Airflow is smooth and the noise stays low enough for night use.',
+      'The app control is useful for speed changes and timer settings.',
+      'Looks premium on the desk and does not take much space.',
+      'Good cooling for daily use, especially on medium speed.',
+      'Remote and app controls both worked well after setup.',
     ];
   }
   if (category.includes('ring')) {
     return [
-      'Comfortable to wear and the health readings are useful for daily tracking.',
-      'Battery backup is decent and wireless charging works well.',
-      'Looks stylish, but sizing needs to be checked carefully before ordering.',
+      'Comfortable to wear all day and sleep tracking is easy to follow.',
+      'Heart rate and wellness data sync properly in the app.',
+      'Looks stylish, but checking the ring size before ordering is important.',
+      'Charging is simple and the battery lasted well for my routine.',
+      'The app gives useful trends without needing a screen on the ring.',
+      'Lightweight feel and good finish for the price.',
     ];
   }
   if (category.includes('band')) {
     return [
-      'Good display and tracking for the price. Battery life is reliable.',
-      'Useful for workouts and notifications, with a comfortable strap.',
-      'Value for money. Some readings can vary but overall it works well.',
+      'Fitness tracking works well and the app keeps the data easy to check.',
+      'Comfortable strap for workouts and daily use.',
+      'Good value for basic health tracking and notifications.',
+      'Battery backup is reliable for regular use.',
+      'Steps and workout tracking are useful, though readings can vary a little.',
+      'The band feels light and pairs with the phone without much effort.',
     ];
   }
   if (category.includes('monitor')) {
@@ -320,12 +348,18 @@ const getDefaultReviewComments = (product: Product): string[] => {
       'Helpful for checking vitals at home and easy for family members to use.',
       'Readings are clear and syncing works fine after setup.',
       'Good device for regular monitoring, though the manual could be simpler.',
+      'Useful for keeping quick health checks in one place.',
+      'Display is clear and the setup did not take long.',
+      'Works well for routine home monitoring.',
     ];
   }
   return [
     'Good quality for the price and works as expected.',
     'Design feels nice and delivery experience was smooth.',
     'Useful product overall with decent performance.',
+    'Setup was simple and the product feels reliable.',
+    'Build quality is good for daily use.',
+    'Happy with the purchase after a few days of use.',
   ];
 };
 
@@ -341,8 +375,8 @@ const toSeedReviewDate = (day: number): string => `2026-01-${String(day).padStar
 const buildDefaultProductReviews = (product: Product): ProductPublicReview[] => {
   const ratings = getDefaultReviewRatings(product);
   const comments = getDefaultReviewComments(product);
-  const names = ['Aarav S.', 'Neha K.', 'Rohan M.'];
-  return comments.map((comment, index) => ({
+  const names = getDefaultReviewNames(product);
+  return comments.slice(0, getDefaultReviewCount(product)).map((comment, index) => ({
     id: `${toSeedReviewProductId(product)}_seed_review_${index + 1}`,
     productId: product.id,
     name: names[index],
@@ -356,23 +390,13 @@ const buildDefaultProductReviews = (product: Product): ProductPublicReview[] => 
 
 const ensureProductReviews = (product: Product): Product => {
   const existingReviews = Array.isArray(product.reviews) ? product.reviews : [];
-  if (existingReviews.length >= 2) {
-    const rating = Number(
-      (existingReviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / existingReviews.length).toFixed(1)
-    );
-    return {
-      ...product,
-      reviews: existingReviews,
-      reviewCount: existingReviews.length,
-      rating,
-    };
-  }
-
   const defaultReviews = buildDefaultProductReviews(product);
+  const customReviews = existingReviews.filter((review) => !String(review.id || '').includes('_seed_review_'));
+  const targetReviewCount = Math.max(getDefaultReviewCount(product), customReviews.length);
   const reviews = [
-    ...existingReviews,
-    ...defaultReviews.filter((review) => !existingReviews.some((existing) => existing.id === review.id)),
-  ].slice(0, 3);
+    ...customReviews,
+    ...defaultReviews.filter((review) => !customReviews.some((existing) => existing.id === review.id)),
+  ].slice(0, targetReviewCount);
   const rating = Number((reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length).toFixed(1));
 
   return {
@@ -836,7 +860,7 @@ export const addProductReview = async (productId: string, review: ProductPublicR
     ...review,
     id: reviewId,
     productId,
-    date: review.date || new Date().toISOString(),
+    date: review.date || new Date().toISOString().slice(0, 10),
     images: (review.images || []).slice(0, 2),
     rating: Math.max(1, Math.min(5, Number(review.rating || 0))),
     verifiedBuyer: Boolean(review.verifiedBuyer),
