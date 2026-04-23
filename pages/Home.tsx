@@ -152,7 +152,7 @@ export const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const cancel = runWhenIdle(() => void loadProducts(), 1000);
+    const cancel = runWhenIdle(() => void loadProducts(), 3600);
     return cancel;
   }, [loadProducts]);
 
@@ -285,7 +285,7 @@ export const Home: React.FC = () => {
         if (document.hidden) return;
         setFanIndex((prev) => (prev + 1) % fanImages.length);
       }, 2800);
-    }, 2200);
+    }, 7600);
 
     return () => {
       cancel();
