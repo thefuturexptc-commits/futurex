@@ -132,7 +132,7 @@ export const Payment: React.FC = () => {
     );
 
     // ✅ META PIXEL: Purchase — fires after order is successfully created
-    pushDataLayerEvent('purchase', {
+    const purchaseEvent = {
       ecommerce: {
         transaction_id: order.id,
         currency: 'INR',
@@ -140,7 +140,7 @@ export const Payment: React.FC = () => {
         payment_type: paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment',
         items: cartItemsToAnalyticsItems(items),
       },
-    });
+    };
 
     try {
       await saveAddressIfNeeded(addressForOrder);
@@ -155,11 +155,11 @@ export const Payment: React.FC = () => {
     window.sessionStorage.removeItem('tfx_begin_checkout_key');
     window.sessionStorage.setItem(
       LAST_ORDER_SUCCESS_KEY,
-      JSON.stringify({ orderId: order.id, paymentMethod })
+      JSON.stringify({ orderId: order.id, paymentMethod, purchaseEvent })
     );
     navigate(`/order-success?orderId=${encodeURIComponent(order.id)}&paymentMethod=${encodeURIComponent(paymentMethod)}`, {
       replace: true,
-      state: { orderId: order.id, paymentMethod },
+      state: { orderId: order.id, paymentMethod, purchaseEvent },
     });
   };
 

@@ -2,15 +2,23 @@ import React, { useEffect, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { useCart } from '../context/CartContext';
+import { pushDataLayerEvent } from '../services/analytics';
 
 const LAST_ORDER_SUCCESS_KEY = 'last_order_success';
+const PURCHASE_FIRED_KEY = 'tfx_purchase_fired_order_id';
+
+type OrderSuccessState = {
+  orderId: string;
+  paymentMethod?: 'online' | 'cod';
+  purchaseEvent?: Record<string, unknown>;
+};
 
 export const OrderSuccess: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { clearCart } = useCart();
-  const state = location.state as { orderId: string; paymentMethod?: 'online' | 'cod' } | undefined;
-  const searchState = useMemo(() => {
+  const state = location.state as OrderSuccessState | undefined;
+  const searchState = useMemo<OrderSuccessState | undefined>(() => {
     const params = new URLSearchParams(location.search);
     const orderId = params.get('orderId') || undefined;
     const paymentMethodParam = params.get('paymentMethod');
@@ -19,10 +27,10 @@ export const OrderSuccess: React.FC = () => {
       : undefined;
     return orderId ? { orderId, paymentMethod } : undefined;
   }, [location.search]);
-  const persistedState = useMemo(() => {
+  const persistedState = useMemo<OrderSuccessState | undefined>(() => {
     try {
       const raw = window.sessionStorage.getItem(LAST_ORDER_SUCCESS_KEY);
-      return raw ? (JSON.parse(raw) as { orderId: string; paymentMethod?: 'online' | 'cod' }) : undefined;
+      return raw ? (JSON.parse(raw) as OrderSuccessState) : undefined;
     } catch {
       return undefined;
     }
@@ -32,9 +40,17 @@ export const OrderSuccess: React.FC = () => {
   const paymentMethod = finalState?.paymentMethod || 'online';
 
   useEffect(() => {
+    if (finalState?.purchaseEvent && orderId !== 'Unknown') {
+      const lastFiredOrderId = window.sessionStorage.getItem(PURCHASE_FIRED_KEY);
+      if (lastFiredOrderId !== orderId) {
+        pushDataLayerEvent('purchase', finalState.purchaseEvent);
+        window.sessionStorage.setItem(PURCHASE_FIRED_KEY, orderId);
+      }
+    }
+
     clearCart();
     window.sessionStorage.removeItem(LAST_ORDER_SUCCESS_KEY);
-  }, []);
+  }, [clearCart, finalState?.purchaseEvent, orderId]);
 
   return (
     <div className="order-success-dark min-h-screen flex items-center justify-center p-4 bg-dark-bg text-white">
