@@ -6,6 +6,7 @@ import { Button } from '../components/ui/Button';
 import { CheckoutStepper } from '../components/CheckoutStepper';
 import { Address, CheckoutFlowState } from '../types';
 import { createOrder, updateUserAddresses } from '../services/backend';
+import { cartItemsToAnalyticsItems, pushDataLayerEvent } from '../services/analytics';
 
 const LAST_ORDER_SUCCESS_KEY = 'last_order_success';
 const ORDER_SOURCE_SESSION_KEY = 'tfx_order_source';
@@ -131,6 +132,16 @@ export const Payment: React.FC = () => {
     );
 
     // ✅ META PIXEL: Purchase — fires after order is successfully created
+    pushDataLayerEvent('purchase', {
+      ecommerce: {
+        transaction_id: order.id,
+        currency: 'INR',
+        value: Number(totalPrice.toFixed(2)),
+        payment_type: paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment',
+        items: cartItemsToAnalyticsItems(items),
+      },
+    });
+
     try {
       await saveAddressIfNeeded(addressForOrder);
     } catch (addressError) {
@@ -141,6 +152,7 @@ export const Payment: React.FC = () => {
 
     window.sessionStorage.removeItem('checkout_flow_state');
     window.sessionStorage.removeItem('checkout_phone_verified');
+    window.sessionStorage.removeItem('tfx_begin_checkout_key');
     window.sessionStorage.setItem(
       LAST_ORDER_SUCCESS_KEY,
       JSON.stringify({ orderId: order.id, paymentMethod })
@@ -159,6 +171,14 @@ export const Payment: React.FC = () => {
     if (loading || orderSubmitting) return;
     setError('');
     setLoading(true);
+    pushDataLayerEvent('add_payment_info', {
+      ecommerce: {
+        currency: 'INR',
+        value: Number(totalPrice.toFixed(2)),
+        payment_type: paymentMethod === 'cod' ? 'Cash on Delivery' : 'Online Payment',
+        items: cartItemsToAnalyticsItems(items),
+      },
+    });
 
     // ✅ META PIXEL: AddPaymentInfo — user initiates payment
     try {

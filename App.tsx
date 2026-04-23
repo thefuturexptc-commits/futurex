@@ -10,11 +10,12 @@ import { CartDrawer } from './components/CartDrawer';
 import { AuthModalProvider } from './context/AuthModalContext';
 import { SiteFooter } from './components/SiteFooter';
 import { LoadingFallback } from './components/LoadingFallback';
+import { Home } from './pages/Home';
+import { pushPageView } from './services/analytics';
 import { removeJsonLd, setSeoMetadata } from './services/seo';
 
 // ✅ META PIXEL
 
-const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Shop = React.lazy(() => import('./pages/Shop').then(module => ({ default: module.Shop })));
 const SmartBands = React.lazy(() => import('./pages/SmartBands').then(module => ({ default: module.SmartBands })));
 const SmartRings = React.lazy(() => import('./pages/SmartRings').then(module => ({ default: module.SmartRings })));
@@ -161,6 +162,16 @@ const RouteSeo: React.FC = () => {
   return null;
 };
 
+const RouteAnalytics: React.FC = () => {
+  const { pathname, search } = useLocation();
+
+  useEffect(() => {
+    pushPageView(`${pathname}${search}`, document.title);
+  }, [pathname, search]);
+
+  return null;
+};
+
 const ORDER_SOURCE_SESSION_KEY = 'tfx_order_source';
 
 const normalizeOrderSource = (raw: string): string => {
@@ -302,6 +313,7 @@ const App: React.FC = () => {
             <AuthModalProvider>
               <ScrollToTop />
               <RouteSeo />
+              <RouteAnalytics />
               <OrderSourceTracker />
               <div className="holi-lite flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />

@@ -1,7 +1,6 @@
 ﻿import React, { MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
-import { ProductCard } from '../components/ProductCard';
 import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
 import fanShowcaseImage from '../assets/images/fan-hero-q8pro-cutout.webp';
@@ -10,6 +9,8 @@ import redFanHomeImage from '../assets/images/red-fan-home.webp';
 import bandHomeImage from '../assets/images/band-hero-cutout.webp';
 import ringHomeImage from '../assets/images/smart-ring-rotating.gif';
 import monitoringPhoneImage from '../assets/images/monitoring-phone-cutout.webp';
+
+const ProductCard = React.lazy(() => import('../components/ProductCard').then((module) => ({ default: module.ProductCard })));
 
 const toProductSlug = (name: string): string =>
   name
@@ -151,7 +152,7 @@ export const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const cancel = runWhenIdle(() => void loadProducts(), 2500);
+    const cancel = runWhenIdle(() => void loadProducts(), 1000);
     return cancel;
   }, [loadProducts]);
 
@@ -278,12 +279,18 @@ export const Home: React.FC = () => {
   useEffect(() => {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const interval = window.setInterval(() => {
-      if (document.hidden) return;
-      setFanIndex((prev) => (prev + 1) % fanImages.length);
-    }, 2000);
+    let interval = 0;
+    const cancel = runWhenIdle(() => {
+      interval = window.setInterval(() => {
+        if (document.hidden) return;
+        setFanIndex((prev) => (prev + 1) % fanImages.length);
+      }, 2800);
+    }, 2200);
 
-    return () => window.clearInterval(interval);
+    return () => {
+      cancel();
+      if (interval) window.clearInterval(interval);
+    };
   }, [fanImages.length]);
 
   const dynamicDeals = [
@@ -516,14 +523,16 @@ export const Home: React.FC = () => {
                 className="flex gap-4 sm:gap-6 overflow-x-auto pb-2 cursor-grab active:cursor-grabbing"
               > */}
               <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
-                {bestSellersForSlider.map((product) => (
-                  <div
-                    key={product.id}
-                    className="w-full max-w-[260px] mx-auto"
-                  >
-                    <ProductCard product={product} compact monochrome imageAspectClassName="aspect-[4/3]" disableHoverEffects />
-                  </div>
-                ))}
+                <React.Suspense fallback={null}>
+                  {bestSellersForSlider.map((product) => (
+                    <div
+                      key={product.id}
+                      className="w-full max-w-[260px] mx-auto"
+                    >
+                      <ProductCard product={product} compact monochrome imageAspectClassName="aspect-[4/3]" disableHoverEffects />
+                    </div>
+                  ))}
+                </React.Suspense>
               </div>
             </div>
           )}

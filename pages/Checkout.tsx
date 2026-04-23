@@ -5,6 +5,7 @@ import { CheckoutFlowState, CheckoutShippingDetails } from '../types';
 import { Button } from '../components/ui/Button';
 import { CheckoutStepper } from '../components/CheckoutStepper';
 import { verifyIndianPincode } from '../services/backend';
+import { cartItemsToAnalyticsItems, pushDataLayerEvent } from '../services/analytics';
 
 const emptyShipping: CheckoutShippingDetails = {
   name: '',
@@ -24,6 +25,24 @@ export const Checkout: React.FC = () => {
   const [verifyingPin, setVerifyingPin] = useState(false);
   const [lastVerifiedPin, setLastVerifiedPin] = useState('');
   const pinVerifySeqRef = useRef(0);
+  const checkoutEventKey = useMemo(
+    () => `begin_checkout_${items.map((item) => `${item.id}:${item.quantity}:${item.price}`).join('|')}_${totalPrice}`,
+    [items, totalPrice]
+  );
+
+  useEffect(() => {
+    if (items.length === 0) return;
+    const firedKey = window.sessionStorage.getItem('tfx_begin_checkout_key');
+    if (firedKey === checkoutEventKey) return;
+    window.sessionStorage.setItem('tfx_begin_checkout_key', checkoutEventKey);
+    pushDataLayerEvent('begin_checkout', {
+      ecommerce: {
+        currency: 'INR',
+        value: Number(totalPrice.toFixed(2)),
+        items: cartItemsToAnalyticsItems(items),
+      },
+    });
+  }, [checkoutEventKey, items, totalPrice]);
 
   const normalizeIndianMobile = (input: string) => {
     const digits = input.replace(/\D/g, '');
@@ -136,6 +155,14 @@ export const Checkout: React.FC = () => {
       },
     };
     window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(flowState));
+    pushDataLayerEvent('add_shipping_info', {
+      ecommerce: {
+        currency: 'INR',
+        value: Number(totalPrice.toFixed(2)),
+        shipping_tier: 'Standard',
+        items: cartItemsToAnalyticsItems(items),
+      },
+    });
 
     // ✅ META PIXEL: InitiateCheckout
     if (flowState.phoneVerified) {
