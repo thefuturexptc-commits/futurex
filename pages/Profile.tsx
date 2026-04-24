@@ -137,6 +137,22 @@ export const Profile: React.FC = () => {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{user.name}</h1>
           <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
+          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              to="/"
+              className="inline-flex items-center justify-center rounded-full border border-gray-200 px-5 py-2 text-sm font-semibold text-gray-700 transition-colors hover:bg-gray-50 dark:border-white/10 dark:text-gray-200 dark:hover:bg-white/5"
+            >
+              Continue Shopping
+            </Link>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={logout}
+            >
+              Sign out
+            </Button>
+          </div>
         </div>
       </div>
 
