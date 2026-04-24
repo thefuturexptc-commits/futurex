@@ -9,7 +9,7 @@ const toProductSlug = (name = '') =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const getFirebaseConfig = () => ({
+const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY,
   authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
   projectId: process.env.VITE_FIREBASE_PROJECT_ID,
@@ -17,7 +17,7 @@ const getFirebaseConfig = () => ({
   messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.VITE_FIREBASE_APP_ID,
   measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID,
-});
+};
 
 const getBaseUrls = () => [
   { loc: 'https://thefuturex.in/', changefreq: 'daily', priority: '1.0' },
@@ -35,21 +35,27 @@ const getBaseUrls = () => [
   { loc: 'https://thefuturex.in/info/terms', changefreq: 'monthly', priority: '0.4' },
 ];
 
-const getLocalProducts = () => PRODUCT_CATALOG.map((product) => ({ name: product.name }));
+const EXTRA_PRODUCT_SLUGS = [
+  'the-future-x-tp02-3-in-1-bladeless-tower-fan-air-cooler-plasma-purifier-led-light-for-home-office-use',
+  'the-future-x-tp-09-pro-heating-cooling-air-safe-for-kids-pets',
+];
 
 const getRemoteProducts = async () => {
-  const config = getFirebaseConfig();
-  if (!config.projectId || !config.apiKey || !config.appId) {
-    return [];
+  if (!firebaseConfig.projectId || !firebaseConfig.apiKey || !firebaseConfig.authDomain) {
+    throw new Error('Missing Firebase environment variables for sitemap generation.');
   }
 
-  const app = getApps().length ? getApp() : initializeApp(config);
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const snapshot = await getDocs(collection(db, 'products'));
 
-  return snapshot.docs
+  const products = snapshot.docs
     .map((doc) => ({ id: doc.id, ...doc.data() }))
     .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
+
+  console.log('TOTAL PRODUCTS:', products.length);
+
+  return products;
 };
 
 const buildUrlEntry = ({ loc, lastmod, changefreq, priority }) => `
@@ -64,17 +70,21 @@ export default async function handler(_req, res) {
   const nowIso = new Date().toISOString();
 
   try {
-    let remoteProducts = [];
-    try {
-      remoteProducts = await getRemoteProducts();
-    } catch {
-      remoteProducts = [];
-    }
+    const remoteProducts = await getRemoteProducts();
 
     const productMap = new Map();
-    [...getLocalProducts(), ...remoteProducts].forEach((product) => {
+    [...PRODUCT_CATALOG.map((product) => ({ name: product.name })), ...remoteProducts].forEach((product) => {
       const slug = toProductSlug(product.name);
       if (!slug) return;
+      productMap.set(slug, {
+        loc: `https://thefuturex.in/product/${slug}`,
+        changefreq: 'weekly',
+        priority: '0.9',
+        lastmod: nowIso,
+      });
+    });
+
+    EXTRA_PRODUCT_SLUGS.forEach((slug) => {
       productMap.set(slug, {
         loc: `https://thefuturex.in/product/${slug}`,
         changefreq: 'weekly',
@@ -91,10 +101,10 @@ export default async function handler(_req, res) {
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}
 </urlset>`;
 
-    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.status(200).send(sitemap);
+    res.setHeader('Content-Type', 'text/xml; charset=utf-8');
+    res.status(200).end(sitemap);
   } catch (error) {
     console.error('Error generating sitemap.xml', error);
-    res.status(500).send('Error generating sitemap');
+    res.status(500).send(`Error generating sitemap: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
