@@ -12,16 +12,23 @@ export const Signup: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const { login, user, isAuthReady } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get('redirect');
   const redirectPath = redirectParam && redirectParam.startsWith('/') ? redirectParam : '';
+  const getPostAuthPath = (nextUser = user) =>
+    redirectPath || (nextUser?.role === 'admin' || nextUser?.role === 'superadmin' ? '/admin' : '/');
 
   useEffect(() => {
     const prefillEmail = searchParams.get('email');
     if (prefillEmail) setEmail(prefillEmail);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (!isAuthReady || !user) return;
+    navigate(getPostAuthPath(user), { replace: true });
+  }, [isAuthReady, navigate, redirectPath, user]);
 
   const isValidIndianPhoneInput = (value: string): boolean => {
     const digits = value.replace(/\D/g, '');
@@ -65,7 +72,7 @@ export const Signup: React.FC = () => {
       const user = await registerUser(email.trim(), password, phone, name.trim());
       login(user);
       // ✅ META PIXEL: CompleteRegistration
-      navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
+      navigate(getPostAuthPath(user), { replace: true });
     } catch (err: any) {
       setError(err?.message || 'Registration failed');
     } finally {
@@ -79,7 +86,7 @@ export const Signup: React.FC = () => {
     try {
       const user = await loginWithGoogle();
       login(user);
-      navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
+      navigate(getPostAuthPath(user), { replace: true });
     } catch (err: any) {
       setError(err?.message || 'Google sign up failed');
     } finally {

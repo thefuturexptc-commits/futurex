@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loginUser, loginWithGoogle } from '../services/backend';
@@ -10,12 +10,19 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login } = useAuth();
+  const { login, user, isAuthReady } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get('redirect');
   const redirectPath = redirectParam && redirectParam.startsWith('/') ? redirectParam : '';
   const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+  const getPostAuthPath = (nextUser = user) =>
+    redirectPath || (nextUser?.role === 'admin' || nextUser?.role === 'superadmin' ? '/admin' : '/');
+
+  useEffect(() => {
+    if (!isAuthReady || !user) return;
+    navigate(getPostAuthPath(user), { replace: true });
+  }, [isAuthReady, navigate, redirectPath, user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +43,7 @@ export const Login: React.FC = () => {
 
       const user = await loginUser(normalizedEmail, password);
       login(user);
-      navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
+      navigate(getPostAuthPath(user), { replace: true });
     } catch (err: any) {
       const message = String(err?.message || 'Login failed.');
       if (message.includes('Account not found')) {
@@ -64,7 +71,7 @@ export const Login: React.FC = () => {
     try {
       const user = await loginWithGoogle();
       login(user);
-      navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
+      navigate(getPostAuthPath(user), { replace: true });
     } catch (err: any) {
       setError(err?.message || 'Google login failed');
     } finally {

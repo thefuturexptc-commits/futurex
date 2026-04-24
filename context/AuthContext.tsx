@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '../types';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
+import { resolveAuthenticatedUser } from '../services/backend';
 
 interface AuthContextType {
   user: User | null;
@@ -56,6 +57,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (firebaseUser?.isAnonymous) {
         return;
       }
+
+      void resolveAuthenticatedUser(firebaseUser)
+        .then((resolvedUser) => {
+          const sanitized = sanitizeUserForStorage(resolvedUser);
+          setUser(sanitized);
+          localStorage.setItem('aura_active_user', JSON.stringify(sanitized));
+        })
+        .catch(() => {
+          // Keep existing local session if user profile restore fails.
+        });
     });
     return () => unsubscribe();
   }, []);

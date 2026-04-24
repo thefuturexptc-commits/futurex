@@ -14,7 +14,8 @@ import {
   signInWithCredential,
   PhoneAuthProvider,
   ConfirmationResult,
-  getAuth as getAuthFromApp
+  getAuth as getAuthFromApp,
+  User as FirebaseAuthUser
 } from 'firebase/auth';
 import { 
   ref, 
@@ -439,6 +440,69 @@ const ensureProductReviews = (product: Product): Product => {
     reviewCount: reviews.length,
     rating,
   };
+};
+
+export const resolveAuthenticatedUser = async (firebaseUser: FirebaseAuthUser): Promise<User> => {
+  const userRef = doc(db, 'users', firebaseUser.uid);
+
+  try {
+    const userSnap = await getDoc(userRef);
+    if (userSnap.exists()) {
+      const rawUser = userSnap.data() as User;
+      const resolvedUser = resolvePreferredUserProfile({
+        ...rawUser,
+        id: rawUser.id || firebaseUser.uid,
+        email: firebaseUser.email || rawUser.email || '',
+        name: rawUser.name || firebaseUser.displayName || 'User',
+      });
+
+      const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+      const existingIdx = localUsers.findIndex(
+        (u) => u.id === resolvedUser.id || (u.email || '').toLowerCase() === (resolvedUser.email || '').toLowerCase()
+      );
+      if (existingIdx >= 0) {
+        localUsers[existingIdx] = { ...localUsers[existingIdx], ...resolvedUser };
+      } else {
+        localUsers.push(resolvedUser);
+      }
+      setMockData('users', localUsers);
+      return resolvedUser;
+    }
+  } catch (profileError) {
+    if (!isPermissionDeniedError(profileError) && !isTimeoutLikeError(profileError)) {
+      throw profileError;
+    }
+  }
+
+  const fallbackUser = resolvePreferredUserProfile({
+    id: firebaseUser.uid,
+    name: firebaseUser.displayName || 'User',
+    email: firebaseUser.email || '',
+    role: 'user',
+    addresses: [],
+    permissions: {}
+  });
+
+  try {
+    await setDoc(userRef, deepSanitize({ ...fallbackUser, createdAt: new Date().toISOString() }), { merge: true });
+  } catch (profileWriteError) {
+    if (!isPermissionDeniedError(profileWriteError) && !isTimeoutLikeError(profileWriteError)) {
+      throw profileWriteError;
+    }
+  }
+
+  const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
+  const existingIdx = localUsers.findIndex(
+    (u) => u.id === fallbackUser.id || (u.email || '').toLowerCase() === (fallbackUser.email || '').toLowerCase()
+  );
+  if (existingIdx >= 0) {
+    localUsers[existingIdx] = { ...localUsers[existingIdx], ...fallbackUser };
+  } else {
+    localUsers.push(fallbackUser);
+  }
+  setMockData('users', localUsers);
+
+  return fallbackUser;
 };
 
 const normalizeProductColors = (product: Product): Product => {
@@ -1287,7 +1351,9 @@ export const registerUser = async (email: string, password: string, phone: strin
     };
     const cleanUser = deepSanitize(newUser);
 
-    // Firebase (strict - no local-only demo fallback)
+    // Firebase auth + profile bootstrap. If profile doc write fails because of
+    // permissions/network, keep the authenticated account usable and fall back
+    // to local cache for app session continuity.
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
       const firebaseUser = userCredential.user;
@@ -1296,18 +1362,24 @@ export const registerUser = async (email: string, password: string, phone: strin
       }
       cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
       const registeredAt = new Date().toISOString();
-      await setDoc(doc(db, 'users', firebaseUser.uid), deepSanitize({
-        uid: firebaseUser.uid,
-        id: firebaseUser.uid,
-        name: cleanUser.name,
-        email: normalizedEmail,
-        phone: normalizedPhone,
-        role: 'user',
-        addresses: [],
-        permissions: {},
-        createdAt: registeredAt,
-        offersSubscribed: true
-      }));
+      try {
+        await setDoc(doc(db, 'users', firebaseUser.uid), deepSanitize({
+          uid: firebaseUser.uid,
+          id: firebaseUser.uid,
+          name: cleanUser.name,
+          email: normalizedEmail,
+          phone: normalizedPhone,
+          role: 'user',
+          addresses: [],
+          permissions: {},
+          createdAt: registeredAt,
+          offersSubscribed: true
+        }));
+      } catch (profileError) {
+        if (!isPermissionDeniedError(profileError) && !isTimeoutLikeError(profileError)) {
+          throw profileError;
+        }
+      }
       cleanUser.createdAt = registeredAt;
     } catch (e: any) {
       throw mapFirebaseAuthError(e, 'Registration failed. Please try again.');
@@ -1360,47 +1432,52 @@ export const loginUser = async (email: string, password: string, phone?: string)
     if (!firebaseUser) throw new Error('Login failed.');
 
     const docRef = doc(db, 'users', firebaseUser.uid);
-    const docSnap = await getDoc(docRef);
-    if (docSnap.exists()) {
-      const rawRemoteUser = docSnap.data() as User;
-      const remoteUser = resolvePreferredUserProfile({
-        ...rawRemoteUser,
-        id: rawRemoteUser.id || firebaseUser.uid,
-        email: firebaseUser.email || rawRemoteUser.email || normalizedEmail,
-      });
-      const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
-      if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
-        throw new Error('Phone number does not match this account');
-      }
-      const permissionsChanged =
-        JSON.stringify(rawRemoteUser.permissions || {}) !== JSON.stringify(remoteUser.permissions || {});
-      const identityChanged =
-        (rawRemoteUser.id || firebaseUser.uid) !== remoteUser.id ||
-        (rawRemoteUser.email || '') !== (remoteUser.email || '') ||
-        (rawRemoteUser.name || '') !== (remoteUser.name || '');
-      if (rawRemoteUser.role !== remoteUser.role || permissionsChanged || identityChanged) {
-        try {
-          await setDoc(
-            docRef,
-            deepSanitize({
-              id: remoteUser.id,
-              email: remoteUser.email,
-              name: remoteUser.name,
-              role: remoteUser.role,
-              permissions: remoteUser.permissions || {},
-            }),
-            { merge: true }
-          );
-        } catch {
-          // If role sync fails, continue with in-app role to avoid blocking login.
+    try {
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const rawRemoteUser = docSnap.data() as User;
+        const remoteUser = resolvePreferredUserProfile({
+          ...rawRemoteUser,
+          id: rawRemoteUser.id || firebaseUser.uid,
+          email: firebaseUser.email || rawRemoteUser.email || normalizedEmail,
+        });
+        const remotePhone = remoteUser.phone ? normalizeIndianPhone(remoteUser.phone) : undefined;
+        if (normalizedPhone && remotePhone && remotePhone !== normalizedPhone) {
+          throw new Error('Phone number does not match this account');
         }
+        const permissionsChanged =
+          JSON.stringify(rawRemoteUser.permissions || {}) !== JSON.stringify(remoteUser.permissions || {});
+        const identityChanged =
+          (rawRemoteUser.id || firebaseUser.uid) !== remoteUser.id ||
+          (rawRemoteUser.email || '') !== (remoteUser.email || '') ||
+          (rawRemoteUser.name || '') !== (remoteUser.name || '');
+        if (rawRemoteUser.role !== remoteUser.role || permissionsChanged || identityChanged) {
+          try {
+            await setDoc(
+              docRef,
+              deepSanitize({
+                id: remoteUser.id,
+                email: remoteUser.email,
+                name: remoteUser.name,
+                role: remoteUser.role,
+                permissions: remoteUser.permissions || {},
+              }),
+              { merge: true }
+            );
+          } catch {
+            // If role sync fails, continue with in-app role to avoid blocking login.
+          }
+        }
+        const localUsers1 = upsertSuperAdmin(getMockData<User[]>('users', []));
+        const idx1 = localUsers1.findIndex(u => u.id === remoteUser.id || (u.email || '').toLowerCase() === (remoteUser.email || '').toLowerCase());
+        if (idx1 >= 0) { localUsers1[idx1] = { ...localUsers1[idx1], ...remoteUser }; } else { localUsers1.push(remoteUser); }
+        setMockData('users', localUsers1);
+        return remoteUser;
       }
-      // Sync into local cache so getAllUsers and order matching stay consistent
-      const localUsers1 = upsertSuperAdmin(getMockData<User[]>('users', []));
-      const idx1 = localUsers1.findIndex(u => u.id === remoteUser.id || (u.email || '').toLowerCase() === (remoteUser.email || '').toLowerCase());
-      if (idx1 >= 0) { localUsers1[idx1] = { ...localUsers1[idx1], ...remoteUser }; } else { localUsers1.push(remoteUser); }
-      setMockData('users', localUsers1);
-      return remoteUser;
+    } catch (profileReadError) {
+      if (!isPermissionDeniedError(profileReadError) && !isTimeoutLikeError(profileReadError)) {
+        throw profileReadError;
+      }
     }
 
     const fallbackUser = resolvePreferredUserProfile({
@@ -1509,41 +1586,61 @@ export const loginWithGoogle = async (): Promise<User> => {
     
     if (!firebaseUser) throw new Error("No user returned");
 
-    const userRef = doc(db, 'users', firebaseUser.uid);
-    const userSnap = await getDoc(userRef);
-
     let resolvedUser: User;
+    const userRef = doc(db, 'users', firebaseUser.uid);
 
-    if (userSnap.exists()) {
-      const rawUser = userSnap.data() as User;
-      const normalizedUser = applyRoleByEmail({ ...rawUser, id: rawUser.id || firebaseUser.uid });
-      if (rawUser.role !== normalizedUser.role) {
-        try {
-          await setDoc(
-            userRef,
-            deepSanitize({
-              role: normalizedUser.role,
-              permissions: normalizedUser.permissions || {},
-            }),
-            { merge: true }
-          );
-        } catch {
-          // Ignore role sync failure and continue with normalized role in app state.
+    try {
+      const userSnap = await getDoc(userRef);
+
+      if (userSnap.exists()) {
+        const rawUser = userSnap.data() as User;
+        const normalizedUser = applyRoleByEmail({ ...rawUser, id: rawUser.id || firebaseUser.uid });
+        if (rawUser.role !== normalizedUser.role) {
+          try {
+            await setDoc(
+              userRef,
+              deepSanitize({
+                role: normalizedUser.role,
+                permissions: normalizedUser.permissions || {},
+              }),
+              { merge: true }
+            );
+          } catch {
+            // Ignore role sync failure and continue with normalized role in app state.
+          }
         }
+        resolvedUser = normalizedUser;
+      } else {
+        const newUser: User = {
+          id: firebaseUser.uid,
+          name: firebaseUser.displayName || 'User',
+          email: firebaseUser.email || '',
+          role: 'user',
+          addresses: [],
+          permissions: {}
+        };
+        const normalizedUser = applyRoleByEmail(newUser);
+        try {
+          await setDoc(userRef, deepSanitize({ ...normalizedUser, createdAt: new Date().toISOString() }));
+        } catch (profileWriteError) {
+          if (!isPermissionDeniedError(profileWriteError) && !isTimeoutLikeError(profileWriteError)) {
+            throw profileWriteError;
+          }
+        }
+        resolvedUser = normalizedUser;
       }
-      resolvedUser = normalizedUser;
-    } else {
-      const newUser: User = {
+    } catch (profileError) {
+      if (!isPermissionDeniedError(profileError) && !isTimeoutLikeError(profileError)) {
+        throw profileError;
+      }
+      resolvedUser = applyRoleByEmail({
         id: firebaseUser.uid,
         name: firebaseUser.displayName || 'User',
         email: firebaseUser.email || '',
         role: 'user',
         addresses: [],
         permissions: {}
-      };
-      const normalizedUser = applyRoleByEmail(newUser);
-      await setDoc(userRef, deepSanitize({ ...normalizedUser, createdAt: new Date().toISOString() }));
-      resolvedUser = normalizedUser;
+      });
     }
 
     // Sync into local user cache so admin lists and order matching work correctly
