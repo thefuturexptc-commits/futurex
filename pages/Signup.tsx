@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { loginWithGoogle, registerUser } from '../services/backend';
+import { isEmailRegistered, loginWithGoogle, registerUser } from '../services/backend';
 import { Button } from '../components/ui/Button';
 
 export const Signup: React.FC = () => {
@@ -22,7 +22,9 @@ export const Signup: React.FC = () => {
 
   useEffect(() => {
     const prefillEmail = searchParams.get('email');
-    if (prefillEmail) setEmail(prefillEmail);
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+    }
   }, [searchParams]);
 
   useEffect(() => {
@@ -42,17 +44,19 @@ export const Signup: React.FC = () => {
     setLoading(true);
     setError('');
 
+    const normalizedEmail = email.trim().toLowerCase();
+
     if (!name.trim()) {
       setError('Enter your full name');
       setLoading(false);
       return;
     }
-    if (!email.trim()) {
+    if (!normalizedEmail) {
       setError('Enter email address');
       setLoading(false);
       return;
     }
-    if (!isValidEmail(email)) {
+    if (!isValidEmail(normalizedEmail)) {
       setError('Enter a valid email address');
       setLoading(false);
       return;
@@ -69,12 +73,30 @@ export const Signup: React.FC = () => {
     }
 
     try {
-      const user = await registerUser(email.trim(), password, phone, name.trim());
-      login(user);
-      // ✅ META PIXEL: CompleteRegistration
-      navigate(getPostAuthPath(user), { replace: true });
+      const alreadyRegistered = await isEmailRegistered(normalizedEmail);
+      if (alreadyRegistered) {
+        setLoading(false);
+        const goToLogin = window.confirm('This email is already registered. Go to Login instead?');
+        if (goToLogin) {
+          navigate(`/login?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
+        }
+        return;
+      }
+
+      const nextUser = await registerUser(normalizedEmail, password, phone, name.trim());
+      login(nextUser);
+      navigate(getPostAuthPath(nextUser), { replace: true });
     } catch (err: any) {
-      setError(err?.message || 'Registration failed');
+      const message = String(err?.message || 'Registration failed');
+      if (message.includes('Email already registered')) {
+        setLoading(false);
+        const goToLogin = window.confirm('This email already has an account. Go to Login now?');
+        if (goToLogin) {
+          navigate(`/login?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
+        }
+        return;
+      }
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -84,9 +106,9 @@ export const Signup: React.FC = () => {
     setLoading(true);
     setError('');
     try {
-      const user = await loginWithGoogle();
-      login(user);
-      navigate(getPostAuthPath(user), { replace: true });
+      const nextUser = await loginWithGoogle();
+      login(nextUser);
+      navigate(getPostAuthPath(nextUser), { replace: true });
     } catch (err: any) {
       setError(err?.message || 'Google sign up failed');
     } finally {
@@ -100,7 +122,9 @@ export const Signup: React.FC = () => {
         <div>
           <p className="text-center text-xs tracking-[0.25em] font-bold text-cyan-600 dark:text-cyan-300 uppercase">Join TheFutureX</p>
           <h2 className="mt-3 text-center text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">Register</h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">Create your account to unlock offers.</p>
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+            New customer? Sign up with email or Google. Already registered? We will guide you back to login.
+          </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -114,6 +138,7 @@ export const Signup: React.FC = () => {
                 name="name"
                 type="text"
                 required
+                autoComplete="name"
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
                 placeholder="Your full name"
                 value={name}
@@ -128,6 +153,7 @@ export const Signup: React.FC = () => {
                 name="email"
                 type="email"
                 required
+                autoComplete="email"
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
                 placeholder="you@example.com"
                 value={email}
@@ -142,6 +168,8 @@ export const Signup: React.FC = () => {
                 name="phone"
                 type="tel"
                 required
+                autoComplete="tel"
+                inputMode="tel"
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
                 placeholder="+91XXXXXXXXXX or 10-digit"
                 value={phone}
@@ -151,18 +179,19 @@ export const Signup: React.FC = () => {
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="new-password"
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
                   placeholder="e.g. Future@123"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <Button type="button" size="sm" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>
+                <Button type="button" size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setShowPassword((prev) => !prev)}>
                   {showPassword ? 'Hide' : 'Show'}
                 </Button>
               </div>
@@ -190,6 +219,9 @@ export const Signup: React.FC = () => {
           >
             Continue with Google
           </Button>
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+            New users can create an account with Google instantly, and existing users can sign in with the same Google account.
+          </p>
 
           <div className="text-center mt-4">
             <span className="text-gray-600 dark:text-gray-400 text-sm">Already have an account? </span>

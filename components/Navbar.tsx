@@ -248,7 +248,7 @@ const NavbarComponent: React.FC = () => {
             </div>
 
             {/* Right Section */}
-            <div className="flex items-center gap-1 sm:gap-2">
+            <div className="flex items-center gap-1">
 
               {/* Search Button */}
               <button
@@ -344,6 +344,29 @@ const NavbarComponent: React.FC = () => {
               >
                 New
               </button>
+
+              {!isAuthReady ? null : user ? (
+                <button
+                  type="button"
+                  onClick={() => navigate('/profile')}
+                  className="md:hidden inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-1.5 text-[10px] font-semibold text-white shadow-sm transition hover:bg-white/15"
+                  aria-label="Open profile"
+                >
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-[9px] font-bold">
+                    {user.name[0]}
+                  </span>
+                  <span>Account</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => navigate('/login')}
+                  className="md:hidden inline-flex items-center gap-1 rounded-full border border-emerald-300/35 bg-emerald-300 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-black shadow-sm transition hover:bg-emerald-200"
+                  aria-label="Login or sign up"
+                >
+                  <span>Login</span>
+                </button>
+              )}
 
               {/* Mobile Hamburger */}
               <button

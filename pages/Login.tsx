@@ -24,6 +24,13 @@ export const Login: React.FC = () => {
     navigate(getPostAuthPath(user), { replace: true });
   }, [isAuthReady, navigate, redirectPath, user]);
 
+  useEffect(() => {
+    const prefillEmail = searchParams.get('email');
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -49,7 +56,7 @@ export const Login: React.FC = () => {
       if (message.includes('Account not found')) {
         const normalizedEmail = email.trim().toLowerCase();
         setLoading(false);
-        const goToRegister = window.confirm('This email is not registered yet. Please register first. Go to Sign up now?');
+        const goToRegister = window.confirm('This email is not registered yet. Please sign up first. Go to Sign up now?');
         if (goToRegister) {
           navigate(`/signup?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
         }
@@ -86,7 +93,7 @@ export const Login: React.FC = () => {
           <p className="text-center text-xs tracking-[0.25em] font-bold text-cyan-600 dark:text-cyan-300 uppercase">Join TheFutureX</p>
           <h2 className="mt-3 text-center text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">Login</h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Login to unlock exclusive offers & faster checkout
+            New or returning customer, you can continue with email or Google and get in smoothly.
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
@@ -99,6 +106,7 @@ export const Login: React.FC = () => {
                 name="email"
                 type="email"
                 required
+                autoComplete="email"
                 className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
                 placeholder="you@example.com"
                 value={email}
@@ -107,18 +115,19 @@ export const Login: React.FC = () => {
             </div>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Password</label>
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2 sm:flex-row">
                 <input
                   id="password"
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="current-password"
                   className="appearance-none relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm dark:bg-white/5"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <Button type="button" size="sm" variant="outline" onClick={() => setShowPassword((prev) => !prev)}>
+                <Button type="button" size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setShowPassword((prev) => !prev)}>
                   {showPassword ? 'Hide' : 'Show'}
                 </Button>
               </div>
@@ -146,6 +155,9 @@ export const Login: React.FC = () => {
           >
             Continue with Google
           </Button>
+          <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+            New users can create an account with Google instantly, and existing users can log in with the same Google account.
+          </p>
 
           <div className="text-center mt-4">
             <span className="text-gray-600 dark:text-gray-400 text-sm">Don't have an account? </span>
