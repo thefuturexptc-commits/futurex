@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { registerUser } from '../services/backend';
+import { loginWithGoogle, registerUser } from '../services/backend';
 import { Button } from '../components/ui/Button';
 
 export const Signup: React.FC = () => {
@@ -68,6 +68,20 @@ export const Signup: React.FC = () => {
       navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
     } catch (err: any) {
       setError(err?.message || 'Registration failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const user = await loginWithGoogle();
+      login(user);
+      navigate(redirectPath || (user.role === 'admin' || user.role === 'superadmin' ? '/admin' : '/'));
+    } catch (err: any) {
+      setError(err?.message || 'Google sign up failed');
     } finally {
       setLoading(false);
     }
@@ -153,6 +167,22 @@ export const Signup: React.FC = () => {
               Register
             </Button>
           </div>
+
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-gray-300 dark:bg-white/15" />
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold">OR</span>
+            <div className="h-px flex-1 bg-gray-300 dark:bg-white/15" />
+          </div>
+
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full rounded-xl"
+            onClick={handleGoogleSignup}
+            disabled={loading}
+          >
+            Continue with Google
+          </Button>
 
           <div className="text-center mt-4">
             <span className="text-gray-600 dark:text-gray-400 text-sm">Already have an account? </span>

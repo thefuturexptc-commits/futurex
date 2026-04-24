@@ -149,7 +149,17 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
     } else if (sortBy === 'a-z') {
       result.sort((a, b) => a.name.localeCompare(b.name));
     } else {
-      result.sort((a, b) => (a.isFeatured === b.isFeatured) ? 0 : a.isFeatured ? -1 : 1);
+      result.sort((a, b) => {
+        const aIsNew = Number(Boolean(a.isNewArrival || a.isFeatured));
+        const bIsNew = Number(Boolean(b.isNewArrival || b.isFeatured));
+        if (aIsNew !== bIsNew) return bIsNew - aIsNew;
+
+        const aIsBestSeller = Number(Boolean(a.isBestSeller));
+        const bIsBestSeller = Number(Boolean(b.isBestSeller));
+        if (aIsBestSeller !== bIsBestSeller) return bIsBestSeller - aIsBestSeller;
+
+        return a.name.localeCompare(b.name);
+      });
     }
     return result;
   }, [products, sortBy]);

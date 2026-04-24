@@ -161,7 +161,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { openLogin } = useAuthModal();
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageTint, setImageTint] = useState(DEFAULT_TINT);
   const [imageDeepTint, setImageDeepTint] = useState('rgba(11, 16, 26, 0.96)');
   const [isLightCard, setIsLightCard] = useState(false);
@@ -185,17 +184,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     return Number(firstColor.stock || 0) - Number(firstColor.reservedStock || 0);
   }, [product.colors, product.stock, product.reservedStock]);
   const canAdd = selectedColorStock > 0;
-  const viewingNow = useMemo(() => {
-    const seed = String(product.id || product.name)
-      .split('')
-      .reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
-    return (seed % 17) + 3;
-  }, [product.id, product.name]);
 
   const defaultImage = useMemo(() => {
     return product.colors?.[0]?.images?.[0] || product.images?.[0] || 'https://picsum.photos/400';
   }, [product.colors, product.images]);
-  const activeImage = previewImage || defaultImage;
+  const activeImage = defaultImage;
 
   useEffect(() => {
     if (monochrome) return;
@@ -267,7 +260,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
     ? 'radial-gradient(540px 260px at 86% 4%, rgba(88, 94, 112, 0.34), transparent 64%), radial-gradient(460px 260px at 54% 26%, rgba(150, 164, 190, 0.14), transparent 54%), linear-gradient(135deg, #03050a 0%, #10141d 42%, #05070d 100%)'
     : `linear-gradient(165deg, ${imageTint} 0%, ${imageDeepTint} 68%)`;
   const cardBorderClass = monochrome ? 'border-white/15' : isLightCard ? 'border-gray-200' : 'border-white/10';
-
   return (
     <>
     <div
@@ -323,49 +315,16 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               Only {selectedColorStock} left
             </span>
           )}
-          {!compact && (
-            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isLightCard ? 'bg-cyan-100 text-cyan-700' : 'bg-cyan-500/20 text-cyan-300'}`}>
-              {viewingNow} viewing now
-            </span>
-          )}
         </div>
 
         <Link to={`/product/${toProductSlug(product.name)}`}>
           <h3
-            className={`${compact ? 'text-[12px] sm:text-sm mb-1 min-h-[1.9rem]' : 'text-sm sm:text-lg mb-1.5 sm:mb-2 min-h-[2.4rem] sm:min-h-[3rem]'} font-bold ${cardTextClass} leading-tight transition-colors font-display overflow-hidden ${hoverTextClass}`}
+            className={`${compact ? 'text-[12px] mb-1 min-h-[2.1rem]' : 'text-sm sm:text-lg mb-1.5 sm:mb-2 min-h-[2.4rem] sm:min-h-[3rem]'} font-bold ${cardTextClass} leading-tight transition-colors font-display overflow-hidden ${hoverTextClass}`}
             style={{ display: '-webkit-box', WebkitLineClamp: compact ? 2 : 2, WebkitBoxOrient: 'vertical' }}
           >
             {product.name}
           </h3>
         </Link>
-
-        {!!product.colors?.length && (
-          <div className={compact ? 'flex items-center gap-2 mt-2' : 'flex items-center gap-2 mt-3'}>
-            {product.colors.slice(0, 5).map((color) => {
-              const isActive = previewImage === (color.images?.[0] || null) || (!previewImage && product.colors![0] === color);
-              return (
-                <button
-                  key={`${product.id}_${color.name}`}
-                  type="button"
-                  className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} rounded-full border-2 transition-transform ${
-                    isActive
-                      ? (isLightCard ? 'border-gray-700 scale-110' : 'border-white scale-110')
-                      : (isLightCard ? 'border-gray-300' : 'border-white/30')
-                  } ${enableHoverEffects ? 'hover:scale-110' : ''}`}
-                  style={{ backgroundColor: color.hex }}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setPreviewImage(color.images?.[0] || null);
-                  }}
-                  onMouseEnter={() => supportsHover && setPreviewImage(color.images?.[0] || null)}
-                  onMouseLeave={() => supportsHover && setPreviewImage(null)}
-                  aria-label={color.name}
-                />
-              );
-            })}
-          </div>
-        )}
 
         <div className={compact ? 'mt-auto pt-2 space-y-2.5' : 'flex flex-col gap-2 mt-auto pt-3 sm:pt-5'}>
           <div className={`flex flex-col ${compact ? '' : ''}`}>
@@ -374,7 +333,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
               <span className={`${compact ? 'text-[9px] sm:text-[10px]' : 'text-[10px] sm:text-xs'} line-through ${mutedTextClass}`}>Rs {mrp}</span>
               {percent > 0 && <span className="text-xs text-green-500 font-semibold">{percent}% off</span>}
             </div>
-            <span className={`${compact ? 'text-[9px] sm:text-[10px]' : 'text-[10px] sm:text-xs'} font-semibold mt-0.5 ${canAdd ? (isLightCard ? 'text-emerald-600' : 'text-green-400') : 'text-red-500'}`}>
+            <span className={`text-[10px] sm:text-xs font-semibold mt-0.5 ${canAdd ? (isLightCard ? 'text-emerald-600' : 'text-green-400') : 'text-red-500'}`}>
               {canAdd ? 'In Stock' : 'Out of Stock'}
             </span>
           </div>

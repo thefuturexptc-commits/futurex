@@ -347,6 +347,9 @@ export const Home: React.FC = () => {
       route: '/smart-fans',
       title: 'Air, Perfected.',
       subtitle: 'Cool. Warm. Intelligent airflow.',
+      offerLabel: 'Limited Offer on Fans',
+      offerText: 'Tap to open the featured fan deal and check the current TP09-style offer.',
+      offerRoute: '/product/the-future-x-tp-09-pro-heating-cooling-air-safe-for-kids-pets',
       image: fanShowcaseImage,
       theme: 'dark',
       bannerClassName: '',
@@ -461,6 +464,46 @@ export const Home: React.FC = () => {
                     <p className="mt-3 text-sm text-gray-300 sm:text-lg">
                       {panel.subtitle}
                     </p>
+                    {'offerLabel' in panel && panel.offerLabel ? (
+                      <div
+                        className="mt-4 max-w-md cursor-pointer rounded-2xl border border-cyan-300/25 bg-gradient-to-r from-cyan-500/14 via-sky-500/10 to-violet-500/14 px-4 py-3 shadow-[0_16px_40px_rgba(0,0,0,0.24)] backdrop-blur-sm transition duration-300 hover:-translate-y-0.5 hover:border-cyan-200/35 hover:from-cyan-500/20 hover:to-violet-500/20"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          if ('offerRoute' in panel && panel.offerRoute) {
+                            handleShopNavigation(panel.offerRoute);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' || event.key === ' ') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            if ('offerRoute' in panel && panel.offerRoute) {
+                              handleShopNavigation(panel.offerRoute);
+                            }
+                          }
+                        }}
+                        aria-label={`Open ${panel.offerLabel}`}
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <span className="inline-flex rounded-full border border-cyan-200/20 bg-black/25 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-200">
+                              Offer
+                            </span>
+                            <p className="mt-2 text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-300">
+                              {panel.offerLabel}
+                            </p>
+                            <p className="mt-1 text-sm leading-6 text-white/90">
+                              {panel.offerText}
+                            </p>
+                          </div>
+                          <span className="mt-1 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-white/15 bg-white/10 text-lg text-white/90 shadow-[0_10px_24px_rgba(0,0,0,0.22)]">
+                            →
+                          </span>
+                        </div>
+                      </div>
+                    ) : null}
                     <div className="mt-5 flex gap-3">
                       <span className="rounded-lg bg-white/10 px-4 py-2 text-sm">
                         Learn more

@@ -118,6 +118,7 @@ export interface Product {
   reviews?: ProductPublicReview[];
   isFeatured?: boolean;
   isBestSeller?: boolean;
+  isNewArrival?: boolean;
   variations?: ProductVariation[];
   rating?: number;
   reviewCount?: number;

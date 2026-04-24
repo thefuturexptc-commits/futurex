@@ -275,6 +275,40 @@ let recaptchaContainerInUse: string | null = null;
 let anonymousAuthAttempted = false;
 let anonymousAuthBlocked = false;
 
+const mapFirebaseAuthError = (error: any, fallbackMessage: string): Error => {
+  const code = error?.code || '';
+  switch (code) {
+    case 'auth/email-already-in-use':
+      return new Error('Email already registered');
+    case 'auth/invalid-email':
+      return new Error('Invalid email address');
+    case 'auth/weak-password':
+      return new Error('Password is too weak');
+    case 'auth/user-not-found':
+      return new Error('Account not found. Please sign up first.');
+    case 'auth/wrong-password':
+      return new Error('Incorrect password.');
+    case 'auth/invalid-credential':
+      return new Error('Incorrect email or password.');
+    case 'auth/operation-not-allowed':
+      return new Error('This sign-in method is not enabled in Firebase yet.');
+    case 'auth/popup-closed-by-user':
+      return new Error('Google login was cancelled.');
+    case 'auth/popup-blocked':
+      return new Error('Popup was blocked by the browser. Please allow popups and try again.');
+    case 'auth/unauthorized-domain':
+      return new Error('This domain is not authorized for Google sign-in in Firebase.');
+    case 'auth/network-request-failed':
+      return new Error('Network error. Please check your internet connection and try again.');
+    case 'auth/too-many-requests':
+      return new Error('Too many attempts. Please wait a bit and try again.');
+    case 'auth/invalid-api-key':
+      return new Error('Firebase API key is invalid or missing.');
+    default:
+      return new Error(fallbackMessage);
+  }
+};
+
 const clampNumber = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
 const getDefaultReviewRating = (product: Product): number => {
@@ -1276,17 +1310,7 @@ export const registerUser = async (email: string, password: string, phone: strin
       }));
       cleanUser.createdAt = registeredAt;
     } catch (e: any) {
-      const code = e?.code || '';
-      if (code === 'auth/email-already-in-use') {
-        throw new Error('Email already registered');
-      }
-      if (code === 'auth/invalid-email') {
-        throw new Error('Invalid email address');
-      }
-      if (code === 'auth/weak-password') {
-        throw new Error('Password is too weak');
-      }
-      throw new Error('Registration failed. Please try again.');
+      throw mapFirebaseAuthError(e, 'Registration failed. Please try again.');
     }
 
     // Local cache/store persistence
@@ -1438,7 +1462,7 @@ export const loginUser = async (email: string, password: string, phone?: string)
     if (firebaseErrorCode === 'auth/invalid-email') {
       throw new Error('Invalid email address.');
     }
-    throw new Error('Login failed. Please use a registered email.');
+    throw mapFirebaseAuthError(e, 'Login failed. Please use a registered email.');
   }
 };
 
@@ -1534,11 +1558,7 @@ export const loginWithGoogle = async (): Promise<User> => {
 
     return resolvedUser;
   } catch (error: any) {
-    const code = error?.code || '';
-    if (code === 'auth/popup-closed-by-user') {
-      throw new Error('Google login was cancelled.');
-    }
-    throw new Error('Google login failed. Please continue with email.');
+    throw mapFirebaseAuthError(error, 'Google login failed. Please continue with email.');
   }
 };
 
