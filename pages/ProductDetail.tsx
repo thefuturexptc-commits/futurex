@@ -331,10 +331,6 @@ export const ProductDetail: React.FC = () => {
 
   const handleAddToCart = useCallback(() => {
     if (!product) return;
-    if (!user) {
-      openLogin('/product/' + id);
-      return;
-    }
     const productToAdd = {
       ...product,
       selectedColorName: selectedColor?.name,
@@ -344,7 +340,7 @@ export const ProductDetail: React.FC = () => {
     addToCart(productToAdd);
     setAddedToCart(true);
     setTimeout(() => setAddedToCart(false), 2000);
-  }, [product, user, openLogin, id, selectedColor, activeImages, addToCart]);
+  }, [product, selectedColor, activeImages, addToCart]);
 
   const handleBuyNow = useCallback(() => {
     if (!product) return;
