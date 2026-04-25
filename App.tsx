@@ -100,6 +100,10 @@ const getRouteSeo = (pathname: string) => {
       title: 'Smart Monitoring',
       description: 'Discover TheFutureX smart monitoring devices for health, wellness, and daily care.',
     },
+    '/shop': {
+      title: 'Shop All Products',
+      description: 'Browse all TheFutureX smart wearables, smart fans, and health monitoring products.',
+    },
     '/shop/all': {
       title: 'Shop All Products',
       description: 'Browse all TheFutureX smart wearables, smart fans, and health monitoring products.',
@@ -331,6 +335,7 @@ const App: React.FC = () => {
                       <Route path="/new-arrivals" element={<NewArrivals />} />
 
                       {/* Legacy/General Shop Route for Search/View All */}
+                      <Route path="/shop" element={<Shop />} />
                       <Route path="/shop/all" element={<Shop />} />
                       <Route path="/shop/:category" element={<Shop />} />
 

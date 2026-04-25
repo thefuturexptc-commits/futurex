@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { useTheme } from '../context/ThemeContext';
 import { Button } from './ui/Button';
-import defaultBrandLogo from '../assets/images/untitled-design-51.webp';
+import defaultBrandLogo from '../assets/images/thefuturex-logo.webp';
 import type { Product } from '../types';
 
 const toProductSlug = (name: string): string =>
@@ -216,6 +216,10 @@ const NavbarComponent: React.FC = () => {
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
+                onError={(event) => {
+                  event.currentTarget.onerror = null;
+                  event.currentTarget.src = defaultBrandLogo;
+                }}
                 width={200}
                 height={80}
                 className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[200px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
