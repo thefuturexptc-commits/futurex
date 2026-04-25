@@ -2,7 +2,7 @@ const SITE_NAME = 'TheFutureX';
 const SITE_URL = 'https://thefuturex.in';
 const DEFAULT_DESCRIPTION =
   'Shop smart bands, smart rings, smart fans, and health monitoring wearables from TheFutureX.';
-const DEFAULT_IMAGE = `${SITE_URL}/images/fav.webp`;
+const DEFAULT_IMAGE = `${SITE_URL}/images/tfx-google-logo.webp`;
 
 interface SeoMetadata {
   title: string;
