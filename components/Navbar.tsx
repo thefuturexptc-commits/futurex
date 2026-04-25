@@ -220,9 +220,9 @@ const NavbarComponent: React.FC = () => {
                   event.currentTarget.onerror = null;
                   event.currentTarget.src = defaultBrandLogo;
                 }}
-                width={200}
-                height={80}
-                className="h-8 sm:h-10 md:h-12 lg:h-14 w-auto max-w-[130px] sm:max-w-[160px] md:max-w-[200px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
+                width={260}
+                height={104}
+                className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto max-w-[150px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
               />
             </Link>
 
