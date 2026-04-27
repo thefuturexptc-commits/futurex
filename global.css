@@ -460,6 +460,268 @@ button {
   color: #d9f4ff !important;
 }
 
+.site-navbar .mobile-brand-logo {
+  max-width: clamp(104px, 34vw, 150px);
+}
+
+.site-navbar .mobile-nav-actions {
+  flex-shrink: 0;
+  min-width: max-content;
+}
+
+.site-navbar .mobile-auth-pill {
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.24);
+  min-height: 34px;
+}
+
+.site-navbar .mobile-nav-control {
+  align-items: center;
+  background: linear-gradient(180deg, rgba(14, 116, 144, 0.78), rgba(8, 47, 73, 0.96)) !important;
+  border: 1.5px solid rgba(125, 211, 252, 0.82);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 10px 24px rgba(8, 145, 178, 0.28);
+  color: #ffffff !important;
+  min-height: 40px;
+  min-width: 40px;
+}
+
+.site-navbar .mobile-nav-control:hover {
+  background: linear-gradient(180deg, rgba(6, 182, 212, 0.9), rgba(14, 116, 144, 0.98)) !important;
+  border-color: #e0faff;
+}
+
+.site-navbar .mobile-nav-control svg {
+  color: #ffffff !important;
+  filter: drop-shadow(0 1px 5px rgba(255, 255, 255, 0.38));
+  stroke-width: 2.35;
+}
+
+.site-navbar .mobile-nav-control[aria-expanded="true"] {
+  background: linear-gradient(180deg, #f8fafc, #a5f3fc) !important;
+  border-color: #ffffff;
+  box-shadow: 0 0 0 3px rgba(103, 232, 249, 0.22), 0 12px 28px rgba(6, 182, 212, 0.34);
+}
+
+.site-navbar .mobile-nav-control[aria-expanded="true"],
+.site-navbar .mobile-nav-control[aria-expanded="true"] svg {
+  color: #03101d !important;
+}
+
+@media (min-width: 768px) {
+  .site-navbar .mobile-brand-logo {
+    max-width: 230px;
+  }
+
+  .site-navbar .mobile-nav-control {
+    background: transparent !important;
+    border-color: transparent;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 390px) {
+  .site-navbar .mobile-nav-actions {
+    gap: 5px;
+  }
+
+  .site-navbar .mobile-nav-control {
+    border-width: 1px;
+    min-height: 38px;
+    min-width: 38px;
+    padding: 7px !important;
+  }
+
+  .site-navbar .mobile-nav-control svg {
+    height: 22px;
+    width: 22px;
+  }
+
+  .site-navbar .mobile-auth-pill {
+    min-height: 32px;
+    padding-left: 7px !important;
+    padding-right: 7px !important;
+  }
+
+  .site-navbar .mobile-auth-pill span:not(:first-child) {
+    display: none;
+  }
+
+  .site-navbar .mobile-menu-card {
+    border-radius: 14px;
+    padding: 10px;
+  }
+
+  .site-navbar .mobile-menu-link {
+    font-size: 11px;
+    min-height: 48px;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 340px) {
+  .site-navbar .mobile-brand-logo {
+    max-width: 96px;
+  }
+
+  .site-navbar .mobile-nav-control {
+    min-height: 36px;
+    min-width: 36px;
+    padding: 6px !important;
+  }
+
+  .site-navbar .mobile-nav-control svg {
+    height: 20px;
+    width: 20px;
+  }
+
+  .site-navbar .mobile-auth-pill {
+    font-size: 9px;
+    min-height: 30px;
+    padding-left: 6px !important;
+    padding-right: 6px !important;
+  }
+}
+
+.site-navbar .mobile-menu-panel {
+  background:
+    linear-gradient(180deg, #020617, #020617 52%, #031525) !important;
+  border-top: 2px solid rgba(125, 211, 252, 0.62);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.76);
+}
+
+.site-navbar .mobile-menu-card {
+  background:
+    linear-gradient(145deg, #10213f, #06111f 68%, #030712) !important;
+  border: 1.5px solid rgba(125, 211, 252, 0.68);
+  border-radius: 16px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 20px 54px rgba(0, 0, 0, 0.58);
+  max-height: calc(100vh - 92px);
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.site-navbar .mobile-menu-eyebrow {
+  color: #67e8f9 !important;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.site-navbar .mobile-menu-title {
+  color: #f8fafc !important;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+
+.site-navbar .mobile-menu-close {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.16) !important;
+  border: 1px solid rgba(125, 211, 252, 0.46);
+  border-radius: 999px;
+  display: inline-flex;
+  height: 34px;
+  justify-content: center;
+  width: 34px;
+}
+
+.site-navbar .mobile-menu-link {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1.5px solid rgba(148, 163, 184, 0.42);
+  border-radius: 12px;
+  color: #f8fafc !important;
+  display: flex;
+  font-size: 12px;
+  font-weight: 800;
+  gap: 8px;
+  justify-content: space-between;
+  letter-spacing: 0.04em;
+  min-height: 50px;
+  padding: 12px;
+  text-align: left;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.site-navbar .mobile-menu-link:hover {
+  background: rgba(8, 47, 73, 0.98) !important;
+  border-color: rgba(125, 211, 252, 0.78);
+}
+
+.site-navbar .mobile-menu-link:active {
+  transform: scale(0.98);
+}
+
+.site-navbar .mobile-menu-link-active {
+  background: linear-gradient(135deg, #0e7490, #1d4ed8) !important;
+  border-color: rgba(224, 250, 252, 0.9);
+  box-shadow: 0 10px 28px rgba(14, 165, 233, 0.28);
+}
+
+.site-navbar .mobile-menu-link-featured {
+  background: linear-gradient(135deg, #0e7490, #1d4ed8) !important;
+  border-color: rgba(125, 211, 252, 0.5);
+}
+
+.site-navbar .mobile-menu-actions {
+  border-top: 1px solid rgba(125, 211, 252, 0.28);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+
+.site-navbar .mobile-menu-user {
+  align-items: center;
+  background: rgba(15, 23, 42, 0.92) !important;
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding: 10px;
+}
+
+.site-navbar .mobile-menu-avatar {
+  align-items: center;
+  background: linear-gradient(135deg, #155e75, #0f172a) !important;
+  border: 1px solid rgba(103, 232, 249, 0.25);
+  border-radius: 999px;
+  color: #e0f2fe !important;
+  display: flex;
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 800;
+  height: 38px;
+  justify-content: center;
+  width: 38px;
+}
+
+.site-navbar .mobile-menu-user-name {
+  color: #ffffff !important;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.site-navbar .mobile-menu-user-email {
+  color: #94a3b8 !important;
+  font-size: 11px;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .home-showcase-panel {
   background:
     radial-gradient(180px 760px at 50% -9%, rgba(238, 244, 255, 0.34), rgba(124, 136, 150, 0.14) 27%, transparent 62%),

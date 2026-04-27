@@ -136,7 +136,7 @@ const NavbarComponent: React.FC = () => {
   );
 
   const navLinks = [{ name: 'Home', path: '/' }, { name: 'New Arrivals', path: '/new-arrivals' }, ...categoryLinks];
-  const mobileNavLinks = [{ name: 'New Arrivals', path: '/new-arrivals' }, { name: 'Home', path: '/' }, ...categoryLinks];
+  const mobileNavLinks = [{ name: 'Home', path: '/' }, ...categoryLinks];
 
   const loadSearchProductsNow = useCallback(() => {
     if (allProducts.length > 0 || searchLoading) return;
@@ -222,7 +222,7 @@ const NavbarComponent: React.FC = () => {
                 }}
                 width={260}
                 height={104}
-                className="h-15 sm:h-15 md:h-15 lg:h-16 w-auto max-w-[150px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
+                className="mobile-brand-logo h-15 sm:h-15 md:h-15 lg:h-16 w-auto max-w-[150px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
               />
             </Link>
 
@@ -252,7 +252,7 @@ const NavbarComponent: React.FC = () => {
             </div>
 
             {/* Right Section */}
-            <div className="flex items-center gap-1">
+            <div className="mobile-nav-actions flex items-center gap-1.5">
 
               {/* Search Button */}
               <button
@@ -261,7 +261,7 @@ const NavbarComponent: React.FC = () => {
                   loadSearchProductsNow();
                 }}
                 aria-label="Search products"
-                className="relative inline-flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/10 px-2.5 py-2 text-white hover:bg-white/15 transition-colors outline-none"
+                className="mobile-nav-control relative inline-flex items-center gap-1.5 rounded-lg px-2.5 py-2 transition-colors outline-none"
               >
                 {searchOpen ? (
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -279,7 +279,7 @@ const NavbarComponent: React.FC = () => {
               <button
                 onClick={openCart}
                 aria-label="Open cart"
-                className="relative p-2 text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-white transition-colors outline-none"
+                className="mobile-nav-control relative p-2 transition-colors outline-none"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -341,19 +341,11 @@ const NavbarComponent: React.FC = () => {
                 </div>
               )}
 
-              <button
-                type="button"
-                onClick={() => openCategory('/new-arrivals')}
-                className="md:hidden rounded-full border border-cyan-300/40 bg-cyan-300 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-black shadow-sm"
-              >
-                New
-              </button>
-
               {!isAuthReady ? null : user ? (
                 <button
                   type="button"
                   onClick={() => navigate('/profile')}
-                  className="md:hidden inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-1.5 text-[10px] font-semibold text-white shadow-sm transition hover:bg-white/15"
+                  className="mobile-auth-pill md:hidden inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/10 px-2 py-1.5 text-[10px] font-semibold text-white shadow-sm transition hover:bg-white/15"
                   aria-label="Open profile"
                 >
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-[9px] font-bold">
@@ -365,7 +357,7 @@ const NavbarComponent: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/login')}
-                  className="md:hidden inline-flex items-center gap-1 rounded-full border border-emerald-300/35 bg-emerald-300 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-black shadow-sm transition hover:bg-emerald-200"
+                  className="mobile-auth-pill md:hidden inline-flex items-center gap-1 rounded-full border border-emerald-300/35 bg-emerald-300 px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-black shadow-sm transition hover:bg-emerald-200"
                   aria-label="Login or sign up"
                 >
                   <span>Login</span>
@@ -377,7 +369,7 @@ const NavbarComponent: React.FC = () => {
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 aria-label="Toggle menu"
                 aria-expanded={mobileMenuOpen}
-                className="md:hidden p-2 rounded-md bg-gray-100 dark:bg-white/10 text-gray-500 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-white/20 transition-colors"
+                className="mobile-nav-control md:hidden p-2 rounded-md transition-colors"
               >
                 {mobileMenuOpen ? (
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -460,68 +452,99 @@ const NavbarComponent: React.FC = () => {
 
         {/* ─── Mobile Dropdown Menu ──────────────────────────────────── */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 dark:border-white/10 bg-white/95 dark:bg-dark-surface/95 backdrop-blur-md animate-slide-down">
-            <div className="px-4 py-4 space-y-1">
-              {/* Nav Links */}
-               {mobileNavLinks.map((link) => {
-                const active = location.pathname === link.path;
-                const isNewArrival = link.path === '/new-arrivals';
-                return (
-                  <button
-                    key={link.name}
-                    onClick={() => openCategory(link.path)}
-                    className={`block w-full text-left px-3 py-2.5 rounded-lg text-sm font-semibold uppercase tracking-wide transition-colors ${
-                      isNewArrival
-                        ? active
-                          ? 'bg-gray-950 text-white dark:bg-white dark:text-gray-950'
-                          : 'bg-gray-950 text-white hover:bg-black dark:bg-white dark:text-gray-950 dark:hover:bg-cyan-100'
-                        : active
-                          ? 'bg-primary-50 dark:bg-primary-900/20 text-primary-600 dark:text-primary-400'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-white/5'
-                    }`}
-                  >
-                    {link.name}
-                  </button>
-                );
-              })}
-
-              {/* Divider */}
-              <div className="border-t border-gray-100 dark:border-white/5 pt-3 mt-3 space-y-2">
-                {!isAuthReady ? null : user ? (
-                  <>
-                    {/* User Info */}
-                    <div className="flex items-center gap-3 px-3 py-2">
-                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary-100 to-primary-200 dark:from-primary-900 dark:to-primary-800 text-primary-700 dark:text-primary-300 flex items-center justify-center border border-primary-200 dark:border-primary-700 shadow-sm font-bold font-display shrink-0">
-                        {user.name[0]}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-gray-900 dark:text-white truncate">{user.name}</p>
-                        <p className="text-xs text-gray-500 truncate">{user.email}</p>
-                      </div>
-                    </div>
-
-                    <Button className="w-full justify-center" onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}>
-                      Profile
-                    </Button>
-                    {isAdmin && (
-                      <Button variant="outline" className="w-full justify-center text-amber-600 border-amber-300" onClick={() => { navigate('/admin'); setMobileMenuOpen(false); }}>
-                        Admin Dashboard
-                      </Button>
-                    )}
-                    <Button variant="outline" className="w-full justify-center text-red-600 border-red-200" onClick={handleLogout}>
-                      Sign out
-                    </Button>
-                  </>
-                ) : (
-                  <div className="flex gap-2">
-                    <Button className="flex-1 justify-center" onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}>
-                      Login
-                    </Button>
-                    <Button variant="outline" className="flex-1 justify-center" onClick={() => { navigate('/signup'); setMobileMenuOpen(false); }}>
-                      Sign up
-                    </Button>
+          <div className="mobile-menu-panel md:hidden animate-slide-down">
+            <div className="px-3 pb-4 pt-3">
+              <div className="mobile-menu-card">
+                <div className="mb-3 flex items-center justify-between gap-3 border-b border-white/10 px-3 pb-3">
+                  <div>
+                    <p className="mobile-menu-eyebrow">Browse</p>
+                    <p className="mobile-menu-title">TheFutureX Store</p>
                   </div>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="mobile-menu-close"
+                    aria-label="Close menu"
+                  >
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+
+                {/* Nav Links */}
+                <div className="grid grid-cols-2 gap-2">
+                  {mobileNavLinks.map((link) => {
+                    const active = location.pathname === link.path;
+                    const isNewArrival = link.path === '/new-arrivals';
+                    return (
+                      <button
+                        key={link.name}
+                        onClick={() => openCategory(link.path)}
+                        className={`mobile-menu-link ${
+                          isNewArrival
+                            ? active
+                              ? 'mobile-menu-link-featured mobile-menu-link-active'
+                              : 'mobile-menu-link-featured'
+                            : active
+                              ? 'mobile-menu-link-active'
+                              : ''
+                        }`}
+                      >
+                        <span>{link.name}</span>
+                        {active && (
+                          <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M5 13l4 4L19 7" />
+                          </svg>
+                        )}
+                        {!active && isNewArrival && (
+                          <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                          </svg>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Divider */}
+                <div className="mobile-menu-actions">
+                  {!isAuthReady ? null : user ? (
+                    <>
+                      {/* User Info */}
+                      <div className="mobile-menu-user">
+                        <div className="mobile-menu-avatar">
+                          {user.name[0]}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="mobile-menu-user-name">{user.name}</p>
+                          <p className="mobile-menu-user-email">{user.email}</p>
+                        </div>
+                      </div>
+
+                      <Button size="sm" className="w-full justify-center" onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}>
+                        Profile
+                      </Button>
+                      {isAdmin && (
+                        <Button size="sm" variant="outline" className="w-full justify-center text-amber-600 border-amber-300" onClick={() => { navigate('/admin'); setMobileMenuOpen(false); }}>
+                          Admin Dashboard
+                        </Button>
+                      )}
+                      <Button size="sm" variant="outline" className="w-full justify-center text-red-600 border-red-200" onClick={handleLogout}>
+                        Sign out
+                      </Button>
+                    </>
+                  ) : (
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1 justify-center" onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}>
+                        Login
+                      </Button>
+                      <Button size="sm" variant="outline" className="flex-1 justify-center" onClick={() => { navigate('/signup'); setMobileMenuOpen(false); }}>
+                        Sign up
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
 
             </div>
