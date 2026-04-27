@@ -540,21 +540,21 @@ export const Home: React.FC = () => {
       </section>
       <div className="h-10 bg-gradient-to-b from-transparent via-primary-100/40 to-transparent dark:via-primary-900/10" />
 
-      <section className="home-deferred-section py-10 sm:py-16 px-4 bg-white dark:bg-dark-bg border-y border-gray-200 dark:border-white/10 text-gray-900 dark:text-white animate-fade-in-up">
+      <section className="home-deferred-section py-10 sm:py-16 px-4 bg-black border-y border-white/10 text-white animate-fade-in-up">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
             <p className={`text-xs uppercase tracking-[0.25em] font-bold ${activeMood.sectionText}`}>Customer Stories</p>
             <h2 className="mt-2 text-2xl sm:text-4xl font-bold font-display">What Buyers Say</h2>
           </div>
-          <div className="relative overflow-hidden rounded-3xl border border-gray-200 dark:border-white/10 bg-gradient-to-br from-sky-50 via-white to-rose-50 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950 p-6 sm:p-8 shadow-xl">
+          <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#050505] p-6 sm:p-8 shadow-xl">
             <div
               className="flex transition-transform duration-500 ease-out"
               style={{ transform: `translateX(-${testimonialIndex * 100}%)` }}
             >
               {testimonials.map((entry) => (
                 <article key={entry.name} className="w-full shrink-0 text-center px-1">
-                  <p className="text-base sm:text-lg text-gray-700 dark:text-gray-300 leading-relaxed">"{entry.text}"</p>
-                  <p className="mt-4 text-sm font-bold text-gray-900 dark:text-white">{entry.name}</p>
+                  <p className="text-base sm:text-lg text-gray-300 leading-relaxed">"{entry.text}"</p>
+                  <p className="mt-4 text-sm font-bold text-white">{entry.name}</p>
                   <p className={`text-xs uppercase tracking-[0.2em] ${activeMood.sectionText}`}>{entry.role}</p>
                 </article>
               ))}
