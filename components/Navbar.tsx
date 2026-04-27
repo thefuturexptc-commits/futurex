@@ -222,7 +222,7 @@ const NavbarComponent: React.FC = () => {
                 }}
                 width={260}
                 height={104}
-                className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto max-w-[150px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
+                className="h-15 sm:h-15 md:h-15 lg:h-16 w-auto max-w-[150px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
               />
             </Link>
 

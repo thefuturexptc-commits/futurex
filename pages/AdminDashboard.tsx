@@ -24,6 +24,7 @@ import {
   updateWebsiteSettings,
   uploadFile,
 } from '../services/backend';
+import { deleteProductFromMerchant, syncAllProductsToMerchant, syncProductToMerchant } from '../services/merchantSync';
 import { Order, Product, ProductNotifyRequest, User, UserPermissions } from '../types';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
@@ -111,6 +112,7 @@ const parseSpecsText = (value: string): Record<string, string> => {
 const createVariantSizeRow = () => ({ id: `sz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, size: '', stock: 0 });
 const ADMIN_ACTIVE_TAB_KEY = 'aura_admin_active_tab';
 const ADMIN_LAST_BULK_STOCK_UNDO_KEY = 'aura_admin_last_bulk_stock_undo';
+const ADMIN_MERCHANT_AUTO_SYNC_KEY = 'aura_admin_merchant_auto_sync_done';
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -150,6 +152,7 @@ export const AdminDashboard: React.FC = () => {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [dataError, setDataError] = useState('');
+  const [merchantSyncWarning, setMerchantSyncWarning] = useState('');
   const [auditError, setAuditError] = useState('');
   const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>('30d');
 
@@ -213,6 +216,7 @@ export const AdminDashboard: React.FC = () => {
   const [settingsAutoSaveState, setSettingsAutoSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const settingsAutoSaveTimerRef = useRef<number | null>(null);
   const settingsBootstrappedRef = useRef(false);
+  const merchantAutoSyncStartedRef = useRef(false);
 
   const pushAudit = useCallback(
     async (action: string, details?: string) => {
@@ -327,6 +331,32 @@ export const AdminDashboard: React.FC = () => {
   useEffect(() => {
     refreshData();
   }, [refreshData, user]);
+
+  useEffect(() => {
+    if (!user || products.length === 0 || merchantAutoSyncStartedRef.current) return;
+    if (!(user.role === 'admin' || user.role === 'superadmin')) return;
+    if (typeof window !== 'undefined' && window.sessionStorage.getItem(ADMIN_MERCHANT_AUTO_SYNC_KEY) === 'true') return;
+
+    merchantAutoSyncStartedRef.current = true;
+    void syncAllProductsToMerchant(products)
+      .then((result) => {
+        const failed = Number(result.failed || 0);
+        if (failed > 0) {
+          const firstError = result.results?.find((item) => !item.ok)?.error || 'Some products failed to sync.';
+          setMerchantSyncWarning(`Merchant auto-sync warning: ${firstError}`);
+          merchantAutoSyncStartedRef.current = false;
+          return;
+        }
+        if (typeof window !== 'undefined') {
+          window.sessionStorage.setItem(ADMIN_MERCHANT_AUTO_SYNC_KEY, 'true');
+        }
+        setMerchantSyncWarning('');
+      })
+      .catch((error) => {
+        setMerchantSyncWarning(`Merchant auto-sync warning: ${error instanceof Error ? error.message : 'Merchant sync failed.'}`);
+        merchantAutoSyncStartedRef.current = false;
+      });
+  }, [products, user]);
 
   useEffect(() => {
     const loadLogs = async () => {
@@ -784,6 +814,18 @@ export const AdminDashboard: React.FC = () => {
         pushAudit('Product Created', savedProduct.name);
       }
 
+      try {
+        const merchantResult = await syncProductToMerchant(savedProduct);
+        if (!merchantResult.ok) {
+          backendSyncWarning = backendSyncWarning
+            ? `${backendSyncWarning} Merchant sync failed.`
+            : 'Merchant sync failed.';
+        }
+      } catch (syncError) {
+        const merchantWarning = syncError instanceof Error ? syncError.message : 'Merchant sync failed.';
+        backendSyncWarning = backendSyncWarning ? `${backendSyncWarning} ${merchantWarning}` : merchantWarning;
+      }
+
       setShowProductModal(false);
       if (backendSyncWarning) {
         alert(`Product updated on this device. Backend sync warning: ${backendSyncWarning}`);
@@ -804,6 +846,11 @@ export const AdminDashboard: React.FC = () => {
       confirmLabel: 'Delete',
       onConfirm: async () => {
         await deleteProduct(product.id);
+        try {
+          await deleteProductFromMerchant(product.id);
+        } catch (error) {
+          alert(error instanceof Error ? `Product deleted, but Merchant delete failed: ${error.message}` : 'Product deleted, but Merchant delete failed.');
+        }
         pushAudit('Product Deleted', `${product.name} (${product.id})`);
         await refreshData();
       },
@@ -1060,6 +1107,11 @@ export const AdminDashboard: React.FC = () => {
       {dataError && (
         <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/40 dark:bg-red-900/20 dark:text-red-200">
           Data load error: {dataError}
+        </div>
+      )}
+      {merchantSyncWarning && (
+        <div className="mb-4 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-900/40 dark:bg-amber-900/20 dark:text-amber-200">
+          {merchantSyncWarning}
         </div>
       )}
       {auditError && (

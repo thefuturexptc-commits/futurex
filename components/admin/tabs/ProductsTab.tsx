@@ -15,7 +15,14 @@ interface Props {
   onDelete: (product: Product) => void;
 }
 
-export const ProductsTab: React.FC<Props> = ({ products, categories, isLoading, onAdd, onEdit, onDelete }) => {
+export const ProductsTab: React.FC<Props> = ({
+  products,
+  categories,
+  isLoading,
+  onAdd,
+  onEdit,
+  onDelete,
+}) => {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'newest' | 'price' | 'stock' | 'bestSeller'>('newest');
