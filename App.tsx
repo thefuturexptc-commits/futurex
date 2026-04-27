@@ -340,7 +340,7 @@ const App: React.FC = () => {
                       <Route path="/shop/:category" element={<Shop />} />
 
                       <Route path="/product/:id" element={<ProductDetail />} />
-                      <Route path="/cart" element={<RequireAuth><Cart /></RequireAuth>} />
+                      <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<RequireAuth><Checkout /></RequireAuth>} />
                       <Route path="/verify-phone" element={<RequireAuth><VerifyPhone /></RequireAuth>} />
                       <Route path="/payment" element={<RequireAuth><Payment /></RequireAuth>} />

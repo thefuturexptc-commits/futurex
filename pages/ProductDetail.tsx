@@ -344,10 +344,6 @@ export const ProductDetail: React.FC = () => {
 
   const handleBuyNow = useCallback(() => {
     if (!product) return;
-    if (!user) {
-      openLogin('/product/' + id);
-      return;
-    }
     const productToAdd = {
       ...product,
       selectedColorName: selectedColor?.name,
@@ -355,8 +351,12 @@ export const ProductDetail: React.FC = () => {
       images: activeImages.length > 0 ? activeImages : product.images,
     };
     addToCart(productToAdd);
+    if (!user) {
+      openLogin('/checkout');
+      return;
+    }
     navigate('/checkout');
-  }, [product, user, openLogin, id, selectedColor, activeImages, addToCart, navigate]);
+  }, [product, user, openLogin, selectedColor, activeImages, addToCart, navigate]);
 
   const handleOpenNotify = useCallback(async () => {
     if (!product) return;

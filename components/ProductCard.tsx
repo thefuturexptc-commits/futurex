@@ -208,10 +208,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   }, [activeImage, monochrome]);
 
   const handleAddToCart = () => {
-    if (!user) {
-      openLogin(`/product/${toProductSlug(product.name)}`);
-      return;
-    }
     addToCart(product);
   };
 

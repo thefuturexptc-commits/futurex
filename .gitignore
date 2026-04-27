@@ -24,3 +24,4 @@ dist-ssr
 *.sw?
 .vercel
 .env*.local
+services/merchant-api/service-account.json

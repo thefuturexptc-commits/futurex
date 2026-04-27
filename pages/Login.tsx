@@ -8,7 +8,9 @@ export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState('');
+  const [authHint, setAuthHint] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, user, isAuthReady } = useAuth();
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ export const Login: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     setError('');
+    setAuthHint('');
     try {
       const normalizedEmail = email.trim().toLowerCase();
       if (!normalizedEmail || !password.trim()) {
@@ -55,11 +58,7 @@ export const Login: React.FC = () => {
       const message = String(err?.message || 'Login failed.');
       if (message.includes('Account not found')) {
         const normalizedEmail = email.trim().toLowerCase();
-        setLoading(false);
-        const goToRegister = window.confirm('This email is not registered yet. Please sign up first. Go to Sign up now?');
-        if (goToRegister) {
-          navigate(`/signup?email=${encodeURIComponent(normalizedEmail)}&redirect=${encodeURIComponent(redirectPath)}`);
-        }
+        setAuthHint(`No account found for ${normalizedEmail}. Create one and we will bring you right back.`);
         return;
       }
       if (message.includes('Incorrect password')) {
@@ -73,8 +72,9 @@ export const Login: React.FC = () => {
   };
 
   const handleGoogleLogin = async () => {
-    setLoading(true);
+    setGoogleLoading(true);
     setError('');
+    setAuthHint('');
     try {
       const user = await loginWithGoogle();
       login(user);
@@ -82,9 +82,15 @@ export const Login: React.FC = () => {
     } catch (err: any) {
       setError(err?.message || 'Google login failed');
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
+
+  const signupQuery = new URLSearchParams({
+    ...(email.trim() ? { email: email.trim().toLowerCase() } : {}),
+    ...(redirectPath ? { redirect: redirectPath } : {}),
+  }).toString();
+  const signupPath = signupQuery ? `/signup?${signupQuery}` : '/signup';
 
   return (
     <div className="auth-page min-h-screen flex items-center justify-center py-6 sm:py-12 px-3 sm:px-6 lg:px-8">
@@ -97,7 +103,15 @@ export const Login: React.FC = () => {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-2 text-center text-sm text-red-200">{error}</div>}
+          {error && <div className="rounded-xl border border-red-400/20 bg-red-500/10 p-2 text-center text-sm text-red-200" role="alert">{error}</div>}
+          {authHint && (
+            <div className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 p-3 text-center text-sm text-cyan-100 break-words" role="status" aria-live="polite">
+              <p>{authHint}</p>
+              <Button type="button" size="sm" variant="outline" className="mt-3 w-full rounded-xl" onClick={() => navigate(signupPath)}>
+                Create account
+              </Button>
+            </div>
+          )}
           <div className="rounded-md shadow-sm space-y-4">
             <div>
               <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email address</label>
@@ -107,10 +121,16 @@ export const Login: React.FC = () => {
                 type="email"
                 required
                 autoComplete="email"
+                inputMode="email"
+                enterKeyHint="next"
                 className="auth-input appearance-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-500 text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                 placeholder="you@example.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                disabled={loading || googleLoading}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setAuthHint('');
+                }}
               />
             </div>
             <div>
@@ -122,12 +142,14 @@ export const Login: React.FC = () => {
                   type={showPassword ? 'text' : 'password'}
                   required
                   autoComplete="current-password"
+                  enterKeyHint="done"
                   className="auth-input appearance-none relative block w-full px-3 py-2 border border-white/10 placeholder-gray-500 text-white rounded-lg focus:outline-none focus:ring-primary-500 focus:border-primary-500 focus:z-10 sm:text-sm"
                   placeholder="Enter your password"
                   value={password}
+                  disabled={loading || googleLoading}
                   onChange={(e) => setPassword(e.target.value)}
                 />
-                <Button type="button" size="sm" variant="outline" className="w-full sm:w-auto" onClick={() => setShowPassword((prev) => !prev)}>
+                <Button type="button" size="sm" variant="outline" className="w-full sm:w-auto" disabled={loading || googleLoading} onClick={() => setShowPassword((prev) => !prev)}>
                   {showPassword ? 'Hide' : 'Show'}
                 </Button>
               </div>
@@ -135,7 +157,7 @@ export const Login: React.FC = () => {
           </div>
 
           <div>
-            <Button type="submit" className="w-full rounded-xl" isLoading={loading}>
+            <Button type="submit" className="w-full rounded-xl" isLoading={loading} disabled={googleLoading}>
               Continue with Email
             </Button>
           </div>
@@ -152,6 +174,7 @@ export const Login: React.FC = () => {
             className="w-full rounded-xl"
             onClick={handleGoogleLogin}
             disabled={loading}
+            isLoading={googleLoading}
           >
             Continue with Google
           </Button>
@@ -161,7 +184,7 @@ export const Login: React.FC = () => {
 
           <div className="text-center mt-4">
             <span className="text-gray-300 text-sm">Don't have an account? </span>
-            <Link to={`/signup?redirect=${encodeURIComponent(redirectPath)}`} className="text-primary-600 hover:text-primary-500 text-sm font-medium">Sign up</Link>
+            <Link to={signupPath} className="text-primary-600 hover:text-primary-500 text-sm font-medium">Sign up</Link>
           </div>
         </form>
       </div>

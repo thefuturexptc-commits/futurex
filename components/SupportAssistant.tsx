@@ -392,10 +392,6 @@ export const SupportAssistant: React.FC = () => {
       await addMessage('bot', 'This product is no longer available.');
       return;
     }
-    if (!user) {
-      openLogin(`/product/${fullProduct.id}`);
-      return;
-    }
     addToCart({ ...fullProduct, price: card.price }, 1);
     setAwaitingFeedback(false);
     setAwaitingCheckout(true);
