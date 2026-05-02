@@ -18,6 +18,10 @@ export const SiteFooter: React.FC = () => {
       .trim()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '');
+  const toFooterLink = (item: string) => {
+    const slug = toSlug(item);
+    return slug === 'delete-account' ? '/delete-account' : `/info/${slug}`;
+  };
   const visibleFooterSections = footerSections
     .map((section) => ({
       ...section,
@@ -35,7 +39,7 @@ export const SiteFooter: React.FC = () => {
               <ul className="space-y-2">
                 {section.items.map((item, idx) => (
                   <li key={`${section.title}_${idx}`} className="text-sm">
-                    <Link to={`/info/${toSlug(item)}`} className="text-gray-300 hover:text-white transition-colors">
+                    <Link to={toFooterLink(item)} className="text-gray-300 hover:text-white transition-colors">
                       {item}
                     </Link>
                   </li>

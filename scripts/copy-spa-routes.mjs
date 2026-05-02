@@ -5,6 +5,7 @@ const distDir = 'dist';
 const indexFile = join(distDir, 'index.html');
 
 const fallbackRoutes = [
+  'delete-account',
   'shop',
   'shop/all',
 ];

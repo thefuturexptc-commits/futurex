@@ -3,7 +3,7 @@ import { WebsiteSettings } from '../types';
 export const DEFAULT_FOOTER_SECTIONS: NonNullable<WebsiteSettings['footerSections']> = [
   { title: 'COMPANY', items: ['About Us', 'Contact'] },
   { title: 'SUPPORT', items: ['Shipping', 'Returns/Refund'] },
-  { title: 'LEGAL', items: ['Privacy', 'Terms'] },
+  { title: 'LEGAL', items: ['Privacy', 'Terms', 'Delete Account'] },
 ];
 
 export const DEFAULT_PAGE_CONTENT: NonNullable<WebsiteSettings['pageContent']> = {

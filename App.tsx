@@ -36,6 +36,7 @@ const Login = React.lazy(() => import('./pages/Login').then(module => ({ default
 const Signup = React.lazy(() => import('./pages/Signup').then(module => ({ default: module.Signup })));
 const InfoPage = React.lazy(() => import('./pages/InfoPage').then(module => ({ default: module.InfoPage })));
 const OfferPage = React.lazy(() => import('./pages/OfferPage').then(module => ({ default: module.OfferPage })));
+const DeleteAccount = React.lazy(() => import('./pages/DeleteAccount').then(module => ({ default: module.DeleteAccount })));
 
 const runAfterPageSettles = (work: () => void, timeout = 8000): (() => void) => {
   if (typeof window === 'undefined') return () => {};
@@ -127,6 +128,10 @@ const getRouteSeo = (pathname: string) => {
     '/signup': {
       title: 'Sign Up',
       description: 'Create your TheFutureX account.',
+    },
+    '/delete-account': {
+      title: 'Delete Your TheFutureX Account',
+      description: 'Request deletion of your TheFutureX account and associated personal data.',
     },
   };
 
@@ -347,6 +352,7 @@ const App: React.FC = () => {
                       <Route path="/order-success" element={<RequireAuth><OrderSuccess /></RequireAuth>} />
                       <Route path="/login" element={<Login />} />
                       <Route path="/signup" element={<Signup />} />
+                      <Route path="/delete-account" element={<DeleteAccount />} />
                       <Route path="/info/:slug" element={<InfoPage />} />
                       <Route path="/offers/:slug" element={<RequireAuth><OfferPage /></RequireAuth>} />
                       <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />
