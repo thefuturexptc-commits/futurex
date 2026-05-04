@@ -51,6 +51,7 @@ const DealCountdown: React.FC = () => {
   const [dealCountdown, setDealCountdown] = useState('00:00:00');
 
   useEffect(() => {
+    let timer = 0;
     const updateCountdown = () => {
       const now = new Date();
       const target = new Date(now);
@@ -61,9 +62,14 @@ const DealCountdown: React.FC = () => {
       const ss = String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
       setDealCountdown(`${hh}:${mm}:${ss}`);
     };
-    updateCountdown();
-    const timer = window.setInterval(updateCountdown, 1000);
-    return () => window.clearInterval(timer);
+    const cancel = runWhenIdle(() => {
+      updateCountdown();
+      timer = window.setInterval(updateCountdown, 1000);
+    }, 2400);
+    return () => {
+      cancel();
+      if (timer) window.clearInterval(timer);
+    };
   }, []);
 
   return <>Flash window ends in {dealCountdown}</>;
@@ -270,10 +276,16 @@ export const Home: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setTestimonialIndex((prev) => (prev + 1) % 3);
-    }, 3800);
-    return () => window.clearInterval(timer);
+    let timer = 0;
+    const cancel = runWhenIdle(() => {
+      timer = window.setInterval(() => {
+        setTestimonialIndex((prev) => (prev + 1) % 3);
+      }, 3800);
+    }, 3200);
+    return () => {
+      cancel();
+      if (timer) window.clearInterval(timer);
+    };
   }, []);
 
   useEffect(() => {
@@ -429,7 +441,7 @@ export const Home: React.FC = () => {
                 key={panel.category}
                 type="button"
                 onClick={() => handleShopNavigation(panel.route)}
-                className={`home-showcase-panel ${isDark ? 'home-showcase-dark' : 'home-showcase-light'} ${'cardClassName' in panel ? panel.cardClassName : ''} group relative block h-[420px] w-full overflow-hidden bg-black text-left transition duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-400 sm:h-[520px] ${panel.bannerClassName}`}
+                className={`home-showcase-panel ${idx > 0 ? 'home-showcase-panel-deferred' : ''} ${isDark ? 'home-showcase-dark' : 'home-showcase-light'} ${'cardClassName' in panel ? panel.cardClassName : ''} group relative block h-[420px] w-full overflow-hidden bg-black text-left transition duration-300 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-400 sm:h-[520px] ${panel.bannerClassName}`}
                 aria-label={`Open ${panel.category}`}
               >
                 <div
@@ -476,7 +488,7 @@ export const Home: React.FC = () => {
                         src={idx === 0 ? fanImages[fanIndex] : panel.image}
                         alt={panel.category}
                         loading={idx === 0 ? 'eager' : 'lazy'}
-                        decoding="async"
+                        decoding={idx === 0 ? 'sync' : 'async'}
                         fetchPriority={idx === 0 ? 'high' : 'low'}
                         width={900}
                         height={900}

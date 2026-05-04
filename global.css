@@ -748,6 +748,11 @@ button {
   margin-top: 0.5rem;
 }
 
+.home-showcase-panel-deferred {
+  contain-intrinsic-size: 520px;
+  content-visibility: auto;
+}
+
 .home-showcase-panel::before {
   content: '';
   position: absolute;
