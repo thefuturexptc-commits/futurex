@@ -5,7 +5,10 @@ const distDir = 'dist';
 const indexFile = join(distDir, 'index.html');
 
 const fallbackRoutes = [
+<<<<<<< HEAD
   'delete-account',
+=======
+>>>>>>> 2927f9d (Resolve conflicts after pull)
   'shop',
   'shop/all',
 ];

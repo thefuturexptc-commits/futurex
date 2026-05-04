@@ -222,7 +222,11 @@ const NavbarComponent: React.FC = () => {
                 }}
                 width={260}
                 height={104}
+<<<<<<< HEAD
                 className="mobile-brand-logo h-15 sm:h-15 md:h-15 lg:h-16 w-auto max-w-[150px] sm:max-w-[190px] md:max-w-[230px] lg:max-w-[260px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
+=======
+                className="mobile-brand-logo h-[132px] sm:h-[146px] md:h-[160px] lg:h-[170px] w-auto max-w-[300px] sm:max-w-[360px] md:max-w-[430px] lg:max-w-[500px] object-contain transition-transform duration-300 drop-shadow-[0_4px_12px_rgba(0,0,0,0.25)] group-hover:scale-[1.03]"
+>>>>>>> 2927f9d (Resolve conflicts after pull)
               />
             </Link>
 
