@@ -13,6 +13,7 @@ import { LoadingFallback } from './components/LoadingFallback';
 import { Home } from './pages/Home';
 import { pushPageView } from './services/analytics';
 import { removeJsonLd, setSeoMetadata } from './services/seo';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 // ✅ META PIXEL
 
@@ -364,6 +365,7 @@ const App: React.FC = () => {
                 </main>
                 <DeferredSupportAssistant />
                 <SiteFooter />
+                <SpeedInsights />
               </div>
             </AuthModalProvider>
           </BrowserRouter>
