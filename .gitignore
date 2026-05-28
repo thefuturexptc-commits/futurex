@@ -22,9 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-<<<<<<< HEAD
 .vercel
 .env*.local
 services/merchant-api/service-account.json
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
