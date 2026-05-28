@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-<<<<<<< HEAD
     "postbuild": "node scripts/copy-spa-routes.mjs",
     "preview": "vite preview",
     "generate:product-feed": "node scripts/generate-product-feed.mjs"
@@ -23,15 +22,6 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router-dom": "^7.13.0"
-=======
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "react-dom": "^19.2.4",
-    "react": "^19.2.4",
-    "react-router-dom": "^7.13.0",
-    "firebase": "^12.9.0"
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

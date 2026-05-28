@@ -1,12 +1,8 @@
 import React from 'react';
 import { CategoryTemplate } from '../components/CategoryTemplate';
-<<<<<<< HEAD
 import heroImage from '../assets/images/monitoring-proactive-health-hero.webp';
 import mobileHeroImage from '../assets/images/monitoring-mobile-hero.webp';
 import overviewImage from '../assets/images/monitoring-phone-cutout.webp';
-=======
-
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 export const SmartMonitoring: React.FC = () => {
   const features = [
     {
@@ -32,7 +28,6 @@ export const SmartMonitoring: React.FC = () => {
       title="Proactive Health."
       subtitle="Take control of your well-being with lab-quality diagnostics in the comfort of your home. Prevention starts here."
       heroGradient="bg-gradient-to-br from-rose-900 via-red-900 to-orange-900"
-<<<<<<< HEAD
       heroImage={heroImage}
       mobileHeroImage={mobileHeroImage}
       heroAsFullBanner
@@ -47,11 +42,3 @@ export const SmartMonitoring: React.FC = () => {
     />
   );
 };
-=======
-      heroImage="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&q=80&w=1000"
-      accentColor="text-rose-400"
-      features={features}
-    />
-  );
-};
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b

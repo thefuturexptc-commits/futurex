@@ -1,12 +1,7 @@
 import React, { useEffect, useState } from 'react';
-<<<<<<< HEAD
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getUserOrders, updateUserAddresses, verifyIndianPincode } from '../services/backend';
-=======
-import { useAuth } from '../context/AuthContext';
-import { getUserOrders, updateUserAddresses } from '../services/backend';
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 import { Order, Address } from '../types';
 import { Button } from '../components/ui/Button';
 
@@ -18,11 +13,8 @@ export const Profile: React.FC = () => {
   // Address Management State
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-<<<<<<< HEAD
   const [verifyingPin, setVerifyingPin] = useState(false);
   const [pinMessage, setPinMessage] = useState('');
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   const [addressForm, setAddressForm] = useState<Omit<Address, 'id'>>({
     street: '',
     city: '',
@@ -43,7 +35,6 @@ export const Profile: React.FC = () => {
     fetchOrders();
   }, [user]);
 
-<<<<<<< HEAD
   if (!user) {
     return (
       <div className="profile-dark min-h-screen p-10 text-center text-white space-y-4">
@@ -57,9 +48,6 @@ export const Profile: React.FC = () => {
       </div>
     );
   }
-=======
-  if (!user) return <div className="p-10 text-center dark:text-white">Please log in.</div>;
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 
   // --- Address Handlers ---
 
@@ -72,17 +60,13 @@ export const Profile: React.FC = () => {
       });
       setEditingId(addr.id);
       setIsEditingAddress(true);
-<<<<<<< HEAD
       setPinMessage('');
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   };
 
   const handleAddNewAddress = () => {
       setAddressForm({ street: '', city: '', zip: '', country: '' });
       setEditingId(null);
       setIsEditingAddress(true);
-<<<<<<< HEAD
       setPinMessage('');
   };
 
@@ -101,8 +85,6 @@ export const Profile: React.FC = () => {
       }
       setAddressForm(prev => ({ ...prev, city: pinData.city, country: pinData.country }));
       setPinMessage(`Verified: ${pinData.city}, ${pinData.country}`);
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   };
 
   const handleDeleteAddress = async (id: string) => {
@@ -136,11 +118,7 @@ export const Profile: React.FC = () => {
   };
 
   return (
-<<<<<<< HEAD
     <div className="profile-dark min-h-screen max-w-7xl mx-auto px-4 py-12 text-white">
-=======
-    <div className="min-h-screen max-w-7xl mx-auto px-4 py-12">
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
       {/* Header Profile Card */}
       <div className="bg-white dark:bg-dark-surface shadow-sm rounded-xl overflow-hidden mb-8 border border-gray-200 dark:border-white/5">
         <div className="bg-gradient-to-r from-primary-600 to-primary-800 h-32"></div>
@@ -159,7 +137,6 @@ export const Profile: React.FC = () => {
           </div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{user.name}</h1>
           <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-<<<<<<< HEAD
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
             <Link
               to="/"
@@ -176,8 +153,6 @@ export const Profile: React.FC = () => {
               Sign out
             </Button>
           </div>
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
         </div>
       </div>
 
@@ -233,7 +208,6 @@ export const Profile: React.FC = () => {
                             <span>Total</span>
                             <span>₹{order.total.toFixed(2)}</span>
                             </div>
-<<<<<<< HEAD
                             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-white/10">
                               <p className="text-xs text-gray-500 dark:text-gray-400">
                                 Tracking ID: <span className="font-mono text-gray-700 dark:text-gray-200">{order.trackingId || 'Not assigned yet'}</span>
@@ -247,8 +221,6 @@ export const Profile: React.FC = () => {
                                 </Link>
                               )}
                             </div>
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
                         </div>
                         </div>
                     ))}
@@ -283,11 +255,7 @@ export const Profile: React.FC = () => {
                         <div className="grid grid-cols-2 gap-2">
                             <input 
                                 placeholder="Zip" required
-<<<<<<< HEAD
                                 value={addressForm.zip} onChange={e => setAddressForm({...addressForm, zip: e.target.value.replace(/\D/g, '').slice(0, 6)})}
-=======
-                                value={addressForm.zip} onChange={e => setAddressForm({...addressForm, zip: e.target.value})}
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
                                 className="w-full p-2 border rounded text-sm dark:bg-white/5 dark:border-white/10 dark:text-white"
                             />
                             <input 
@@ -297,15 +265,12 @@ export const Profile: React.FC = () => {
                             />
                         </div>
                         <div className="flex gap-2 pt-2">
-<<<<<<< HEAD
                             <Button type="button" size="sm" variant="outline" className="flex-1" onClick={handleVerifyPincode} disabled={verifyingPin}>
                               {verifyingPin ? 'Verifying...' : 'Verify Pincode'}
                             </Button>
                         </div>
                         {pinMessage && <p className={`text-xs ${pinMessage.startsWith('Verified') ? 'text-green-600' : 'text-red-500'}`}>{pinMessage}</p>}
                         <div className="flex gap-2 pt-2">
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
                             <Button type="submit" size="sm" className="flex-1">Save</Button>
                             <Button type="button" size="sm" variant="outline" className="flex-1" onClick={() => setIsEditingAddress(false)}>Cancel</Button>
                         </div>
@@ -339,9 +304,5 @@ export const Profile: React.FC = () => {
       </div>
     </div>
   );
-<<<<<<< HEAD
 };
 
-=======
-};
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b

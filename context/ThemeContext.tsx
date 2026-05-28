@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Theme, WebsiteSettings } from '../types';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from '../services/contentDefaults';
@@ -55,11 +54,6 @@ const runWhenIdle = (work: () => void, timeout = 1200): (() => void) => {
     cleanup();
   };
 };
-=======
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { Theme } from '../types';
-import { getWebsiteSettings } from '../services/backend';
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 
 interface ThemeContextType {
   theme: Theme;
@@ -68,21 +62,17 @@ interface ThemeContextType {
   updatePrimaryColor: (color: string) => void;
   logoUrl: string;
   updateLogoUrl: (url: string) => void;
-<<<<<<< HEAD
   socialLinks: NonNullable<WebsiteSettings['socialLinks']>;
   updateSocialLinks: (links: NonNullable<WebsiteSettings['socialLinks']>) => void;
   footerSections: Array<{ title: string; items: string[] }>;
   updateFooterSections: (sections: Array<{ title: string; items: string[] }>) => void;
   pageContent: Record<string, string>;
   updatePageContent: (content: Record<string, string>) => void;
-=======
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-<<<<<<< HEAD
   const getPreferredTheme = (): Theme => {
     if (typeof window === 'undefined') return 'light';
     const savedTheme = localStorage.getItem(THEME_PREFERENCE_KEY);
@@ -215,50 +205,11 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [primaryColor, logoUrl, socialLinks, footerSections, pageContent]);
 
-=======
-  // Explicitly default to 'light'
-  const [theme, setTheme] = useState<Theme>('light');
-  const [primaryColor, setPrimaryColor] = useState('#0ea5e9');
-  const [logoUrl, setLogoUrl] = useState('');
-
-  // Helper inside component to avoid HMR export issues
-  const hexToRgb = (hex: string) => {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    return result ? 
-        `${parseInt(result[1], 16)} ${parseInt(result[2], 16)} ${parseInt(result[3], 16)}` 
-        : '14 165 233'; 
-  };
-
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('aura_theme') as Theme;
-    if (savedTheme) {
-        setTheme(savedTheme);
-    } else {
-        setTheme('light');
-    }
-
-    // Load settings from Backend (Mock or Real)
-    getWebsiteSettings().then(settings => {
-        setPrimaryColor(settings.primaryColor);
-        if(settings.logoUrl) setLogoUrl(settings.logoUrl);
-    }).catch(err => console.log("Waiting for backend connection..."));
-  }, []);
-
-  useEffect(() => {
-    const root = window.document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(theme);
-    localStorage.setItem('aura_theme', theme);
-  }, [theme]);
-
-  // Apply CSS Variables for Color
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   useEffect(() => {
     const rgb = hexToRgb(primaryColor);
     const root = document.documentElement;
     root.style.setProperty('--color-primary-500', rgb);
     root.style.setProperty('--color-primary-600', rgb);
-<<<<<<< HEAD
     root.style.setProperty('--color-primary-400', rgb);
     root.style.setProperty('--color-primary-700', rgb);
     root.style.setProperty('--color-primary-50', '236 254 255');
@@ -289,27 +240,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         updatePageContent: setPageContent,
       }}
     >
-=======
-    root.style.setProperty('--color-primary-400', rgb); 
-    root.style.setProperty('--color-primary-700', rgb); 
-    root.style.setProperty('--color-primary-50', '240 249 255'); 
-  }, [primaryColor]);
-
-  const toggleTheme = () => {
-    setTheme(prev => (prev === 'light' ? 'dark' : 'light'));
-  };
-
-  const updatePrimaryColor = (color: string) => {
-      setPrimaryColor(color);
-  };
-
-  const updateLogoUrl = (url: string) => {
-      setLogoUrl(url);
-  };
-
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, primaryColor, updatePrimaryColor, logoUrl, updateLogoUrl }}>
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
       {children}
     </ThemeContext.Provider>
   );
@@ -318,7 +248,6 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-<<<<<<< HEAD
     return {
       theme: 'dark' as Theme,
       toggleTheme: () => {},
@@ -336,9 +265,3 @@ export const useTheme = () => {
   }
   return context;
 };
-=======
-    throw new Error('useTheme must be used within a ThemeProvider');
-  }
-  return context;
-};
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
