@@ -1,0 +1,277 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Button } from '../components/ui/Button';
+import { CheckoutStepper } from '../components/CheckoutStepper';
+import { CheckoutFlowState } from '../types';
+import { useAuth } from '../context/AuthContext';
+import {
+  resetPhoneOtpFlow,
+  sendCheckoutPhoneOtp,
+  sendPhoneOtp,
+  upsertCheckoutPhoneUserProfile,
+  verifyCheckoutPhoneOtp,
+  verifyPhoneOtp,
+} from '../services/backend';
+
+const RESEND_COOLDOWN_SECONDS = 30;
+
+export const VerifyPhone: React.FC = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, login } = useAuth();
+  const flowState = location.state as CheckoutFlowState | undefined;
+  const recaptchaRef = useRef<HTMLDivElement>(null);
+
+  const readPersistedFlow = (): CheckoutFlowState | null => {
+    try {
+      const raw = window.sessionStorage.getItem('checkout_flow_state');
+      if (!raw) return null;
+      return JSON.parse(raw) as CheckoutFlowState;
+    } catch {
+      return null;
+    }
+  };
+
+  const [currentFlow, setCurrentFlow] = useState<CheckoutFlowState | null>(() => flowState || readPersistedFlow());
+  const [otp, setOtp] = useState('');
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [draftPhone, setDraftPhone] = useState('');
+  const [cooldown, setCooldown] = useState(0);
+
+  const phone = useMemo(() => currentFlow?.phone?.replace(/\D/g, '').slice(0, 10) || '', [currentFlow?.phone]);
+
+  useEffect(() => {
+    if (flowState) setCurrentFlow(flowState);
+  }, [flowState]);
+
+  useEffect(() => {
+    setDraftPhone(phone);
+  }, [phone]);
+
+  useEffect(() => {
+    if (!currentFlow) return;
+    window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(currentFlow));
+  }, [currentFlow]);
+
+  useEffect(() => {
+    resetPhoneOtpFlow();
+    return () => {
+      resetPhoneOtpFlow();
+    };
+  }, []);
+
+  // Resend cooldown countdown
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setTimeout(() => setCooldown(c => c - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
+
+  useEffect(() => {
+    if (!currentFlow || !phone) return;
+    const verifiedPhone = window.sessionStorage.getItem('checkout_phone_verified') || '';
+    if (verifiedPhone !== phone && !currentFlow.phoneVerified) return;
+    const verifiedFlow: CheckoutFlowState = { ...currentFlow, phoneVerified: true };
+    window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(verifiedFlow));
+    window.sessionStorage.setItem('checkout_phone_verified', phone);
+    navigate('/payment', { replace: true, state: verifiedFlow });
+  }, [currentFlow, phone, navigate]);
+
+  if (!currentFlow?.shippingDetails || !phone) {
+    return <Navigate to="/checkout" replace />;
+  }
+
+  const sendOtpForPhone = async (targetPhone: string) => {
+    if (sending || cooldown > 0) return;
+    const normalizedTarget = targetPhone.replace(/\D/g, '').slice(0, 10);
+    if (!/^[6-9]\d{9}$/.test(normalizedTarget)) {
+      setError('Please check your phone number. Enter a valid 10-digit Indian mobile number starting with 6-9.');
+      setMessage('');
+      setOtpSent(false);
+      setEditingPhone(true);
+      return;
+    }
+
+    // Ensure the recaptcha container div is in the DOM before calling sendPhoneOtp.
+    if (!document.getElementById('checkout-recaptcha-container')) {
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    setError('');
+    setMessage('');
+    setSending(true);
+    setOtpSent(false);
+    try {
+      const sendOtp = user ? sendPhoneOtp : sendCheckoutPhoneOtp;
+      await Promise.race([
+        sendOtp(normalizedTarget, 'checkout-recaptcha-container'),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('OTP request timed out. Please try again.')), 15000)),
+      ]);
+      setMessage(`OTP sent to +91 ${normalizedTarget}.`);
+      setOtpSent(true);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+    } catch (err: any) {
+      const raw = String(err?.message || 'Failed to send OTP.');
+      if (/recaptcha|captcha/i.test(raw)) {
+        setError('Captcha issue detected. Please wait a few seconds and try again, or refresh the page.');
+      } else if (/invalid phone number format|invalid indian phone number|auth\/invalid-phone-number/i.test(raw)) {
+        setError('Please check your phone number. Enter a valid 10-digit Indian mobile number.');
+        setEditingPhone(true);
+      } else if (/too.many/i.test(raw)) {
+        setError('Too many OTP requests. Please wait a few minutes before trying again.');
+        setCooldown(60);
+      } else {
+        setError(raw);
+      }
+      setOtpSent(false);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleUpdatePhone = async () => {
+    const cleaned = draftPhone.replace(/\D/g, '').slice(0, 10);
+    if (cleaned.length !== 10 || !currentFlow) {
+      setError('Enter a valid 10-digit phone number.');
+      return;
+    }
+
+    const nextFlow: CheckoutFlowState = {
+      ...currentFlow,
+      phone: cleaned,
+      phoneVerified: false,
+      shippingDetails: {
+        ...currentFlow.shippingDetails,
+        phoneNumber: cleaned,
+      },
+    };
+
+    setCurrentFlow(nextFlow);
+    navigate('/verify-phone', { replace: true, state: nextFlow });
+    setEditingPhone(false);
+    setOtp('');
+    setOtpSent(false);
+    setError('');
+    setCooldown(0);
+    setMessage('Phone updated. Click "Send OTP" to receive a new code.');
+  };
+
+  const handleVerifyOtp = async () => {
+    if (sending) {
+      setError('OTP is still being sent. Please wait a few seconds and try verify again.');
+      return;
+    }
+    if (!otpSent) {
+      setError('OTP not sent yet. Please wait a moment or check your number/captcha message below.');
+      return;
+    }
+    setError('');
+    setMessage('');
+    setVerifying(true);
+    try {
+      if (user) {
+        await verifyPhoneOtp(otp);
+      } else {
+        await verifyCheckoutPhoneOtp(otp);
+      }
+      const verifiedFlow: CheckoutFlowState = {
+        ...currentFlow,
+        phoneVerified: true,
+      };
+      const nextUser = await upsertCheckoutPhoneUserProfile(verifiedFlow.shippingDetails);
+      login(nextUser);
+      window.sessionStorage.setItem('checkout_flow_state', JSON.stringify(verifiedFlow));
+      window.sessionStorage.setItem('checkout_phone_verified', phone);
+      navigate('/payment', {
+        replace: true,
+        state: verifiedFlow,
+      });
+    } catch (err: any) {
+      const errMsg = err?.message || 'Invalid OTP.';
+      setError(errMsg);
+      if (/expired|invalid|resend/i.test(errMsg)) {
+        setOtp('');
+        setOtpSent(false);
+        setEditingPhone(true);
+      }
+    } finally {
+      setVerifying(false);
+    }
+  };
+
+  return (
+    <div className="verify-phone-page min-h-screen max-w-3xl mx-auto px-4 py-8 sm:py-12 text-white">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3">Checkout</h1>
+      <CheckoutStepper current="verify" />
+
+      <div className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-6 space-y-5">
+        <div>
+          <h2 className="text-xl font-semibold text-white">Verify Phone Number</h2>
+          <p className="text-gray-300 mt-1">+91 {phone}</p>
+        </div>
+
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button
+            type="button"
+            onClick={() => void sendOtpForPhone(phone)}
+            disabled={sending || cooldown > 0}
+          >
+            {sending ? 'Sending OTP...' : cooldown > 0 ? `Resend in ${cooldown}s` : otpSent ? 'Resend OTP' : 'Send OTP'}
+          </Button>
+          <input
+            type="text"
+            placeholder="Enter 6-digit OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+            className="flex-1 rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
+          />
+          <Button type="button" onClick={handleVerifyOtp} disabled={verifying || otp.length !== 6 || !otpSent}>
+            {verifying ? 'Verifying...' : 'Verify OTP'}
+          </Button>
+        </div>
+        {sending && <p className="text-sm text-gray-300">Sending OTP...</p>}
+
+        {/* reCAPTCHA container — must stay mounted at all times while on this page */}
+        <div id="checkout-recaptcha-container" ref={recaptchaRef} className="min-h-[78px]" />
+
+        {message && <p className="text-sm text-green-600">{message}</p>}
+        {error && <p className="text-sm text-red-500">{error}</p>}
+
+        <div className="pt-1">
+          <p className="text-sm text-gray-300 mb-2">Didn't receive OTP?</p>
+          <button
+            type="button"
+            onClick={() => setEditingPhone((prev) => !prev)}
+            className="text-sm font-semibold text-primary-600 hover:text-primary-500"
+          >
+            {editingPhone ? 'Cancel' : 'Edit Phone Number'}
+          </button>
+        </div>
+
+        {editingPhone && (
+          <div className="rounded-xl border border-white/10 bg-black/30 p-4 space-y-3">
+            <p className="text-sm font-medium text-white">Correct Phone Number</p>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-300">+91</span>
+              <input
+                type="tel"
+                value={draftPhone}
+                onChange={(e) => setDraftPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                placeholder="Enter 10-digit number"
+                className="flex-1 rounded-lg border border-white/20 bg-black/30 p-3 text-white placeholder:text-gray-500"
+              />
+            </div>
+            <Button type="button" onClick={handleUpdatePhone}>
+              Update Number
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};

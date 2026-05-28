@@ -1,0 +1,69 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return signedIn() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
+    }
+
+    function isSuperAdminEmail() {
+      return signedIn() &&
+        request.auth.token.email != null &&
+        lower(request.auth.token.email) == 'thefuturex.ptc@gmail.com';
+    }
+
+    // Product catalog
+    // Public read keeps storefront working.
+    // If you need strict admin-only reads for variant/size stock, change read to: allow read: if isAdmin();
+    match /products/{productId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /product_reviews/{reviewId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /product_notify_requests/{requestId} {
+      allow create: if true;
+      allow read, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    // Settings & categories are admin-managed.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /categories/{docId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /admin_audit_logs/{logId} {
+      allow read, write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /orders/{orderId} {
+      allow create: if signedIn();
+      allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin() || isSuperAdminEmail());
+      allow update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /support_chats/{chatId} {
+      allow create: if signedIn();
+      allow read, update, delete: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth.uid == userId || isAdmin();
+    }
+  }
+}
