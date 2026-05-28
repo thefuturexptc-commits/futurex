@@ -1,10 +1,15 @@
 import { 
+<<<<<<< HEAD
   collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, getFirestore
+=======
+  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where 
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
+<<<<<<< HEAD
   UserCredential,
   fetchSignInMethodsForEmail,
   signInWithPopup, 
@@ -17,12 +22,18 @@ import {
   ConfirmationResult,
   getAuth as getAuthFromApp,
   User as FirebaseAuthUser
+=======
+  signInWithPopup, 
+  GoogleAuthProvider,
+  getAuth as getAuthFromApp
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 } from 'firebase/auth';
 import { 
   ref, 
   uploadBytes, 
   getDownloadURL 
 } from 'firebase/storage';
+<<<<<<< HEAD
 import { initializeApp, deleteApp, FirebaseApp, getApps, getApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
 import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, OfferLead, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails, SiteAnalyticsEvent } from '../types';
@@ -72,6 +83,12 @@ const sanitizeProductImagesForCloud = (product: Product): Product => ({
     images: sanitizeImageUrlsForCloud(variant.images),
   })),
 });
+=======
+import { initializeApp, deleteApp, FirebaseApp } from 'firebase/app';
+import { db, auth, storage, app as mainApp } from './firebaseConfig';
+import { Product, User, Order, Address, WebsiteSettings } from '../types';
+import { INITIAL_PRODUCTS } from './mockData';
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 
 // --- Helper: Data Sanitization (Crucial for Firestore) ---
 const deepSanitize = (obj: any): any => {
@@ -96,6 +113,7 @@ const deepSanitize = (obj: any): any => {
 };
 
 // --- Helper: Mock Data Management ---
+<<<<<<< HEAD
 const memoryStore = new Map<string, unknown>();
 const MOCK_STORAGE_PREFIX = 'aura_mock_';
 
@@ -685,10 +703,30 @@ const upsertSuperAdmin = (users: User[]): User[] => {
   return [superAdmin, ...users];
 };
 
+=======
+const getMockData = <T>(key: string, defaultVal: T): T => {
+    try {
+        const stored = localStorage.getItem(`mock_${key}`);
+        return stored ? JSON.parse(stored) : defaultVal;
+    } catch (e) {
+        return defaultVal;
+    }
+};
+
+const setMockData = (key: string, data: any) => {
+    try {
+        localStorage.setItem(`mock_${key}`, JSON.stringify(data));
+    } catch (e) {
+        console.error("Local storage error", e);
+    }
+};
+
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 // --- Helper: Ensure Firebase Connection (Fix for Normal Users) ---
 // If a user is "Local" (failed auth) or Admin, they might not have a Firebase Session.
 // We force an anonymous sign-in so they can still read/write to Firestore if rules allow.
 const ensureFirebaseConnection = async () => {
+<<<<<<< HEAD
   if (auth.currentUser || anonymousAuthBlocked || anonymousAuthAttempted) return;
   anonymousAuthAttempted = true;
   try {
@@ -787,32 +825,63 @@ export const getAuditLogs = async (): Promise<Array<{
     }
     return [...localLogs].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
+=======
+    if (!auth.currentUser) {
+        try {
+            console.log("No active Firebase user. Attempting anonymous sign-in for DB access...");
+            // Set a timeout for connection attempt
+            const timeout = new Promise((_, reject) => setTimeout(() => reject("Auth Timeout"), 3000));
+            await Promise.race([signInAnonymously(auth), timeout]);
+            console.log("Anonymous connection established.");
+        } catch (e) {
+            console.warn("Anonymous auth failed or timed out (Database might be unreachable):", e);
+        }
+    }
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 };
 
 // --- Helper: Seed Database ---
 export const seedDatabase = async () => {
+<<<<<<< HEAD
+=======
+    console.log("Seeding database...");
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
     
     // Ensure we have products in local storage
     const currentProducts = getMockData<Product[]>('products', []);
     if (currentProducts.length === 0) {
+<<<<<<< HEAD
         setMockData('products', INITIAL_PRODUCTS.map(normalizeProductColors));
     }
     setMockData('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
     const seededUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
     setMockData('users', seededUsers);
+=======
+        setMockData('products', INITIAL_PRODUCTS);
+    }
+    setMockData('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
     
     try {
         await ensureFirebaseConnection();
         const productsColl = collection(db, 'products');
         const snapshot = await getDocs(productsColl);
         if (snapshot.empty) {
+<<<<<<< HEAD
             for (const p of INITIAL_PRODUCTS.map(normalizeProductColors)) {
+=======
+            for (const p of INITIAL_PRODUCTS) {
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
                 const cleanP = deepSanitize(p);
                 await setDoc(doc(db, 'products', p.id), cleanP);
             }
         }
     } catch (e) {
+<<<<<<< HEAD
         logDevWarning("Seed failed (likely permission or offline):", e);
+=======
+        console.warn("Seed failed (likely permission or offline):", e);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
     }
 };
 
@@ -840,6 +909,7 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
             uploadBytes(storageRef, file),
             timeout
         ]) as any;
+<<<<<<< HEAD
         const downloadURL = await getDownloadURL(snapshot.ref);
 
         // 🔒 ADDED: Prevent invalid URLs from being returned
@@ -850,6 +920,13 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
         return downloadURL;
     } catch (error) {
         logDevError("Firebase Storage Upload Failed or Timed Out:", error);
+=======
+
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        return downloadURL;
+    } catch (error) {
+        console.error("Firebase Storage Upload Failed or Timed Out:", error);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
         
         // --- Fallback Protection ---
         // Firestore documents are limited to 1 MB. 
@@ -859,7 +936,11 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
         const MAX_FALLBACK_SIZE = 500 * 1024; // 500 KB
 
         if (file.size > MAX_FALLBACK_SIZE) {
+<<<<<<< HEAD
             logDevWarning(`File ${file.name} is too large for local DB storage. Using temporary Blob URL.`);
+=======
+            console.warn(`File ${file.name} is too large for local DB storage. Using temporary Blob URL.`);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
             // Use Blob URL for immediate session playback (works for video/large images)
             // NOTE: This URL will expire on page refresh, but allows the demo to work without crashing.
             return URL.createObjectURL(file);
@@ -873,6 +954,7 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
 // --- Products Service ---
 
 export const getProducts = async (): Promise<Product[]> => {
+<<<<<<< HEAD
   const now = Date.now();
   if (productsCache && now - productsCache.ts < PRODUCTS_CACHE_TTL_MS) {
     return [...productsCache.data];
@@ -1166,6 +1248,42 @@ export const getOfferLeads = async (): Promise<OfferLead[]> => {
 export const addProduct = async (product: Product): Promise<void> => {
   const cleanProduct = deepSanitize(normalizeProductColors(product));
   const cloudProduct = deepSanitize(sanitizeProductImagesForCloud(cleanProduct));
+=======
+  // 1. Get Local
+  const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  
+  // 2. Try Firebase 
+  try {
+      // Don't force auth for reading public products, but try if available
+      const querySnapshot = await getDocs(collection(db, 'products'));
+      if (!querySnapshot.empty) {
+          const fbProducts: Product[] = [];
+          querySnapshot.forEach((doc) => {
+            fbProducts.push({ ...doc.data(), id: doc.id } as Product);
+          });
+          return fbProducts;
+      }
+  } catch (e) { }
+  
+  return localProducts;
+};
+
+export const getProductById = async (id: string): Promise<Product | undefined> => {
+  try {
+      const docRef = doc(db, 'products', id);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        return { ...docSnap.data(), id: docSnap.id } as Product;
+      }
+  } catch (e) { }
+
+  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  return products.find(p => p.id === id);
+};
+
+export const addProduct = async (product: Product): Promise<void> => {
+  const cleanProduct = deepSanitize(product);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   
   // Local - SAVE HERE FIRST (Source of truth for immediate UI update)
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
@@ -1175,12 +1293,16 @@ export const addProduct = async (product: Product): Promise<void> => {
   
   products.push(cleanProduct);
   setMockData('products', products);
+<<<<<<< HEAD
   refreshProductsCache(products);
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 
   // Firebase
   try {
       await ensureFirebaseConnection();
       if (newId) {
+<<<<<<< HEAD
 
    // 🔒 ADDED: Prevent corrupted image URLs from reaching Firestore
    if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any).imageUrl)) {
@@ -1200,6 +1322,14 @@ export const addProduct = async (product: Product): Promise<void> => {
 }
   } catch (e: any) { 
       logDevWarning("Firebase save failed:", e);
+=======
+         await setDoc(doc(db, 'products', newId), cleanProduct);
+      } else {
+         await addDoc(collection(db, 'products'), cleanProduct);
+      }
+  } catch (e: any) { 
+      console.warn("Firebase save failed:", e);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
       if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
           alert("Database Error: Product data size is too large (likely due to offline images/videos). Product saved locally only.");
       }
@@ -1207,8 +1337,12 @@ export const addProduct = async (product: Product): Promise<void> => {
 };
 
 export const updateProduct = async (product: Product): Promise<void> => {
+<<<<<<< HEAD
   const cleanProduct = deepSanitize(normalizeProductColors(product));
   const cloudProduct = deepSanitize(sanitizeProductImagesForCloud(cleanProduct));
+=======
+  const cleanProduct = deepSanitize(product);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   
   // Local
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
@@ -1216,13 +1350,17 @@ export const updateProduct = async (product: Product): Promise<void> => {
   if (idx !== -1) {
       products[idx] = cleanProduct;
       setMockData('products', products);
+<<<<<<< HEAD
       refreshProductsCache(products);
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   }
 
   // Firebase
   try {
       await ensureFirebaseConnection();
       const docRef = doc(db, 'products', cleanProduct.id);
+<<<<<<< HEAD
      // 🔒 ADDED: Prevent corrupted image URLs from Firestore update
 if ((cleanProduct as any).imageUrl && !isValidProductionUrl((cleanProduct as any).imageUrl)) {
     logDevWarning("Blocked invalid image URL from Firestore update.");
@@ -1282,6 +1420,14 @@ export const updateProductContentFields = async (
       throw new Error('Specifications/key features were saved locally, but cloud sync timed out. Please retry once.');
     }
     throw e instanceof Error ? e : new Error('Specifications/key features cloud sync failed.');
+=======
+      await updateDoc(docRef, { ...cleanProduct });
+  } catch (e: any) {
+      console.warn("Firebase update failed:", e);
+      if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
+          alert("Database Error: Product data size is too large. Product updated locally only.");
+      }
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   }
 };
 
@@ -1289,7 +1435,10 @@ export const deleteProduct = async (id: string): Promise<void> => {
   // Local
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
   setMockData('products', products.filter(p => p.id !== id));
+<<<<<<< HEAD
   refreshProductsCache();
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 
   // Firebase
   try {
@@ -1300,6 +1449,7 @@ export const deleteProduct = async (id: string): Promise<void> => {
 
 // --- Category Service ---
 export const getCategories = async (): Promise<string[]> => {
+<<<<<<< HEAD
   const localCats = getMockData<string[]>('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
   try {
     await ensureFirebaseConnection();
@@ -1315,10 +1465,23 @@ export const getCategories = async (): Promise<string[]> => {
       logDevWarning('Failed to fetch categories from Firebase:', error);
     }
   }
+=======
+  // Local
+  const localCats = getMockData<string[]>('categories', ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring']);
+  
+  try {
+      const querySnapshot = await getDocs(collection(db, 'categories'));
+      const cats: string[] = [];
+      querySnapshot.forEach(doc => cats.push(doc.data().name));
+      if (cats.length > 0) return cats;
+  } catch (e) { }
+  
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   return localCats;
 };
 
 export const addCategory = async (category: string): Promise<void> => {
+<<<<<<< HEAD
   const normalizedCategory = category.trim();
   if (!normalizedCategory) {
     throw new Error('Category name is required');
@@ -1362,10 +1525,46 @@ export const addCategory = async (category: string): Promise<void> => {
       throw new Error('Category sync timed out. Please retry.');
     }
     throw error instanceof Error ? error : new Error('Failed to add category');
+=======
+  const cats = getMockData<string[]>('categories', []);
+  if (!cats.includes(category)) {
+      cats.push(category);
+      setMockData('categories', cats);
+  }
+
+  try {
+      await ensureFirebaseConnection();
+      
+      const catCol = collection(db, 'categories');
+      const snapshot = await getDocs(catCol);
+
+      // CRITICAL: If DB is empty, seed defaults first so we don't lose the "previous" ones.
+      if (snapshot.empty) {
+          const defaults = ['Smart Bands', 'Smart Rings', 'Smart Fans', 'Smart Monitoring'];
+          for (const def of defaults) {
+              if (def !== category) { 
+                  await addDoc(catCol, { name: def });
+              }
+          }
+      }
+      
+      // Check if this specific category already exists in DB to avoid duplicates
+      let exists = false;
+      snapshot.forEach(doc => {
+          if (doc.data().name === category) exists = true;
+      });
+
+      if (!exists) {
+          await addDoc(catCol, { name: category });
+      }
+  } catch (e) { 
+      console.error("Error adding category:", e);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   }
 };
 
 export const deleteCategory = async (category: string): Promise<void> => {
+<<<<<<< HEAD
   const normalizedCategory = category.trim();
   if (!normalizedCategory) {
     throw new Error('Category name is required');
@@ -1392,10 +1591,24 @@ export const deleteCategory = async (category: string): Promise<void> => {
     }
     throw error instanceof Error ? error : new Error('Failed to delete category');
   }
+=======
+  const cats = getMockData<string[]>('categories', []);
+  setMockData('categories', cats.filter(c => c !== category));
+
+  try {
+      await ensureFirebaseConnection();
+      const q = query(collection(db, 'categories'), where('name', '==', category));
+      const querySnapshot = await getDocs(q);
+      querySnapshot.forEach(async (d) => {
+        await deleteDoc(doc(db, 'categories', d.id));
+      });
+  } catch (e) { }
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 };
 
 // --- Auth Service ---
 
+<<<<<<< HEAD
 export const registerUser = async (email: string, password: string, phone: string, name?: string): Promise<User> => {
     const normalizedEmail = email.trim().toLowerCase();
     const normalizedPhone = normalizeIndianPhone(phone);
@@ -1480,10 +1693,45 @@ export const registerUser = async (email: string, password: string, phone: strin
     // Local cache/store persistence
     users.push(cleanUser);
     setMockData('users', users);
+=======
+export const registerUser = async (name: string, email: string, password: string): Promise<User> => {
+    const newUser: User = {
+        id: `user_${Date.now()}`,
+        name,
+        email,
+        role: 'user',
+        addresses: []
+    };
+    const cleanUser = deepSanitize(newUser);
+
+    // Local
+    const users = getMockData<User[]>('users', []);
+    users.push(cleanUser);
+    setMockData('users', users);
+
+    // Firebase
+    try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const firebaseUser = userCredential.user;
+        if (firebaseUser) {
+            cleanUser.id = firebaseUser.uid; // Update ID to match Firebase
+            await setDoc(doc(db, 'users', firebaseUser.uid), cleanUser);
+        }
+    } catch (e) {
+        console.warn("Auth failed/unavailable. Using local user fallback.");
+        // CRITICAL: Force anonymous connection so this 'local' user can still write orders to DB
+        await ensureFirebaseConnection();
+        // Try to save the user profile to DB even if Auth failed (so Admin sees them)
+        try {
+           await setDoc(doc(db, 'users', cleanUser.id), cleanUser);
+        } catch(dbErr) { console.error("Could not save local user to DB", dbErr); }
+    }
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
     
     return cleanUser;
 };
 
+<<<<<<< HEAD
 export const isPhoneRegistered = async (phone: string): Promise<boolean> => {
   const normalizedPhone = normalizeIndianPhone(phone);
   const nationalPhone = getIndianNationalPhone(phone);
@@ -1668,6 +1916,54 @@ export const loginUserWithPhone = async (phone: string, password: string): Promi
   }
 
   return loginUser(accountEmail, password, normalizedPhone);
+=======
+export const loginUser = async (email: string, password: string): Promise<User> => {
+    // 1. Hardcoded Admin (Always works)
+    if (email === 'admin@gmail.com' && password === 'admin123') {
+        const admin: User = { id: 'admin_1', name: 'Admin User', email, role: 'admin', addresses: [] };
+        
+        // Ensure admin is in local storage
+        const users = getMockData<User[]>('users', []);
+        if(!users.find(u => u.id === 'admin_1')) {
+            users.push(admin);
+            setMockData('users', users);
+        }
+
+        await ensureFirebaseConnection();
+        return admin;
+    }
+
+    // 2. Try Firebase
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const firebaseUser = userCredential.user;
+        if (firebaseUser) {
+            const docRef = doc(db, 'users', firebaseUser.uid);
+            const docSnap = await getDoc(docRef);
+            if (docSnap.exists()) return docSnap.data() as User;
+            // Return basic info if doc missing
+            return {
+                id: firebaseUser.uid,
+                name: firebaseUser.displayName || 'User',
+                email: firebaseUser.email || '',
+                role: 'user',
+                addresses: []
+            };
+        }
+    } catch (e) {
+        // Fallback to Local
+    }
+
+    // 3. Local Check
+    const users = getMockData<User[]>('users', []);
+    const found = users.find(u => u.email === email);
+    if (found) {
+        await ensureFirebaseConnection(); // Ensure connection for local users too
+        return found;
+    }
+
+    throw new Error("Invalid credentials");
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 };
 
 export const loginWithGoogle = async (): Promise<User> => {
@@ -1678,6 +1974,7 @@ export const loginWithGoogle = async (): Promise<User> => {
     
     if (!firebaseUser) throw new Error("No user returned");
 
+<<<<<<< HEAD
     let resolvedUser: User;
     const userRef = doc(db, 'users', firebaseUser.uid);
 
@@ -1726,10 +2023,20 @@ export const loginWithGoogle = async (): Promise<User> => {
         throw profileError;
       }
       resolvedUser = applyRoleByEmail({
+=======
+    const userRef = doc(db, 'users', firebaseUser.uid);
+    const userSnap = await getDoc(userRef);
+
+    if (userSnap.exists()) {
+      return userSnap.data() as User;
+    } else {
+      const newUser: User = {
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
         id: firebaseUser.uid,
         name: firebaseUser.displayName || 'User',
         email: firebaseUser.email || '',
         role: 'user',
+<<<<<<< HEAD
         addresses: [],
         permissions: {}
       });
@@ -2319,6 +2626,31 @@ export const loginWithPhoneOtp = async (phone: string): Promise<User> => {
   return await syncRoleForCurrentAuthUser(found);
 };
 
+=======
+        addresses: []
+      };
+      await setDoc(userRef, deepSanitize(newUser));
+      return newUser;
+    }
+  } catch (error) {
+    // Simulate google login for demo
+    const mockUser: User = {
+        id: `google_${Date.now()}`,
+        name: 'Demo Google User',
+        email: 'demo@gmail.com',
+        role: 'user',
+        addresses: []
+    };
+    const users = getMockData<User[]>('users', []);
+    users.push(mockUser);
+    setMockData('users', users);
+    
+    await ensureFirebaseConnection(); // Ensure connection
+    return mockUser;
+  }
+};
+
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 export const updateUserAddresses = async (userId: string, addresses: Address[]): Promise<void> => {
     // 1. Update Local Mock
     const users = getMockData<User[]>('users', []);
@@ -2336,6 +2668,7 @@ export const updateUserAddresses = async (userId: string, addresses: Address[]):
         // We only update the addresses field
         await updateDoc(userRef, { addresses: deepSanitize(addresses) });
     } catch (e) {
+<<<<<<< HEAD
         logDevWarning("Failed to update user address in Firebase:", e);
     }
 
@@ -2543,10 +2876,49 @@ export const deleteAdmin = async (adminId: string): Promise<void> => {
         await updateDoc(userRef, { role: 'user', permissions: {} });
     } catch (e) {
         logDevWarning("Failed to demote admin in Firebase:", e);
+=======
+        console.warn("Failed to update user address in Firebase:", e);
+    }
+};
+
+export const addNewAdmin = async (email: string, name: string, password: string): Promise<void> => {
+    // Local
+    const users = getMockData<User[]>('users', []);
+    users.push({ id: `admin_${Date.now()}`, name, email, role: 'admin', addresses: [] });
+    setMockData('users', users);
+
+    try {
+        await ensureFirebaseConnection();
+        
+        // Create in Firebase Auth using secondary app to avoid logging out current admin
+        // We use the options from the main app to initialize the secondary one
+        const secondaryApp = initializeApp(mainApp.options, "SecondaryApp");
+        const secondaryAuth = getAuthFromApp(secondaryApp);
+        
+        const userCredential = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+        const uid = userCredential.user.uid;
+        
+        // Save user document
+        await setDoc(doc(db, 'users', uid), { 
+            id: uid,
+            email, 
+            name, 
+            role: 'admin', 
+            addresses: [] 
+        });
+
+        // Cleanup
+        await deleteApp(secondaryApp);
+
+    } catch(e) { 
+        console.error("Error adding admin to Firebase:", e);
+        throw e;
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
     }
 };
 
 export const getAllUsers = async (): Promise<User[]> => {
+<<<<<<< HEAD
     const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
     setMockData('users', localUsers);
     try {
@@ -2698,6 +3070,38 @@ export const createOrder = async (
     customerName,
     customerEmail: verifiedCustomerEmail,
     customerPhone,
+=======
+    const localUsers = getMockData<User[]>('users', []);
+    
+    try {
+        // We try to fetch from DB, but don't force auth here as it's a read op often done by admin
+        const querySnapshot = await getDocs(collection(db, 'users'));
+        const fbUsers: User[] = [];
+        querySnapshot.forEach((doc) => fbUsers.push(doc.data() as User));
+        
+        // Merge without duplicates (Prefer Firebase)
+        const combined = [...fbUsers];
+        localUsers.forEach(locU => {
+            if (!combined.find(u => u.id === locU.id)) combined.push(locU);
+        });
+        return combined;
+    } catch(e) {
+        return localUsers;
+    }
+};
+
+// --- Order Service ---
+
+export const createOrder = async (userId: string, items: any[], total: number, address: Address): Promise<Order> => {
+  const newOrder: Order = {
+    id: `ORD-${Date.now()}`,
+    userId,
+    items,
+    total,
+    status: 'Processing',
+    date: new Date().toISOString(),
+    shippingAddress: address
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   };
 
   const cleanOrder = deepSanitize(newOrder);
@@ -2712,14 +3116,23 @@ export const createOrder = async (
     // CRITICAL: Ensure we have a session (anonymous or real) before writing
     await ensureFirebaseConnection();
     
+<<<<<<< HEAD
     await setDoc(doc(db, 'orders', cleanOrder.id), cleanOrder);
     
     // Reserve inventory by selected color
+=======
+    console.log("Saving order to Firebase...", cleanOrder);
+    await setDoc(doc(db, 'orders', cleanOrder.id), cleanOrder);
+    console.log("Order saved successfully to Firebase!");
+    
+    // Inventory reduction
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
     for (const item of items) {
         try {
             const pRef = doc(db, 'products', item.id);
             const pSnap = await getDoc(pRef);
             if(pSnap.exists()) {
+<<<<<<< HEAD
                 const product = normalizeProductColors({ ...(pSnap.data() as Product), id: pSnap.id });
                 const colorName = item.selectedColorName;
                 const qty = Number(item.quantity || 0);
@@ -2758,6 +3171,24 @@ export const createOrder = async (
         }
         Object.assign(p, normalizeProductColors({ ...product, colors }));
       }
+=======
+                const currentStock = pSnap.data().stock;
+                await updateDoc(pRef, { stock: Math.max(0, currentStock - item.quantity) });
+            }
+        } catch(invError) {
+            console.warn("Failed to update inventory for item", item.id, invError);
+        }
+    }
+  } catch (error) {
+    console.error("FIREBASE SAVE FAILED (Data might be undefined or Permissions denied):", error);
+  }
+  
+  // Local Inventory Reduction
+  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  items.forEach(item => {
+      const p = products.find(prod => prod.id === item.id);
+      if (p) p.stock = Math.max(0, p.stock - item.quantity);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   });
   setMockData('products', products);
 
@@ -2766,6 +3197,7 @@ export const createOrder = async (
 
 // New: Explicitly fetch all orders for Admin
 export const getAllOrders = async (): Promise<Order[]> => {
+<<<<<<< HEAD
     const localOrders = getMockData<Order[]>('orders', []);
     const normalizeEmailValue = (value?: string) => (value || '').trim().toLowerCase();
     const resolveOrderCustomer = (order: Order, users: User[]): Order => {
@@ -2840,17 +3272,47 @@ export const getAllOrders = async (): Promise<Order[]> => {
       const localUsers = upsertSuperAdmin(getMockData<User[]>('users', []));
       return [...localOrders].map((order) => resolveOrderCustomer(order, localUsers)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     }
+=======
+    let fbOrders: Order[] = [];
+    
+    try {
+        await ensureFirebaseConnection();
+        console.log("Fetching all orders from Firebase...");
+        const q = query(collection(db, 'orders'));
+        const querySnapshot = await getDocs(q);
+        // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
+        querySnapshot.forEach((doc) => fbOrders.push({ ...(doc.data() as Order), id: doc.id }));
+        console.log("Fetched orders from DB:", fbOrders.length);
+    } catch (e) {
+        console.error("Error fetching admin orders from DB (Check permissions):", e);
+    }
+
+    const localOrders = getMockData<Order[]>('orders', []);
+    
+    // Merge logic: Add local orders only if they are NOT in Firebase list
+    const combined = [...fbOrders];
+    localOrders.forEach(locO => {
+        if (!combined.find(o => o.id === locO.id)) combined.push(locO);
+    });
+
+    return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 };
 
 export const getUserOrders = async (userId: string): Promise<Order[]> => {
   // 1. Get Local Orders
   const mockOrders = getMockData<Order[]>('orders', []);
   
+<<<<<<< HEAD
   // 2. Fetch Firebase Orders (with timeout to prevent hanging on slow connections)
+=======
+  // 2. Fetch Firebase Orders
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   let fbOrders: Order[] = [];
   try {
       await ensureFirebaseConnection();
       const q = query(collection(db, 'orders'), where('userId', '==', userId));
+<<<<<<< HEAD
       const querySnapshot = await withTimeout(getDocs(q), 5000);
       // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
       querySnapshot.forEach((orderDoc) => fbOrders.push({ ...(orderDoc.data() as Order), id: orderDoc.id }));
@@ -2865,6 +3327,17 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
     o.userId === userId ||
     (firebaseUid && o.userId === firebaseUid)
   );
+=======
+      const querySnapshot = await getDocs(q);
+      // FORCE ID MAP: Explicitly overwrite the ID from the doc.id to ensure matching works
+      querySnapshot.forEach((doc) => fbOrders.push({ ...(doc.data() as Order), id: doc.id }));
+  } catch (e) { 
+      console.warn("Failed to fetch user orders from Firebase", e);
+  }
+
+  // 3. Filter Local Orders
+  const filteredMock = mockOrders.filter(o => o.userId === userId);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 
   // 4. Merge - Prioritize Firebase Orders (Source of truth for Status Updates)
   const combined = [...fbOrders];
@@ -2878,6 +3351,7 @@ export const getUserOrders = async (userId: string): Promise<Order[]> => {
   return combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 };
 
+<<<<<<< HEAD
 export const getOrderById = async (orderId: string): Promise<Order | null> => {
   const cleanOrderId = orderId.trim();
   if (!cleanOrderId) return null;
@@ -2903,16 +3377,22 @@ export const getCachedOrderById = (orderId: string): Order | null => {
   return getMockData<Order[]>('orders', []).find((order) => order.id === cleanOrderId) || null;
 };
 
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 export const updateOrderStatus = async (orderId: string, status: Order['status']): Promise<void> => {
   // Local
   const orders = getMockData<Order[]>('orders', []);
   const order = orders.find(o => o.id === orderId);
+<<<<<<< HEAD
   const previousStatus = order?.status;
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   if (order) {
       order.status = status;
       setMockData('orders', orders);
   }
 
+<<<<<<< HEAD
   const applyInventoryTransition = (products: Product[], targetOrder?: Order) => {
     if (!targetOrder || previousStatus === status) return products;
     return products.map((raw) => {
@@ -2952,11 +3432,14 @@ export const updateOrderStatus = async (orderId: string, status: Order['status']
   const updatedLocalProducts = applyInventoryTransition(localProducts, order);
   setMockData('products', updatedLocalProducts);
 
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   // Firebase
   try {
       await ensureFirebaseConnection();
       const orderRef = doc(db, 'orders', orderId);
       await updateDoc(orderRef, { status });
+<<<<<<< HEAD
 
       if (order) {
         for (const item of order.items) {
@@ -3208,3 +3691,34 @@ export const getSiteAnalyticsEvents = async (): Promise<SiteAnalyticsEvent[]> =>
     return localEvents.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 };
+=======
+  } catch (e) { }
+};
+
+// --- Settings Service ---
+
+export const getWebsiteSettings = async (): Promise<WebsiteSettings> => {
+    // Local
+    const localSettings = getMockData<WebsiteSettings>('settings', { primaryColor: '#0ea5e9', logoUrl: '' });
+    
+    // Firebase
+    try {
+        const docRef = doc(db, 'settings', 'general');
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            return docSnap.data() as WebsiteSettings;
+        }
+    } catch(e) { }
+    
+    return localSettings;
+};
+
+export const updateWebsiteSettings = async (settings: WebsiteSettings): Promise<void> => {
+    setMockData('settings', settings);
+    try {
+        await ensureFirebaseConnection();
+        const docRef = doc(db, 'settings', 'general');
+        await setDoc(docRef, settings, { merge: true });
+    } catch (e) { }
+};
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b

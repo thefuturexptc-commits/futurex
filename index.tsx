@@ -8,4 +8,12 @@ if (!rootElement) {
 }
 
 const root = ReactDOM.createRoot(rootElement);
+<<<<<<< HEAD
 root.render(<App />);
+=======
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b

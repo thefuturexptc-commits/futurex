@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 export interface ProductVariation {
   id: string;
   size?: string;
@@ -158,10 +159,31 @@ export const AVAILABLE_COLORS = [
   { name: "Green", value: "#10B981" }
 ];
 
+=======
+export interface Product {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  category: string;
+  images: string[];
+  videoUrl?: string;
+  features: string[];
+  specs: Record<string, string>;
+  stock: number;
+  isFeatured?: boolean;
+  isBestSeller?: boolean;
+  rating: number;
+  reviewCount: number;
+  warranty?: string;
+}
+
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 export interface CartItem extends Product {
   quantity: number;
 }
 
+<<<<<<< HEAD
 export type UserRole = "superadmin" | "admin" | "user";
 
 export interface UserPermissions {
@@ -175,15 +197,23 @@ export interface UserPermissions {
   support?: boolean;
 }
 
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 export interface User {
   id: string;
   name: string;
   email: string;
+<<<<<<< HEAD
   password?: string;
   role: UserRole;
   addresses?: Address[];
   phone?: string;
   permissions?: UserPermissions;
+=======
+  role: 'user' | 'admin';
+  phone?: string;
+  addresses: Address[];
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 }
 
 export interface Address {
@@ -194,6 +224,7 @@ export interface Address {
   country: string;
 }
 
+<<<<<<< HEAD
 export interface CheckoutShippingDetails {
   name: string;
   phoneNumber: string;
@@ -209,11 +240,14 @@ export interface CheckoutFlowState {
   phoneVerified?: boolean;
 }
 
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 export interface Order {
   id: string;
   userId: string;
   items: CartItem[];
   total: number;
+<<<<<<< HEAD
   status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled' | 'Returned';
   date: string;
   shippingAddress: Address;
@@ -259,11 +293,17 @@ export interface SiteAnalyticsEvent {
   quantity?: number;
   orderId?: string;
   source?: string;
+=======
+  status: 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  date: string;
+  shippingAddress: Address;
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 }
 
 export interface WebsiteSettings {
   primaryColor: string; // Hex code
   logoUrl?: string; // URL for the custom brand logo
+<<<<<<< HEAD
   socialLinks?: {
     email?: string;
     twitter?: string;
@@ -277,6 +317,8 @@ export interface WebsiteSettings {
     items: string[];
   }>;
   pageContent?: Record<string, string>;
+=======
+>>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
 }
 
 export type Theme = 'light' | 'dark';
