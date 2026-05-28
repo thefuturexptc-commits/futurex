@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "headers": [
     {
       "source": "/assets/:path*",
@@ -58,9 +57,5 @@
       "source": "/:path*",
       "destination": "/index.html"
     }
-=======
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
->>>>>>> a168ac528e04a1ed3dcc8407965889538ae3e04b
   ]
 }
