@@ -2619,7 +2619,13 @@ export const ProductDetail: React.FC = () => {
             image: storyImages[index + 1] || storyImages[0],
           }))),
   ];
-  const mobileProductBannerSections = overviewSections.slice(1).filter((section) => section.image || section.video);
+  const overviewMediaSections = [
+    ...(productVideoUrl
+      ? [{ title: `${product.name} video`, copy: '', video: productVideoUrl, cleanBanner: true }]
+      : []),
+    ...overviewSections.slice(1),
+  ];
+  const mobileProductBannerSections = overviewMediaSections.filter((section) => section.image || section.video);
   const familyProductFaqs: Record<string, Array<{ q: string; a: string }>> = {
     band: [
       { q: `What does ${product.name} track?`, a: `${product.name} supports fitness and wellness tracking such as activity, sleep, heart rate and connected app insights depending on the model.` },
@@ -3237,7 +3243,7 @@ export const ProductDetail: React.FC = () => {
             </div>
             {showProductOverview && mobileProductBannerSections.length === 0 && (
               <div className="space-y-3">
-                {(showAllMobileOverview ? overviewSections.slice(1) : overviewSections.slice(1, 3)).map((section, index) => (
+                {(showAllMobileOverview ? overviewMediaSections : overviewMediaSections.slice(0, 2)).map((section, index) => (
                   <article key={section.title} className="overflow-hidden">
                     {section.image && (
                       <div className="relative overflow-hidden bg-[#f8fbfb]">
@@ -3441,7 +3447,7 @@ export const ProductDetail: React.FC = () => {
 
           <section id="more-information" className="hidden scroll-mt-32 bg-white px-0 pb-10 sm:block sm:scroll-mt-36 lg:pb-14">
             <div className="mx-auto w-full max-w-[1200px] space-y-4 px-4 sm:px-6 lg:px-0">
-              {overviewSections.slice(1).map((section, index) => (
+              {overviewMediaSections.map((section, index) => (
                 <article key={section.title} className="overflow-hidden bg-transparent shadow-none">
                   {section.video ? (
                     <div className="aspect-[12/5] overflow-hidden bg-slate-950">
