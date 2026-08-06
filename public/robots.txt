@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://thefuturex.in/sitemap.xml
+LLMS: https://thefuturex.in/llms.txt

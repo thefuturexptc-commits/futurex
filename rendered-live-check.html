@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      (function () {
+        try {
+          var savedTheme = localStorage.getItem('aura_theme_preference') || localStorage.getItem('aura_theme');
+          var theme = savedTheme === 'light' ? 'light' : 'dark';
+          document.documentElement.classList.remove('light', 'dark');
+          document.documentElement.classList.add(theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (error) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        }
+      })();
+    </script>
+    <!-- Google Tag Manager -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({ 'gtm.start': new Date().getTime(), event: 'gtm.js' });
+      window.addEventListener('load', function () {
+        window.setTimeout(function () {
+          var firstScript = document.getElementsByTagName('script')[0];
+          var gtmScript = document.createElement('script');
+          gtmScript.async = true;
+          gtmScript.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-MFP4VCPQ';
+          firstScript.parentNode.insertBefore(gtmScript, firstScript);
+        }, 1200);
+      }, { once: true });
+    </script>
+    <!-- End Google Tag Manager -->
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LR0CKB2MSN"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LR0CKB2MSN');
+    </script>
+    <title>TheFutureX | Future of Wearables</title>
+ <meta name="description" content="Shop smart bands, smart rings, smart fans and monitoring wearables from TheFutureX." />
+    <meta name="google-site-verification" content="14jIuypmdDpaPLZUQjAOilXZ0KOYwuVAWi1InNWslkg" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#050505" />
+    <link rel="canonical" href="https://thefuturex.in/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TheFutureX" />
+    <meta property="og:title" content="TheFutureX | Future of Wearables" />
+ <meta property="og:description" content="Shop smart bands, smart rings, smart fans and monitoring wearables from TheFutureX." />
+    <meta property="og:url" content="https://thefuturex.in/" />
+    <meta property="og:image" content="https://thefuturex.in/images/tfx-google-logo.webp" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TheFutureX | Future of Wearables" />
+ <meta name="twitter:description" content="Shop smart bands, smart rings, smart fans and monitoring wearables from TheFutureX." />
+    <meta name="twitter:image" content="https://thefuturex.in/images/tfx-google-logo.webp" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/images/tfx-google-favicon-v2.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/images/favicon-192.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/images/favicon-96.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/images/favicon-48.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32.png" />
+    <link rel="shortcut icon" href="/favicon-v2.ico" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/apple-touch-icon.png" />
+    <link rel="prefetch" as="image" href="/assets/fan-hero-q8pro-cutout-Gixnibz1.webp" type="image/webp" fetchpriority="low" />
+    <link rel="prefetch" as="image" href="/assets/untitled-design-51-BZXuLAF4.webp" type="image/webp" fetchpriority="low" />
+    <script>
+      window.tailwind = window.tailwind || {};
+      window.tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Outfit', 'sans-serif'],
+              display: ['Space Grotesk', 'sans-serif'],
+            },
+            colors: {
+              primary: {
+                50: 'rgb(var(--color-primary-50) / <alpha-value>)',
+                100: 'rgb(var(--color-primary-100) / <alpha-value>)',
+                200: 'rgb(var(--color-primary-200) / <alpha-value>)',
+                300: 'rgb(var(--color-primary-300) / <alpha-value>)',
+                400: 'rgb(var(--color-primary-400) / <alpha-value>)',
+                500: 'rgb(var(--color-primary-500) / <alpha-value>)',
+                600: 'rgb(var(--color-primary-600) / <alpha-value>)',
+                700: 'rgb(var(--color-primary-700) / <alpha-value>)',
+                800: 'rgb(var(--color-primary-800) / <alpha-value>)',
+                900: 'rgb(var(--color-primary-900) / <alpha-value>)',
+              },
+              dark: {
+                bg: '#050505',
+                surface: '#0a0a0a',
+                border: '#1f1f1f'
+              }
+            },
+            animation: {
+              'fade-in-up': 'fadeInUp 0.45s ease-out forwards',
+              'card-reveal': 'cardReveal 0.55s ease-out forwards',
+              'fade-in': 'fadeIn 0.5s ease-out forwards',
+              'float': 'float 6s ease-in-out infinite',
+              'float-fast': 'float 6s ease-in-out infinite',
+              'float-slow': 'float 12s ease-in-out infinite',
+              'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              'spin-slow': 'spin 15s linear infinite',
+              'bounce-slow': 'bounce 3s infinite',
+              'gradient-x': 'gradientX 7s ease-in-out infinite',
+              'modal-pop': 'modalPop 0.3s ease-out forwards',
+            },
+            keyframes: {
+              fadeInUp: {
+                '0%': { opacity: '0', transform: 'translateY(20px)' },
+                '100%': { opacity: '1', transform: 'translateY(0)' },
+              },
+              cardReveal: {
+                '0%': { opacity: '0', transform: 'translateY(14px) scale(0.95)' },
+                '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+              },
+              fadeIn: {
+                '0%': { opacity: '0' },
+                '100%': { opacity: '1' },
+              },
+              float: {
+                '0%, 100%': { transform: 'translateY(0)' },
+                '50%': { transform: 'translateY(-20px)' },
+              },
+              gradientX: {
+                '0%, 100%': { backgroundPosition: '0% 50%' },
+                '50%': { backgroundPosition: '100% 50%' },
+              },
+              modalPop: {
+                '0%': { opacity: '0', transform: 'translateY(18px) scale(0.95)' },
+                '100%': { opacity: '1', transform: 'translateY(0) scale(1)' },
+              },
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.tailwindcss.com">
+    <script defer src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript>
+      <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    </noscript>
+    <style>
+      :root {
+        /* Sky blue default */
+        --color-primary-50: 240 249 255;
+        --color-primary-100: 224 242 254;
+        --color-primary-200: 186 230 253;
+        --color-primary-300: 125 211 252;
+        --color-primary-400: 56 189 248;
+        --color-primary-500: 14 165 233;
+        --color-primary-600: 2 132 199;
+        --color-primary-700: 3 105 161;
+        --color-primary-800: 7 89 133;
+        --color-primary-900: 12 74 110;
+      }
+
+      body {
+        font-family: 'Outfit', sans-serif;
+      }
+      html, body, #root {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      img, video {
+        max-width: 100%;
+        height: auto;
+      }
+
+      h1, h2, h3, h4, h5, h6, .font-display {
+        font-family: 'Space Grotesk', sans-serif;
+      }
+      
+      /* Advanced Glassmorphism */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.02), 
+          0 2px 4px -1px rgba(0, 0, 0, 0.02),
+          inset 0 0 20px rgba(255, 255, 255, 0.6);
+      }
+      
+      .dark .glass-card {
+        background: rgba(10, 10, 10, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .glass-nav {
+         background: rgba(255, 255, 255, 0.8);
+         backdrop-filter: blur(10px);
+         -webkit-backdrop-filter: blur(10px);
+         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .dark .glass-nav {
+         background: rgba(5, 5, 5, 0.8);
+         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Global form contrast fixes for dropdowns/inputs */
+      select {
+        background: #ffffff;
+        color: #111827;
+        border-color: #d1d5db;
+      }
+      .dark select {
+        background: #1f2937;
+        color: #ffffff;
+        border-color: #4b5563;
+      }
+      select option {
+        background: #ffffff;
+        color: #111827;
+      }
+      .dark select option {
+        background: #1f2937;
+        color: #ffffff;
+      }
+
+      img[data-brand-logo="true"] {
+        max-width: 180px;
+      }
+
+      /* Tech Background Pattern - Light Mode Optimized */
+      .bg-grid-pattern {
+        background-size: 60px 60px;
+        background-image: 
+          linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+        mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+      }
+
+      .dark .bg-grid-pattern {
+        background-image: 
+          linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+      }
+
+      .tech-border {
+        position: relative;
+      }
+      .tech-border::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 10px; height: 1px;
+        background: currentColor;
+      }
+      .tech-border::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 1px; height: 10px;
+        background: currentColor;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #333;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgb(var(--color-primary-500));
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      .animate-fade-in-up,
+      .animate-fade-in,
+      .animate-float,
+      .animate-float-fast,
+      .animate-float-slow {
+        will-change: transform, opacity;
+      }
+    </style>
+  <script type="module" crossorigin src="/assets/index-F-J_VXP6.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/router-BeuOxiws.js">
+  <link rel="modulepreload" crossorigin href="/assets/editor-DLsPnxTE.js">
+  <link rel="modulepreload" crossorigin href="/assets/firebaseAuth-mYVVXLZR.js">
+  <link rel="modulepreload" crossorigin href="/assets/firebaseApp-B4botFrQ.js">
+  <link rel="modulepreload" crossorigin href="/assets/firebaseDb-zBeQJDWi.js">
+  <link rel="modulepreload" crossorigin href="/assets/firebaseStorage-CoaClAfh.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-nVhpKyG5.css">
+    <script id="homepage-json-ld" type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"Organization","@id":"https://thefuturex.in/#organization","name":"The Future X","alternateName":["TFX","TheFutureX"],"url":"https://thefuturex.in/","logo":"https://thefuturex.in/images/tfx-google-logo.webp","sameAs":["https://www.instagram.com/thefuturex.in/"]},{"@type":"WebSite","@id":"https://thefuturex.in/#website","name":"The Future X","url":"https://thefuturex.in/","publisher":{"@id":"https://thefuturex.in/#organization"}}]}</script>
+  </head>
+  <body class="bg-dark-bg text-gray-100 selection:bg-primary-500 selection:text-white">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript>
+      <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MFP4VCPQ" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+    </noscript>
+    <!-- End Google Tag Manager (noscript) -->
+    <div id="root"><div class="seo-prerendered-page">
+  <style id="seo-prerendered-style">
+    .seo-prerendered-page{font-family:Arial,sans-serif;background:#fff;color:#0f172a;line-height:1.6}
+    .seo-prerendered-page a{color:#0369a1;text-decoration:none}
+    .seo-prerendered-page main{max-width:1180px;margin:0 auto;padding:32px 20px}
+    .seo-prerendered-page h1{font-size:clamp(2rem,5vw,4.5rem);line-height:1.05;margin:0 0 16px}
+    .seo-prerendered-page h2{font-size:clamp(1.35rem,3vw,2.25rem);line-height:1.15;margin:24px 0 12px}
+    .seo-prerendered-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;margin-top:24px}
+    .seo-product-card{border:1px solid #dbe7ea;border-radius:12px;padding:16px;background:#f8fbfb}
+    .seo-product-card img{display:block;width:100%;height:180px;object-fit:contain;background:#fff;border-radius:8px}
+    .seo-faq details{border:1px solid #dbe7ea;border-radius:10px;margin:10px 0;padding:14px;background:#fff}
+  </style>
+    <main>
+      <h1>TheFutureX Smart Wearables and Connected Lifestyle Products</h1>
+      <p>Shop smart bands, smart rings, smart fans, AI smart glasses, and monitoring wearables from TheFutureX. Compare everyday tracking, sleep insights, app connectivity, airflow comfort, and practical connected technology for modern living.</p>
+      <section>
+        <h2>Featured TheFutureX Products</h2>
+        <div class="seo-prerendered-grid">
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-advance" itemprop="url">
+            <img src="https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2F1782201273422_Q8%20pro1.webp?alt=media&amp;token=22b0e245-9ade-4962-8675-e88d26984a90" alt="TFX Advance – All-Season Bladeless Fan | Cool in Summer &amp; Warm in Winter" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX Advance – All-Season Bladeless Fan | Cool in Summer &amp; Warm in Winter</h2>
+          </a>
+          <p itemprop="description">Shop TFX Advance, an all-season bladeless fan built for smooth cooling, warm airflow, modern rooms, quiet operation, and.</p>
+          <p><strong>₹12,599</strong></p>
+        </article>
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-ai-smart-glasses" itemprop="url">
+            <img src="https://picsum.photos/400" alt="TFX AI Smart Glasses – Bluetooth Calling, Music, Voice Assistant &amp; HD Recording Eyewea" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX AI Smart Glasses – Bluetooth Calling, Music, Voice Assistant &amp; HD Recording Eyewea</h2>
+          </a>
+          <p itemprop="description">Explore TFX AI Smart Glasses with Bluetooth calling, music control, voice assistant support, HD recording, and.</p>
+          <p><strong>₹3,999</strong></p>
+        </article>
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-airwall-pro" itemprop="url">
+            <img src="https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2Fvariants%2F1782203655455_v_0_1782203625736_wall%20mounted6.webp?alt=media&amp;token=5a14a579-f66e-4374-8ef7-278ddd867703" alt="TFX AirWall Pro – Smart Wall-Mounted Bladeless Fan with Air Purifier" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX AirWall Pro – Smart Wall-Mounted Bladeless Fan with Air Purifier</h2>
+          </a>
+          <p itemprop="description">Buy TFX AirWall Pro, a smart wall-mounted bladeless fan with air purifier support, wide airflow, modern styling, and.</p>
+          <p><strong>₹12,999</strong></p>
+        </article>
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-breeze-pro" itemprop="url">
+            <img src="https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2F1782201794533_TP02-4.webp?alt=media&amp;token=70351db6-0459-4a0f-a052-f4d2decad6db" alt="TFX Breeze Pro – Bladeless Tower Fan with Upgraded Motor &amp; Remote Control" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX Breeze Pro – Bladeless Tower Fan with Upgraded Motor &amp; Remote Control</h2>
+          </a>
+          <p itemprop="description">Shop TFX Breeze Pro, a bladeless tower fan with upgraded motor, remote control, smooth airflow, low-noise performance.</p>
+          <p><strong>₹12,000</strong></p>
+        </article>
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-display-pro-smart-ring" itemprop="url">
+            <img src="https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2Fvariants%2F1779513480389_v_0_1779513435723_Rose%20Gold%20Display%20ring%203.webp?alt=media&amp;token=70ce943c-3082-47ef-ae4b-f66bdd583871" alt="TFX Display Pro Smart Ring – Premium Fitness Tracking with Display &amp; Wireless Charging" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX Display Pro Smart Ring – Premium Fitness Tracking with Display &amp; Wireless Charging</h2>
+          </a>
+          <p itemprop="description">Buy TFX Display Pro Smart Ring with premium tracking, built-in display, wireless charging, sleep insights, heart rate.</p>
+          <p><strong>₹3,855</strong></p>
+        </article>
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-display-pro-smart-ring" itemprop="url">
+            <img src="https://thefuturex.in/images/aura-ring-halo.webp" alt="TFX Display Pro Smart Ring" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX Display Pro Smart Ring</h2>
+          </a>
+          <p itemprop="description">Buy TFX Display Pro Smart Ring with premium tracking, built-in display, wireless charging, sleep insights, heart rate.</p>
+          <p><strong>₹2,999</strong></p>
+        </article>
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-hepa-pureair-pro" itemprop="url">
+            <img src="https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2F1775564687091_TP20-12%20Purifier%20Bladeless%20Floor%20Fan.jpg.webp?alt=media&amp;token=bfef5d4c-1fc6-4dce-822b-fea7e383fefb" alt="TFX HEPA PureAir Pro – Bladeless Tower Fan with HEPA Air Purifier for Home &amp; Office" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX HEPA PureAir Pro – Bladeless Tower Fan with HEPA Air Purifier for Home &amp; Office</h2>
+          </a>
+          <p itemprop="description">Shop TFX HEPA PureAir Pro, a bladeless tower fan with HEPA air purifier support, clean airflow, quiet operation, and.</p>
+          <p><strong>₹14,999</strong></p>
+        </article>
+        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
+          <a href="https://thefuturex.in/product/tfx-luxair-pro" itemprop="url">
+            <img src="https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2F1778071392888_TP)12%20(1).webp?alt=media&amp;token=c051a3b8-9b4c-4acb-aba5-3ca39f570162" alt="TFX LuxAir Pro – Premium Bladeless Fan for Modern Homes" loading="lazy" decoding="async" itemprop="image" />
+            <h2 itemprop="name">TFX LuxAir Pro – Premium Bladeless Fan for Modern Homes</h2>
+          </a>
+          <p itemprop="description">Buy TFX LuxAir Pro, a premium bladeless fan for modern homes with smooth airflow, quiet cooling, refined design, and.</p>
+          <p><strong>₹16,450</strong></p>
+        </article></div>
+      </section>
+      <section>
+        <h2>Shop by Category</h2>
+        <ul>
+          <li><a href="/smart-bands">Smart Bands</a></li>
+          <li><a href="/smart-rings">Smart Rings</a></li>
+          <li><a href="/bladeless-fan">Bladeless Fans</a></li>
+          <li><a href="/smart-monitoring">Smart Monitoring</a></li>
+          <li><a href="/smart-glasses">AI Smart Glasses</a></li>
+        </ul>
+      </section>
+    </main></div></div>
+</body>
+</html>

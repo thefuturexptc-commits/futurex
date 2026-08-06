@@ -1,0 +1,198 @@
+{
+  "headers": [
+    {
+      "source": "/assets/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/images/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/product-feed.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=900, s-maxage=900"
+        }
+      ]
+    },
+    {
+      "source": "/product-feed.csv",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/csv; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=900, s-maxage=900"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "source": "/:path((?!assets/).*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/product-category/smart-bracelet",
+      "destination": "/smart-bands",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/smart-band",
+      "destination": "/smart-bands",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/smart-bands",
+      "destination": "/smart-bands",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/smart-ring",
+      "destination": "/smart-rings",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/smart-rings",
+      "destination": "/smart-rings",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/smart-fan",
+      "destination": "/bladeless-fan",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/smart-fans",
+      "destination": "/bladeless-fan",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/monitor",
+      "destination": "/smart-monitoring",
+      "permanent": true
+    },
+    {
+      "source": "/product-category/smart-monitoring",
+      "destination": "/smart-monitoring",
+      "permanent": true
+    },
+    {
+      "source": "/shop/:category/:slug",
+      "destination": "/product/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/product-feed",
+      "destination": "/product-feed.xml",
+      "permanent": true
+    },
+    {
+      "source": "/merchant-feed",
+      "destination": "/product-feed.xml",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/sitemap_index.xml",
+      "destination": "/api/sitemap"
+    },
+    {
+      "source": "/merchant-feed.xml",
+      "destination": "/api/merchant-feed"
+    },
+    {
+      "source": "/privacy-policy",
+      "destination": "/privacy-policy.html"
+    },
+    {
+      "source": "/product/:slug",
+      "destination": "/product/:slug/index.html"
+    },
+    {
+      "source": "/smart-bands",
+      "destination": "/smart-bands/index.html"
+    },
+    {
+      "source": "/smart-rings",
+      "destination": "/smart-rings/index.html"
+    },
+    {
+      "source": "/bladeless-fan",
+      "destination": "/bladeless-fan/index.html"
+    },
+    {
+      "source": "/smart-monitoring",
+      "destination": "/smart-monitoring/index.html"
+    },
+    {
+      "source": "/smart-glasses",
+      "destination": "/smart-glasses/index.html"
+    },
+    {
+      "source": "/shop/all",
+      "destination": "/shop/all/index.html"
+    },
+    {
+      "source": "/shop",
+      "destination": "/shop/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}
