@@ -1042,7 +1042,9 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
 const formatInr = (amount: number) => `₹${Math.max(0, Math.ceil(amount || 0)).toLocaleString('en-IN')}`;
 
 const RazorpayEmiStrip: React.FC<{ price: number; onOpen: () => void }> = ({ price, onOpen }) => {
-  const monthlyAmount = Math.max(1, Math.ceil(price / 3));
+  const payNowAmount = Math.max(1, Math.ceil(price / 3));
+  const sixMonthAmount = Math.max(1, Math.ceil(price / 6));
+  const nineMonthAmount = Math.max(1, Math.ceil(price / 9));
 
   return (
     <button
@@ -1055,10 +1057,10 @@ const RazorpayEmiStrip: React.FC<{ price: number; onOpen: () => void }> = ({ pri
         Razorpay EMI
       </span>
       <span className="block text-sm font-black leading-5 text-slate-950 sm:text-base">
-        or {formatInr(monthlyAmount)}/month for 3 months
+        Pay only {formatInr(payNowAmount)} now
       </span>
       <span className="mt-1 block text-[11px] font-bold leading-4 text-slate-600">
-        Cards, UPI, and eligible EMI options are shown securely at Razorpay checkout.
+        {formatInr(sixMonthAmount)}/month for 6 months or {formatInr(nineMonthAmount)}/month for 9 months.
       </span>
     </button>
   );
@@ -1132,7 +1134,11 @@ const RazorpayEmiModal: React.FC<{
   onContinue: () => void;
 }> = ({ price, firstName, lastName, phone, onFirstNameChange, onLastNameChange, onPhoneChange, onClose, onContinue }) => {
   const monthlyAmount = Math.max(1, Math.ceil(price / 3));
-  const paymentDates = ['Today', '2nd month', '3rd month'];
+  const installmentOptions = [
+    { amount: Math.max(1, Math.ceil(price / 3)), label: '3 Months' },
+    { amount: Math.max(1, Math.ceil(price / 6)), label: '6 Months' },
+    { amount: Math.max(1, Math.ceil(price / 9)), label: '9 Months' },
+  ];
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
@@ -1154,13 +1160,13 @@ const RazorpayEmiModal: React.FC<{
         </div>
         <div className="product-detail-emi-graph-card mx-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
           <div className="grid grid-cols-3 gap-3">
-            {paymentDates.map((label) => (
-              <div key={label} className="text-center">
+            {installmentOptions.map((installment) => (
+              <div key={installment.label} className="text-center">
                 <div className="product-detail-emi-donut mx-auto grid h-16 w-16 place-items-center rounded-full">
                   <span className="product-detail-emi-donut-hole" />
                 </div>
-                <p className="mt-2 text-sm font-black text-slate-950">{formatInr(monthlyAmount)}</p>
-                <p className="text-[11px] font-bold text-slate-500">{label}</p>
+                <p className="mt-2 text-sm font-black text-slate-950">{formatInr(installment.amount)}</p>
+                <p className="text-[11px] font-bold text-slate-500">{installment.label}</p>
               </div>
             ))}
           </div>
@@ -2743,7 +2749,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      <section className="overflow-hidden bg-white px-3 py-6 sm:px-6 lg:px-8 lg:py-14">
+      <section className="overflow-hidden bg-white px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-14">
         <div
           className={`mx-auto grid w-full max-w-[calc(100vw-1.5rem)] min-w-0 gap-7 sm:max-w-2xl lg:max-w-7xl lg:items-start ${
             useMarketplaceArrangement
@@ -2751,7 +2757,7 @@ export const ProductDetail: React.FC = () => {
               : 'lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)] lg:gap-14'
           }`}
         >
-          <div ref={productGalleryRef} className="order-1 min-w-0 max-w-full scroll-mt-28 space-y-4 overflow-hidden sm:space-y-6 lg:order-none lg:row-span-2">
+          <div ref={productGalleryRef} className="order-1 min-w-0 max-w-full scroll-mt-28 space-y-4 overflow-hidden sm:space-y-6 lg:order-none lg:row-span-2 lg:overflow-visible">
             <ProductImageCarousel
               images={displayedImages}
               videoUrl={productVideoUrl}

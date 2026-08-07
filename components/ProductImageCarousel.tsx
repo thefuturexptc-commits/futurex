@@ -44,6 +44,9 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isPreviewZoomed, setIsPreviewZoomed] = useState(false);
     const [zoomScale, setZoomScale] = useState(1.8);
+    const [isSideZoomActive, setIsSideZoomActive] = useState(false);
+    const [sideZoomPoint, setSideZoomPoint] = useState({ x: 50, y: 50 });
+    const sideZoomScale = 2.2;
     const previewImageRef = useRef<HTMLImageElement | null>(null);
     const zoomFrameRef = useRef<number | null>(null);
     const previewPointerMovedRef = useRef(false);
@@ -80,6 +83,27 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
         if (!previewImageRef.current) return;
         previewImageRef.current.style.transformOrigin = `${Math.max(0, Math.min(100, x))}% ${Math.max(0, Math.min(100, y))}%`;
       });
+    };
+
+    const updateSideZoomPosition = (event: React.MouseEvent<HTMLElement>) => {
+      const rect = event.currentTarget.getBoundingClientRect();
+      const x = ((event.clientX - rect.left) / rect.width) * 100;
+      const y = ((event.clientY - rect.top) / rect.height) * 100;
+      setSideZoomPoint({ x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) });
+    };
+
+    const handleSideZoomMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
+      setIsSideZoomActive(true);
+      updateSideZoomPosition(event);
+    };
+
+    const handleSideZoomMouseMove = (event: React.MouseEvent<HTMLElement>) => {
+      if (!isSideZoomActive) return;
+      updateSideZoomPosition(event);
+    };
+
+    const handleSideZoomMouseLeave = () => {
+      setIsSideZoomActive(false);
     };
 
     const openPreview = (index: number) => {
@@ -184,7 +208,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
     }, [emblaApi, onSelectIndex]);
 
     return (
-      <div className="w-full min-w-0 max-w-full overflow-hidden">
+      <div className="relative w-full min-w-0 max-w-full">
         <div className="group relative max-w-full overflow-hidden bg-white" ref={emblaRef}>
           <div className="flex min-w-0 touch-pan-y">
             {mediaItems.map((item, idx) => (
@@ -200,6 +224,9 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                   event.preventDefault();
                   openPreview(idx);
                 }}
+                onMouseEnter={item.type === 'image' ? handleSideZoomMouseEnter : undefined}
+                onMouseMove={item.type === 'image' ? handleSideZoomMouseMove : undefined}
+                onMouseLeave={item.type === 'image' ? handleSideZoomMouseLeave : undefined}
                 className={`relative min-w-0 flex-[0_0_100%] cursor-zoom-in overflow-hidden border-0 bg-transparent p-0 ${
                   bannerMode ? 'aspect-[4/3]' : 'aspect-[4/3] sm:aspect-square'
                 }`}
@@ -252,6 +279,21 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
             ))}
           </div>
         </div>
+
+        {isSideZoomActive && mediaItems[selectedIndex]?.type === 'image' && (
+          <div className="absolute right-[-420px] top-0 z-20 hidden h-full w-[420px] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_32px_80px_rgba(15,23,42,0.16)] xl:right-[-520px] xl:w-[520px] lg:block">
+            <img
+              src={mediaItems[selectedIndex].src}
+              alt={`${alt} zoom preview`}
+              className="h-full w-full object-cover"
+              style={{
+                transform: `scale(${sideZoomScale})`,
+                transformOrigin: `${sideZoomPoint.x}% ${sideZoomPoint.y}%`,
+              }}
+              draggable={false}
+            />
+          </div>
+        )}
 
         {snapPoints.length > 1 && (
           <div className="mt-3 flex items-center justify-center gap-2 sm:mt-4">
