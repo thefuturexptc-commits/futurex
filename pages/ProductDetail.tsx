@@ -1325,6 +1325,7 @@ export const ProductDetail: React.FC = () => {
   const [selectedSize, setSelectedSize] = useState('');
   const [sizeError, setSizeError] = useState('');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const productThumbnailStripRef = useRef<HTMLDivElement | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
 
   const [activeDetailTab, setActiveDetailTab] = useState<ProductDetailTabKey>('description');
@@ -2768,8 +2769,9 @@ export const ProductDetail: React.FC = () => {
               videoFit={productGalleryVideoFit}
             />
             {displayedMediaCount > 1 && (
-              <div className="mx-auto flex w-full max-w-full snap-x justify-start gap-2 overflow-x-auto bg-white py-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-center sm:gap-3 [&::-webkit-scrollbar]:hidden">
-                {displayedImages.map((imgUrl, imgIdx) => (
+              <div className="mx-auto flex w-full max-w-full items-center gap-2 bg-white py-2">
+                <div ref={productThumbnailStripRef} className="flex min-w-0 flex-1 snap-x justify-start gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-center sm:gap-3 [&::-webkit-scrollbar]:hidden">
+                  {displayedImages.map((imgUrl, imgIdx) => (
                   <button
                     key={imgUrl + imgIdx}
                     type="button"
@@ -2781,7 +2783,7 @@ export const ProductDetail: React.FC = () => {
                     <img src={imgUrl} alt={`${product.name} ${imgIdx + 1}`} className="h-full w-full object-contain object-center transition duration-200 hover:scale-105" loading="lazy" decoding="async" />
                   </button>
                 ))}
-                {productVideoUrl && (
+                  {productVideoUrl && (
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(productVideoIndex)}
@@ -2805,7 +2807,16 @@ export const ProductDetail: React.FC = () => {
                       </span>
                     </span>
                   </button>
-                )}
+                  )}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Show more product thumbnails"
+                  onClick={() => productThumbnailStripRef.current?.scrollBy({ left: 360, behavior: 'smooth' })}
+                  className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#0ea5e9] hover:text-[#0284c7] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] lg:flex"
+                >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </button>
               </div>
             )}
           </div>
