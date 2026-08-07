@@ -1042,7 +1042,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
 const formatInr = (amount: number) => `₹${Math.max(0, Math.ceil(amount || 0)).toLocaleString('en-IN')}`;
 
 const RazorpayEmiStrip: React.FC<{ price: number; onOpen: () => void }> = ({ price, onOpen }) => {
-  const payNowAmount = Math.max(1, Math.ceil(price / 3));
+  const payNowAmount = Math.max(1, Math.ceil(price / 9));
   const sixMonthAmount = Math.max(1, Math.ceil(price / 6));
   const nineMonthAmount = Math.max(1, Math.ceil(price / 9));
 
@@ -1133,7 +1133,7 @@ const RazorpayEmiModal: React.FC<{
   onClose: () => void;
   onContinue: () => void;
 }> = ({ price, firstName, lastName, phone, onFirstNameChange, onLastNameChange, onPhoneChange, onClose, onContinue }) => {
-  const monthlyAmount = Math.max(1, Math.ceil(price / 3));
+  const monthlyAmount = Math.max(1, Math.ceil(price / 9));
   const installmentOptions = [
     { amount: Math.max(1, Math.ceil(price / 3)), label: '3 Months' },
     { amount: Math.max(1, Math.ceil(price / 6)), label: '6 Months' },
