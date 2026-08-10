@@ -191,7 +191,19 @@
       "destination": "/shop/index.html"
     },
     {
-      "source": "/:path*",
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/edit-product",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/profile",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/blog/:slug",
       "destination": "/index.html"
     }
   ]

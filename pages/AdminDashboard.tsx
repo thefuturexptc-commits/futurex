@@ -48,12 +48,14 @@ import { SupportTab } from '../components/admin/tabs/SupportTab';
 import { AdminsTab } from '../components/admin/tabs/AdminsTab';
 import { SettingsTab } from '../components/admin/tabs/SettingsTab';
 import { SeoTab } from '../components/admin/tabs/SeoTab';
+import { BlogTab } from '../components/admin/tabs/BlogTab';
 
-type TabKey = 'analytics' | 'seo' | 'inventory' | 'products' | 'orders' | 'categories' | 'reviews' | 'support' | 'admins' | 'settings';
+type TabKey = 'analytics' | 'seo' | 'blog' | 'inventory' | 'products' | 'orders' | 'categories' | 'reviews' | 'support' | 'admins' | 'settings';
 
 const ADMIN_TABS: Array<{ key: TabKey; label: string }> = [
   { key: 'analytics', label: 'Analytics' },
   { key: 'seo', label: 'SEO' },
+  { key: 'blog', label: 'Blog' },
   { key: 'inventory', label: 'Inventory' },
   { key: 'products', label: 'Products' },
   { key: 'orders', label: 'Orders' },
@@ -308,6 +310,7 @@ export const AdminDashboard: React.FC = () => {
       const tabRequirements: Record<TabKey, keyof UserPermissions | null> = {
         analytics: 'analytics',
         seo: 'analytics',
+        blog: 'products',
         inventory: 'inventory',
         products: 'products',
         orders: 'orders',
@@ -1401,6 +1404,7 @@ export const AdminDashboard: React.FC = () => {
       {activeTab === 'seo' && (
         <SeoTab siteEvents={siteAnalyticsEvents} />
       )}
+      {activeTab === 'blog' && <BlogTab />}
       {activeTab === 'inventory' && (
         <InventoryTab
           products={products}

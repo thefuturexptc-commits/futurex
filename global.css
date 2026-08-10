@@ -2080,27 +2080,27 @@ button {
 }
 
 .admin-dashboard-dark {
-  background: #050505;
-  color: #ffffff;
+  background: #f4f8fc;
+  color: #122033;
 }
 
 .admin-dashboard-dark .bg-white,
 .admin-dashboard-dark .bg-gray-50,
 .admin-dashboard-dark .bg-gray-50\/60,
 .admin-dashboard-dark .bg-gray-100 {
-  background-color: #0a0a0a !important;
+  background-color: #ffffff !important;
 }
 
 .admin-dashboard-dark .dark\:bg-dark-surface,
 .admin-dashboard-dark .dark\:bg-white\/5,
 .admin-dashboard-dark .dark\:bg-gray-800 {
-  background-color: #0a0a0a !important;
+  background-color: #f8fbff !important;
 }
 
 .admin-dashboard-dark .text-gray-900,
 .admin-dashboard-dark .text-gray-800,
 .admin-dashboard-dark .text-gray-700 {
-  color: #ffffff !important;
+  color: #122033 !important;
 }
 
 .admin-dashboard-dark .text-gray-600,
@@ -2108,7 +2108,7 @@ button {
 .admin-dashboard-dark .text-gray-400,
 .admin-dashboard-dark .dark\:text-gray-300,
 .admin-dashboard-dark .dark\:text-gray-400 {
-  color: #d1d5db !important;
+  color: #52657a !important;
 }
 
 .admin-dashboard-dark .border-gray-300,
@@ -2116,25 +2116,25 @@ button {
 .admin-dashboard-dark .border-gray-100,
 .admin-dashboard-dark .dark\:border-white\/10,
 .admin-dashboard-dark .dark\:border-gray-600 {
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: #dbe5ef !important;
 }
 
 .admin-dashboard-dark input,
 .admin-dashboard-dark select,
 .admin-dashboard-dark textarea {
-  background-color: #111827 !important;
-  border-color: rgba(255, 255, 255, 0.16) !important;
-  color: #ffffff !important;
+  background-color: #ffffff !important;
+  border-color: #c9d8e6 !important;
+  color: #122033 !important;
 }
 
 .admin-dashboard-dark input::placeholder,
 .admin-dashboard-dark textarea::placeholder {
-  color: #9ca3af !important;
+  color: #7b8da1 !important;
 }
 
 .admin-dashboard-dark option {
-  background: #111827;
-  color: #ffffff;
+  background: #ffffff;
+  color: #122033;
 }
 
 

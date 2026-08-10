@@ -8,23 +8,74 @@ import { useCart } from '../context/CartContext';
 import { addOfferLead, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import bandCutout from '../assets/images/band-hero-cutout.webp';
-import homeRainReadyBandBanner from '../assets/images/home-rain-ready-band-banner.webp';
-import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
-import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
 import bestSellerTfx5AiBandImage from '../assets/images/best-seller-tfx5-ai-band.webp';
 import homeCollectionBandImage from '../assets/images/home-collection-smart-band.webp';
 import homeCollectionFanImage from '../assets/images/home-collection-smart-fan.webp';
 import homeCollectionRingImage from '../assets/images/home-collection-smart-ring.png';
+import homeRainReadyBandBanner from '../assets/images/home-rain-ready-band-banner.webp';
+import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
+import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
 import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
+import futurexBraceletFloatingBanner from '../assets/images/futurex-bracelet-floating-banner.webp';
 import tfxVitalAppQr from '../assets/images/tfx-vital-app-qr-512.png';
+
+/**
+ * Fades and lifts its children into view the first time they scroll into the
+ * viewport. Pure CSS transition driven by one IntersectionObserver per
+ * instance; disconnects itself after firing once. No images, no libraries.
+ * Respects prefers-reduced-motion by rendering fully visible immediately.
+ */
+const RevealOnScroll: React.FC<{ children: React.ReactNode; className?: string; delayMs?: number }> = ({
+  children,
+  className = '',
+  delayMs = 0,
+}) => {
+  const nodeRef = React.useRef<HTMLDivElement | null>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const node = nodeRef.current;
+    if (!node || typeof window === 'undefined') return;
+
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setVisible(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.14, rootMargin: '0px 0px -60px 0px' }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div
+      ref={nodeRef}
+      style={{ transitionDelay: visible ? `${delayMs}ms` : '0ms' }}
+      className={`transition-all duration-700 ease-out ${
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+      } ${className}`}
+    >
+      {children}
+    </div>
+  );
+};
 
 const CATALOG_PAGE_SIZE = 4;
 const FEATURED_BAND_PRODUCT_NAME = 'TFX5 AI Smart Band Heart Rate SpO2 Fitness Tracker';
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 const FEATURED_FAN_PRODUCT_PATH = '/product/tfx-advance';
-const HOME_WATER_RESISTANT_BANNERS = [
+const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: string; mobileImage?: string }> = [
   {
     image: homeWaterproofBandBanner,
     href: FEATURED_BAND_PRODUCT_PATH,
@@ -39,6 +90,11 @@ const HOME_WATER_RESISTANT_BANNERS = [
     image: homeStormRingBanner,
     href: FEATURED_RING_PRODUCT_PATH,
     alt: 'TFX smart rings in rain with elegance meets every storm message',
+  },
+  {
+    image: futurexBraceletFloatingBanner,
+    href: FEATURED_BAND_PRODUCT_PATH,
+    alt: 'TFX bracelet floating banner highlighting style and durability',
   },
 ];
 const HOME_COLLECTION_CARDS = [
@@ -175,6 +231,19 @@ export const Home: React.FC = () => {
     return () => window.removeEventListener('products-updated', loadProducts);
   }, [loadProducts]);
 
+  const [isHomeBannerPaused, setIsHomeBannerPaused] = useState(false);
+
+  useEffect(() => {
+    if (isHomeBannerPaused || HOME_WATER_RESISTANT_BANNERS.length <= 1) return undefined;
+    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      return undefined;
+    }
+    const intervalId = window.setInterval(() => {
+      setHomeWaterBannerIndex((current) => (current + 1) % HOME_WATER_RESISTANT_BANNERS.length);
+    }, 4500);
+    return () => window.clearInterval(intervalId);
+  }, [isHomeBannerPaused]);
+
   const handleSeedDefaults = async () => {
     setSeeding(true);
     setLoadError('');
@@ -245,8 +314,6 @@ export const Home: React.FC = () => {
     setShowOfferPopup(false);
     document.getElementById('models')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
-
-  const hasMultipleHomeWaterBanners = HOME_WATER_RESISTANT_BANNERS.length > 1;
 
   const catalogProducts = useMemo(() => {
     return [...products].sort((a, b) => {
@@ -395,38 +462,50 @@ export const Home: React.FC = () => {
         </div>
       ), document.body)}
 
-      <section className="home-waterproof-banner-slider" aria-label="Water resistant product banners">
+      <section
+        className="home-waterproof-banner-slider relative"
+        aria-label="Homepage banner"
+        onMouseEnter={() => setIsHomeBannerPaused(true)}
+        onMouseLeave={() => setIsHomeBannerPaused(false)}
+        onFocus={() => setIsHomeBannerPaused(true)}
+        onBlur={() => setIsHomeBannerPaused(false)}
+      >
         <div className="home-waterproof-banner-track">
           {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
             <Link
-              key={banner.image}
-              to={banner.href}
+              key={banner.alt}
+              to={banner.href || '#'}
               className={`home-waterproof-banner-slide ${index === homeWaterBannerIndex ? 'is-active' : ''}`}
               aria-hidden={index !== homeWaterBannerIndex}
               tabIndex={index === homeWaterBannerIndex ? 0 : -1}
             >
-              <img
-                src={banner.image}
-                alt={banner.alt}
-                className="home-waterproof-banner-image"
-                loading={index === 0 ? 'eager' : 'lazy'}
-                decoding="async"
-              />
+              <picture>
+                {banner.mobileImage && <source media="(max-width: 639px)" srcSet={banner.mobileImage} />}
+                {banner.image && (
+                  <img
+                    src={banner.image}
+                    alt={banner.alt}
+                    className="home-waterproof-banner-image"
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                  />
+                )}
+              </picture>
             </Link>
           ))}
         </div>
-
-        {hasMultipleHomeWaterBanners && (
-          <div className="home-waterproof-banner-dots" aria-label="Water resistant banner slides">
+        {HOME_WATER_RESISTANT_BANNERS.length > 1 && (
+          <div className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2 sm:bottom-4">
             {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
               <button
                 key={banner.alt}
                 type="button"
-                onMouseEnter={() => setHomeWaterBannerIndex(index)}
                 onClick={() => setHomeWaterBannerIndex(index)}
-                className={index === homeWaterBannerIndex ? 'is-active' : ''}
-                aria-label={`Show banner ${index + 1}`}
-                aria-current={index === homeWaterBannerIndex ? 'true' : undefined}
+                aria-label={`Show banner ${index + 1} of ${HOME_WATER_RESISTANT_BANNERS.length}`}
+                aria-current={index === homeWaterBannerIndex}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === homeWaterBannerIndex ? 'w-6 bg-white shadow-[0_1px_6px_rgba(0,0,0,0.35)]' : 'w-1.5 bg-white/55 hover:bg-white/80'
+                }`}
               />
             ))}
           </div>
@@ -440,21 +519,22 @@ export const Home: React.FC = () => {
           </h2>
 
           <div className="home-collection-strip mt-7 flex gap-3 overflow-x-auto pb-2 sm:mt-8 sm:gap-6 lg:grid lg:grid-cols-4 lg:gap-7 lg:overflow-visible">
-            {HOME_COLLECTION_CARDS.map((card) => (
-              <Link
-                key={card.title}
-                to={card.href}
-                className="group flex min-w-[130px] shrink-0 flex-col items-center justify-center px-2 py-2 text-center transition sm:min-w-[160px] lg:min-h-[255px] lg:min-w-0 lg:rounded-xl lg:bg-white lg:px-5 lg:py-6 lg:shadow-[0_10px_22px_rgba(15,23,42,0.1)]"
-              >
-                <img
-                  src={card.image}
-                  alt={card.alt}
-                  className="h-24 w-full object-contain transition duration-200 group-hover:scale-[1.04] sm:h-32 lg:h-40"
-                  loading="lazy"
-                  decoding="async"
-                />
-                <h3 className="mt-3 text-sm font-black leading-tight text-slate-950 sm:text-base lg:mt-5 lg:text-lg">{card.title}</h3>
-              </Link>
+            {HOME_COLLECTION_CARDS.map((card, index) => (
+              <RevealOnScroll key={card.title} delayMs={index * 80} className="shrink-0 lg:shrink">
+                <Link
+                  to={card.href}
+                  className="group flex min-w-[130px] shrink-0 flex-col items-center justify-center px-2 py-2 text-center transition sm:min-w-[160px] lg:min-h-[255px] lg:min-w-0 lg:rounded-xl lg:bg-white lg:px-5 lg:py-6 lg:shadow-[0_10px_22px_rgba(15,23,42,0.1)] lg:hover:-translate-y-1 lg:hover:shadow-[0_18px_34px_rgba(15,23,42,0.16)]"
+                >
+                  <img
+                    src={card.image}
+                    alt={card.alt}
+                    className="h-24 w-full object-contain transition duration-200 group-hover:scale-[1.04] sm:h-32 lg:h-40"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <h3 className="mt-3 text-sm font-black leading-tight text-slate-950 sm:text-base lg:mt-5 lg:text-lg">{card.title}</h3>
+                </Link>
+              </RevealOnScroll>
             ))}
           </div>
         </div>
@@ -474,41 +554,6 @@ export const Home: React.FC = () => {
             >
               View All
             </Link>
-            <div className="hidden">
-              <button
-                type="button"
-                onClick={() => changeCatalogPage(catalogPage - 1)}
-                disabled={catalogPage <= 1}
-                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-2xl font-black leading-none text-slate-700 shadow-sm transition hover:border-[#0ea5e9] hover:text-[#0369a1] disabled:cursor-not-allowed disabled:opacity-45"
-                aria-label="Previous product catalog page"
-              >
-                ‹
-              </button>
-              {Array.from({ length: totalCatalogPages }, (_, index) => index + 1).map((page) => (
-                <button
-                  key={page}
-                  type="button"
-                  onClick={() => changeCatalogPage(page)}
-                  className={`grid h-10 w-10 place-items-center rounded-full border text-sm font-black transition ${
-                    catalogPage === page
-                      ? 'border-[#0ea5e9] bg-[#0ea5e9] text-white shadow-sm'
-                      : 'border-slate-200 bg-white text-slate-700 hover:border-[#0ea5e9] hover:text-[#0369a1]'
-                  }`}
-                  aria-current={catalogPage === page ? 'page' : undefined}
-                >
-                  {page}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => changeCatalogPage(catalogPage + 1)}
-                disabled={catalogPage >= totalCatalogPages}
-                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 bg-white text-2xl font-black leading-none text-slate-700 shadow-sm transition hover:border-[#0ea5e9] hover:text-[#0369a1] disabled:cursor-not-allowed disabled:opacity-45"
-                aria-label="Next product catalog page"
-              >
-                ›
-              </button>
-            </div>
           </div>
 
           {loadError && (
@@ -528,9 +573,16 @@ export const Home: React.FC = () => {
           )}
 
           {loading ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {[1, 2, 3].map((item) => (
-                <div key={item} className="h-[300px] animate-pulse rounded-[1.5rem] bg-white shadow-sm sm:h-[430px]" />
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
+              {Array.from({ length: CATALOG_PAGE_SIZE }).map((_, item) => (
+                <div key={item} className="flex min-h-[342px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] sm:min-h-[420px]">
+                  <div className="h-48 w-full animate-pulse rounded-md bg-slate-100 sm:h-64" />
+                  <div className="flex flex-1 flex-col gap-2 px-1 pb-1 pt-3">
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" />
+                    <div className="h-3 w-1/2 animate-pulse rounded bg-slate-100" />
+                    <div className="mt-auto h-8 w-full animate-pulse rounded-md bg-slate-100" />
+                  </div>
+                </div>
               ))}
             </div>
           ) : catalogProducts.length > 0 ? (
@@ -548,8 +600,8 @@ export const Home: React.FC = () => {
                 const extraPreviewCount = Math.max(0, allPreviewImages.length - previewImages.length);
 
                 return (
+                  <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70}>
                   <article
-                    key={product.id}
                     className="group relative flex min-h-[342px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] sm:min-h-[420px]"
                   >
                     {(showMegaPriceDrop || product.isNewArrival || product.isBestSeller || product.isFeatured) && (
@@ -636,6 +688,7 @@ export const Home: React.FC = () => {
                       </div>
                     </div>
                   </article>
+                  </RevealOnScroll>
                 );
               })}
             </div>

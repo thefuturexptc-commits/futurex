@@ -25,7 +25,7 @@ import {
 } from 'firebase/storage';
 import { initializeApp, deleteApp, FirebaseApp, getApps, getApp } from 'firebase/app';
 import { db, auth, storage, app as mainApp } from './firebaseConfig';
-import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, OfferLead, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails, SiteAnalyticsEvent } from '../types';
+import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, OfferLead, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails, SiteAnalyticsEvent, BlogPost } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 import { TFX5_AI_BAND_PRICE, isTfxV5Band } from '../utils/coupons';
@@ -3470,6 +3470,33 @@ export const updateWebsiteSettings = async (
       const reason = code || rawMessage || 'unknown error';
       throw new Error(`Saved locally, but backend sync failed (${reason}). Please check admin permissions/login.`);
     }
+};
+
+// --- Blog service ---
+// Published posts are stored separately from settings so drafts never leak into
+// the public sitemap or storefront.
+export const getBlogPosts = async (): Promise<BlogPost[]> => {
+  const snapshot = await getDocs(collection(db, 'blog_posts'));
+  return snapshot.docs
+    .map((entry) => ({ id: entry.id, ...entry.data() } as BlogPost))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+};
+
+export const saveBlogPost = async (post: Omit<BlogPost, 'updatedAt'> & { updatedAt?: string }): Promise<void> => {
+  const slug = toProductSlug(post.slug || post.title);
+  if (!slug) throw new Error('A blog title or slug is required.');
+  await setDoc(doc(db, 'blog_posts', post.id), {
+    ...post,
+    slug,
+    title: post.title.trim(),
+    excerpt: post.excerpt.trim(),
+    content: post.content.trim(),
+    updatedAt: new Date().toISOString(),
+  }, { merge: true });
+};
+
+export const deleteBlogPost = async (id: string): Promise<void> => {
+  await deleteDoc(doc(db, 'blog_posts', id));
 };
 
 export const getSiteAnalyticsEvents = async (): Promise<SiteAnalyticsEvent[]> => {

@@ -301,4 +301,14 @@ export interface WebsiteSettings {
   pageContent?: Record<string, string>;
 }
 
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  status: 'draft' | 'published';
+  updatedAt: string;
+}
+
 export type Theme = 'light' | 'dark';

@@ -361,11 +361,19 @@ const rawInfoRoutes = [
 ];
 
 export const infoRoutes = dedupeRoutes(rawInfoRoutes);
-export const sitemapRoutes = [...coreRoutes, ...infoRoutes];
+// Only publish pages that are real, maintained destinations.  The previous
+// sitemap included hundreds of planned/generated blog URLs with substantially
+// the same content; that creates crawl waste and thin-page signals. Blog posts
+// are added to the sitemap only when they are published as full pages.
+export const sitemapRoutes = [
+  ...coreRoutes,
+  { path: '/blog', label: 'TheFutureX Blog', changefreq: 'weekly', priority: '0.7' },
+];
 
-const legacyBlogFallbackRoutes = infoRoutes
-  .filter((route) => route.path === '/blog' || route.path.startsWith('/blog/'))
-  .map((route) => (route.path === '/blog' ? 'info/blog' : route.path.replace(/^\//, '').replace(/^blog\//, 'info/')));
+// Do not generate fallback files for retired/blog-plan URLs. Unknown legacy
+// URLs must be allowed to return a genuine 404 at the host, rather than a
+// client-side page that looks like a soft 404 to Google.
+const legacyBlogFallbackRoutes = [];
 
 export const spaFallbackRoutes = [
   'delete-account',

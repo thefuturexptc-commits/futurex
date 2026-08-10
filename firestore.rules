@@ -46,6 +46,11 @@ service cloud.firestore {
       allow write: if isAdmin() || isSuperAdminEmail();
     }
 
+    match /blog_posts/{postId} {
+      allow read: if true;
+      allow write: if isAdmin() || isSuperAdminEmail();
+    }
+
     match /admin_audit_logs/{logId} {
       allow read, write: if isAdmin() || isSuperAdminEmail();
     }
