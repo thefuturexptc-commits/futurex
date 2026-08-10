@@ -17,7 +17,6 @@ import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
 import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
 import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
-import futurexBraceletFloatingBanner from '../assets/images/futurex-bracelet-floating-banner.webp';
 import tfxVitalAppQr from '../assets/images/tfx-vital-app-qr-512.png';
 
 /**
@@ -90,11 +89,6 @@ const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: st
     image: homeStormRingBanner,
     href: FEATURED_RING_PRODUCT_PATH,
     alt: 'TFX smart rings in rain with elegance meets every storm message',
-  },
-  {
-    image: futurexBraceletFloatingBanner,
-    href: FEATURED_BAND_PRODUCT_PATH,
-    alt: 'TFX bracelet floating banner highlighting style and durability',
   },
 ];
 const HOME_COLLECTION_CARDS = [
@@ -189,6 +183,7 @@ export const Home: React.FC = () => {
   const [offerUnlocked, setOfferUnlocked] = useState(false);
   const [copiedOfferCode, setCopiedOfferCode] = useState('');
   const [homeWaterBannerIndex, setHomeWaterBannerIndex] = useState(0);
+  const [homeBannerAspects, setHomeBannerAspects] = useState<Record<number, number>>({});
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -243,6 +238,22 @@ export const Home: React.FC = () => {
     }, 4500);
     return () => window.clearInterval(intervalId);
   }, [isHomeBannerPaused]);
+
+  useEffect(() => {
+    let cancelled = false;
+    HOME_WATER_RESISTANT_BANNERS.forEach((banner, index) => {
+      if (!banner.image) return;
+      const img = new Image();
+      img.onload = () => {
+        if (cancelled || !img.naturalWidth || !img.naturalHeight) return;
+        setHomeBannerAspects((prev) => ({ ...prev, [index]: img.naturalWidth / img.naturalHeight }));
+      };
+      img.src = banner.image;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleSeedDefaults = async () => {
     setSeeding(true);
@@ -463,19 +474,24 @@ export const Home: React.FC = () => {
       ), document.body)}
 
       <section
-        className="home-waterproof-banner-slider relative"
+        className="relative isolate overflow-hidden bg-slate-950 shadow-[0_18px_45px_rgba(15,23,42,0.28)] sm:rounded-b-[1.75rem]"
         aria-label="Homepage banner"
         onMouseEnter={() => setIsHomeBannerPaused(true)}
         onMouseLeave={() => setIsHomeBannerPaused(false)}
         onFocus={() => setIsHomeBannerPaused(true)}
         onBlur={() => setIsHomeBannerPaused(false)}
       >
-        <div className="home-waterproof-banner-track">
+        <div
+          className="relative w-full aspect-[16/9]"
+          style={homeBannerAspects[homeWaterBannerIndex] ? { aspectRatio: String(homeBannerAspects[homeWaterBannerIndex]) } : undefined}
+        >
           {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
             <Link
               key={banner.alt}
               to={banner.href || '#'}
-              className={`home-waterproof-banner-slide ${index === homeWaterBannerIndex ? 'is-active' : ''}`}
+              className={`absolute inset-0 overflow-hidden transition-opacity duration-[900ms] ease-out ${
+                index === homeWaterBannerIndex ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'
+              }`}
               aria-hidden={index !== homeWaterBannerIndex}
               tabIndex={index === homeWaterBannerIndex ? 0 : -1}
             >
@@ -485,30 +501,61 @@ export const Home: React.FC = () => {
                   <img
                     src={banner.image}
                     alt={banner.alt}
-                    className="home-waterproof-banner-image"
+                    className={`relative z-10 h-full w-full object-contain object-center transition-transform duration-[5000ms] ease-out ${
+                      index === homeWaterBannerIndex ? 'scale-[1.06]' : 'scale-100'
+                    }`}
                     loading={index === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
                 )}
               </picture>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-1/4 bg-gradient-to-t from-black/45 via-black/0 to-transparent" />
             </Link>
           ))}
         </div>
+
         {HOME_WATER_RESISTANT_BANNERS.length > 1 && (
-          <div className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-2 sm:bottom-4">
-            {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
-              <button
-                key={banner.alt}
-                type="button"
-                onClick={() => setHomeWaterBannerIndex(index)}
-                aria-label={`Show banner ${index + 1} of ${HOME_WATER_RESISTANT_BANNERS.length}`}
-                aria-current={index === homeWaterBannerIndex}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  index === homeWaterBannerIndex ? 'w-6 bg-white shadow-[0_1px_6px_rgba(0,0,0,0.35)]' : 'w-1.5 bg-white/55 hover:bg-white/80'
-                }`}
-              />
-            ))}
-          </div>
+          <>
+            <button
+              type="button"
+              onClick={() =>
+                setHomeWaterBannerIndex(
+                  (current) => (current - 1 + HOME_WATER_RESISTANT_BANNERS.length) % HOME_WATER_RESISTANT_BANNERS.length
+                )
+              }
+              aria-label="Previous banner"
+              className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition hover:bg-white hover:scale-105 sm:flex"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => setHomeWaterBannerIndex((current) => (current + 1) % HOME_WATER_RESISTANT_BANNERS.length)}
+              aria-label="Next banner"
+              className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition hover:bg-white hover:scale-105 sm:flex"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+
+            <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2 sm:bottom-5">
+              {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
+                <button
+                  key={banner.alt}
+                  type="button"
+                  onClick={() => setHomeWaterBannerIndex(index)}
+                  aria-label={`Show banner ${index + 1} of ${HOME_WATER_RESISTANT_BANNERS.length}`}
+                  aria-current={index === homeWaterBannerIndex}
+                  className={`h-1.5 rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
+                    index === homeWaterBannerIndex ? 'w-8 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'
+                  }`}
+                />
+              ))}
+            </div>
+          </>
         )}
       </section>
 
@@ -575,7 +622,7 @@ export const Home: React.FC = () => {
           {loading ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
               {Array.from({ length: CATALOG_PAGE_SIZE }).map((_, item) => (
-                <div key={item} className="flex min-h-[342px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] sm:min-h-[420px]">
+                <div key={item} className="flex min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] sm:min-h-[436px]">
                   <div className="h-48 w-full animate-pulse rounded-md bg-slate-100 sm:h-64" />
                   <div className="flex flex-1 flex-col gap-2 px-1 pb-1 pt-3">
                     <div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" />
@@ -600,9 +647,9 @@ export const Home: React.FC = () => {
                 const extraPreviewCount = Math.max(0, allPreviewImages.length - previewImages.length);
 
                 return (
-                  <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70}>
+                  <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70} className="h-full">
                   <article
-                    className="group relative flex min-h-[342px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] sm:min-h-[420px]"
+                    className="group relative flex h-full min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] sm:min-h-[436px]"
                   >
                     {(showMegaPriceDrop || product.isNewArrival || product.isBestSeller || product.isFeatured) && (
                       <div className={`absolute left-2.5 top-2.5 z-10 rounded-r-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white sm:px-3 sm:text-[10px] ${
@@ -627,7 +674,7 @@ export const Home: React.FC = () => {
                             <Link
                               key={`${image}-${previewIndex}`}
                               to={catalogHref}
-                              className="grid h-11 w-11 place-items-center rounded-md border border-[#0ea5e9] bg-white p-1 shadow-sm"
+                              className="grid h-11 w-11 place-items-center rounded-lg border-2 border-rose-300 bg-white p-1 shadow-sm transition hover:border-rose-500"
                               aria-label={`View ${product.name} preview ${previewIndex + 1}`}
                             >
                               <img src={image} alt="" className="h-full w-full object-contain" loading="lazy" decoding="async" aria-hidden="true" />
@@ -636,10 +683,12 @@ export const Home: React.FC = () => {
                           {extraPreviewCount > 0 && (
                             <Link
                               to={catalogHref}
-                              className="grid h-11 w-11 place-items-center rounded-md border border-slate-200 bg-white text-xs font-medium text-slate-500 shadow-sm"
+                              className="grid h-11 w-11 place-items-center rounded-lg border-2 border-rose-300 bg-white text-slate-700 shadow-sm transition hover:border-rose-500 hover:text-rose-500"
                               aria-label={`View ${extraPreviewCount} more ${product.name} previews`}
                             >
-                              +{extraPreviewCount}
+                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                <polyline points="9 18 15 12 9 6" />
+                              </svg>
                             </Link>
                           )}
                         </div>
@@ -670,18 +719,18 @@ export const Home: React.FC = () => {
                           Save {formatInrAmount(offerPricing.unitDiscount)} ({offerPricing.rateLabel} off)
                         </p>
                       )}
-                      <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
+                      <div className="relative z-20 mt-auto grid shrink-0 grid-cols-2 gap-2 pt-3">
                         <button
                           type="button"
                           onClick={() => handleHomeAddToCart(product)}
-                          className="inline-flex h-8 items-center justify-center rounded-md bg-black px-2 text-[10px] font-black text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-950/25 focus:ring-offset-2 focus:ring-offset-white sm:text-[11px]"
+                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition hover:!bg-[#161b28] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
                         >
                           Add to Cart
                         </button>
                         <button
                           type="button"
                           onClick={() => handleHomeBuyNow(product)}
-                          className="inline-flex h-8 items-center justify-center rounded-md bg-[#540000] px-2 text-[10px] font-black text-white transition hover:bg-[#3f0000] focus:outline-none focus:ring-2 focus:ring-[#540000]/25 focus:ring-offset-2 focus:ring-offset-white sm:text-[11px]"
+                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition hover:!bg-[#630000] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
                         >
                           Buy Now
                         </button>

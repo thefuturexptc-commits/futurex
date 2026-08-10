@@ -8005,18 +8005,18 @@ html.dark .mobile-menu-link {
 .product-detail-add-cart-btn,
 html.light .product-card-add-cart-btn,
 html.dark .product-card-add-cart-btn {
-  background: var(--fx-red) !important;
+  background: #0f172a !important;
   background-image: none !important;
-  border-color: var(--fx-red) !important;
+  border-color: #0f172a !important;
   color: #ffffff !important;
-  box-shadow: 0 16px 36px rgba(255, 0, 51, 0.22) !important;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.22) !important;
 }
 
 #models article button:first-child:hover,
 .product-card-add-cart-btn:hover,
 .product-detail-add-cart-btn:hover {
-  background: var(--fx-red-dark) !important;
-  border-color: var(--fx-red-dark) !important;
+  background: #1e293b !important;
+  border-color: #1e293b !important;
 }
 
 #models article button:last-child,
@@ -8024,19 +8024,19 @@ html.dark .product-card-add-cart-btn {
 .product-detail-buy-now-btn,
 html.light .product-card-action-maroon,
 html.dark .product-card-action-maroon {
-  background: #ffffff !important;
+  background: #540000 !important;
   background-image: none !important;
-  border: 1px solid var(--fx-line) !important;
-  color: var(--fx-ink) !important;
-  box-shadow: none !important;
+  border: 1px solid rgba(84, 0, 0, 0.35) !important;
+  color: #ffffff !important;
+  box-shadow: 0 16px 36px rgba(84, 0, 0, 0.22) !important;
 }
 
 #models article button:last-child:hover,
 .product-card-action-maroon:hover,
 .product-detail-buy-now-btn:hover {
-  border-color: rgba(255, 0, 51, 0.64) !important;
-  background: #fff1f4 !important;
-  color: var(--fx-red) !important;
+  border-color: #3f0000 !important;
+  background: #3f0000 !important;
+  color: #ffffff !important;
 }
 
 .product-detail-page > div.border-b,
@@ -8617,20 +8617,30 @@ html.dark .tfx-footer,
 .site-navbar .mobile-nav-control,
 .site-navbar .navbar-auth-link,
 .site-navbar .navbar-account-pill,
-.site-navbar .mobile-auth-pill,
-#models article button:last-child,
-.product-card-action-maroon,
-.product-detail-buy-now-btn {
+.site-navbar .mobile-auth-pill {
   border: 0 !important;
   box-shadow: none !important;
 }
 
 .tfx-reference-home-hero__badge,
-.tfx-reference-home-hero__secondary,
+.tfx-reference-home-hero__secondary {
+  background: #fff1f4 !important;
+}
+
+#models article button:first-child,
+.product-card-add-cart-btn,
+.product-detail-add-cart-btn {
+  background: #0f172a !important;
+  border: 0 !important;
+}
+
 #models article button:last-child,
 .product-card-action-maroon,
 .product-detail-buy-now-btn {
-  background: #fff1f4 !important;
+  background: #540000 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
 }
 
 #root .product-detail-page button.product-detail-action-button,
