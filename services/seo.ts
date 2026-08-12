@@ -39,6 +39,10 @@ const setMetaProperty = (property: string, content: string) => {
   meta.content = content;
 };
 
+const removeMetaProperty = (property: string) => {
+  document.head.querySelector(`meta[property="${property}"]`)?.remove();
+};
+
 const setCanonical = (href: string) => {
   let link = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]');
   if (!link) {
@@ -56,9 +60,18 @@ export const stripHtml = (value = ''): string =>
     .trim();
 
 export const absoluteUrl = (path = '/'): string => {
-  if (/^https?:\/\//i.test(path)) return path;
-  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
-  return `${SITE_URL}${normalizedPath}`;
+  const rawPath = String(path || '/').trim();
+  const url = /^https?:\/\//i.test(rawPath)
+    ? new URL(rawPath)
+    : new URL(rawPath.startsWith('/') ? rawPath : `/${rawPath}`, SITE_URL);
+  // A canonical must identify one clean document, never a filter, campaign,
+  // fragment, or trailing-slash variant.
+  url.protocol = 'https:';
+  url.hostname = new URL(SITE_URL).hostname;
+  url.search = '';
+  url.hash = '';
+  url.pathname = url.pathname.replace(/\/{2,}/g, '/').replace(/\/$/, '') || '/';
+  return url.toString().replace(/\/$/, url.pathname === '/' ? '/' : '');
 };
 
 export const setSeoMetadata = ({
@@ -88,6 +101,17 @@ export const setSeoMetadata = ({
   setMetaProperty('og:url', canonicalUrl);
   setMetaProperty('og:image', imageUrl);
   setCanonical(canonicalUrl);
+};
+
+export const setProductSocialMetadata = (price: number, currency = 'INR') => {
+  if (!Number.isFinite(price) || price <= 0) return;
+  setMetaProperty('product:price:amount', String(Math.round(price)));
+  setMetaProperty('product:price:currency', currency);
+};
+
+export const removeProductSocialMetadata = () => {
+  removeMetaProperty('product:price:amount');
+  removeMetaProperty('product:price:currency');
 };
 
 export const setJsonLd = (id: string, data: Record<string, unknown>) => {
@@ -195,7 +219,29 @@ export const setHomepageJsonLd = () => {
       },
     ],
   });
+  setJsonLd('homepage-faq-json-ld', {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: homepageFaqs.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: { '@type': 'Answer', text: answer },
+    })),
+  });
 };
+
+export const homepageFaqs = [
+  { question: 'What is TheFutureX (TFX)?', answer: 'TheFutureX (TFX) is an Indian brand of smart wearables and connected lifestyle products, including smart bands, smart rings, bladeless fans, smart monitoring devices, and AI smart glasses for everyday tracking and modern living.' },
+  { question: 'What products does TheFutureX sell?', answer: 'TheFutureX sells smart bands, smart rings, bladeless fans, smart monitoring systems, and AI smart glasses. The full product catalog is available online.' },
+  { question: 'Does TheFutureX ship across India?', answer: 'Yes, TheFutureX ships smart wearables and connected lifestyle products across India when ordered directly from thefuturex.in.' },
+  { question: 'Are TheFutureX smart bands and rings screenless?', answer: 'Some products, including the TFX5 AI Smart Band, are screenless for background tracking, while selected smart rings include a built-in display.' },
+  { question: 'What metrics do TheFutureX wearables track?', answer: 'Depending on the model, TheFutureX wearables can track heart-rate trends, blood oxygen (SpO2), sleep, stress, recovery, steps, calories, and activity through a connected app.' },
+  { question: 'Do TheFutureX bladeless fans have features beyond cooling?', answer: 'Selected TheFutureX bladeless fans offer features such as heating, HEPA air-purification support, or wall-mounted airflow support alongside no-exposed-blade airflow.' },
+  { question: 'What can TheFutureX AI Smart Glasses do?', answer: 'TFX AI Smart Glasses support Bluetooth calling, music playback, voice assistant access, and selected HD recording features for hands-free everyday use.' },
+  { question: 'Where can I buy TheFutureX products?', answer: 'You can buy TheFutureX products directly at thefuturex.in and browse the complete catalog at thefuturex.in/shop/all.' },
+  { question: 'Does TheFutureX offer a warranty?', answer: 'Smart bands and smart rings include a 6-month limited warranty. Bladeless fans include a 1-year warranty on the motor and internal components. See the warranty policy for applicable terms and exclusions.' },
+  { question: 'Does TheFutureX have a mobile app?', answer: 'TheFutureX Smartwear is available on Google Play and connects compatible smart bands and rings to display device insights.' },
+];
 
 export const setCollectionPageJsonLd = ({
   path,
@@ -244,6 +290,7 @@ export const setCollectionPageJsonLd = ({
 
 const PAGE_SCOPED_JSON_LD_IDS = [
   'homepage-json-ld',
+  'homepage-faq-json-ld',
   'collection-page-json-ld',
   'product-json-ld',
   'product-breadcrumb-json-ld',

@@ -81,6 +81,11 @@
   ],
   "redirects": [
     {
+      "source": "/product/tfx-display-pro-smart-ring-premium-tracking-with-display-and-wireless-charging",
+      "destination": "/product/tfx-display-pro-smart-ring",
+      "permanent": true
+    },
+    {
       "source": "/product-category/smart-bracelet",
       "destination": "/smart-bands",
       "permanent": true

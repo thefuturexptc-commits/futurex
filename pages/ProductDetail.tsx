@@ -8,7 +8,7 @@ import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
 import { ProductCard } from '../components/ProductCard';
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
-import { absoluteUrl, removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
+import { absoluteUrl, removeJsonLd, setJsonLd, setProductSocialMetadata, setSeoMetadata, stripHtml } from '../services/seo';
 import { formatInrAmount, getAutomaticOfferItemPricing, getPrepaidDiscountForItems, isTfxV5Band as isTfxV5OfferExcluded } from '../utils/coupons';
 import { getProductModelIdentifiers } from '../utils/productSearch';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
@@ -1657,8 +1657,8 @@ export const ProductDetail: React.FC = () => {
     const categoryPath = getCategoryPathForSchema(product.category);
     const categoryUrl = absoluteUrl(categoryPath);
     const productUrl = absoluteUrl(productPath);
-    const ratingValue = Number(product.rating || 4.8);
-    const reviewCount = Math.max(1, Number(product.reviewCount || product.reviews?.length || 1));
+    const reviewCount = Math.max(0, Number(product.reviewCount || product.reviews?.length || 0));
+    const ratingValue = Math.max(1, Math.min(5, Number(product.rating || 0)));
     const productReviews = (product.reviews || []).slice(0, 3).map((review) => ({
       '@type': 'Review',
       author: {
@@ -1681,8 +1681,14 @@ export const ProductDetail: React.FC = () => {
       image,
       type: 'product',
     });
+    setProductSocialMetadata(price);
 
-    setJsonLd('product-json-ld', {
+    const additionalProperty = Object.entries(product.specs || {})
+      .filter(([name, value]) => String(name).trim() && String(value).trim())
+      .slice(0, 20)
+      .map(([name, value]) => ({ '@type': 'PropertyValue', name: String(name), value: String(value) }));
+
+    const productSchema: Record<string, unknown> = {
       '@context': 'https://schema.org',
       '@type': 'Product',
       '@id': `${productUrl}#product`,
@@ -1697,14 +1703,8 @@ export const ProductDetail: React.FC = () => {
       },
       sku: product.id,
       category: product.category,
-      aggregateRating: {
-        '@type': 'AggregateRating',
-        ratingValue: ratingValue.toFixed(1),
-        reviewCount,
-        bestRating: '5',
-        worstRating: '1',
-      },
-      review: productReviews.length ? productReviews : undefined,
+      ...(primaryProductModel ? { mpn: primaryProductModel, model: primaryProductModel } : {}),
+      ...(additionalProperty.length ? { additionalProperty } : {}),
       offers: {
         '@type': 'Offer',
         url: productUrl,
@@ -1716,8 +1716,18 @@ export const ProductDetail: React.FC = () => {
           '@type': 'Organization',
           name: 'The Future X',
         },
+        shippingDetails: {
+          '@type': 'OfferShippingDetails',
+          shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
+          shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+        },
       },
-    });
+    };
+    if (reviewCount > 0 && Number.isFinite(ratingValue) && ratingValue > 0) {
+      productSchema.aggregateRating = { '@type': 'AggregateRating', ratingValue: ratingValue.toFixed(1), reviewCount, bestRating: '5', worstRating: '1' };
+    }
+    if (productReviews.length) productSchema.review = productReviews;
+    setJsonLd('product-json-ld', productSchema);
 
     setJsonLd('product-breadcrumb-json-ld', {
       '@context': 'https://schema.org',
@@ -4019,10 +4029,10 @@ export const ProductDetail: React.FC = () => {
                   'product-detail-add-cart-btn min-h-12 w-full rounded-2xl px-4 py-3 text-center text-sm font-bold leading-tight transition-all duration-200',
                   'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
                   !canAdd
-                    ? 'border border-violet-300/40 bg-white text-black'
+                    ? 'border border-white/15 bg-white text-slate-950 hover:bg-slate-100'
                     : addedToCart
-                      ? 'bg-green-500 text-white'
-                      : 'border border-cyan-400/30 bg-gradient-to-r from-[#0b2a6e] via-[#0d3f9f] to-[#1167c7] text-white shadow-lg shadow-cyan-700/30',
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-primary-600 text-white shadow-[0_10px_28px_-8px_rgba(59,130,246,0.55)] hover:bg-primary-500',
                 ].join(' ')}
               >
                 {notifySubmitting ? 'Saving...' : addedToCart ? 'Added to Cart' : canAdd ? 'Add to Cart' : 'Notify me'}
@@ -4031,7 +4041,7 @@ export const ProductDetail: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/cart')}
-                  className="product-detail-buy-now-btn min-h-12 w-full rounded-2xl bg-[#540000] px-4 py-3 text-center text-sm font-bold leading-tight text-white transition-all duration-200 hover:bg-[#3f0000]"
+                  className="product-detail-buy-now-btn min-h-12 w-full rounded-2xl border border-amber-300/40 bg-amber-400 px-4 py-3 text-center text-sm font-bold leading-tight text-slate-950 transition-all duration-200 hover:bg-amber-300"
                 >
                   View Cart
                 </button>
@@ -4066,19 +4076,19 @@ export const ProductDetail: React.FC = () => {
                   'product-detail-add-cart-btn min-h-14 min-w-0 rounded-2xl px-4 py-4 text-center text-sm font-bold leading-tight transition-all duration-200 lg:px-6 lg:text-base',
                   'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
                   !canAdd
-                    ? 'border border-violet-300/40 bg-white text-black hover:bg-violet-100 active:scale-[0.98]'
+                    ? 'border border-white/15 bg-white text-slate-950 hover:bg-slate-100 active:scale-[0.98]'
                     : addedToCart
-                      ? 'bg-green-500 text-white scale-[0.98]'
-                      : 'border border-cyan-800/40 bg-gradient-to-r from-[#0b1224] to-[#122342] text-cyan-100 shadow-lg shadow-black/35 hover:from-[#101a32] hover:to-[#17305a] active:scale-[0.98]',
+                      ? 'bg-emerald-500 text-white scale-[0.98]'
+                      : 'bg-primary-600 text-white shadow-[0_14px_32px_-10px_rgba(59,130,246,0.55)] hover:bg-primary-500 active:scale-[0.98]',
                 ].join(' ')}
               >
-                {notifySubmitting ? 'Saving...' : addedToCart ? 'âœ“ Added to Cart!' : canAdd ? 'Add to Cart' : 'Notify me'}
+                {notifySubmitting ? 'Saving...' : addedToCart ? 'Added to Cart' : canAdd ? 'Add to Cart' : 'Notify me'}
               </button>
               {canAdd && (
                 <button
                   type="button"
                   onClick={() => navigate('/cart')}
-                  className="product-detail-buy-now-btn min-h-14 min-w-0 rounded-2xl bg-[#540000] px-4 py-4 text-center text-sm font-bold leading-tight text-white transition-all duration-200 hover:bg-[#3f0000] active:scale-[0.98] lg:px-6 lg:text-base"
+                  className="product-detail-buy-now-btn min-h-14 min-w-0 rounded-2xl border border-amber-300/40 bg-amber-400 px-4 py-4 text-center text-sm font-bold leading-tight text-slate-950 transition-all duration-200 hover:bg-amber-300 active:scale-[0.98] lg:px-6 lg:text-base"
                 >
                   View Cart
                 </button>
@@ -4093,10 +4103,10 @@ export const ProductDetail: React.FC = () => {
               {infoBadges.map((badge) => (
                 <div
                   key={badge.title}
-                  className="rounded-lg border border-white/10 bg-gradient-to-br from-white/7 via-white/4 to-white/[0.02] p-2 shadow-[0_10px_24px_rgba(0,0,0,0.12)] sm:rounded-xl sm:p-2.5"
+                  className="rounded-lg border border-white/10 bg-white/[0.04] p-2 transition-colors hover:border-white/15 hover:bg-white/[0.06] sm:rounded-xl sm:p-2.5"
                 >
                   <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md border border-primary-400/20 bg-gradient-to-br from-primary-500/18 via-cyan-400/10 to-violet-500/18 text-primary-200 shadow-[0_6px_18px_rgba(59,130,246,0.14)] sm:h-7 sm:w-7 sm:rounded-lg">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary-500/15 text-primary-300 sm:h-7 sm:w-7 sm:rounded-lg">
                       <DetailIcon kind={badge.icon} />
                     </span>
                     <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-primary-200 sm:text-[10px]">
@@ -4121,7 +4131,7 @@ export const ProductDetail: React.FC = () => {
           {detailTabsFixed && <div aria-hidden="true" style={{ height: detailTabsHeight }} />}
           <div
             ref={detailTabsBarRef as React.RefObject<HTMLDivElement>}
-            className={`product-detail-sticky-tabs mb-5 border-y border-[#bdebea] bg-[#d8f5f2]/95 shadow-[0_8px_24px_rgba(15,63,70,0.08)] backdrop-blur ${
+            className={`product-detail-sticky-tabs mb-5 border-y border-white/10 bg-[#0b0f1a]/95 backdrop-blur ${
               detailTabsFixed ? 'fixed inset-x-0 top-16 z-[70]' : '-mx-4 relative z-[55] sm:-mx-6 lg:-mx-8'
             }`}
           >
@@ -4131,10 +4141,10 @@ export const ProductDetail: React.FC = () => {
                     key={tab.key}
                     type="button"
                     onClick={() => scrollToDetailSection(tab.key)}
-                    className={`product-detail-sticky-tab shrink-0 snap-center border-b-2 px-4 py-3 text-sm font-semibold transition sm:px-5 ${
+                    className={`product-detail-sticky-tab shrink-0 snap-center border-b-2 px-4 py-3 text-sm font-semibold text-gray-400 transition sm:px-5 ${
                       activeDetailTab === tab.key
-                        ? 'is-active border-[#16b8b0]'
-                        : 'border-transparent'
+                        ? 'is-active border-primary-400 text-white'
+                        : 'border-transparent hover:text-gray-200'
                     }`}
                   >
                     {getDetailTabLabel(tab)}
@@ -4481,20 +4491,18 @@ export const ProductDetail: React.FC = () => {
           </section>
         )}
         {showNotifyModal && product && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-[#02040a]/75 px-4 backdrop-blur-md">
-            <div className="w-full max-w-sm overflow-hidden rounded-[26px] border border-violet-300/20 bg-gradient-to-br from-[#17061f] via-[#0a1020] to-[#071922] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.45)]">
-              <div className="pointer-events-none absolute" />
+          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
+            <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0b0f1a] p-5 text-white shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
               <div className="mb-4 flex items-center gap-2">
-                <span className="inline-flex rounded-full border border-violet-300/25 bg-violet-400/12 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.24em] text-violet-200">
-                  Stock Alert
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/25 bg-amber-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-300">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                  Out of stock
                 </span>
-                <span className="h-2 w-2 rounded-full bg-rose-400 shadow-[0_0_12px_rgba(251,113,133,0.9)]" />
               </div>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-rose-200">Out of stock</p>
-                  <h3 className="mt-2 text-xl font-bold text-white">Notify me</h3>
-                  <p className="mt-1 text-sm text-gray-300">
+                  <h3 className="text-xl font-bold text-white">Notify me</h3>
+                  <p className="mt-1 text-sm text-gray-400">
                     {product.name}
                     {selectedColor?.name ? ` - ${selectedColor.name}` : ''}
                   </p>
@@ -4502,32 +4510,32 @@ export const ProductDetail: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowNotifyModal(false)}
-                  className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-sm text-gray-200 transition hover:border-violet-300/30 hover:bg-violet-400/10"
+                  className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-sm text-gray-300 transition hover:border-white/20 hover:bg-white/10"
                   aria-label="Close notify me popup"
                 >
                   X
                 </button>
               </div>
-              <div className="mt-4 rounded-2xl border border-cyan-400/10 bg-black/20 p-3">
+              <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
                 <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/25 to-cyan-400/20 text-violet-100">
+                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-primary-500/15 text-primary-300">
                     <DetailIcon kind="support" />
                   </span>
                   <div>
                     <p className="text-sm font-semibold text-white">We will message you once it is back</p>
-                    <p className="mt-1 text-xs leading-5 text-gray-300">Your alert request will be saved for this product variant.</p>
+                    <p className="mt-1 text-xs leading-5 text-gray-400">Your alert request will be saved for this product variant.</p>
                   </div>
                 </div>
               </div>
               {notifyMessage && (
-                <p className={`mt-3 text-sm ${notifyMessage.startsWith('Done') ? 'text-green-300' : 'text-rose-300'}`}>
+                <p className={`mt-3 text-sm ${notifyMessage.startsWith('Done') ? 'text-emerald-300' : 'text-rose-300'}`}>
                   {notifyMessage}
                 </p>
               )}
               <button
                 type="button"
                 onClick={() => setShowNotifyModal(false)}
-                className="mt-5 w-full rounded-xl border border-violet-200/20 bg-gradient-to-r from-violet-500 via-fuchsia-500 to-cyan-500 px-4 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(168,85,247,0.28)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                className="mt-5 w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Close
               </button>
@@ -4536,7 +4544,7 @@ export const ProductDetail: React.FC = () => {
         )}
 
         <div
-          className={`fixed inset-x-0 bottom-0 z-[80] border-t border-white/10 bg-[#050816]/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl transition-transform duration-300 sm:hidden ${
+          className={`fixed inset-x-0 bottom-0 z-[80] border-t border-white/10 bg-[#0b0f1a]/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl transition-transform duration-300 sm:hidden ${
             showMobileStickyCta ? 'translate-y-0' : 'translate-y-full'
           }`}
         >
@@ -4560,10 +4568,10 @@ export const ProductDetail: React.FC = () => {
                 'min-h-10 min-w-[86px] rounded-xl px-2.5 py-2 text-center text-[11px] font-bold leading-tight transition-all duration-200 min-[360px]:min-w-[104px] min-[360px]:text-xs',
                 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
                 !canAdd
-                  ? 'border border-violet-300/40 bg-white text-black'
+                  ? 'border border-white/15 bg-white text-slate-950'
                   : addedToCart
-                    ? 'bg-green-500 text-white'
-                    : 'border border-cyan-800/40 bg-gradient-to-r from-[#0b1224] to-[#122342] text-cyan-100 shadow-lg shadow-black/35',
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-primary-600 text-white shadow-[0_8px_20px_-6px_rgba(59,130,246,0.55)]',
               ].join(' ')}
             >
               {notifySubmitting ? 'Saving...' : addedToCart ? 'Added' : canAdd ? 'Add to Cart' : 'Notify me'}
@@ -4572,7 +4580,7 @@ export const ProductDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => handleBuyNowClick()}
-                className="min-h-10 min-w-[76px] rounded-xl bg-[#540000] px-2.5 py-2 text-center text-[11px] font-bold leading-tight text-white transition-all duration-200 hover:bg-[#3f0000] min-[360px]:min-w-[92px] min-[360px]:text-xs"
+                className="min-h-10 min-w-[76px] rounded-xl border border-amber-300/40 bg-amber-400 px-2.5 py-2 text-center text-[11px] font-bold leading-tight text-slate-950 transition-all duration-200 hover:bg-amber-300 min-[360px]:min-w-[92px] min-[360px]:text-xs"
               >
                 Buy Now
               </button>

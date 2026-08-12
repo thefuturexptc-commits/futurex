@@ -95,6 +95,8 @@ interface BulkStockUndoState {
 const inputClass =
   'w-full p-2 border border-white/15 bg-gray-900 text-white rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
 const createProductId = () => `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+const MAX_PRODUCT_VIDEO_BYTES = 50 * 1024 * 1024;
+const MAX_PRODUCT_VIDEO_SECONDS = 30;
 
 const isPermanentImageUrl = (url: string): boolean => {
   if (!url) return false;
@@ -777,11 +779,15 @@ export const AdminDashboard: React.FC = () => {
       setDataError('Please select a video file.');
       return;
     }
+    if (file.size > MAX_PRODUCT_VIDEO_BYTES) {
+      setDataError('Product video must be smaller than 50 MB.');
+      return;
+    }
 
     try {
       const duration = await getVideoDuration(file);
-      if (duration > 10) {
-        setDataError('Product video must be 10 seconds or shorter.');
+      if (duration > MAX_PRODUCT_VIDEO_SECONDS) {
+        setDataError('Product video must be 30 seconds or shorter.');
         return;
       }
       setDataError('');
@@ -800,11 +806,15 @@ export const AdminDashboard: React.FC = () => {
       setDataError('Please select a video file.');
       return;
     }
+    if (file.size > MAX_PRODUCT_VIDEO_BYTES) {
+      setDataError('Variant video must be smaller than 50 MB.');
+      return;
+    }
 
     try {
       const duration = await getVideoDuration(file);
-      if (duration > 10) {
-        setDataError('Variant video must be 10 seconds or shorter.');
+      if (duration > MAX_PRODUCT_VIDEO_SECONDS) {
+        setDataError('Variant video must be 30 seconds or shorter.');
         return;
       }
       setDataError('');
@@ -1842,10 +1852,10 @@ export const AdminDashboard: React.FC = () => {
 
                       <div className="space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-black/20">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Variant Video</label>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">Upload a video up to 10 seconds for this variant. It will show as the last gallery slide.</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Upload an MP4, WebM, or MOV video up to 30 seconds and 50 MB. It will show as the last gallery slide.</p>
                         <input
                           type="file"
-                          accept="video/*"
+                          accept="video/mp4,video/webm,video/quicktime"
                           className="block w-full text-sm text-gray-500 dark:text-gray-300"
                           onChange={(e) => handleVariantVideoSelect(variant.variantId, e)}
                         />
@@ -1881,8 +1891,8 @@ export const AdminDashboard: React.FC = () => {
 
               <section className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">Product Video</h3>
-                <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">Upload an MP4/video file up to 10 seconds. It will show as the last gallery slide unless a variant has its own video.</p>
-                <input type="file" accept="video/*" onChange={handleProductVideoSelect} className="mb-3 block w-full text-sm text-gray-500 dark:text-gray-300" />
+                <p className="mb-3 text-xs text-gray-600 dark:text-gray-400">Upload an MP4, WebM, or MOV video up to 30 seconds and 50 MB. It will show as the last gallery slide unless a variant has its own video.</p>
+                <input type="file" accept="video/mp4,video/webm,video/quicktime" onChange={handleProductVideoSelect} className="mb-3 block w-full text-sm text-gray-500 dark:text-gray-300" />
                 {selectedVideoFile && (
                   <div className="mb-3 flex items-center justify-between gap-2 rounded-lg border border-gray-200 px-3 py-2 text-xs text-gray-700 dark:border-white/10 dark:text-gray-300">
                     <span className="min-w-0 truncate">{selectedVideoFile.name}</span>

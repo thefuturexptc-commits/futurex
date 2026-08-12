@@ -389,11 +389,8 @@ export const spaFallbackRoutes = [
   'shop',
   ...sitemapRoutes.map((route) => route.path.replace(/^\//, '')).filter(Boolean),
   ...legacyBlogFallbackRoutes,
-  ...staticProductSeoRecords.flatMap((product) => {
-    const routes = [`product/${product.slug}`];
-    if (product.canonicalSlug && product.canonicalSlug !== product.slug) {
-      routes.push(`product/${product.canonicalSlug}`);
-    }
-    return routes;
-  }),
+  ...[...new Set(staticProductSeoRecords
+    .map((product) => product.canonicalSlug || product.slug)
+    .filter(Boolean)
+    .map((slug) => `product/${slug}`))],
 ];

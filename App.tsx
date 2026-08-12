@@ -13,7 +13,7 @@ import { FloatingContactRail } from './components/FloatingContactRail';
 import { LoadingFallback } from './components/LoadingFallback';
 import { Home } from './pages/Home';
 import { preloadVisitorGeo, pushPageView } from './services/analytics';
-import { removePageScopedJsonLd, setCollectionPageJsonLd, setHomepageJsonLd, setSeoMetadata } from './services/seo';
+import { removePageScopedJsonLd, removeProductSocialMetadata, setCollectionPageJsonLd, setHomepageJsonLd, setSeoMetadata } from './services/seo';
 
 // ✅ META PIXEL
 
@@ -263,6 +263,7 @@ const RouteSeo: React.FC = () => {
   useEffect(() => {
     const cleanPath = pathname.replace(/\/+$/, '') || '/';
     removePageScopedJsonLd();
+    if (!cleanPath.startsWith('/product/')) removeProductSocialMetadata();
 
     const seo = getRouteSeo(pathname);
     if (!seo) return;

@@ -262,6 +262,13 @@ const buildHomeStaticHtml = (products = []) => {
           <li><a href="/blog">Blog</a></li>
         </ul>
       </section>
+      <section class="seo-faq">
+        <h2>Frequently Asked Questions</h2>
+        <details><summary>What is TheFutureX (TFX)?</summary><p>TheFutureX (TFX) is an Indian brand of smart wearables and connected lifestyle products, including smart bands, smart rings, bladeless fans, smart monitoring devices, and AI smart glasses.</p></details>
+        <details><summary>Does TheFutureX ship across India?</summary><p>Yes, TheFutureX ships smart wearables and connected lifestyle products across India when ordered directly from thefuturex.in.</p></details>
+        <details><summary>Does TheFutureX offer a warranty?</summary><p>Smart bands and smart rings include a 6-month limited warranty. Bladeless fans include a 1-year warranty on the motor and internal components. See the warranty policy for applicable terms and exclusions.</p></details>
+        <details><summary>Does TheFutureX have a mobile app?</summary><p>TheFutureX Smartwear is available on Google Play and connects compatible smart bands and rings to display device insights.</p></details>
+      </section>
     </main>`;
 };
 
@@ -508,6 +515,10 @@ const buildJsonLd = (product) => {
   const ratingValue = Math.max(1, Math.min(5, Number(product.ratingValue || 0))).toFixed(1);
   const reviewCount = Math.max(0, Number(product.reviewCount || 0));
   const faqItems = getProductFaqs(product);
+  const additionalProperty = Object.entries(product.specs || {})
+    .filter(([name, value]) => String(name).trim() && String(value).trim())
+    .slice(0, 20)
+    .map(([name, value]) => ({ '@type': 'PropertyValue', name: String(name), value: String(value) }));
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -520,7 +531,9 @@ const buildJsonLd = (product) => {
       name: product.brand || BRAND_NAME,
     },
     sku: product.id || product.slug,
+    ...(product.model ? { mpn: product.model, model: product.model } : {}),
     category: product.category || 'Products',
+    ...(additionalProperty.length ? { additionalProperty } : {}),
     offers: {
       '@type': 'Offer',
       url: productUrl,
@@ -531,6 +544,11 @@ const buildJsonLd = (product) => {
       seller: {
         '@type': 'Organization',
         name: BRAND_NAME,
+      },
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
+        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
       },
     },
   };
@@ -646,13 +664,11 @@ const productRecords = mergeProductSeoRecords(remoteProducts);
 const productRouteMap = new Map();
 
 productRecords.forEach((product) => {
-  productRouteMap.set(product.slug, product);
+  const canonicalSlug = product.canonicalSlug || product.slug;
+  productRouteMap.set(canonicalSlug, { ...product, slug: canonicalSlug });
   if (product.id) {
-    productRouteMap.set(String(product.id), product);
-    productRouteMap.set(slugify(product.id), product);
-  }
-  if (product.canonicalSlug) {
-    productRouteMap.set(product.canonicalSlug, { ...product, slug: product.canonicalSlug });
+    // IDs are not public URLs. Publishing one static page per ID creates
+    // duplicate canonical candidates, so only the canonical slug is built.
   }
 });
 

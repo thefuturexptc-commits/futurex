@@ -18,6 +18,7 @@ import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-bann
 import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
 import tfxVitalAppQr from '../assets/images/tfx-vital-app-qr-512.png';
+import { homepageFaqs } from '../services/seo';
 
 /**
  * Fades and lifts its children into view the first time they scroll into the
@@ -839,6 +840,21 @@ export const Home: React.FC = () => {
               decoding="async"
             />
           </Link>
+        </div>
+      </section>
+
+      <section className="bg-slate-50 px-4 py-14 sm:py-20">
+        <div className="mx-auto max-w-4xl">
+          <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-cyan-700">TheFutureX help centre</p>
+          <h2 className="mt-3 text-center text-3xl font-black text-slate-950 sm:text-4xl">Frequently Asked Questions</h2>
+          <div className="mt-8 space-y-3">
+            {homepageFaqs.map((item) => (
+              <details key={item.question} className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+                <summary className="cursor-pointer list-none pr-8 text-base font-bold text-slate-900 marker:hidden">{item.question}</summary>
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{item.answer}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 

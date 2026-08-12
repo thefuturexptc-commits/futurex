@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { getBlogPosts } from '../services/backend';
-import { setSeoMetadata } from '../services/seo';
+import { removeJsonLd, setJsonLd, setSeoMetadata } from '../services/seo';
 import type { BlogPost } from '../types';
 
 export const BlogPostPage: React.FC = () => {
@@ -15,7 +15,18 @@ export const BlogPostPage: React.FC = () => {
   }, [slug]);
 
   useEffect(() => {
-    if (post) setSeoMetadata({ title: `${post.title} | TheFutureX Blog`, description: post.excerpt, path: `/blog/${post.slug}` });
+    if (!post) return;
+    const path = `/blog/${post.slug}`;
+    const url = `https://thefuturex.in${path}`;
+    setSeoMetadata({ title: `${post.title} | TheFutureX Blog`, description: post.excerpt, path, type: 'website' });
+    setJsonLd('blog-article-json-ld', {
+      '@context': 'https://schema.org', '@type': 'Article', headline: post.title,
+      description: post.excerpt, mainEntityOfPage: { '@type': 'WebPage', '@id': url },
+      url, datePublished: post.updatedAt, dateModified: post.updatedAt,
+      author: { '@type': 'Organization', name: 'TheFutureX' },
+      publisher: { '@type': 'Organization', name: 'TheFutureX', logo: { '@type': 'ImageObject', url: 'https://thefuturex.in/images/tfx-google-logo.webp' } },
+    });
+    return () => removeJsonLd('blog-article-json-ld');
   }, [post]);
 
   if (post === undefined) return <main className="mx-auto max-w-3xl px-4 py-16 text-center">Loading article…</main>;

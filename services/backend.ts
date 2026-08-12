@@ -1095,18 +1095,10 @@ export const seedDatabase = async () => {
 // --- Storage Service ---
 
 export const uploadFile = async (file: File, path: string): Promise<string> => {
-    const readFileAsBase64 = (f: File): Promise<string> => {
-        return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.readAsDataURL(f);
-        });
-    };
-
     try {
-        // Create a timeout promise (15 seconds) - Increased from 5s to avoid false positives on slow connections
+        // Video uploads can take longer on a normal mobile/office connection.
         const timeout = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error("Upload timed out")), 15000)
+            setTimeout(() => reject(new Error("Upload timed out after 2 minutes")), 120000)
         );
 
         // Try Firebase Storage
@@ -1126,23 +1118,9 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
         return downloadURL;
     } catch (error) {
         logDevError("Firebase Storage Upload Failed or Timed Out:", error);
-        
-        // --- Fallback Protection ---
-        // Firestore documents are limited to 1 MB. 
-        // Base64 encoding increases size by ~33%. 
-        // We set a safe limit of ~500KB for fallback files to avoid crashing the DB save.
-        
-        const MAX_FALLBACK_SIZE = 500 * 1024; // 500 KB
-
-        if (file.size > MAX_FALLBACK_SIZE) {
-            logDevWarning(`File ${file.name} is too large for local DB storage. Using temporary Blob URL.`);
-            // Use Blob URL for immediate session playback (works for video/large images)
-            // NOTE: This URL will expire on page refresh, but allows the demo to work without crashing.
-            return URL.createObjectURL(file);
-        }
-        
-        // Return Base64 string if small enough (Persistent in LocalStorage)
-        return await readFileAsBase64(file);
+        const code = (error as { code?: string })?.code || '';
+        const message = error instanceof Error ? error.message : 'Unknown Firebase Storage error';
+        throw new Error(`Cloud upload failed (${code || message}). Confirm Firebase Storage is enabled, deploy storage.rules, and sign in with an admin account.`);
     }
 };
 
