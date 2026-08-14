@@ -70,6 +70,70 @@ const RevealOnScroll: React.FC<{ children: React.ReactNode; className?: string; 
   );
 };
 
+/**
+ * Small circular button that fades in once the page has scrolled down and
+ * smoothly returns the user to the top when clicked. Pure scroll-listener,
+ * no libraries.
+ */
+const ScrollToTopButton: React.FC = () => {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const onScroll = () => setVisible(window.scrollY > 480);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  return (
+    <button
+      type="button"
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+      aria-label="Scroll back to top"
+      className={`fixed bottom-5 right-4 z-40 grid h-11 w-11 place-items-center rounded-full bg-slate-950 text-white shadow-[0_10px_26px_rgba(15,23,42,0.35)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-[#0ea5e9] active:scale-90 sm:bottom-7 sm:right-6 ${
+        visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'
+      }`}
+    >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15" />
+      </svg>
+    </button>
+  );
+};
+
+const TRUST_STRIP_ITEMS = [
+  'IP68 Water Resistant',
+  'Heart Rate & SpO2 Tracking',
+  'Smart Alerts',
+  '7-Day Easy Returns',
+  'Cash on Delivery Available',
+  '1 Year Warranty',
+];
+
+/**
+ * Infinitely scrolling trust-badge strip. Duplicates the item list once so
+ * the CSS marquee can loop seamlessly at -50% translate.
+ */
+const TrustMarquee: React.FC = () => {
+  const items = [...TRUST_STRIP_ITEMS, ...TRUST_STRIP_ITEMS];
+  return (
+    <div className="relative overflow-hidden border-y border-slate-100 bg-slate-950 py-3">
+      <div className="tfx-marquee-track flex w-max items-center gap-10 whitespace-nowrap">
+        {items.map((item, index) => (
+          <span
+            key={`${item}-${index}`}
+            className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-white/90 sm:text-sm"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1ca9a4]" aria-hidden="true" />
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 const CATALOG_PAGE_SIZE = 4;
 const FEATURED_BAND_PRODUCT_NAME = 'TFX5 AI Smart Band Heart Rate SpO2 Fitness Tracker';
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
@@ -185,6 +249,7 @@ export const Home: React.FC = () => {
   const [copiedOfferCode, setCopiedOfferCode] = useState('');
   const [homeWaterBannerIndex, setHomeWaterBannerIndex] = useState(0);
   const [homeBannerAspects, setHomeBannerAspects] = useState<Record<number, number>>({});
+  const [popupEntered, setPopupEntered] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -220,6 +285,15 @@ export const Home: React.FC = () => {
     return () => {
       document.body.style.overflow = previousOverflow;
     };
+  }, [showOfferPopup]);
+
+  useEffect(() => {
+    if (!showOfferPopup) {
+      setPopupEntered(false);
+      return undefined;
+    }
+    const raf = window.requestAnimationFrame(() => setPopupEntered(true));
+    return () => window.cancelAnimationFrame(raf);
   }, [showOfferPopup]);
 
   useEffect(() => {
@@ -356,12 +430,43 @@ export const Home: React.FC = () => {
 
   return (
     <div className="smart-bands-page relative min-h-screen overflow-x-hidden bg-white text-slate-950">
+      <style>{`
+        @keyframes tfx-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .tfx-marquee-track {
+          animation: tfx-marquee 22s linear infinite;
+        }
+        @keyframes tfx-shimmer {
+          from { background-position: -400px 0; }
+          to { background-position: 400px 0; }
+        }
+        .tfx-shimmer {
+          background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 40%, #f1f5f9 80%);
+          background-size: 800px 100%;
+          animation: tfx-shimmer 1.4s linear infinite;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .tfx-marquee-track { animation: none; }
+          .tfx-shimmer { animation: none; background: #eef2f6; }
+        }
+      `}</style>
+
+      <ScrollToTopButton />
+
       {showOfferPopup && createPortal((
         <div
-          className="fixed inset-0 flex min-h-[100dvh] items-center justify-center overflow-y-auto bg-black/85 px-3 py-5 sm:px-4 sm:py-8"
+          className={`fixed inset-0 flex min-h-[100dvh] items-center justify-center overflow-y-auto bg-black/85 px-3 py-5 transition-opacity duration-300 ease-out sm:px-4 sm:py-8 ${
+            popupEntered ? 'opacity-100' : 'opacity-0'
+          }`}
           style={{ zIndex: 2147483647 }}
         >
-          <div className="relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-[390px] overflow-y-auto rounded-2xl bg-[#050505] px-4 pb-5 pt-8 text-center shadow-2xl ring-1 ring-white/10 sm:max-w-[460px] sm:px-8 sm:pb-8 sm:pt-9">
+          <div
+            className={`relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-[390px] overflow-y-auto rounded-2xl bg-[#050505] px-4 pb-5 pt-8 text-center shadow-2xl ring-1 ring-white/10 transition-all duration-300 ease-out sm:max-w-[460px] sm:px-8 sm:pb-8 sm:pt-9 ${
+              popupEntered ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'
+            }`}
+          >
             <button
               type="button"
               onClick={() => {
@@ -404,7 +509,7 @@ export const Home: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleShopWithOffer}
-                  className="mt-5 h-11 w-full rounded-xl bg-[#df0b16] text-sm font-black text-white shadow-[0_16px_28px_rgba(223,11,22,0.26)] transition hover:bg-[#c70712] sm:h-12 sm:text-base"
+                  className="mt-5 h-11 w-full rounded-xl bg-[#df0b16] text-sm font-black text-white shadow-[0_16px_28px_rgba(223,11,22,0.26)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#c70712] hover:shadow-[0_20px_34px_rgba(223,11,22,0.32)] active:translate-y-0 active:scale-[0.97] sm:h-12 sm:text-base"
                 >
                   Shop Now
                 </button>
@@ -463,7 +568,7 @@ export const Home: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAvailHomeOffer}
-                className="mt-2 h-11 w-full rounded-xl bg-[#df0b16] text-sm font-black text-white shadow-[0_16px_28px_rgba(223,11,22,0.26)] transition hover:bg-[#c70712] sm:h-12 sm:text-base"
+                className="mt-2 h-11 w-full rounded-xl bg-[#df0b16] text-sm font-black text-white shadow-[0_16px_28px_rgba(223,11,22,0.26)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#c70712] hover:shadow-[0_20px_34px_rgba(223,11,22,0.32)] active:translate-y-0 active:scale-[0.97] sm:h-12 sm:text-base"
               >
                 Unlock Offer Now
               </button>
@@ -560,6 +665,8 @@ export const Home: React.FC = () => {
         )}
       </section>
 
+      <TrustMarquee />
+
       <section id="explore-collection" className="relative z-10 bg-white px-5 pb-8 pt-2 sm:px-8 sm:pb-12 lg:px-10">
         <div className="mx-auto max-w-7xl">
           <h2 className="text-center font-display text-2xl font-black leading-tight text-slate-950 sm:text-4xl">
@@ -624,11 +731,11 @@ export const Home: React.FC = () => {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
               {Array.from({ length: CATALOG_PAGE_SIZE }).map((_, item) => (
                 <div key={item} className="flex min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] sm:min-h-[436px]">
-                  <div className="h-48 w-full animate-pulse rounded-md bg-slate-100 sm:h-64" />
+                  <div className="tfx-shimmer h-48 w-full rounded-md sm:h-64" />
                   <div className="flex flex-1 flex-col gap-2 px-1 pb-1 pt-3">
-                    <div className="h-4 w-3/4 animate-pulse rounded bg-slate-100" />
-                    <div className="h-3 w-1/2 animate-pulse rounded bg-slate-100" />
-                    <div className="mt-auto h-8 w-full animate-pulse rounded-md bg-slate-100" />
+                    <div className="tfx-shimmer h-4 w-3/4 rounded" />
+                    <div className="tfx-shimmer h-3 w-1/2 rounded" />
+                    <div className="tfx-shimmer mt-auto h-8 w-full rounded-md" />
                   </div>
                 </div>
               ))}
@@ -724,14 +831,14 @@ export const Home: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleHomeAddToCart(product)}
-                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition hover:!bg-[#161b28] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
+                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#161b28] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
                         >
                           Add to Cart
                         </button>
                         <button
                           type="button"
                           onClick={() => handleHomeBuyNow(product)}
-                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition hover:!bg-[#630000] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
+                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#630000] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
                         >
                           Buy Now
                         </button>

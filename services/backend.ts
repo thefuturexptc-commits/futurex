@@ -1126,6 +1126,10 @@ export const uploadFile = async (file: File, path: string): Promise<string> => {
 
 // --- Products Service ---
 
+const isSmartGlassesProduct = (product: Pick<Product, 'name' | 'category'>) =>
+  product.category?.trim().toLowerCase() === 'smart glasses' ||
+  /\b(?:ai\s*)?smart\s*glasses?\b/i.test(`${product.name || ''} ${product.category || ''}`);
+
 export const getProducts = async (): Promise<Product[]> => {
   const now = Date.now();
   if (productsCache && now - productsCache.ts < PRODUCTS_CACHE_TTL_MS) {
@@ -1144,13 +1148,15 @@ export const getProducts = async (): Promise<Product[]> => {
       querySnapshot.forEach((snapshotDoc) => {
         fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
       });
-      const normalized = fbProducts.map(normalizeProductColors);
+      const normalized = fbProducts.map(normalizeProductColors).filter((product) => !isSmartGlassesProduct(product));
       setMockData('products', normalized);
       productsCache = { data: normalized, ts: Date.now() };
       return normalized;
     } catch (error) {
       if (isAbortLikeError(error) || isPermissionDeniedError(error)) {
-        const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS).map(normalizeProductColors);
+        const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS)
+          .map(normalizeProductColors)
+          .filter((product) => !isSmartGlassesProduct(product));
         productsCache = { data: localProducts, ts: Date.now() };
         return localProducts;
       }
@@ -1165,6 +1171,7 @@ export const getProducts = async (): Promise<Product[]> => {
 
 // ─── Slug utility ─────────────────────────────────────────────────────────────
 export const getProductById = async (id: string): Promise<Product | undefined> => {
+  if (/\b(?:ai-?)?smart-?glasses?\b/i.test(id)) return undefined;
   const knownFallback = getKnownProductFallback(id);
   try {
       const allProducts = await getProducts();
@@ -1182,6 +1189,7 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
       const docSnap = await withTimeout(getDoc(docRef), 4500);
       if (docSnap.exists()) {
         const remoteProduct = normalizeProductColors({ ...(docSnap.data() as Product), id: docSnap.id });
+        if (isSmartGlassesProduct(remoteProduct)) return undefined;
         const nextProducts = [remoteProduct, ...products.filter((p) => p.id !== id)];
         setMockData('products', nextProducts);
         refreshProductsCache(nextProducts);
@@ -1194,7 +1202,7 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
     products.find((p) => p.id === id) ||
     products.find((p) => getProductSlug(p) === id) ||
     products.find((p) => toProductSlug(p.name) === id);
-  return localFound ? normalizeProductColors(localFound) : knownFallback;
+  return localFound && !isSmartGlassesProduct(localFound) ? normalizeProductColors(localFound) : knownFallback;
 };
 
 export const getProductReviews = async (productId: string): Promise<ProductPublicReview[]> => {

@@ -5,7 +5,6 @@ import { getProductSlug, getProducts } from '../services/backend';
 import { isSameCollection } from '../utils/productCollections';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { ProductComparisonSection } from '../components/ProductComparisonSection';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import bandCutout from '../assets/images/band-hero-cutout.webp';
 import bandHeroLifestyle from '../assets/images/band-men-women-lifestyle.webp';
@@ -479,14 +478,6 @@ export const SmartBands: React.FC = () => {
           </Link>
         </div>
       </section>
-
-      <ProductComparisonSection
-        products={catalogProducts}
-        eyebrow="Smart band comparison"
-        title="Compare Smart Bands"
-        subtitle="Compare price, battery, app support, tracking features, and daily-use fit across the smart band lineup."
-        className="bg-white"
-      />
 
       <section className="bg-[#f2fbfb] px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-4xl">

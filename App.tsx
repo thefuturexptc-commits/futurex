@@ -22,7 +22,6 @@ const SmartBands = React.lazy(() => import('./pages/SmartBands').then(module => 
 const SmartRings = React.lazy(() => import('./pages/SmartRings').then(module => ({ default: module.SmartRings })));
 const SmartFans = React.lazy(() => import('./pages/SmartFans').then(module => ({ default: module.SmartFans })));
 const SmartMonitoring = React.lazy(() => import('./pages/SmartMonitoring').then(module => ({ default: module.SmartMonitoring })));
-const SmartGlasses = React.lazy(() => import('./pages/SmartGlasses').then(module => ({ default: module.SmartGlasses })));
 const GiftingStore = React.lazy(() => import('./pages/GiftingStore').then(module => ({ default: module.GiftingStore })));
 const NewArrivals = React.lazy(() => import('./pages/NewArrivals').then(module => ({ default: module.NewArrivals })));
 const BestSellers = React.lazy(() => import('./pages/BestSellers').then(module => ({ default: module.BestSellers })));
@@ -109,10 +108,6 @@ const getRouteSeo = (pathname: string) => {
     '/smart-monitoring': {
       title: 'Smart Monitoring',
  description: 'Discover TheFutureX smart monitoring devices for wellness and daily care.',
-    },
-    '/smart-glasses': {
-      title: 'AI Glasses',
-      description: 'Explore premium TheFutureX AI Glasses for hands-free connected living, everyday style, and intelligent utility.',
     },
     '/gifting-store': {
       title: 'Gifts',
@@ -512,7 +507,6 @@ const App: React.FC = () => {
                       <Route path="/bladeless-fan" element={<SmartFans />} />
                       <Route path="/smart-fans" element={<Navigate to="/bladeless-fan" replace />} />
                       <Route path="/smart-monitoring" element={<SmartMonitoring />} />
-                      <Route path="/smart-glasses" element={<SmartGlasses />} />
                       <Route path="/product-category/smart-bracelet" element={<Navigate to="/smart-bands" replace />} />
                       <Route path="/product-category/smart-band" element={<Navigate to="/smart-bands" replace />} />
                       <Route path="/product-category/smart-bands" element={<Navigate to="/smart-bands" replace />} />

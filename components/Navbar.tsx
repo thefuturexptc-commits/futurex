@@ -73,7 +73,6 @@ const NavbarComponent: React.FC = () => {
     'Smart Rings',
     'Smart Fans',
     'Smart Monitoring',
-    'Smart Glasses',
   ]);
 
   const handleLogout = () => {
@@ -94,7 +93,6 @@ const NavbarComponent: React.FC = () => {
     if (normalized === 'smart rings') return '/smart-rings';
     if (normalized === 'smart fans') return '/bladeless-fan';
     if (normalized === 'smart monitoring') return '/smart-monitoring';
-    if (normalized === 'smart glasses') return '/smart-glasses';
     return `/shop/${encodeURIComponent(category)}`;
   };
 
@@ -104,7 +102,6 @@ const NavbarComponent: React.FC = () => {
     if (normalized === 'smart rings') return 'Rings';
     if (normalized === 'smart fans') return 'Fans';
     if (normalized === 'smart monitoring') return 'Monitoring';
-    if (normalized === 'smart glasses') return 'Glasses';
     return category.trim();
   };
 
@@ -135,8 +132,8 @@ const NavbarComponent: React.FC = () => {
 
   const categoryLinks = useMemo(
     () => {
-      const preferredOrder = ['smart bands', 'smart rings', 'smart fans', 'smart monitoring', 'smart glasses'];
-      const sortedCategories = [...categories].sort((a, b) => {
+      const preferredOrder = ['smart bands', 'smart rings', 'smart fans', 'smart monitoring'];
+      const sortedCategories = categories.filter((category) => category.trim().toLowerCase() !== 'smart glasses').sort((a, b) => {
         const aIndex = preferredOrder.indexOf(a.trim().toLowerCase());
         const bIndex = preferredOrder.indexOf(b.trim().toLowerCase());
         if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
@@ -158,7 +155,6 @@ const NavbarComponent: React.FC = () => {
     { name: 'Smart Ring', path: '/smart-rings' },
     { name: 'Fan', path: '/bladeless-fan' },
     { name: 'Gifts', path: '/gifting-store' },
-    { name: 'AI Glasses', path: '/smart-glasses' },
   ];
   const mobileNavRows = [
     { title: 'Shop', links: mainNavLinks },

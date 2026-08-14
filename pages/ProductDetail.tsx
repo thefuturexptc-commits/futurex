@@ -185,6 +185,78 @@ const buildSpecGroups = (entries: Array<[string, unknown]>) => {
     .map((title) => ({ title, entries: grouped[title] }));
 };
 
+const SPEC_GROUP_ICON_PATHS: Record<string, React.ReactNode> = {
+  Style: (
+    <>
+      <circle cx="9" cy="12" r="4.2" />
+      <circle cx="15" cy="12" r="4.2" />
+    </>
+  ),
+  Battery: (
+    <>
+      <rect x="2.5" y="8" width="16" height="8" rx="2" />
+      <path d="M18.5 10.2v3.6" strokeWidth="2.4" />
+      <path d="M6.5 10.5v3" />
+    </>
+  ),
+  Display: (
+    <>
+      <rect x="3" y="5" width="18" height="12" rx="2" />
+      <path d="M8 21h8" />
+      <path d="M12 17v4" />
+    </>
+  ),
+  Compatibility: (
+    <>
+      <rect x="7.5" y="2" width="9" height="20" rx="2" />
+      <path d="M11 18h2" strokeWidth="2.4" />
+    </>
+  ),
+  'User guide': (
+    <>
+      <path d="M6 2.5h8.5L19 7v14.5H6z" />
+      <path d="M14.5 2.5V7H19" />
+      <path d="M9 12.5h6M9 16.5h6" />
+    </>
+  ),
+  Connectivity: <path d="M7 6.5l10 11-5 4.5v-19l5 4.5-10 11" />,
+  Measurements: (
+    <>
+      <rect x="2.5" y="8.5" width="19" height="7" rx="1.4" />
+      <path d="M6.5 8.5v2.6M10.5 8.5v2.6M14.5 8.5v2.6M18.5 8.5v2.6" />
+    </>
+  ),
+  'Item details': (
+    <>
+      <path d="M20 12.3L11.7 20.6 2.9 11.8 3 3l8.8-.1z" />
+      <circle cx="7.6" cy="7.6" r="1.6" />
+    </>
+  ),
+  'Additional details': (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8.2h.01M11 11.3h1.2v5.4h.8" strokeWidth="2.1" />
+    </>
+  ),
+};
+
+const SpecGroupIcon: React.FC<{ title: string; className?: string; size?: number }> = ({ title, className = 'h-5 w-5', size = 20 }) => (
+  <svg
+    viewBox="0 0 24 24"
+    width={size}
+    height={size}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+    style={{ display: 'block', flexShrink: 0 }}
+  >
+    {SPEC_GROUP_ICON_PATHS[title] || SPEC_GROUP_ICON_PATHS['Additional details']}
+  </svg>
+);
+
 const FEATURED_BAND_PRODUCT_SLUG = 'ai-v5-smart-band-heart-rate-spo2-fitness-tracker';
 const MEGA_PRICE_DROP_BAND_SLUGS = ['tfx5-ai-smart-band', FEATURED_BAND_PRODUCT_SLUG];
 const DISPLAY_PRO_PRODUCT_SLUG = 'tfx-display-pro-smart-ring';
@@ -906,62 +978,228 @@ const getSeoComparisonBrief = (product: Product, productFamily: string, price: n
   return null;
 };
 
+const CompareCrownIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+    <path
+      d="M3 8.5l4 3 5-6 5 6 4-3-1.6 9.5a1 1 0 01-1 .84H5.6a1 1 0 01-1-.84L3 8.5z"
+      fill="currentColor"
+    />
+    <circle cx="3" cy="6.5" r="1.6" fill="currentColor" />
+    <circle cx="12" cy="4" r="1.6" fill="currentColor" />
+    <circle cx="21" cy="6.5" r="1.6" fill="currentColor" />
+  </svg>
+);
+
+const CompareCheckIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+    <circle cx="10" cy="10" r="9" fill="currentColor" fillOpacity="0.18" />
+    <path d="M6 10.2l2.4 2.4L14.2 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CompareDotIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
+    <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.5" />
+    <circle cx="10" cy="10" r="2.2" fill="currentColor" fillOpacity="0.6" />
+  </svg>
+);
+
 const ProductSeoComparisonChart: React.FC<{ brief: SeoComparisonBrief }> = ({ brief }) => {
   const showExtraCopy = brief.eyebrow !== 'Smart ring comparison';
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const node = sectionRef.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setInView(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setInView(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
 
   return (
-  <section id="comparison" className="scroll-mt-32 bg-[#05070d] px-4 py-10 text-white sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
-    <div className="mx-auto max-w-7xl overflow-hidden rounded-2xl border border-white/10 bg-[linear-gradient(135deg,#05070d_0%,#0b1620_54%,#071018_100%)] shadow-[0_28px_90px_rgba(2,6,23,0.45)]">
-      <div className={`grid gap-5 border-b border-white/10 bg-[#07101a]/95 px-4 py-5 sm:px-6 lg:px-8 lg:py-7 ${showExtraCopy ? 'lg:grid-cols-[0.86fr_1.14fr]' : ''}`}>
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">{brief.eyebrow}</p>
-          <h2 className="mt-2 font-display text-3xl font-black leading-tight text-white sm:text-5xl">{brief.title}</h2>
-        </div>
-        {showExtraCopy && <p className="max-w-3xl text-sm font-semibold leading-7 text-slate-300 sm:text-base">{brief.intro}</p>}
-      </div>
+    <section
+      ref={sectionRef as any}
+      id="comparison"
+      className="relative scroll-mt-32 overflow-hidden bg-[#05070d] px-4 py-12 text-white sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16"
+    >
+      <style>{`
+        @keyframes tfxCompareGlowA { 0%,100% { transform: translate(-8%,-8%) scale(1); opacity:.5; } 50% { transform: translate(6%,4%) scale(1.18); opacity:.85; } }
+        @keyframes tfxCompareGlowB { 0%,100% { transform: translate(8%,6%) scale(1); opacity:.35; } 50% { transform: translate(-6%,-8%) scale(1.22); opacity:.65; } }
+        @keyframes tfxCompareShimmer { from { background-position: 0% 0; } to { background-position: -200% 0; } }
+        @keyframes tfxCompareCrownFloat { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-4px) rotate(4deg); } }
+        .tfx-compare-glow-a { animation: tfxCompareGlowA 9s ease-in-out infinite; }
+        .tfx-compare-glow-b { animation: tfxCompareGlowB 11s ease-in-out infinite; }
+        .tfx-compare-title-shine {
+          background: linear-gradient(110deg, #fef3c7 10%, #fff 30%, #a5f3fc 50%, #fff 70%, #fef3c7 90%);
+          background-size: 220% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: tfxCompareShimmer 6s linear infinite;
+        }
+        .tfx-compare-crown { display: inline-block; animation: tfxCompareCrownFloat 3.2s ease-in-out infinite; }
+        .tfx-compare-header {
+          opacity: 0;
+          transform: translateY(20px);
+          transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1);
+        }
+        .tfx-compare-header-in { opacity: 1; transform: translateY(0); }
+        .tfx-compare-card {
+          opacity: 0;
+          transform: translateY(24px) scale(0.99);
+          transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s, transform 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s;
+        }
+        .tfx-compare-card-in { opacity: 1; transform: translateY(0) scale(1); }
+        .tfx-compare-row {
+          opacity: 0;
+          transform: translateY(14px);
+          transition: opacity 0.55s cubic-bezier(0.22,1,0.36,1), transform 0.55s cubic-bezier(0.22,1,0.36,1), background-color 0.3s ease;
+        }
+        .tfx-compare-row-in { opacity: 1; transform: translateY(0); }
+        @media (prefers-reduced-motion: reduce) {
+          .tfx-compare-glow-a, .tfx-compare-glow-b, .tfx-compare-title-shine, .tfx-compare-crown,
+          .tfx-compare-header, .tfx-compare-card, .tfx-compare-row {
+            animation: none !important;
+            transition: none !important;
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        }
+      `}</style>
 
-      <div>
-        <table className="w-full table-fixed border-collapse text-left text-[10px] sm:text-sm">
-          <thead>
-            <tr className="border-b border-white/10 bg-white/[0.06] text-xs uppercase tracking-[0.12em] text-slate-200">
-              <th className="w-[26%] px-2 py-3 font-black sm:w-[28%] sm:px-6 sm:py-4">Feature</th>
-              <th className="w-[39%] bg-cyan-500/16 px-2 py-3 font-black text-cyan-100 sm:w-[36%] sm:px-6 sm:py-4">{brief.columns[0]}</th>
-              <th className="w-[35%] px-2 py-3 font-black sm:w-[36%] sm:px-6 sm:py-4">{brief.columns[1]}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {brief.rows.map(([feature, first, second]) => (
-              <tr key={feature} className="border-b border-white/[0.07] last:border-b-0">
-                <td className="break-words px-2 py-3 font-bold leading-4 text-slate-100 sm:px-6 sm:leading-6">{feature}</td>
-                <td className="break-words bg-cyan-950/24 px-2 py-3 font-semibold leading-4 text-white sm:px-6 sm:leading-6">{first}</td>
-                <td className="break-words px-2 py-3 font-semibold leading-4 text-slate-300 sm:px-6 sm:leading-6">{second}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div aria-hidden="true" className="tfx-compare-glow-a pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
+      <div aria-hidden="true" className="tfx-compare-glow-b pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-amber-400/20 blur-3xl" />
 
-      {showExtraCopy && <div className="border-t border-white/10 px-4 py-5 sm:px-6 lg:px-8">
-        <h3 className="text-base font-black text-white">Verdict</h3>
-        <p className="mt-2 max-w-4xl text-sm font-semibold leading-7 text-slate-300">{brief.verdict}</p>
-        <div className="mt-5 flex flex-wrap gap-2">
-          {brief.keywords.map((keyword) => (
-            <span key={keyword} className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[11px] font-bold text-cyan-100">
-              {keyword}
+      <div className="relative mx-auto max-w-7xl">
+        <div className={`tfx-compare-header ${inView ? 'tfx-compare-header-in' : ''} grid gap-5 ${showExtraCopy ? 'lg:grid-cols-[0.86fr_1.14fr]' : ''}`}>
+          <div>
+            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.24em] text-cyan-200">
+              <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+                <path d="M10 1.4l2.3 5.5 5.9.5-4.5 3.9 1.4 5.8L10 14 5 17.1l1.4-5.8-4.5-3.9 5.9-.5z" />
+              </svg>
+              {brief.eyebrow}
             </span>
-          ))}
+            <h2 className="tfx-compare-title-shine mt-3 font-display text-3xl font-black leading-tight sm:text-5xl">{brief.title}</h2>
+          </div>
+          {showExtraCopy && (
+            <p className="max-w-3xl text-sm font-semibold leading-7 text-slate-300 sm:text-base">{brief.intro}</p>
+          )}
         </div>
-      </div>}
-    </div>
-  </section>
+
+        <div
+          className={`tfx-compare-card ${inView ? 'tfx-compare-card-in' : ''} mt-7 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03] shadow-[0_28px_90px_rgba(2,6,23,0.5)] backdrop-blur-sm`}
+        >
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[560px] table-fixed border-collapse text-left text-[11px] sm:text-sm">
+              <thead>
+                <tr className="border-b border-white/10 bg-white/[0.05] text-xs uppercase tracking-[0.12em] text-slate-200">
+                  <th className="w-[26%] px-3 py-4 font-black sm:w-[28%] sm:px-6">Feature</th>
+                  <th className="relative w-[39%] bg-gradient-to-b from-amber-400/12 via-cyan-400/6 to-transparent px-3 py-4 font-black sm:w-[36%] sm:px-6">
+                    <span className="tfx-compare-crown absolute -top-2 right-3 text-base sm:right-6">
+                      <CompareCrownIcon className="h-4 w-4 text-amber-300 sm:h-5 sm:w-5" />
+                    </span>
+                    <span className="bg-gradient-to-r from-amber-200 via-yellow-100 to-cyan-200 bg-clip-text text-transparent">{brief.columns[0]}</span>
+                  </th>
+                  <th className="w-[35%] px-3 py-4 font-black text-slate-400 sm:w-[36%] sm:px-6">{brief.columns[1]}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {brief.rows.map(([feature, first, second], i) => (
+                  <tr
+                    key={feature}
+                    className={`tfx-compare-row group border-b border-white/[0.06] last:border-b-0 hover:bg-white/[0.04] ${inView ? 'tfx-compare-row-in' : ''}`}
+                    style={{ transitionDelay: inView ? `${Math.min(i, 12) * 55}ms` : '0ms' }}
+                  >
+                    <td className="break-words px-3 py-3.5 font-bold leading-4 text-slate-100 sm:px-6 sm:leading-6">{feature}</td>
+                    <td className="break-words bg-gradient-to-r from-amber-400/10 via-cyan-400/5 to-transparent px-3 py-3.5 font-semibold leading-4 text-white transition-transform duration-300 group-hover:translate-x-0.5 sm:px-6 sm:leading-6">
+                      <span className="flex items-start gap-2">
+                        <CompareCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
+                        <span>{first}</span>
+                      </span>
+                    </td>
+                    <td className="break-words px-3 py-3.5 font-semibold leading-4 text-slate-400 sm:px-6 sm:leading-6">
+                      <span className="flex items-start gap-2">
+                        <CompareDotIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" />
+                        <span>{second}</span>
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {showExtraCopy && brief.keywords.length > 0 && (
+            <div className="border-t border-white/10 px-4 py-5 sm:px-6 lg:px-8">
+              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">Trending searches</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {brief.keywords.map((keyword) => (
+                  <span
+                    key={keyword}
+                    className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[11px] font-bold text-cyan-100 transition-colors duration-300 hover:border-cyan-300/40 hover:bg-cyan-300/15"
+                  >
+                    {keyword}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
   );
 };
 
-const productCheckoutTrustSignals = [
-  ['Free shipping across India', ''],
-  ['COD available on eligible orders', ''],
-  ['Brand warranty support', 'TheFutureX help'],
-  ['Secure checkout', 'UPI, cards, wallet'],
+const TRUST_TILE_ICONS: Record<'shipping' | 'cod' | 'warranty' | 'secure', React.ReactNode> = {
+  shipping: (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 7h11v9H3z" />
+      <path d="M14 10h4l3 3v3h-7z" />
+      <circle cx="7.5" cy="18" r="1.6" />
+      <circle cx="17.5" cy="18" r="1.6" />
+    </svg>
+  ),
+  cod: (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M9.6 9.8c0-1.1 1-1.9 2.4-1.9s2.4.8 2.4 1.7c0 1.2-1.1 1.7-2.4 2.2-1.4.5-2.4 1.1-2.4 2.3 0 1 1 1.8 2.4 1.8s2.4-.8 2.4-1.9" />
+      <path d="M12 6.8v1.1M12 16.1v1.1" />
+    </svg>
+  ),
+  warranty: (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3l7 3.2v5.9c0 4.4-2.9 7.3-7 8.9-4.1-1.6-7-4.5-7-8.9V6.2z" />
+      <path d="M9.2 12.3l1.8 1.8 3.8-4" />
+    </svg>
+  ),
+  secure: (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <rect x="4.5" y="10.5" width="15" height="9.5" rx="2" />
+      <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+    </svg>
+  ),
+};
+
+const productCheckoutTrustSignals: Array<{ title: string; mobileTitle: string; text: string; icon: keyof typeof TRUST_TILE_ICONS }> = [
+  { title: 'Free shipping across India', mobileTitle: 'Free shipping', text: '', icon: 'shipping' },
+  { title: 'COD available on eligible orders', mobileTitle: 'Cash on delivery', text: '', icon: 'cod' },
+  { title: 'Brand warranty support', mobileTitle: 'Brand warranty', text: 'TheFutureX help', icon: 'warranty' },
+  { title: 'Secure checkout', mobileTitle: 'Secure checkout', text: 'UPI, cards, wallet', icon: 'secure' },
 ];
 
 const getWarrantyDisplayText = (product: Product, productFamily: string) => {
@@ -976,65 +1214,150 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
   productFamily = 'wearable',
   dark = false,
 }) => {
+  const [isWarrantyExpanded, setIsWarrantyExpanded] = useState(false);
   const warrantyText = product ? getWarrantyDisplayText(product, productFamily) : 'Brand-backed help';
   const registrationPath = product ? `/register-warranty?product=${encodeURIComponent(product.name)}` : '/register-warranty';
   const tileTitleClass = dark
-    ? 'break-words text-xs font-semibold text-primary-200'
-    : 'break-words text-xs font-semibold text-[#df0b16]';
+    ? 'break-words text-[10px] font-semibold leading-3 text-primary-200 sm:text-xs sm:leading-normal'
+    : 'break-words text-[10px] font-semibold leading-3 text-slate-950 sm:text-xs sm:leading-normal';
   const tileTextClass = dark
     ? 'mt-1 break-words text-[11px] font-medium leading-4 text-gray-300'
-    : 'mt-1 break-words text-[11px] font-medium leading-4 text-slate-700';
+    : 'mt-1 break-words text-[11px] font-medium leading-4 text-slate-600';
   const tileMutedClass = dark
     ? 'mt-1 break-words text-[10px] font-medium leading-4 text-gray-400'
     : 'mt-1 break-words text-[10px] font-medium leading-4 text-slate-500';
   const tileLinkClass = dark
     ? 'inline-flex text-[11px] font-semibold text-primary-200 hover:text-white'
-    : 'inline-flex text-[11px] font-semibold text-[#0369a1] hover:text-[#df0b16]';
-
+    : 'inline-flex text-[11px] font-semibold text-[#8a6a20] hover:text-slate-950';
+  const tileBaseClass = dark
+    ? 'tfx-trust-tile min-w-0 border-r border-white/10 px-1 py-3 text-center last:border-r-0 sm:rounded-xl sm:border sm:border-white/10 sm:bg-white/5 sm:px-3.5 sm:py-3.5 sm:text-left sm:shadow-[0_10px_24px_rgba(0,0,0,0.12)]'
+    : 'tfx-trust-tile min-w-0 border-r border-slate-200 px-1 py-3 text-center last:border-r-0 sm:rounded-xl sm:border sm:border-slate-200 sm:bg-[#fbfaf7] sm:px-3.5 sm:py-3.5 sm:text-left sm:shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
+  const iconChipClass = dark
+    ? 'tfx-trust-tile-icon mx-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-500/15 text-primary-300 sm:mx-0'
+    : 'tfx-trust-tile-icon mx-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#a9812f]/10 text-[#8a6a20] sm:mx-0';
   return (
-    <div className="mt-4 grid grid-cols-1 gap-2 min-[420px]:grid-cols-2">
-      {productCheckoutTrustSignals.map(([title, text]) => {
-        const isWarrantyTile = title === 'Brand warranty support';
-        if (isWarrantyTile && product) {
+    <div className="relative mt-4">
+      <style>{`
+        .tfx-trust-tile {
+          position: relative;
+          overflow: hidden;
+          opacity: 0;
+          transform: translateY(10px);
+          animation: tfx-trust-tile-in 550ms ease-out forwards;
+          transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, width 220ms ease;
+        }
+        .tfx-trust-tile:hover {
+          transform: translateY(-3px);
+          border-color: rgba(169,129,47,0.35);
+          box-shadow: 0 16px 32px rgba(15,23,42,0.10);
+        }
+        @keyframes tfx-trust-tile-in {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .tfx-trust-tile-icon svg { display: block; }
+        .tfx-trust-tile--shipping .tfx-trust-tile-icon svg {
+          animation: tfx-trust-truck-drive 2.4s ease-in-out infinite;
+        }
+        @keyframes tfx-trust-truck-drive {
+          0% { transform: translateX(0); }
+          45% { transform: translateX(3px); }
+          50% { transform: translateX(3px); }
+          95% { transform: translateX(0); }
+          100% { transform: translateX(0); }
+        }
+        .tfx-trust-tile--secure .tfx-trust-tile-icon svg {
+          transform-origin: 50% 85%;
+          animation: tfx-trust-lock-secure 3s ease-in-out infinite;
+        }
+        @keyframes tfx-trust-lock-secure {
+          0%, 55%, 100% { transform: rotate(0deg); }
+          62% { transform: rotate(-9deg); }
+          69% { transform: rotate(7deg); }
+          76% { transform: rotate(-4deg); }
+          83% { transform: rotate(0deg); }
+        }
+        .tfx-trust-tile--warranty .tfx-trust-tile-icon svg {
+          animation: tfx-trust-shield-pop 3s ease-in-out infinite;
+        }
+        @keyframes tfx-trust-shield-pop {
+          0%, 50%, 100% { transform: scale(1); }
+          58% { transform: scale(1.18); }
+          66% { transform: scale(0.96); }
+          74% { transform: scale(1.06); }
+          82% { transform: scale(1); }
+        }
+        .tfx-trust-tile--cod .tfx-trust-tile-icon svg {
+          animation: tfx-trust-coin-flip 2.6s ease-in-out infinite;
+        }
+        @keyframes tfx-trust-coin-flip {
+          0%, 40%, 100% { transform: rotateY(0deg); }
+          20% { transform: rotateY(180deg); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .tfx-trust-tile { opacity: 1; transform: none; animation: none; }
+          .tfx-trust-tile--shipping .tfx-trust-tile-icon svg,
+          .tfx-trust-tile--secure .tfx-trust-tile-icon svg,
+          .tfx-trust-tile--warranty .tfx-trust-tile-icon svg,
+          .tfx-trust-tile--cod .tfx-trust-tile-icon svg {
+            animation: none;
+          }
+        }
+      `}</style>
+      <div className={`grid grid-cols-4 rounded-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-[#fbfaf7]'} sm:grid-cols-2 sm:gap-3 sm:border-0 sm:bg-transparent`}>
+        {productCheckoutTrustSignals.map((signal, index) => {
+          const { title, mobileTitle, text, icon } = signal;
+          const isWarrantyTile = title === 'Brand warranty support';
+          const tileClass = `${tileBaseClass} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'col-span-4 sm:col-span-2' : ''}`;
+          const tileStyle = { animationDelay: `${index * 90}ms` };
+
+          if (isWarrantyTile && product) {
+            return (
+              <div key={title} className={tileClass} style={tileStyle}>
+                <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start">
+                  <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                  <div className="min-w-0">
+                    <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
+                    <p className={`${tileTextClass} hidden sm:block`}>{text}</p>
+                    {isWarrantyExpanded ? (
+                      <>
+                        <p className={tileMutedClass}>{warrantyText}</p>
+                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
+                          <Link to={registrationPath} className={tileLinkClass}>
+                            Register product
+                          </Link>
+                          <Link to="/info/warranty-policy" className={tileLinkClass}>
+                            Warranty policy
+                          </Link>
+                        </div>
+                      </>
+                    ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setIsWarrantyExpanded((prev) => !prev)}
+                      className={`mt-2 inline-flex text-[11px] font-semibold underline-offset-2 hover:underline ${dark ? 'text-primary-200' : 'text-[#8a6a20]'}`}
+                    >
+                      {isWarrantyExpanded ? 'Show less' : 'Read more'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
           return (
-            <div
-              key={title}
-              className={dark ? 'rounded-lg border border-white/10 bg-white/5 px-3 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.12)]' : 'rounded-lg border border-[#ff6a3d]/20 bg-[#fff7ed] px-3 py-3 shadow-[0_10px_22px_rgba(255,106,61,0.10)]'}
-            >
-              <p className={tileTitleClass}>
-                {title}
-              </p>
-              <p className={tileTextClass}>
-                {text}
-              </p>
-              <p className={tileMutedClass}>
-                {warrantyText}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                <Link to={registrationPath} className={tileLinkClass}>
-                  Register product
-                </Link>
-                <Link to="/info/warranty-policy" className={tileLinkClass}>
-                  Warranty policy
-                </Link>
+            <div key={title} className={tileClass} style={tileStyle}>
+              <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start">
+                <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                <div className="min-w-0">
+                  <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
+                  {text && <p className={`${tileTextClass} hidden sm:block`}>{text}</p>}
+                </div>
               </div>
             </div>
           );
-        }
-
-        return (
-          <div key={title} className={dark ? 'rounded-lg border border-white/10 bg-white/5 px-3 py-3 shadow-[0_10px_24px_rgba(0,0,0,0.12)]' : 'rounded-lg border border-[#ff6a3d]/20 bg-[#fff7ed] px-3 py-3 shadow-[0_10px_22px_rgba(255,106,61,0.10)]'}>
-            <p className={tileTitleClass}>
-              {title}
-            </p>
-            {text && (
-              <p className={tileTextClass}>
-                {text}
-              </p>
-            )}
-          </div>
-        );
-      })}
+        })}
+      </div>
     </div>
   );
 };
@@ -1153,7 +1476,7 @@ const RazorpayEmiModal: React.FC<{
         </button>
         <div className="px-5 pb-5 pt-6 text-center">
           <p className="text-sm font-bold text-slate-700">Pay with Razorpay EMI</p>
-          <h2 className="mt-1 text-2xl font-black text-[#02a99a]">Pay only {formatInr(monthlyAmount)} now</h2>
+          <h2 className="mt-1 text-2xl font-semibold text-slate-950">Pay only {formatInr(monthlyAmount)} now</h2>
           <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
             Indicative split. Final EMI plans, bank eligibility, interest, and charges are shown by Razorpay at checkout.
           </p>
@@ -1187,13 +1510,13 @@ const RazorpayEmiModal: React.FC<{
               value={firstName}
               onChange={(event) => onFirstNameChange(event.target.value)}
               placeholder="First Name"
-              className="h-10 rounded border border-slate-300 bg-white px-3 text-sm font-semibold outline-none focus:border-[#02a99a] focus:ring-2 focus:ring-[#02a99a]/20"
+              className="h-10 rounded border border-slate-300 bg-white px-3 text-sm font-semibold outline-none focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10"
             />
             <input
               value={lastName}
               onChange={(event) => onLastNameChange(event.target.value)}
               placeholder="Last Name"
-              className="h-10 rounded border border-slate-300 bg-white px-3 text-sm font-semibold outline-none focus:border-[#02a99a] focus:ring-2 focus:ring-[#02a99a]/20"
+              className="h-10 rounded border border-slate-300 bg-white px-3 text-sm font-semibold outline-none focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10"
             />
           </div>
           <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_156px]">
@@ -1210,7 +1533,7 @@ const RazorpayEmiModal: React.FC<{
             <button
               type="button"
               onClick={onContinue}
-              className="h-11 rounded bg-[#02b9ab] px-4 text-sm font-black text-white transition hover:bg-[#009688]"
+              className="product-detail-action-button h-11 rounded bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800"
             >
               Buy on EMI
             </button>
@@ -1308,6 +1631,49 @@ const DetailIcon: React.FC<{ kind: 'delivery' | 'shield' | 'support' | 'payment'
   );
 };
 
+const RevealOnScroll: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  delayMs?: number;
+  as?: 'article' | 'div';
+}> = ({ children, className = '', delayMs = 0, as = 'article' }) => {
+  const ref = useRef<HTMLElement | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return;
+    }
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsVisible(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const Tag = as as any;
+  return (
+    <Tag
+      ref={ref as any}
+      className={`product-reveal ${isVisible ? 'product-reveal-visible' : ''} ${className}`}
+      style={{ transitionDelay: isVisible ? `${delayMs}ms` : '0ms' }}
+    >
+      {children}
+    </Tag>
+  );
+};
+
 export const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -1350,6 +1716,7 @@ export const ProductDetail: React.FC = () => {
   const [emiPhone, setEmiPhone] = useState('');
   const [surprisePriceRevealed, setSurprisePriceRevealed] = useState(false);
   const [showMobileStickyCta, setShowMobileStickyCta] = useState(false);
+  const [isBuyNowPressed, setIsBuyNowPressed] = useState(false);
   const [detailTabsFixed, setDetailTabsFixed] = useState(false);
   const [detailTabsHeight, setDetailTabsHeight] = useState(48);
   const mobileCtaAnchorRef = useRef<HTMLDivElement | null>(null);
@@ -2714,6 +3081,72 @@ export const ProductDetail: React.FC = () => {
 
   return (
     <div className="product-detail-page min-h-screen bg-white text-slate-950">
+      <style>{`
+        @keyframes productPanelIn {
+          from { opacity: 0; transform: translateY(14px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes productShimmer {
+          from { transform: translateX(-120%) skewX(-12deg); }
+          to { transform: translateX(220%) skewX(-12deg); }
+        }
+        @keyframes productBadgePulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+        }
+        .product-panel-in {
+          animation: productPanelIn 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+        }
+        .product-reveal {
+          opacity: 0;
+          transform: translateY(32px);
+          transition: opacity 0.75s cubic-bezier(0.22, 1, 0.36, 1), transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+          will-change: opacity, transform;
+        }
+        .product-reveal-visible {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        .product-cta-shine {
+          position: relative;
+          overflow: hidden;
+        }
+        .product-cta-shine::after {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 40%;
+          height: 100%;
+          background: linear-gradient(115deg, transparent, rgba(255,255,255,0.35), transparent);
+          transform: translateX(-120%) skewX(-12deg);
+          pointer-events: none;
+        }
+        .product-cta-shine:hover::after {
+          animation: productShimmer 1.1s ease;
+        }
+        .product-offer-badge {
+          animation: productBadgePulse 2.6s ease-in-out infinite;
+        }
+        .product-banner-media {
+          transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .product-banner-group:hover .product-banner-media {
+          transform: scale(1.045);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .product-panel-in,
+          .product-reveal,
+          .product-cta-shine::after,
+          .product-offer-badge,
+          .product-banner-media {
+            animation: none !important;
+            transition: none !important;
+            transform: none !important;
+          }
+          .product-reveal { opacity: 1; }
+        }
+      `}</style>
       {showEmiModal && (
         <RazorpayEmiModal
           price={displayedPrice || salePrice}
@@ -2741,8 +3174,8 @@ export const ProductDetail: React.FC = () => {
                 <span>30-day support</span>
               </div>
               <div className="flex items-center gap-3">
-                <Link to="/track-order" className="hover:text-[#0284c7]">Track order</Link>
-                <Link to="/cart" className="hover:text-[#0284c7]">Cart</Link>
+                <Link to="/track-order" className="hover:text-slate-950">Track order</Link>
+                <Link to="/cart" className="hover:text-slate-950">Cart</Link>
               </div>
             </div>
           </div>
@@ -2751,9 +3184,9 @@ export const ProductDetail: React.FC = () => {
       <section className="border-b border-slate-200 bg-[#f5fbfb]">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 sm:text-sm">
-            <Link to="/" className="hover:text-[#0284c7]">Home</Link>
+            <Link to="/" className="hover:text-slate-950">Home</Link>
             <span>/</span>
-            <Link to={'/shop/' + product.category?.toLowerCase()} className="capitalize hover:text-[#0284c7]">{product.category}</Link>
+            <Link to={'/shop/' + product.category?.toLowerCase()} className="capitalize hover:text-slate-950">{product.category}</Link>
             <span>/</span>
             <span className="max-w-[260px] truncate text-slate-900">{product.name}</span>
           </nav>
@@ -2787,7 +3220,7 @@ export const ProductDetail: React.FC = () => {
                     type="button"
                     onClick={() => setSelectedImageIndex(imgIdx)}
                     className={`h-14 w-14 shrink-0 snap-start overflow-hidden bg-white p-1.5 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
-                      selectedImageIndex === imgIdx ? 'opacity-100 ring-2 ring-[#0ea5e9]/45' : 'opacity-55 hover:opacity-90'
+                      selectedImageIndex === imgIdx ? 'opacity-100 ring-2 ring-slate-950/60' : 'opacity-55 hover:opacity-90'
                     }`}
                   >
                     <img src={imgUrl} alt={`${product.name} ${imgIdx + 1}`} className="h-full w-full object-contain object-center transition duration-200 hover:scale-105" loading="lazy" decoding="async" />
@@ -2798,7 +3231,7 @@ export const ProductDetail: React.FC = () => {
                     type="button"
                     onClick={() => setSelectedImageIndex(productVideoIndex)}
                     className={`relative h-14 w-14 shrink-0 snap-start overflow-hidden bg-white p-0 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
-                      selectedImageIndex === productVideoIndex ? 'opacity-100 ring-2 ring-[#0ea5e9]/45' : 'opacity-75 hover:opacity-100'
+                      selectedImageIndex === productVideoIndex ? 'opacity-100 ring-2 ring-slate-950/60' : 'opacity-75 hover:opacity-100'
                     }`}
                     aria-label={`Play ${product.name} video`}
                   >
@@ -2823,7 +3256,7 @@ export const ProductDetail: React.FC = () => {
                   type="button"
                   aria-label="Show more product thumbnails"
                   onClick={() => productThumbnailStripRef.current?.scrollBy({ left: 360, behavior: 'smooth' })}
-                  className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-[#0ea5e9] hover:text-[#0284c7] focus:outline-none focus:ring-2 focus:ring-[#0ea5e9] lg:flex"
+                  className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:border-slate-950 hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-950/20 lg:flex"
                 >
                   <svg viewBox="0 0 24 24" aria-hidden="true" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="m9 18 6-6-6-6" strokeLinecap="round" strokeLinejoin="round" /></svg>
                 </button>
@@ -2831,11 +3264,8 @@ export const ProductDetail: React.FC = () => {
             )}
           </div>
 
-          <div className={`order-3 min-w-0 text-center lg:order-none lg:text-left ${useMarketplaceArrangement ? '' : 'lg:sticky lg:top-24'}`}>
-            {!useMarketplaceArrangement && (
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0284c7] sm:text-xs">{product.category}</p>
-            )}
-            <div className={`mt-4 space-y-4 ${useMarketplaceArrangement ? 'hidden' : ''}`}>
+          <div className="product-panel-in order-3 min-w-0 text-center lg:order-none lg:text-left">
+            <div className="hidden">
               {product.colors && product.colors.length > 0 && (
                 <div className="rounded-xl bg-[#f5fbfb] p-3 text-left sm:p-4">
                   <p className="mb-3 text-xs font-black text-slate-950 sm:text-sm">Select Color{selectedColor?.name ? ` - ${selectedColor.name}` : ''}</p>
@@ -2850,7 +3280,7 @@ export const ProductDetail: React.FC = () => {
                           onClick={() => handleSelectColor(color)}
                           disabled={colorStock <= 0}
                           className={`min-w-[112px] shrink-0 snap-start rounded-lg px-2.5 py-2 text-left transition sm:min-w-[132px] sm:px-3 ${
-                            isSelected ? 'bg-[#f0f9ff] shadow-[0_8px_20px_rgba(14,165,233,0.12)] ring-2 ring-[#0ea5e9]/35' : 'bg-white ring-1 ring-slate-100 hover:bg-[#f0f9ff] hover:ring-[#0ea5e9]/30'
+                            isSelected ? 'bg-slate-50 shadow-[0_4px_14px_rgba(15,23,42,0.08)] ring-2 ring-slate-950/25' : 'bg-white ring-1 ring-slate-100 hover:bg-slate-50 hover:ring-slate-300'
                           } ${colorStock <= 0 ? 'cursor-not-allowed opacity-40' : ''}`}
                         >
                           <span className="flex min-w-0 items-center gap-2">
@@ -2883,7 +3313,7 @@ export const ProductDetail: React.FC = () => {
                           }}
                           disabled={outOfStock}
                           className={`min-w-0 rounded-lg px-2 py-2 text-center text-[10px] font-black transition sm:px-3 sm:text-sm ${
-                            selectedSize === sizeLabel ? 'bg-[#f0f9ff] text-[#0369a1] ring-2 ring-[#0ea5e9]/35' : 'bg-white text-slate-800 ring-1 ring-slate-100 hover:ring-[#0ea5e9]/30'
+                            selectedSize === sizeLabel ? 'bg-slate-950 text-white ring-0' : 'bg-white text-slate-800 ring-1 ring-slate-200 hover:ring-slate-400'
                           } ${outOfStock ? 'cursor-not-allowed opacity-40' : ''}`}
                         >
                           <span className="block">{sizeLabel}</span>
@@ -2897,22 +3327,23 @@ export const ProductDetail: React.FC = () => {
               )}
             </div>
             {(isFeaturedBandProduct || isMegaPriceDropBand) && (
-              <div className="mt-4 inline-flex w-fit rounded-full bg-[#df0b16] px-3.5 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] text-white shadow-[0_10px_22px_rgba(223,11,22,0.24)] sm:px-4 sm:text-xs">
+              <div className="product-offer-badge mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#a9812f]/30 bg-[#fbf6ea] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a6a20] shadow-[0_1px_6px_rgba(169,129,47,0.18)] sm:px-4 sm:text-xs">
+                <span className="h-1 w-1 rounded-full bg-[#a9812f]" />
                 {isMegaPriceDropBand ? 'Mega Price Drop' : 'Limited Time Offer'}
               </div>
             )}
-            <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.2rem] font-medium leading-[1.16] text-slate-950 [font-family:Arial,Helvetica,sans-serif] sm:text-[1.35rem] md:text-[1.5rem] lg:text-[1.6rem] xl:text-[1.72rem] 2xl:text-[1.85rem]`}>
+            <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
               {product.name}
             </h1>
-            <p className="mt-2 max-w-none text-left text-xs font-bold leading-5 text-slate-800 sm:text-base sm:leading-6">
+            <p className="mt-2.5 max-w-none text-left text-xs font-medium leading-5 text-slate-600 sm:text-sm sm:leading-6">
               {product.features?.[0] ? cleanFeatureText(product.features[0]) : 'Premium smart technology with everyday TheFutureX support'}
             </p>
             <div className="mt-4 flex flex-wrap items-center justify-start gap-3">
               {product.rating != null && (
-                <div className="flex items-center gap-2 rounded-full bg-[#fff8e6] px-3 py-2 text-sm font-black text-amber-600">
-                  <span>{'\u2605'.repeat(Math.round(Number(product.rating || 0)))}</span>
+                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]">
+                  <span className="text-[#a9812f] tracking-tight">{'\u2605'.repeat(Math.round(Number(product.rating || 0)))}</span>
                   <span>{Number(product.rating || 0).toFixed(1)}</span>
-                  <span className="text-xs text-slate-500">({product.reviewCount || product.reviews?.length || 0} reviews)</span>
+                  <span className="text-xs font-medium text-slate-400">({product.reviewCount || product.reviews?.length || 0} reviews)</span>
                 </div>
               )}
               <a
@@ -2921,122 +3352,55 @@ export const ProductDetail: React.FC = () => {
                   event.preventDefault();
                   scrollToDetailSection('reviews');
                 }}
-                className="product-detail-review-link inline-flex h-10 items-center justify-center rounded-full bg-slate-950 px-4 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-[#0284c7]"
+                className="product-detail-review-link inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold uppercase tracking-[0.06em] text-slate-700 transition duration-300 hover:-translate-y-0.5 hover:border-slate-950 hover:text-slate-950 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]"
               >
                 Write Review
               </a>
             </div>
 
-            {!useMarketplaceArrangement && (
-              <>
-            <div className="mt-6 flex flex-wrap items-end justify-center gap-3 lg:justify-start">
-              {couponRate > 0 ? (
-                <>
-                  <span className="text-sm font-semibold text-slate-400 line-through sm:text-lg">{formatInrAmount(salePrice)}</span>
-                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700 sm:text-sm">{couponRateLabel} off</span>
-                </>
-              ) : mrp > salePrice && (
-                <>
-                  <span className="text-sm font-semibold text-slate-400 line-through sm:text-lg">&#8377;{mrp.toLocaleString('en-IN')}</span>
-                  {!hidePercentageOffer && (
-                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700 sm:text-sm">{percent}% off</span>
-                  )}
-                </>
-              )}
-              <span className={`font-display text-3xl font-black sm:text-4xl ${couponRate > 0 ? 'text-emerald-600' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
-            </div>
-
-            {offerLine}
-            {paymentOfferBlock}
-
-            <div ref={mobileCtaAnchorRef} className="mt-6 grid gap-2 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={handleAddButtonClick}
-                  className={`product-detail-action-button min-h-12 w-full min-w-0 rounded-lg px-4 py-3 text-center text-xs font-black leading-tight transition sm:min-h-14 sm:px-6 sm:py-4 sm:text-sm ${
-                  addedToCart ? 'bg-green-600 text-white' : 'bg-slate-950 text-white hover:bg-slate-800'
-                }`}
-              >
-                {notifySubmitting ? 'Saving...' : addedToCart ? 'Added to Cart' : canAdd ? 'Add to Cart' : 'Notify me'}
-              </button>
-              {canAdd && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/cart')}
-                  className="product-detail-action-button min-h-12 w-full min-w-0 rounded-lg bg-[#540000] px-4 py-3 text-center text-xs font-black leading-tight text-white transition hover:bg-[#3f0000] sm:min-h-14 sm:px-6 sm:py-4 sm:text-sm"
-                >
-                  View Cart
-                </button>
-              )}
-            </div>
-
-            <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />
-
-            <div className="mt-5 flex items-center gap-2">
-              <span className={`h-2.5 w-2.5 rounded-full ${canAdd ? 'bg-green-500' : 'bg-red-500'}`} />
-              <p className={`text-xs font-black sm:text-sm ${canAdd ? 'text-green-700' : 'text-red-600'}`}>
-                {canAdd ? 'In stock' : 'Out of stock'}
-              </p>
-            </div>
-
-            {flipkartListing && (
-              <a
-                href={flipkartListing.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-[#2874f0]/25 bg-[#f3f8ff] p-4 shadow-[0_14px_34px_rgba(40,116,240,0.12)] transition hover:border-[#2874f0] hover:shadow-[0_16px_38px_rgba(40,116,240,0.18)] sm:p-5"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[11px] font-black uppercase tracking-[0.18em] text-yellow-500">Available on Flipkart</span>
-                  <span className="mt-1 block truncate text-sm font-bold text-slate-950 sm:text-base">{flipkartListing.product}</span>
-                  {flipkartListing.code && (
-                    <span className="mt-0.5 block text-[10px] font-semibold text-slate-500 sm:text-xs">PID: {flipkartListing.code}</span>
-                  )}
-                </span>
-                <span className="shrink-0 rounded-xl bg-[#ffe500] px-3 py-2 text-[11px] font-black text-slate-950 transition hover:bg-[#ffd814] sm:px-4 sm:text-xs">
-                  View
-                </span>
-              </a>
-            )}
-              </>
-            )}
-
           </div>
 
           {useMarketplaceArrangement && (
-            <aside className="order-2 w-full min-w-0 max-w-full overflow-hidden bg-white text-left lg:col-start-2 lg:row-start-2 lg:order-none">
-              <div className="flex flex-wrap items-end gap-2">
-                {couponRate > 0 ? (
-                  <>
-                    <span className="text-sm font-bold text-slate-400 line-through">{formatInrAmount(salePrice)}</span>
-                    <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-black text-green-700">{couponRateLabel} off</span>
-                  </>
-                ) : mrp > salePrice && (
-                  <>
-                    <span className="text-sm font-bold text-slate-400 line-through">&#8377;{mrp.toLocaleString('en-IN')}</span>
-                    {!hidePercentageOffer && (
-                      <span className="rounded-full bg-green-50 px-2.5 py-1 text-xs font-black text-green-700">{percent}% off</span>
+            <aside className="product-panel-in order-2 w-full min-w-0 max-w-full overflow-hidden bg-white text-left lg:col-start-2 lg:row-start-2 lg:order-none">
+              <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-[#f8fbfb] to-white p-4 shadow-[0_2px_14px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_6px_22px_rgba(15,23,42,0.08)] sm:p-5">
+                <div className="flex flex-wrap items-end gap-2.5">
+                  {couponRate > 0 ? (
+                    <>
+                      <span className="text-sm font-medium text-slate-400 line-through">{formatInrAmount(salePrice)}</span>
+                      <span className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-2.5 py-1 text-xs font-semibold text-[#8a6a20]">{couponRateLabel} off</span>
+                    </>
+                  ) : mrp > salePrice && (
+                    <>
+                      <span className="text-sm font-medium text-slate-400 line-through">&#8377;{mrp.toLocaleString('en-IN')}</span>
+                      {!hidePercentageOffer && (
+                        <span className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-2.5 py-1 text-xs font-semibold text-[#8a6a20]">{percent}% off</span>
+                      )}
+                    </>
+                  )}
+                  <span className={`font-display text-2xl font-semibold tracking-tight sm:text-3xl ${couponRate > 0 ? 'text-emerald-700' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
+                </div>
+
+                {offerLine}
+                {paymentOfferBlock}
+
+                <div className="mt-4 flex items-center gap-2">
+                  <span className="relative flex h-2 w-2">
+                    {canAdd && (
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
                     )}
-                  </>
-                )}
-                <span className={`text-2xl font-black sm:text-3xl ${couponRate > 0 ? 'text-emerald-600' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
-              </div>
-
-              {offerLine}
-              {paymentOfferBlock}
-
-              <div className="mt-4 flex items-center gap-2">
-                <span className={`h-2.5 w-2.5 rounded-full ${canAdd ? 'bg-green-500' : 'bg-red-500'}`} />
-                <p className={`text-sm font-black ${canAdd ? 'text-green-700' : 'text-red-600'}`}>
-                  {canAdd ? 'In stock' : 'Out of stock'}
-                </p>
+                    <span className={`relative inline-flex h-2 w-2 rounded-full ${canAdd ? 'bg-emerald-600' : 'bg-red-500'}`} />
+                  </span>
+                  <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${canAdd ? 'text-emerald-700' : 'text-red-600'}`}>
+                    {canAdd ? 'In stock' : 'Out of stock'}
+                  </p>
+                </div>
               </div>
 
               {product.colors && product.colors.length > 0 && (
                 <div className="mt-5 min-w-0 max-w-full">
-                  <p className="text-sm font-semibold text-slate-500">
+                  <p className="text-sm font-medium text-slate-500">
                     Color <span className="mx-1 text-slate-300">-</span>
-                    <span className="font-black text-slate-950">{selectedColor?.name || product.colors[0]?.name}</span>
+                    <span className="font-semibold text-slate-950">{selectedColor?.name || product.colors[0]?.name}</span>
                   </p>
                   <div className="mt-3 flex max-w-full snap-x gap-3 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {product.colors.map((color) => {
@@ -3049,8 +3413,10 @@ export const ProductDetail: React.FC = () => {
                           type="button"
                           onClick={() => handleSelectColor(color)}
                           disabled={colorStock <= 0}
-                          className={`relative h-16 w-16 shrink-0 snap-start overflow-hidden rounded-lg border bg-white p-1 transition sm:h-20 sm:w-20 ${
-                            isSelected ? 'border-[#0ea5e9] ring-2 ring-[#0ea5e9]/35' : 'border-slate-200 hover:border-[#0ea5e9]/60'
+                          className={`group relative h-[4.5rem] w-[4.5rem] shrink-0 snap-start overflow-hidden rounded-2xl border-2 bg-gradient-to-b from-white to-slate-50 p-1.5 transition-all duration-300 ease-out sm:h-[5.5rem] sm:w-[5.5rem] ${
+                            isSelected
+                              ? 'scale-[1.04] border-[#a9812f] shadow-[0_8px_20px_rgba(169,129,47,0.28)] ring-4 ring-[#a9812f]/15'
+                              : 'border-slate-200 hover:-translate-y-1 hover:border-slate-400 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]'
                           } ${colorStock <= 0 ? 'cursor-not-allowed opacity-40' : ''}`}
                           aria-label={`Select ${color.name}`}
                         >
@@ -3058,13 +3424,20 @@ export const ProductDetail: React.FC = () => {
                             <img
                               src={colorImage}
                               alt={color.name}
-                              className="h-full w-full object-contain object-center"
+                              className="h-full w-full object-contain object-center transition-transform duration-300 ease-out group-hover:scale-110"
                               loading="lazy"
                               decoding="async"
                             />
                           ) : (
                             <span className="grid h-full w-full place-items-center">
                               <span className="h-8 w-8 rounded-full ring-1 ring-slate-300" style={{ backgroundColor: color.hex }} />
+                            </span>
+                          )}
+                          {isSelected && (
+                            <span className="product-detail-color-selected-check absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#a9812f] text-white shadow-[0_2px_6px_rgba(169,129,47,0.5)]">
+                              <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3.5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
+                              </svg>
                             </span>
                           )}
                         </button>
@@ -3076,10 +3449,10 @@ export const ProductDetail: React.FC = () => {
 
               {requiresRingSize && (
                 <div className="mt-5 min-w-0 max-w-full rounded-xl border border-slate-200 bg-white p-3">
-                  <p className="text-sm font-semibold text-slate-500">
+                  <p className="text-sm font-medium text-slate-500">
                     Ring Size
                     <span className="mx-1 text-slate-300">-</span>
-                    <span className="font-black text-slate-950">
+                    <span className="font-semibold text-slate-950">
                       {selectedSize || `Select for ${selectedColor?.name || product.colors?.[0]?.name || 'this color'}`}
                     </span>
                   </p>
@@ -3099,14 +3472,14 @@ export const ProductDetail: React.FC = () => {
                           }}
                           disabled={outOfStock}
                           aria-label={`Select ring size ${sizeLabel}`}
-                          className={`flex min-h-12 min-w-0 flex-col items-center justify-center rounded-lg border px-2 py-2 text-center text-sm font-black leading-tight transition ${
+                          className={`flex min-h-12 min-w-0 flex-col items-center justify-center rounded-lg border px-2 py-2 text-center text-sm font-semibold leading-tight transition-all duration-300 ease-out ${isSelected ? 'product-detail-action-button' : ''} ${
                             isSelected
-                              ? 'border-[#0ea5e9] bg-[#f0f9ff] text-[#0369a1] ring-2 ring-[#0ea5e9]/25'
-                              : 'border-slate-200 bg-white text-slate-900 hover:border-[#0ea5e9]/60 hover:bg-[#f8fbfb]'
+                              ? 'scale-[1.03] border-slate-950 bg-slate-950 text-white shadow-[0_4px_12px_rgba(15,23,42,0.18)]'
+                              : 'border-slate-200 bg-white text-slate-900 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50'
                           } ${outOfStock ? 'cursor-not-allowed opacity-40' : ''}`}
                         >
                           <span className="block">{sizeLabel}</span>
-                          {outOfStock && <span className="mt-0.5 block text-[9px] font-bold normal-case text-red-600 sm:text-[10px]">Out of stock</span>}
+                          {outOfStock && <span className="mt-0.5 block text-[9px] font-semibold normal-case text-red-500 sm:text-[10px]">Out of stock</span>}
                         </button>
                       );
                     })}
@@ -3115,26 +3488,56 @@ export const ProductDetail: React.FC = () => {
                 </div>
               )}
 
-              <div ref={mobileCtaAnchorRef} className="mt-5 grid min-w-0 gap-2 sm:grid-cols-2">
+              <div ref={mobileCtaAnchorRef} className="mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2">
                 <button
                   type="button"
                   onClick={handleAddButtonClick}
-                  className={`product-detail-action-button min-h-12 w-full min-w-0 rounded-lg px-4 py-3 text-center text-sm font-black transition ${
-                    addedToCart ? 'bg-green-600 text-white' : 'bg-slate-950 text-white hover:bg-slate-800'
+                  className={`product-detail-action-button product-cta-shine flex min-h-[3.25rem] w-full min-w-0 items-center justify-center gap-2 rounded-xl px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.04em] shadow-[0_1px_0_rgba(255,255,255,0.12)_inset,0_10px_24px_rgba(15,23,42,0.22)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-[0_14px_30px_rgba(15,23,42,0.28)] active:translate-y-0 active:scale-[0.98] ${
+                    addedToCart
+                      ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 text-white'
+                      : 'bg-gradient-to-b from-slate-900 to-slate-950 text-white hover:from-slate-800 hover:to-slate-900'
                   }`}
                 >
+                  {addedToCart ? (
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m5 13 4 4L19 7" />
+                    </svg>
+                  ) : canAdd ? (
+                    <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="9" cy="21" r="1" />
+                      <circle cx="19" cy="21" r="1" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.5 3h2l2.4 12.2a2 2 0 0 0 2 1.6h8.6a2 2 0 0 0 2-1.6L21 7H6" />
+                    </svg>
+                  ) : null}
                   {notifySubmitting ? 'Saving...' : addedToCart ? 'Added to Cart' : canAdd ? 'Add to cart' : 'Notify me'}
                 </button>
                 {canAdd && (
                   <button
                     type="button"
-                    onClick={() => navigate('/cart')}
-                    className="product-detail-action-button min-h-12 w-full min-w-0 rounded-lg bg-[#540000] px-4 py-3 text-center text-sm font-black text-white transition hover:bg-[#3f0000]"
+                    onClick={() => {
+                      setIsBuyNowPressed(true);
+                      window.setTimeout(() => handleBuyNowClick(), 140);
+                    }}
+                    className={`flex min-h-[3.25rem] w-full min-w-0 items-center justify-center rounded-xl border-2 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.04em] shadow-[0_1px_0_rgba(255,255,255,0.15)_inset] transition-all duration-300 ease-out active:translate-y-0 active:scale-[0.98] ${
+                      isBuyNowPressed
+                        ? 'product-detail-buy-now-active border-[#a9812f] bg-gradient-to-b from-[#c79a3d] to-[#a9812f] text-white shadow-[0_10px_24px_rgba(169,129,47,0.32)]'
+                        : 'border-slate-950 bg-white text-slate-950 hover:border-[#a9812f] hover:text-[#8a6a20]'
+                    }`}
                   >
-                    View Cart
+                    Buy Now
                   </button>
                 )}
               </div>
+
+              {canAdd && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/cart')}
+                  className="mt-2.5 flex w-full items-center justify-center text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 underline-offset-4 transition hover:text-slate-950 hover:underline"
+                >
+                  View Cart
+                </button>
+              )}
 
               <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />
 
@@ -3161,7 +3564,7 @@ export const ProductDetail: React.FC = () => {
       {detailTabsFixed && <div aria-hidden="true" style={{ height: detailTabsHeight }} />}
       <nav
         ref={detailTabsBarRef as React.RefObject<HTMLElement>}
-        className={`product-detail-sticky-tabs border-y border-[#bdebea] bg-[#d8f5f2]/95 shadow-[0_8px_24px_rgba(15,63,70,0.08)] backdrop-blur ${
+        className={`product-detail-sticky-tabs border-y border-slate-200 bg-[#faf8f4]/95 shadow-[0_4px_16px_rgba(15,23,42,0.05)] backdrop-blur ${
           detailTabsFixed ? 'fixed inset-x-0 z-[70]' : 'sticky z-[60]'
         }`}
       >
@@ -3178,7 +3581,7 @@ export const ProductDetail: React.FC = () => {
                 setActiveDetailTab(tab.key);
               }}
               className={`product-detail-sticky-tab snap-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold tracking-wide transition ${
-                activeDetailTab === tab.key ? 'is-active border-[#16b8b0]' : 'border-transparent'
+                activeDetailTab === tab.key ? 'is-active border-[#a9812f]' : 'border-transparent'
               }`}
             >
               {tab.label}
@@ -3195,7 +3598,7 @@ export const ProductDetail: React.FC = () => {
                 scrollToDetailSection(tab.key);
               }}
               className={`product-detail-sticky-tab snap-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold tracking-wide transition sm:px-5 sm:text-base ${
-                activeDetailTab === tab.key ? 'is-active border-[#16b8b0]' : 'border-transparent'
+                activeDetailTab === tab.key ? 'is-active border-[#a9812f]' : 'border-transparent'
               }`}
             >
               {getDetailTabLabel(tab)}
@@ -3207,12 +3610,12 @@ export const ProductDetail: React.FC = () => {
       {activeDetailTab === 'description' && mobileProductBannerSections.length > 0 && (
         <section className="bg-white px-4 py-4 sm:hidden">
           <div className="space-y-3">
-            {(showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section) => (
-              <article key={section.title} className="mx-auto w-full max-w-[1200px] overflow-hidden bg-[#f8fbfb]">
+            {(showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section, index) => (
+              <RevealOnScroll key={section.title} className="product-banner-group mx-auto w-full max-w-[1200px] overflow-hidden rounded-xl bg-[#f8fbfb] shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
                 {section.video ? (
                   <div className="aspect-[4/3] w-full overflow-hidden bg-slate-950">
                     <video
-                      className="h-full w-full object-contain object-center"
+                      className="product-banner-media h-full w-full object-contain object-center"
                       autoPlay
                       muted
                       loop
@@ -3224,11 +3627,11 @@ export const ProductDetail: React.FC = () => {
                     </video>
                   </div>
                 ) : section.image && (
-                  <div className="relative">
+                  <div className="relative overflow-hidden">
                     <img
                       src={section.image}
                       alt={section.title}
-                      className="block h-auto w-full object-contain object-center"
+                      className="product-banner-media block h-auto w-full object-contain object-center"
                       loading="lazy"
                       fetchPriority="low"
                       decoding="async"
@@ -3240,9 +3643,23 @@ export const ProductDetail: React.FC = () => {
                         </h2>
                       </div>
                     )}
+                    {isRingOverview && !section.cleanBanner && (
+                      <div className="pointer-events-none absolute left-4 top-4 max-w-[65%] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)]">
+                        <p className="text-[9px] font-black uppercase tracking-[0.22em] text-white/85">0{index + 1}</p>
+                        <h2 className="mt-1 font-display text-base font-black leading-tight">{section.title}</h2>
+                        <p className="mt-1.5 text-xs font-semibold leading-5 text-white/90">{section.copy}</p>
+                      </div>
+                    )}
                   </div>
                 )}
-              </article>
+                {!isRingOverview && !isTfxV5Band && !section.cleanBanner && section.copy && (
+                  <div className="px-4 py-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">0{index + 1}</p>
+                    <h2 className="mt-1.5 font-display text-base font-black leading-tight text-slate-950">{section.title}</h2>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{section.copy}</p>
+                  </div>
+                )}
+              </RevealOnScroll>
             ))}
           </div>
           {mobileProductBannerSections.length > 3 && (
@@ -3250,7 +3667,7 @@ export const ProductDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowAllMobileOverview((prev) => !prev)}
-                className="w-full rounded-xl border border-[#bdebea] bg-[#f0f9ff] px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-[#0369a1]"
+                className="w-full rounded-xl border border-slate-200 bg-[#fbfaf7] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
               >
                 {showAllMobileOverview ? 'Show Less' : 'Show More Banners'}
               </button>
@@ -3263,7 +3680,7 @@ export const ProductDetail: React.FC = () => {
         {activeDetailTab === 'description' && (
           <div className="space-y-4">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0369a1]">{isFanMarketplacePage ? 'Description' : 'Overview'}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">{isFanMarketplacePage ? 'Description' : 'Overview'}</p>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">
                 {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
               </p>
@@ -3297,7 +3714,7 @@ export const ProductDetail: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowAllMobileOverview((prev) => !prev)}
-                    className="w-full rounded-xl border border-[#bdebea] bg-[#f0f9ff] px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-[#0369a1]"
+                    className="w-full rounded-xl border border-slate-200 bg-[#fbfaf7] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
                   >
                     {showAllMobileOverview ? 'Show Less' : 'Show More Banners'}
                   </button>
@@ -3309,12 +3726,12 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'features' && (
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0369a1]">What Should I Buy?</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">What Should I Buy?</p>
             <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{whyBuyCopy}</p>
             {featureList.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {featureList.slice(0, 10).map((feature) => (
-                  <div key={feature} className="rounded-xl border border-[#bdebea] bg-white px-3 py-3 text-center text-[11px] font-black leading-4 text-slate-800 shadow-[0_8px_20px_rgba(15,63,70,0.05)]">
+                  <div key={feature} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
                     {cleanFeatureText(feature)}
                   </div>
                 ))}
@@ -3325,25 +3742,54 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'specs' && (
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0369a1]">Product information</p>
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#8a6a20]">Under The Hood</p>
+                <h3 className="mt-1 font-display text-lg font-black text-slate-950">Product Specifications</h3>
+              </div>
+              {productInformationSpecEntries.length > 0 && (
+                <span className="shrink-0 rounded-full border border-[#e6d9a8] bg-[#fbf6e4] px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#8a6a20]">
+                  {productInformationSpecEntries.length} details
+                </span>
+              )}
+            </div>
             {productInformationSpecEntries.length > 0 ? (
-              <div className="mt-4 space-y-2">
+              <div className="mt-4 space-y-3">
                 {specGroups.map((group) => (
                   <details
                     key={group.title}
-                    className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_8px_18px_rgba(15,23,42,0.04)]"
+                    className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-all duration-300 open:border-[#d9c88a] open:shadow-[0_16px_32px_-14px_rgba(15,23,42,0.2)]"
                     {...(group.title === 'Style' ? { open: true } : {})}
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between bg-slate-50 px-4 py-3 text-sm font-black text-slate-950">
-                      <span>{group.title}</span>
-                      <span className="text-xl leading-none transition-transform group-open:rotate-180">v</span>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-gradient-to-r from-white to-[#fbfaf5] px-4 py-3.5 transition-colors group-open:from-[#fdf9ee] group-open:to-white">
+                      <span className="flex items-center gap-3">
+                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_4px_10px_rgba(15,23,42,0.28)]">
+                          <SpecGroupIcon title={group.title} className="h-5 w-5" size={20} />
+                        </span>
+                        <span>
+                          <span className="block text-sm font-black leading-tight text-slate-950">{group.title}</span>
+                          <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">
+                            {group.entries.length} {group.entries.length === 1 ? 'detail' : 'details'}
+                          </span>
+                        </span>
+                      </span>
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-300 group-open:rotate-180 group-open:border-[#8a6a20] group-open:text-[#8a6a20]">
+                        <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
+                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </span>
                     </summary>
-                    {group.entries.map(([key, value]) => (
-                      <div key={key} className="grid grid-cols-[0.42fr_0.58fr] border-t border-slate-100 px-4 py-3">
-                        <p className="pr-3 text-xs font-semibold leading-5 text-slate-500">{formatSpecLabel(key)}</p>
-                        <p className="text-xs font-bold leading-5 text-slate-900">{String(value ?? '')}</p>
-                      </div>
-                    ))}
+                    <div className="divide-y divide-slate-100 border-t border-slate-100">
+                      {group.entries.map(([key, value], rowIndex) => (
+                        <div
+                          key={key}
+                          className={`grid grid-cols-[0.42fr_0.58fr] gap-2 px-4 py-3 ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : 'bg-white'}`}
+                        >
+                          <p className="pr-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8a6a20]">{formatSpecLabel(key)}</p>
+                          <p className="text-xs font-bold leading-5 text-slate-900">{String(value ?? '')}</p>
+                        </div>
+                      ))}
+                    </div>
                   </details>
                 ))}
               </div>
@@ -3354,7 +3800,7 @@ export const ProductDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowAllSpecs((prev) => !prev)}
-                className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-950"
+                className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-950 transition hover:border-slate-950"
               >
                 {showAllSpecs ? 'Show Less' : 'Show More Specs'}
               </button>
@@ -3364,17 +3810,17 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'battery' && (
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0369a1]">Battery</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">Battery</p>
             {(mobileBatterySpecEntries.length > 0 || batteryFeatureEntries.length > 0) ? (
               <div className="mt-4 grid grid-cols-1 gap-2">
                 {mobileBatterySpecEntries.map(([key, value]) => (
                   <div key={key} className="rounded-xl border border-slate-200 bg-white px-3 py-3">
-                    <p className="text-[10px] font-black uppercase tracking-[0.12em] text-[#0369a1]">{formatSpecLabel(key)}</p>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8a6a20]">{formatSpecLabel(key)}</p>
                     <p className="mt-1 text-sm font-bold leading-6 text-slate-800">{value}</p>
                   </div>
                 ))}
                 {batteryFeatureEntries.map((feature) => (
-                  <div key={feature} className="rounded-xl border border-[#bdebea] bg-[#f0f9ff] px-3 py-3 text-sm font-bold leading-6 text-slate-800">
+                  <div key={feature} className="rounded-xl border border-slate-200 bg-[#fbfaf7] px-3 py-3 text-sm font-medium leading-6 text-slate-800">
                     {cleanFeatureText(feature)}
                   </div>
                 ))}
@@ -3387,7 +3833,7 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'faq' && (
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#0369a1]">FAQ</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">FAQ</p>
             <div className="mt-4 space-y-3">
               {productFaqs.map((item) => (
                 <details key={item.q} className="rounded-xl border border-slate-200 bg-[#f8fbfb] p-4">
@@ -3403,7 +3849,7 @@ export const ProductDetail: React.FC = () => {
       <section id="features" className="hidden scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-4 flex items-center justify-center">
-            <h2 className="rounded-full bg-[#f0f9ff] px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#0369a1] sm:text-xs">
+            <h2 className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6a20] sm:text-xs">
               What Should I Buy?
             </h2>
           </div>
@@ -3414,7 +3860,7 @@ export const ProductDetail: React.FC = () => {
           {featureList.length > 0 && (
             <div className="mx-auto mt-5 grid max-w-4xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {featureList.slice(0, 8).map((feature) => (
-                <div key={feature} className="rounded-xl border border-[#bdebea] bg-white px-3 py-3 text-center text-[11px] font-black leading-4 text-slate-800 shadow-[0_8px_20px_rgba(15,63,70,0.05)] sm:text-xs">
+                <div key={feature} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:text-xs">
                   {cleanFeatureText(feature)}
                 </div>
               ))}
@@ -3427,7 +3873,7 @@ export const ProductDetail: React.FC = () => {
         <section id="description" className="hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
           <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[0.34fr_0.66fr]">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0284c7]">Description</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a6a20]">Description</p>
               <h2 className="mt-2 font-display text-xl font-black text-slate-950 sm:text-3xl">Smart comfort for every season</h2>
             </div>
             <div>
@@ -3438,7 +3884,7 @@ export const ProductDetail: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                  className="mt-4 text-sm font-black text-[#0284c7] hover:text-slate-950"
+                  className="mt-4 text-sm font-semibold text-[#8a6a20] hover:text-slate-950"
                 >
                   {isDescriptionExpanded ? 'Show Less' : 'Read More'}
                 </button>
@@ -3462,7 +3908,7 @@ export const ProductDetail: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                      className="mt-4 text-sm font-black text-[#0284c7] hover:text-slate-950"
+                      className="mt-4 text-sm font-semibold text-[#8a6a20] hover:text-slate-950"
                     >
                       {isDescriptionExpanded ? 'Show Less' : 'Read More'}
                     </button>
@@ -3475,11 +3921,11 @@ export const ProductDetail: React.FC = () => {
           <section id="more-information" className="hidden scroll-mt-32 bg-white px-0 pb-10 sm:block sm:scroll-mt-36 lg:pb-14">
             <div className="mx-auto w-full max-w-[1200px] space-y-4 px-4 sm:px-6 lg:px-0">
               {overviewMediaSections.map((section, index) => (
-                <article key={section.title} className="overflow-hidden bg-transparent shadow-none">
+                <RevealOnScroll key={section.title} className="product-banner-group overflow-hidden bg-transparent shadow-none">
                   {section.video ? (
                     <div className="aspect-[12/5] overflow-hidden bg-slate-950">
                       <video
-                        className="band-hero-video h-full w-full object-contain object-center"
+                        className="band-hero-video product-banner-media h-full w-full object-contain object-center"
                         autoPlay
                         muted
                         loop
@@ -3495,7 +3941,7 @@ export const ProductDetail: React.FC = () => {
                       <img
                         src={section.image}
                         alt={section.title}
-                        className="h-auto w-full object-contain object-center"
+                        className="product-banner-media h-auto w-full object-contain object-center"
                         loading="lazy"
                         fetchPriority="low"
                         decoding="async"
@@ -3518,12 +3964,12 @@ export const ProductDetail: React.FC = () => {
                   )}
                   {!isRingOverview && !isTfxV5Band && !section.cleanBanner && (
                     <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-                      <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#0284c7] sm:text-xs">0{index + 1}</p>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8a6a20] sm:text-xs">0{index + 1}</p>
                       <h2 className="mt-2 font-display text-lg font-black leading-tight text-slate-950 sm:text-2xl lg:text-3xl">{section.title}</h2>
                       <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">{section.copy}</p>
                     </div>
                   )}
-                </article>
+                </RevealOnScroll>
               ))}
             </div>
           </section>
@@ -3532,27 +3978,57 @@ export const ProductDetail: React.FC = () => {
 
       {productSeoComparison && <ProductSeoComparisonChart brief={productSeoComparison} />}
 
-      <section id="specs" className="hidden scroll-mt-32 bg-[#f8fbfb] px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
+      <section id="specs" className="hidden scroll-mt-32 bg-gradient-to-b from-[#f8fbfb] to-[#f2f5f4] px-4 py-12 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16">
         <div className="mx-auto max-w-6xl">
-          <h2 className="font-display text-xl font-black text-slate-950 sm:text-3xl lg:text-4xl">Product information</h2>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#8a6a20]">Under The Hood</p>
+              <h2 className="mt-2 font-display text-2xl font-black text-slate-950 sm:text-3xl lg:text-4xl">Product Specifications</h2>
+              <p className="mt-2 max-w-lg text-sm font-medium leading-6 text-slate-500">Every detail, verified and organized so you know exactly what you're getting.</p>
+            </div>
+            {productInformationSpecEntries.length > 0 && (
+              <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-[#e6d9a8] bg-[#fbf6e4] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[#8a6a20]">
+                {productInformationSpecEntries.length} verified details
+              </span>
+            )}
+          </div>
           {productInformationSpecEntries.length > 0 ? (
-            <div className="mt-8 grid gap-6 lg:grid-cols-2">
+            <div className="mt-8 grid items-start gap-5 lg:grid-cols-2">
               {specGroups.map((group) => (
                 <details
                   key={group.title}
-                  className="group overflow-hidden rounded-[1.25rem] border border-slate-200 bg-white shadow-sm"
+                  className="group overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-300 open:border-[#d9c88a] open:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.2)]"
                   {...(group.title === 'Style' ? { open: true } : {})}
                 >
-                  <summary className="flex cursor-pointer list-none items-center justify-between bg-slate-50 px-5 py-4 text-base font-black text-slate-950">
-                    <span>{group.title}</span>
-                    <span className="text-2xl leading-none transition-transform group-open:rotate-180">v</span>
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-gradient-to-r from-white to-[#fbfaf5] px-6 py-5 transition-colors group-open:from-[#fdf9ee] group-open:to-white">
+                    <span className="flex items-center gap-4">
+                      <span className="product-detail-spec-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#e6d9a8] bg-[#fbf6ea] text-[#8a6a20] shadow-[0_8px_16px_rgba(169,129,47,0.16)] transition-transform duration-300 group-open:scale-105">
+                        <SpecGroupIcon title={group.title} className="h-6 w-6" size={24} />
+                      </span>
+                      <span>
+                        <span className="block text-base font-black leading-tight text-slate-950 sm:text-lg">{group.title}</span>
+                        <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
+                          {group.entries.length} {group.entries.length === 1 ? 'detail' : 'details'}
+                        </span>
+                      </span>
+                    </span>
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-300 group-open:rotate-180 group-open:border-[#8a6a20] group-open:text-[#8a6a20]">
+                      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
+                        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </span>
                   </summary>
-                  {group.entries.map(([key, value]) => (
-                    <div key={key} className="grid border-t border-slate-100 sm:grid-cols-[0.36fr_0.64fr]">
-                      <p className="bg-white px-5 py-3 text-sm font-semibold leading-6 text-slate-500">{formatSpecLabel(key)}</p>
-                      <p className="px-5 py-3 text-sm font-bold leading-6 text-slate-900">{String(value ?? '')}</p>
-                    </div>
-                  ))}
+                  <div className="divide-y divide-slate-100 border-t border-slate-100">
+                    {group.entries.map(([key, value], rowIndex) => (
+                      <div
+                        key={key}
+                        className={`grid gap-1 px-6 py-3.5 transition-colors hover:bg-[#fdf9ee] sm:grid-cols-[0.38fr_0.62fr] sm:gap-4 ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : 'bg-white'}`}
+                      >
+                        <p className="text-xs font-bold uppercase tracking-[0.1em] text-[#8a6a20]">{formatSpecLabel(key)}</p>
+                        <p className="text-sm font-bold leading-6 text-slate-900">{String(value ?? '')}</p>
+                      </div>
+                    ))}
+                  </div>
                 </details>
               ))}
             </div>
@@ -3563,7 +4039,7 @@ export const ProductDetail: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowAllSpecs((prev) => !prev)}
-              className="mt-5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-950 hover:border-[#0ea5e9] hover:text-[#0369a1] sm:px-5 sm:py-3 sm:text-sm"
+              className="mt-6 rounded-full border border-slate-300 bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-950 transition hover:border-slate-950 hover:shadow-md sm:px-7 sm:text-sm"
             >
               {showAllSpecs ? 'See Less' : 'See More'}
             </button>
@@ -3589,7 +4065,7 @@ export const ProductDetail: React.FC = () => {
         <div className="mx-auto max-w-5xl">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0284c7]">Customer Reviews</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a6a20]">Customer Reviews</p>
               <h2 className="mt-2 font-display text-xl font-black text-slate-950 sm:text-3xl lg:text-4xl">Write a Review</h2>
             </div>
             <p className="max-w-md text-sm font-semibold leading-6 text-slate-500">
@@ -3625,7 +4101,7 @@ export const ProductDetail: React.FC = () => {
                   value={reviewName}
                   onChange={(event) => setReviewName(event.target.value)}
                   placeholder="Eg: Rahul Sharma"
-                  className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9]/20"
+                  className="h-11 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-950 outline-none focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10"
                   required
                 />
               </label>
@@ -3663,17 +4139,17 @@ export const ProductDetail: React.FC = () => {
                 value={reviewComment}
                 onChange={(event) => setReviewComment(event.target.value)}
                 placeholder="Eg: The product quality is good, delivery was fast, and it works smoothly."
-                className="min-h-[120px] w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold leading-6 text-slate-950 outline-none focus:border-[#0ea5e9] focus:ring-2 focus:ring-[#0ea5e9]/20"
+                className="min-h-[120px] w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm font-semibold leading-6 text-slate-950 outline-none focus:border-slate-950 focus:ring-2 focus:ring-slate-950/10"
                 required
               />
             </label>
 
             <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="min-h-5 text-sm font-semibold text-[#0369a1]">{reviewMessage}</p>
+              <p className="min-h-5 text-sm font-semibold text-[#8a6a20]">{reviewMessage}</p>
               <button
                 type="submit"
                 disabled={reviewSubmitting}
-                className="h-11 rounded-lg bg-slate-950 px-5 text-sm font-black text-white transition hover:bg-[#0284c7] disabled:cursor-not-allowed disabled:opacity-60"
+                className="h-11 rounded-lg bg-slate-950 px-5 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
               </button>
@@ -3713,7 +4189,7 @@ export const ProductDetail: React.FC = () => {
                     : 2
                 )
               }
-              className="mt-5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-black text-slate-950 hover:border-[#0ea5e9] hover:text-[#0369a1] sm:px-5 sm:py-3 sm:text-sm"
+              className="mt-5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-950 transition hover:border-slate-950 sm:px-5 sm:py-3 sm:text-sm"
             >
               {visibleReviewCount < (product.reviews?.length ?? 0) ? 'View More Reviews' : 'Show Less'}
             </button>
@@ -3733,7 +4209,7 @@ export const ProductDetail: React.FC = () => {
               <button type="button" onClick={() => setShowNotifyModal(false)} className="rounded-full border border-slate-200 px-3 py-1 text-sm font-black">X</button>
             </div>
             {notifyMessage && <p className={`mt-4 text-sm font-semibold ${notifyMessage.startsWith('Done') ? 'text-green-700' : 'text-red-600'}`}>{notifyMessage}</p>}
-            <button type="button" onClick={() => setShowNotifyModal(false)} className="mt-5 w-full rounded-lg bg-[#0ea5e9] px-4 py-3 text-sm font-black text-white">
+            <button type="button" onClick={() => setShowNotifyModal(false)} className="mt-5 w-full rounded-lg bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
               Close
             </button>
           </div>
@@ -3743,849 +4219,29 @@ export const ProductDetail: React.FC = () => {
       <div className={`fixed inset-x-0 bottom-0 z-[80] border-t border-slate-200 bg-white/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl backdrop-blur transition-transform duration-300 sm:hidden ${showMobileStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#0284c7]">Price</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a6a20]">Price</p>
             <p className={`truncate text-base font-black ${couponRate > 0 ? 'text-emerald-600' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</p>
             {couponRate > 0 && <p className="truncate text-[10px] font-bold text-emerald-700">Save {formatInrAmount(couponDiscount)} ({couponRateLabel} off)</p>}
           </div>
-          <button type="button" onClick={handleAddButtonClick} className="min-h-10 min-w-[86px] rounded-lg bg-slate-950 px-2.5 py-2 text-center text-[11px] font-black leading-tight text-white min-[360px]:min-w-[104px] min-[360px]:text-xs">
+          <button type="button" onClick={handleAddButtonClick} className="product-detail-action-button product-cta-shine min-h-11 min-w-[86px] rounded-xl bg-gradient-to-b from-slate-900 to-slate-950 px-2.5 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.03em] leading-tight text-white shadow-[0_1px_0_rgba(255,255,255,0.12)_inset,0_8px_18px_rgba(15,23,42,0.25)] transition-all duration-300 ease-out active:scale-[0.96] min-[360px]:min-w-[104px] min-[360px]:text-xs">
             {notifySubmitting ? 'Saving...' : addedToCart ? 'Added' : canAdd ? 'Add to Cart' : 'Notify me'}
           </button>
           {canAdd && (
-            <button type="button" onClick={() => handleBuyNowClick()} className="min-h-10 min-w-[76px] rounded-lg bg-[#540000] px-2.5 py-2 text-center text-[11px] font-black leading-tight text-white min-[360px]:min-w-[92px] min-[360px]:text-xs">
+            <button
+              type="button"
+              onClick={() => {
+                setIsBuyNowPressed(true);
+                window.setTimeout(() => handleBuyNowClick(), 140);
+              }}
+              className={`min-h-11 min-w-[76px] rounded-xl border-2 px-2.5 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.03em] leading-tight shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all duration-300 ease-out active:scale-[0.96] min-[360px]:min-w-[92px] min-[360px]:text-xs ${
+                isBuyNowPressed
+                  ? 'product-detail-buy-now-active border-[#a9812f] bg-[#a9812f] text-white'
+                  : 'border-slate-950 bg-white text-slate-950'
+              }`}
+            >
               Buy Now
             </button>
           )}
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <div className="product-detail-dark min-h-screen bg-dark-bg text-white">
-
-      {/* Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
-        <nav className="flex items-center gap-2 text-sm text-gray-400 flex-wrap">
-          <Link to="/" className="hover:text-white transition-colors">Home</Link>
-          <span>/</span>
-          <Link to={'/shop/' + product.category?.toLowerCase()} className="hover:text-white transition-colors capitalize">
-            {product.category}
-          </Link>
-          <span>/</span>
-          <span className="text-gray-200 truncate max-w-[200px]">{product.name}</span>
-        </nav>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 pb-28 sm:px-6 sm:pb-8 lg:px-8 lg:py-10">
-        <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1.18fr)_minmax(0,0.82fr)] lg:gap-12">
-
-          {/* Left: Image Carousel + Thumbnails */}
-          <div className="w-full self-start space-y-4">
-            <ProductImageCarousel
-              images={displayedImages}
-              videoUrl={productVideoUrl}
-              alt={product.name}
-              selectedIndex={selectedImageIndex}
-              onSelectIndex={setSelectedImageIndex}
-              bannerMode
-              videoFit={productGalleryVideoFit}
-            />
-            {displayedMediaCount > 1 && (
-              <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {displayedImages.map((imgUrl, imgIdx) => (
-                  <img
-                    key={imgIdx}
-                    src={imgUrl}
-                    alt={`${product.name} ${imgIdx + 1}`}
-                    loading="lazy"
-                    decoding="async"
-                    width={64}
-                    height={64}
-                    onClick={() => setSelectedImageIndex(imgIdx)}
-                    className={`h-14 w-14 rounded-lg bg-black/70 object-contain object-center border shrink-0 snap-start cursor-pointer transition-all duration-150 min-[360px]:h-16 min-[360px]:w-16 ${selectedImageIndex === imgIdx
-                      ? 'border-primary-500 ring-2 ring-primary-400'
-                      : 'border-white/10 hover:border-white/40'
-                      }`}
-                  />
-                ))}
-                {productVideoUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setSelectedImageIndex(productVideoIndex)}
-                    className={`relative h-14 w-14 shrink-0 snap-start overflow-hidden rounded-lg border bg-white p-0 transition-all duration-150 min-[360px]:h-16 min-[360px]:w-16 ${
-                      selectedImageIndex === productVideoIndex ? 'border-primary-500 ring-2 ring-primary-400' : 'border-white/10 hover:border-white/40'
-                    }`}
-                    aria-label={`Play ${product.name} video`}
-                  >
-                    <video
-                      src={productVideoUrl}
-                      className="h-full w-full object-cover object-bottom"
-                      muted
-                      playsInline
-                      preload="metadata"
-                    />
-                    <span className="absolute inset-0 grid place-items-center bg-black/25">
-                      <span className="grid h-6 w-6 place-items-center rounded-full bg-white/90 text-slate-950 shadow-lg min-[360px]:h-7 min-[360px]:w-7">
-                        <svg className="ml-0.5 h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                      </span>
-                    </span>
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Right: Product Info */}
-            <div className="flex min-w-0 flex-col justify-center gap-4 self-start">
-
-            {/* Category + Rating */}
-            <div className="flex items-center justify-between flex-wrap gap-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-primary-300 bg-primary-900/30 px-3 py-1 rounded-full">
-                {product.category}
-              </span>
-              {product.rating != null && (
-                <div className="flex items-center gap-1.5 text-amber-400">
-                  <span className="text-sm">
-                    {'\u2605'.repeat(Math.round(Number(product.rating || 0)))}
-                    {'\u2606'.repeat(5 - Math.round(Number(product.rating || 0)))}
-                  </span>
-                  <span className="text-sm font-bold">{product.rating}</span>
-                  {product.reviewCount != null && (
-                    <span className="text-xs text-gray-400">({product.reviewCount} reviews)</span>
-                  )}
-                </div>
-              )}
-              <button
-                type="button"
-                onClick={() => {
-                  setActiveDetailTab('reviews');
-                  window.setTimeout(() => scrollToDetailSection('reviews'), 0);
-                }}
-                className="rounded-full border border-white/15 px-3 py-1.5 text-xs font-bold text-white transition hover:bg-white/10"
-              >
-                Write Review
-              </button>
-            </div>
-
-
-            {/* Mobile: Color before title */}
-            <div className="block sm:hidden">
-              {product.colors && product.colors.length > 0 && (
-                <div>
-                  <p className="mb-2 text-sm font-semibold text-gray-300">
-                    Select Color{selectedColor?.name ? ` â€” ${selectedColor.name}` : ''}
-                  </p>
-
-                  <div className="flex flex-nowrap gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                    {product.colors.map((color) => {
-                      const isSelected = normalizeOptionKey(selectedColor?.name) === normalizeOptionKey(color.name);
-                      const colorStock = getColorAvailableStock(color);
-
-                      return (
-                        <button
-                          key={color.name}
-                          type="button"
-                          onClick={() => handleSelectColor(color)}
-                          disabled={colorStock <= 0}
-                          aria-label={color.name + (colorStock <= 0 ? ' â€” Out of stock' : '')}
-                          className={`min-w-[118px] shrink-0 rounded-xl border px-3 py-2.5 text-left transition-all focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg ${
-                            isSelected ? 'border-primary-400 bg-primary-400/15 ring-1 ring-primary-300/50' : 'border-white/20 bg-white/[0.03]'
-                          } ${colorStock <= 0 ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:border-white/50'}`}
-                        >
-                          <div className="flex min-w-0 items-center gap-2">
-                            <span
-                              className="h-4 w-4 shrink-0 rounded-full border border-white/20"
-                              style={{ backgroundColor: color.hex }}
-                            />
-                            <span className="min-w-0 truncate text-xs text-white">{color.name}</span>
-                          </div>
-                          {colorStock <= 0 && <p className="mt-1 text-xs text-red-300">Out of stock</p>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Title */}
-            <h1 className="w-full text-[1.35rem] font-medium font-display leading-[1.18] tracking-normal text-white/95 min-[360px]:text-[1.42rem] sm:text-[1.95rem] lg:text-[2.35rem] lg:leading-[1.12]">
-              {product.name}
-            </h1>
-
-            {/* Desktop: Color after title */}
-            <div className="hidden sm:block">
-              {product.colors && product.colors.length > 0 && (
-                <div>
-                  <p className="mb-3 text-sm font-semibold text-gray-300">
-                    Select Color{selectedColor?.name ? ` â€” ${selectedColor.name}` : ''}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {product.colors.map((color) => {
-                      const isSelected = normalizeOptionKey(selectedColor?.name) === normalizeOptionKey(color.name);
-                      const colorStock = getColorAvailableStock(color);
-
-                      return (
-                        <button
-                          key={color.name}
-                          type="button"
-                          onClick={() => handleSelectColor(color)}
-                          disabled={colorStock <= 0}
-                          aria-label={color.name + (colorStock <= 0 ? ' â€” Out of stock' : '')}
-                          className={`min-w-[128px] flex-1 rounded-xl border px-3 py-3 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg sm:flex-none sm:px-4 ${
-                            isSelected ? 'border-primary-500 bg-primary-900/20' : 'border-white/20'
-                          } ${colorStock <= 0 ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:border-white/50'}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            <span
-                              className="h-4 w-4 rounded-full border border-white/20"
-                              style={{ backgroundColor: color.hex }}
-                            />
-                            <span className="min-w-0 truncate text-sm text-white">{color.name}</span>
-                          </div>
-                          {colorStock <= 0 && <p className="mt-1 text-xs text-red-300">Out of stock</p>}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {requiresRingSize && (
-              <div>
-                <p className="mb-3 text-sm font-semibold text-gray-300">
-                  Select Ring Size{selectedSize ? ` - ${selectedSize}` : ' *'}
-                </p>
-                <div className="grid grid-cols-2 gap-2 min-[420px]:grid-cols-3 sm:flex sm:flex-wrap sm:gap-3">
-                  {availableSizes.map((sizeRow) => {
-                    const sizeLabel = String(sizeRow.size).trim();
-                    const isSelected = selectedSize === sizeLabel;
-                    const outOfStock = sizeRow.stock <= 0;
-                    return (
-                      <button
-                        key={sizeLabel}
-                        type="button"
-                        onClick={() => {
-                          if (outOfStock) return;
-                          setSelectedSize(sizeLabel);
-                          setSizeError('');
-                        }}
-                        disabled={outOfStock}
-                        className={`min-w-0 rounded-xl border px-3 py-2.5 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg sm:px-4 ${
-                          isSelected ? 'border-primary-500 bg-primary-900/20' : 'border-white/20'
-                        } ${outOfStock ? 'cursor-not-allowed opacity-40' : 'cursor-pointer hover:border-white/50'}`}
-                        aria-label={`Size ${sizeLabel}${outOfStock ? ' - Out of stock' : ''}`}
-                      >
-                        <p className="text-sm font-semibold text-white">{sizeLabel}</p>
-                        {outOfStock && <p className="text-xs text-red-300">Out of stock</p>}
-                      </button>
-                    );
-                  })}
-                </div>
-                {sizeError && <p className="mt-2 text-xs text-red-400">{sizeError}</p>}
-              </div>
-            )}
-
-            {/* Price */}
-            <div className="flex flex-wrap items-end gap-2 sm:gap-3">
-              {couponRate > 0 ? (
-                <>
-                  <span className="text-sm text-gray-400 line-through sm:text-lg">{formatInrAmount(salePrice)}</span>
-                  <span className="rounded-full bg-green-400/10 px-2 py-0.5 text-xs font-bold text-green-400 sm:text-sm">
-                    {couponRateLabel} off
-                  </span>
-                </>
-              ) : mrp > salePrice && (
-                <>
-                  <span className="text-sm text-gray-400 line-through sm:text-lg">&#8377;{mrp.toLocaleString('en-IN')}</span>
-                  {!hidePercentageOffer && (
-                    <span className="rounded-full bg-green-400/10 px-2 py-0.5 text-xs font-bold text-green-400 sm:text-sm">
-                      {percent}% off
-                    </span>
-                  )}
-                </>
-              )}
-              <span className={`font-display text-2xl font-bold min-[360px]:text-3xl sm:text-4xl ${couponRate > 0 ? 'text-emerald-300' : 'text-white'}`}>
-                {formatInrAmount(displayedPrice)}
-              </span>
-            </div>
-            {(couponRate > 0 || savings > 0) && (
-              <p className="text-sm text-green-400 -mt-2">
-                {couponRate > 0 ? `Save ${formatInrAmount(couponDiscount)} (${couponRateLabel} off)` : `You save ₹${savings.toLocaleString('en-IN')}`}
-              </p>
-            )}
-            {darkPaymentOfferBlock}
-
-            <div ref={mobileCtaAnchorRef} className="grid gap-2 sm:hidden">
-              <button
-                type="button"
-                onClick={handleAddButtonClick}
-                className={[
-                  'product-detail-add-cart-btn min-h-12 w-full rounded-2xl px-4 py-3 text-center text-sm font-bold leading-tight transition-all duration-200',
-                  'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
-                  !canAdd
-                    ? 'border border-white/15 bg-white text-slate-950 hover:bg-slate-100'
-                    : addedToCart
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-primary-600 text-white shadow-[0_10px_28px_-8px_rgba(59,130,246,0.55)] hover:bg-primary-500',
-                ].join(' ')}
-              >
-                {notifySubmitting ? 'Saving...' : addedToCart ? 'Added to Cart' : canAdd ? 'Add to Cart' : 'Notify me'}
-              </button>
-              {canAdd && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/cart')}
-                  className="product-detail-buy-now-btn min-h-12 w-full rounded-2xl border border-amber-300/40 bg-amber-400 px-4 py-3 text-center text-sm font-bold leading-tight text-slate-950 transition-all duration-200 hover:bg-amber-300"
-                >
-                  View Cart
-                </button>
-              )}
-            </div>
-
-            <div className="sm:hidden">
-              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} dark />
-            </div>
-
-            <div className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-2">
-              <p className="text-sm font-semibold text-gray-200">Stock Info</p>
-              <div className="flex items-center gap-2">
-                <span className={`inline-block w-2 h-2 rounded-full ${canAdd ? 'bg-green-400' : 'bg-red-500'}`} />
-                <p className={`text-sm font-medium ${canAdd ? 'text-green-400' : 'text-red-400'}`}>
-                  {canAdd ? 'In stock' : 'Out of stock'}
-                </p>
-              </div>
-              {product.warranty && (
-                <p className="text-sm text-gray-300">
-                  <span className="font-semibold text-white">Warranty:</span> {product.warranty}
-                </p>
-              )}
-            </div>
-
-            {/* CTA Buttons â€” kept exactly in Code 1's position */}
-            <div className="hidden sm:mt-2 sm:grid sm:grid-cols-2 sm:gap-3">
-              <button
-                type="button"
-                onClick={handleAddButtonClick}
-                className={[
-                  'product-detail-add-cart-btn min-h-14 min-w-0 rounded-2xl px-4 py-4 text-center text-sm font-bold leading-tight transition-all duration-200 lg:px-6 lg:text-base',
-                  'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
-                  !canAdd
-                    ? 'border border-white/15 bg-white text-slate-950 hover:bg-slate-100 active:scale-[0.98]'
-                    : addedToCart
-                      ? 'bg-emerald-500 text-white scale-[0.98]'
-                      : 'bg-primary-600 text-white shadow-[0_14px_32px_-10px_rgba(59,130,246,0.55)] hover:bg-primary-500 active:scale-[0.98]',
-                ].join(' ')}
-              >
-                {notifySubmitting ? 'Saving...' : addedToCart ? 'Added to Cart' : canAdd ? 'Add to Cart' : 'Notify me'}
-              </button>
-              {canAdd && (
-                <button
-                  type="button"
-                  onClick={() => navigate('/cart')}
-                  className="product-detail-buy-now-btn min-h-14 min-w-0 rounded-2xl border border-amber-300/40 bg-amber-400 px-4 py-4 text-center text-sm font-bold leading-tight text-slate-950 transition-all duration-200 hover:bg-amber-300 active:scale-[0.98] lg:px-6 lg:text-base"
-                >
-                  View Cart
-                </button>
-              )}
-            </div>
-
-            <div className="hidden sm:block">
-              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} dark />
-            </div>
-
-            <div className="grid grid-cols-1 gap-2 min-[420px]:grid-cols-2 sm:grid-cols-4 sm:gap-2.5">
-              {infoBadges.map((badge) => (
-                <div
-                  key={badge.title}
-                  className="rounded-lg border border-white/10 bg-white/[0.04] p-2 transition-colors hover:border-white/15 hover:bg-white/[0.06] sm:rounded-xl sm:p-2.5"
-                >
-                  <div className="flex items-center gap-1.5 sm:gap-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary-500/15 text-primary-300 sm:h-7 sm:w-7 sm:rounded-lg">
-                      <DetailIcon kind={badge.icon} />
-                    </span>
-                    <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-primary-200 sm:text-[10px]">
-                      {badge.title}
-                    </p>
-                  </div>
-                  <p className="mt-1 text-[9px] leading-4 text-gray-300 sm:text-[10px] sm:leading-4">
-                    {badge.text}
-                  </p>
-                </div>
-              ))}
-            </div>
-
-          </div>
-        </div>
-
-        {/* â”€â”€ Product Details Tabs (Code 2 style) â”€â”€ */}
-        <section className="mt-8">
-
-          {/* Tab Bar */}
-          <div ref={detailTabsAnchorRef} />
-          {detailTabsFixed && <div aria-hidden="true" style={{ height: detailTabsHeight }} />}
-          <div
-            ref={detailTabsBarRef as React.RefObject<HTMLDivElement>}
-            className={`product-detail-sticky-tabs mb-5 border-y border-white/10 bg-[#0b0f1a]/95 backdrop-blur ${
-              detailTabsFixed ? 'fixed inset-x-0 top-16 z-[70]' : '-mx-4 relative z-[55] sm:-mx-6 lg:-mx-8'
-            }`}
-          >
-              <div className="mx-auto flex max-w-7xl snap-x overflow-x-auto px-3 text-center [-ms-overflow-style:none] [scrollbar-width:none] sm:px-6 [&::-webkit-scrollbar]:hidden">
-                {detailTabs.map((tab) => (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => scrollToDetailSection(tab.key)}
-                    className={`product-detail-sticky-tab shrink-0 snap-center border-b-2 px-4 py-3 text-sm font-semibold text-gray-400 transition sm:px-5 ${
-                      activeDetailTab === tab.key
-                        ? 'is-active border-primary-400 text-white'
-                        : 'border-transparent hover:text-gray-200'
-                    }`}
-                  >
-                    {getDetailTabLabel(tab)}
-                  </button>
-                ))}
-              </div>
-          </div>
-
-          {/* Description Tab */}
-          {activeDetailTab === 'description' && (
-            <div id="description" className="scroll-mt-32 rounded-xl border border-white/10 bg-white/5 p-4 sm:scroll-mt-36 sm:p-5">
-              {product.description ? (
-                <>
-                  <div>
-                    <div className="relative min-w-0">
-                      <div
-                        className={`product-detail-description-body text-sm text-gray-300 leading-6 space-y-3 overflow-hidden transition-all duration-300
-      ${!isDescriptionExpanded ? 'max-h-[88px] sm:max-h-[132px]' : 'max-h-[5000px]'}`}
-                      >
-                        <div
-                          className="[&_p]:mb-3 
-      [&_h2]:text-lg [&_h2]:font-semibold [&_h2]:text-white [&_h2]:mt-4
-      [&_h3]:text-base [&_h3]:font-semibold [&_h3]:text-white [&_h3]:mt-3
-      [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:space-y-1
-      [&_strong]:text-white"
-                          dangerouslySetInnerHTML={{
-                            __html: product.description,
-                          }}
-                        />
-                      </div>
-
-                      {/* Fade effect when collapsed */}
-                      {!isDescriptionExpanded && (
-                        <div className="product-detail-description-fade absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-dark-bg via-dark-bg/80 to-transparent pointer-events-none sm:h-14" />
-                      )}
-                    </div>
-
-                  </div>
-
-                  {/* Toggle button */}
-                  <button
-                    type="button"
-                    onClick={() => setIsDescriptionExpanded(prev => !prev)}
-                    className="mt-2 inline-flex items-center rounded-lg border border-white/10 bg-white/5 px-3 py-1.5 text-[11px] font-semibold text-primary-300 transition-colors hover:bg-white/10 hover:text-primary-200 sm:mt-3 sm:py-2 sm:text-xs"
-                  >
-                    {isDescriptionExpanded ? 'Show Less' : 'Show More'}
-                  </button>
-
-                  {product.reviews && product.reviews.length > 0 && (
-                    <div className="mt-8 border-t border-white/10 pt-6">
-                      <div className="flex items-center justify-between gap-3">
-                        <div>
-                          <p className="text-lg font-bold text-white">Ratings and reviews</p>
-                          <p className="mt-1 text-sm text-gray-400">Latest buyer feedback for this product.</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setActiveDetailTab('reviews')}
-                          className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white hover:bg-white/10"
-                        >
-                          View all
-                        </button>
-                      </div>
-                      <div className="mt-4 flex gap-3 overflow-x-auto pb-1">
-                        {product.reviews.slice(0, 3).map((review, i) => (
-                          <article key={i} className="w-[240px] shrink-0 rounded-xl border border-white/10 bg-black/20 p-4">
-                            <div className="flex items-center gap-0.5 text-amber-400">
-                              {Array.from({ length: 5 }).map((_, s) => (
-                                <svg key={s} className={'h-3.5 w-3.5 ' + (s < review.rating ? 'fill-current' : 'text-gray-600 fill-current')} viewBox="0 0 20 20">
-                                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                </svg>
-                              ))}
-                            </div>
-                            <p className="mt-3 text-sm font-semibold text-white">{review.name}</p>
-                            <p className="mt-2 line-clamp-3 text-sm leading-6 text-gray-300">{review.comment}</p>
-                          </article>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <p className="text-sm text-gray-500">No description available.</p>
-              )}
-            </div>
-          )}
-
-          {/* Features Tab */}
-          {activeDetailTab === 'features' && (
-            <div id="features" className="scroll-mt-32 rounded-2xl border border-white/10 bg-white/5 p-5 sm:scroll-mt-36">
-              <h3 className="mb-3 text-sm font-black uppercase tracking-[0.18em] text-primary-300">Why you should buy it</h3>
-              <p className="text-sm font-medium leading-7 text-gray-300 sm:text-base sm:leading-8">
-                {whyBuyCopy}
-              </p>
-            </div>
-          )}
-
-          {/* Specs Tab */}
-          {activeDetailTab === 'specs' && (
-            <div id="specs" className="scroll-mt-32 rounded-2xl border border-white/10 bg-white/5 p-5 sm:scroll-mt-36">
-              {specEntries.length > 0 ? (
-                <div className="space-y-5">
-                  {topSpecEntries.length > 0 && (
-                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                      {topSpecEntries.map(([key, value]) => (
-                        <div key={key} className="rounded-xl border border-white/10 bg-black/20 p-3">
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">
-                            {formatSpecLabel(key)}
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-gray-100">{value}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  <div className="overflow-hidden rounded-xl border border-white/10">
-                    {visibleSpecEntries.map(([key, value], index) => (
-                      <div
-                        key={key}
-                        className={`grid grid-cols-1 gap-1 px-4 py-3 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] sm:gap-4 ${
-                          index !== visibleSpecEntries.length - 1 ? 'border-b border-white/10' : ''
-                        }`}
-                      >
-                        <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                          {formatSpecLabel(key)}
-                        </p>
-                        <p className="text-sm font-medium leading-6 text-gray-100">{value}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {!isRingProduct && specEntries.length > 8 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowAllSpecs((prev) => !prev)}
-                      className="rounded-lg border border-white/15 px-4 py-2 text-sm font-semibold text-primary-300 hover:bg-white/10"
-                    >
-                      {showAllSpecs ? 'See Less' : 'See More'}
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No specifications added.</p>
-              )}
-            </div>
-          )}
-
-          {/* FAQ Tab */}
-          {activeDetailTab === 'faq' && (
-            <div id="faq" className="scroll-mt-32 space-y-3 sm:scroll-mt-36">
-              {productFaqs.map((item) => (
-                <details key={item.q} className="rounded-xl border border-white/10 bg-white/5 p-4 group">
-                  <summary className="cursor-pointer font-medium text-sm text-white list-none flex items-center justify-between">
-                    {item.q}
-                    <span className="text-gray-400 group-open:rotate-180 transition-transform duration-200">â†“</span>
-                  </summary>
-                  <p className="mt-3 text-sm text-gray-300 leading-relaxed">{item.a}</p>
-                </details>
-              ))}
-            </div>
-          )}
-
-          {/* Reviews Tab */}
-          {activeDetailTab === 'reviews' && (
-            <div>
-              <form onSubmit={handleSubmitReview} className="mb-6 rounded-xl border border-white/10 bg-white/5 p-4 sm:p-5">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">Write a Review</h3>
-                    <p className="mt-1 text-sm text-gray-400">Share your experience with this product.</p>
-                  </div>
-                  <div className="flex items-center gap-1 text-amber-400">
-                    {Array.from({ length: 5 }).map((_, index) => {
-                      const star = index + 1;
-                      return (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setReviewRating(star)}
-                          className="text-2xl leading-none transition hover:scale-110"
-                          aria-label={`Rate ${star} star${star === 1 ? '' : 's'}`}
-                        >
-                          {star <= reviewRating ? '\u2605' : '\u2606'}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Name</span>
-                    <input
-                      value={reviewName}
-                      onChange={(event) => setReviewName(event.target.value)}
-                      placeholder="Eg: Rahul Sharma"
-                      className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                      required
-                    />
-                  </label>
-                  <label className="block">
-                    <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Images</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={handleReviewImageSelect}
-                      className="w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-gray-300 file:mr-3 file:rounded-md file:border-0 file:bg-white file:px-3 file:py-1 file:text-sm file:font-semibold file:text-black"
-                    />
-                  </label>
-                </div>
-                <p className="mt-2 text-xs text-gray-500">You can add only 2 images.</p>
-                {reviewImagePreviews.length > 0 && (
-                  <div className="mt-3 flex gap-2">
-                    {reviewImagePreviews.map(({ file, url }) => (
-                      <img
-                        key={`${file.name}_${file.size}`}
-                        src={url}
-                        alt={file.name}
-                        width={64}
-                        height={64}
-                        className="h-16 w-16 rounded-lg border border-white/10 object-cover"
-                      />
-                    ))}
-                  </div>
-                )}
-                <label className="mt-3 block">
-                  <span className="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-400">Review Description</span>
-                  <textarea
-                    value={reviewComment}
-                    onChange={(event) => setReviewComment(event.target.value)}
-                    placeholder="Eg: The product quality is good, delivery was fast, and it works smoothly."
-                    className="min-h-[110px] w-full rounded-lg border border-white/15 bg-black/30 px-3 py-2 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    required
-                  />
-                </label>
-                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  {reviewMessage ? <p className="text-sm text-cyan-300">{reviewMessage}</p> : <span />}
-                  <button
-                    type="submit"
-                    disabled={reviewSubmitting}
-                    className="rounded-lg bg-primary-600 px-5 py-2 text-sm font-bold text-white transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {reviewSubmitting ? 'Submitting...' : 'Submit Review'}
-                  </button>
-                </div>
-              </form>
-
-              {product.reviews && product.reviews.length > 0 ? (
-                <div className="-mx-5 mb-6 flex snap-x snap-mandatory gap-4 overflow-x-auto px-5 pb-2 [-webkit-overflow-scrolling:touch] sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 sm:pb-0 xl:grid-cols-4">
-                  {product.reviews.slice(0, visibleReviewCount).map((review, i) => (
-                    <article key={i} className="w-[82vw] max-w-[320px] shrink-0 snap-start rounded-xl border border-white/10 bg-white/5 p-4 sm:w-auto sm:max-w-none">
-                      <div className="flex items-center gap-0.5 text-amber-400 text-sm mb-2">
-                        {Array.from({ length: 5 }).map((_, s) => (
-                          <svg
-                            key={s}
-                            className={'w-3.5 h-3.5 ' + (s < review.rating ? 'fill-current' : 'text-gray-600 fill-current')}
-                            viewBox="0 0 20 20"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <p className="font-semibold text-sm text-white truncate">{review.name}</p>
-                      </div>
-                      <p className="text-sm text-gray-300 break-words leading-relaxed">{review.comment}</p>
-                      {review.images && review.images.length > 0 && (
-                        <div className="mt-3 flex gap-2">
-                          {review.images.slice(0, 2).map((image) => (
-                            <img
-                              key={image}
-                              src={image}
-                              alt={`${review.name} review`}
-                              loading="lazy"
-                              decoding="async"
-                              width={64}
-                              height={64}
-                              className="h-16 w-16 rounded-lg border border-white/10 object-cover"
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </article>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500 mb-6">No reviews yet.</p>
-              )}
-
-              {product.reviews && product.reviews.length > 2 && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setVisibleReviewCount((prev) =>
-                      prev < (product.reviews?.length ?? 0)
-                        ? Math.min(prev + 4, product.reviews?.length ?? 0)
-                        : 2
-                    )
-                  }
-                  className="rounded-xl border border-white/20 px-5 py-2.5 text-sm font-semibold text-white hover:bg-white/10 transition"
-                >
-                  {visibleReviewCount < (product.reviews?.length ?? 0) ? 'View More Reviews' : 'Show Less'}
-                </button>
-              )}
-            </div>
-          )}
-        </section>
-
-        <ProductComparisonSection
-          products={[product, ...relatedProducts]}
-          eyebrow="Side-by-side comparison"
-          title="Compare Before You Buy"
-          subtitle={`Compare ${product.name} with nearby TheFutureX picks by price, availability, features, and practical use case.`}
-          className="mt-14 rounded-xl bg-white text-slate-950"
-        />
-
-        {relatedProducts.length > 0 && (
-          <section className="mt-14 border-t border-white/10 pt-8">
-            <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary-300">You may also like</p>
-                <h2 className="mt-2 text-xl sm:text-2xl font-bold text-white">More Products</h2>
-              </div>
-              <Link
-                to="/shop/all"
-                className="text-sm font-semibold text-primary-300 transition-colors hover:text-primary-200"
-              >
-                Continue Shopping
-              </Link>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-6">
-              {relatedProducts.map((item) => (
-                <ProductCard
-                  key={item.id}
-                  product={item}
-                  compact
-                  imageAspectClassName="aspect-[4/3]"
-                  disableHoverEffects
-                />
-              ))}
-            </div>
-          </section>
-        )}
-        {showNotifyModal && product && (
-          <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/70 px-4 backdrop-blur-md">
-            <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0b0f1a] p-5 text-white shadow-[0_24px_60px_rgba(0,0,0,0.5)]">
-              <div className="mb-4 flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-300/25 bg-amber-400/10 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-amber-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                  Out of stock
-                </span>
-              </div>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-xl font-bold text-white">Notify me</h3>
-                  <p className="mt-1 text-sm text-gray-400">
-                    {product.name}
-                    {selectedColor?.name ? ` - ${selectedColor.name}` : ''}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowNotifyModal(false)}
-                  className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-sm text-gray-300 transition hover:border-white/20 hover:bg-white/10"
-                  aria-label="Close notify me popup"
-                >
-                  X
-                </button>
-              </div>
-              <div className="mt-4 rounded-xl border border-white/10 bg-white/5 p-3">
-                <div className="flex items-start gap-3">
-                  <span className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-primary-500/15 text-primary-300">
-                    <DetailIcon kind="support" />
-                  </span>
-                  <div>
-                    <p className="text-sm font-semibold text-white">We will message you once it is back</p>
-                    <p className="mt-1 text-xs leading-5 text-gray-400">Your alert request will be saved for this product variant.</p>
-                  </div>
-                </div>
-              </div>
-              {notifyMessage && (
-                <p className={`mt-3 text-sm ${notifyMessage.startsWith('Done') ? 'text-emerald-300' : 'text-rose-300'}`}>
-                  {notifyMessage}
-                </p>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowNotifyModal(false)}
-                className="mt-5 w-full rounded-xl bg-primary-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-primary-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        )}
-
-        <div
-          className={`fixed inset-x-0 bottom-0 z-[80] border-t border-white/10 bg-[#0b0f1a]/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl transition-transform duration-300 sm:hidden ${
-            showMobileStickyCta ? 'translate-y-0' : 'translate-y-full'
-          }`}
-        >
-          <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-primary-300">Price</p>
-              <div className="mt-0.5 flex items-center gap-1.5">
-                {couponRate > 0 ? (
-                  <span className="truncate text-[10px] text-gray-400 line-through">{formatInrAmount(salePrice)}</span>
-                ) : mrp > salePrice && (
-                  <span className="truncate text-[10px] text-gray-400 line-through">&#8377;{mrp.toLocaleString('en-IN')}</span>
-                )}
-                <span className={`truncate text-base font-bold ${couponRate > 0 ? 'text-emerald-300' : 'text-white'}`}>{formatInrAmount(displayedPrice)}</span>
-              </div>
-              {couponRate > 0 && <p className="truncate text-[10px] font-bold text-emerald-300">Save {formatInrAmount(couponDiscount)} ({couponRateLabel} off)</p>}
-            </div>
-            <button
-              type="button"
-              onClick={handleAddButtonClick}
-              className={[
-                'min-h-10 min-w-[86px] rounded-xl px-2.5 py-2 text-center text-[11px] font-bold leading-tight transition-all duration-200 min-[360px]:min-w-[104px] min-[360px]:text-xs',
-                'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-dark-bg',
-                !canAdd
-                  ? 'border border-white/15 bg-white text-slate-950'
-                  : addedToCart
-                    ? 'bg-emerald-500 text-white'
-                    : 'bg-primary-600 text-white shadow-[0_8px_20px_-6px_rgba(59,130,246,0.55)]',
-              ].join(' ')}
-            >
-              {notifySubmitting ? 'Saving...' : addedToCart ? 'Added' : canAdd ? 'Add to Cart' : 'Notify me'}
-            </button>
-            {canAdd && (
-              <button
-                type="button"
-                onClick={() => handleBuyNowClick()}
-                className="min-h-10 min-w-[76px] rounded-xl border border-amber-300/40 bg-amber-400 px-2.5 py-2 text-center text-[11px] font-bold leading-tight text-slate-950 transition-all duration-200 hover:bg-amber-300 min-[360px]:min-w-[92px] min-[360px]:text-xs"
-              >
-                Buy Now
-              </button>
-            )}
-          </div>
         </div>
       </div>
     </div>
