@@ -217,12 +217,12 @@ const buildProductCards = (products = [], limit = 8) =>
       const image = resolveUrl(product.image || product.images?.[0] || DEFAULT_IMAGE);
       const description = truncate(product.description, 120);
       return `
-        <article class="seo-product-card" itemscope itemtype="https://schema.org/Product">
-          <a href="${htmlEscape(url)}" itemprop="url">
-            <img src="${htmlEscape(image)}" alt="${htmlEscape(product.name)}" loading="lazy" decoding="async" itemprop="image" />
-            <h2 itemprop="name">${htmlEscape(product.name)}</h2>
+        <article class="seo-product-card">
+          <a href="${htmlEscape(url)}">
+            <img src="${htmlEscape(image)}" alt="${htmlEscape(product.name)}" loading="lazy" decoding="async" />
+            <h2>${htmlEscape(product.name)}</h2>
           </a>
-          <p itemprop="description">${htmlEscape(description)}</p>
+          <p>${htmlEscape(description)}</p>
           <p><strong>${htmlEscape(formatPrice(product.price))}</strong></p>
         </article>`;
     })
@@ -318,14 +318,14 @@ const buildProductStaticHtml = (product) => {
   const image = resolveUrl(product.image || product.images?.[0] || DEFAULT_IMAGE);
   const faqs = getProductFaqs(product);
   return `${buildStaticStyles()}
-    <main itemscope itemtype="https://schema.org/Product">
+    <main>
       <nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="${htmlEscape(getCategoryUrl(product.category).replace(SITE_URL, ''))}">${htmlEscape(product.category || 'Products')}</a> / <span>${htmlEscape(product.name)}</span></nav>
       <article>
-        <h1 itemprop="name">${htmlEscape(product.name)}</h1>
-        <img src="${htmlEscape(image)}" alt="${htmlEscape(product.name)}" loading="eager" decoding="async" itemprop="image" />
-        <p itemprop="description">${htmlEscape(product.description)}</p>
+        <h1>${htmlEscape(product.name)}</h1>
+        <img src="${htmlEscape(image)}" alt="${htmlEscape(product.name)}" loading="eager" decoding="async" />
+        <p>${htmlEscape(product.description)}</p>
         <p><strong>${htmlEscape(formatPrice(product.price))}</strong></p>
-        <p>Brand: <span itemprop="brand">${htmlEscape(product.brand || BRAND_NAME)}</span></p>
+        <p>Brand: <span>${htmlEscape(product.brand || BRAND_NAME)}</span></p>
         <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
       </article>
       <section>
