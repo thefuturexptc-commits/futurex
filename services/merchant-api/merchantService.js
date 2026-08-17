@@ -128,10 +128,23 @@ const collectProductImages = (product) => {
 };
 
 const getProductPrice = (product) => {
-  const price = Number(product.salePrice || product.price || product.mrp || 0);
-  if (!Number.isFinite(price) || price <= 0) {
+  const basePrice = Number(product.salePrice || product.price || product.mrp || 0);
+  if (!Number.isFinite(basePrice) || basePrice <= 0) {
     throw new Error(`Invalid price for product ${product.id || product.name || 'unknown'}.`);
   }
+
+  const name = String(product.name || '').toLowerCase();
+  const category = String(product.category || '').toLowerCase();
+  const isTfx5Band = category.includes('band') && /\btfx\s*v?5\b|\btfx5\b|\bai\s*v5\b|\bv5\b/i.test(name);
+  const offerRate = isTfx5Band
+    ? 0
+    : category.includes('fan')
+      ? 0.1
+      : category.includes('ring') || category.includes('band')
+        ? 0.05
+        : 0;
+  const price = Number((basePrice * (1 - offerRate)).toFixed(2));
+
   return String(price).replace(/,/g, '');
 };
 

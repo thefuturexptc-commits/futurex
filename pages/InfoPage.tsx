@@ -40,19 +40,19 @@ const buildFaqJsonLd = (faqs: Array<[string, string]>) => ({
 const smartRingBlogProducts = [
   {
     name: 'TFX Ring Pro',
-    price: '₹9,999',
+    price: '₹2,374.05',
     image: ringProImage,
     href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features',
   },
   {
     name: 'TFX Touch Smart Ring',
-    price: '₹4,999',
+    price: '₹2,374.05',
     image: touchRingImage,
     href: '/product/tfx-touch-smart-ring',
   },
   {
     name: 'TFX Display Pro Smart Ring',
-    price: '₹15,999',
+    price: '₹2,849.05',
     image: displayRingImage,
     href: '/product/tfx-display-pro-smart-ring',
   },
@@ -77,7 +77,7 @@ const smartRingInternalLinks = [
 const smartBandBlogProducts = [
   {
     name: 'TFX Smart Band',
-    price: 'View price',
+    price: '₹4,488.75',
     image: bandLifestyleImage,
     href: '/product/tfx-smart-band',
   },

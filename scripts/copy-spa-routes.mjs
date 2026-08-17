@@ -510,7 +510,7 @@ const buildMerchantCsvFeed = (products = []) => {
 const buildJsonLd = (product) => {
   const productUrl = getProductUrl(product);
   const categoryUrl = getCategoryUrl(product.category);
-  const schemaPrice = Math.max(1, Number(product.price || 1)).toFixed(0);
+  const schemaPrice = Math.max(1, Number(product.price || 1)).toFixed(2);
   const images = (product.images?.length ? product.images : [product.image || DEFAULT_IMAGE]).map(resolveUrl).filter(Boolean);
   const ratingValue = Math.max(1, Math.min(5, Number(product.ratingValue || 0))).toFixed(1);
   const reviewCount = Math.max(0, Number(product.reviewCount || 0));

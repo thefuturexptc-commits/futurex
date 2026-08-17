@@ -2064,7 +2064,8 @@ export const ProductDetail: React.FC = () => {
       ? `${baseDescription.replace(/[. ]*$/, '')}. Model number: ${primaryProductModel}.`
       : baseDescription);
     const price = Number(product.salePrice || product.price || product.mrp || 0);
-    const schemaPrice = Math.max(price, 1).toFixed(0);
+    const customerFacingPrice = getAutomaticOfferItemPricing(product).unitOfferPrice || price;
+    const schemaPrice = Math.max(customerFacingPrice, 1).toFixed(2);
     const productImages = product.images?.length ? product.images : [image];
     const categoryPath = getCategoryPathForSchema(product.category);
     const categoryUrl = absoluteUrl(categoryPath);
@@ -2093,7 +2094,7 @@ export const ProductDetail: React.FC = () => {
       image,
       type: 'product',
     });
-    setProductSocialMetadata(price);
+    setProductSocialMetadata(customerFacingPrice);
 
     const additionalProperty = Object.entries(product.specs || {})
       .filter(([name, value]) => String(name).trim() && String(value).trim())

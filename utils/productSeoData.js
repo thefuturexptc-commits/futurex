@@ -45,6 +45,26 @@ export const cleanSeoText = (value = '') =>
     .replace(/\s{2,}/g, ' ')
     .trim();
 
+// Keep SEO, feed, and on-page prices aligned with the automatic offers shown
+// to customers on product pages and at checkout.
+export const getCustomerFacingPrice = (product = {}) => {
+  const basePrice = Number(product.salePrice || product.price || product.mrp || 0);
+  if (!Number.isFinite(basePrice) || basePrice <= 0) return 1;
+
+  const name = String(product.name || '').toLowerCase();
+  const category = String(product.category || '').toLowerCase();
+  const isTfx5Band = category.includes('band') && /\btfx\s*v?5\b|\btfx5\b|\bai\s*v5\b|\bv5\b/i.test(name);
+  if (isTfx5Band) return 9999;
+
+  const offerRate = category.includes('fan')
+    ? 0.1
+    : category.includes('ring') || category.includes('band')
+      ? 0.05
+      : 0;
+
+  return Number((basePrice * (1 - offerRate)).toFixed(2));
+};
+
 export const truncateText = (value = '', maxLength = 220) => {
   const text = cleanSeoText(value);
   if (text.length <= maxLength) return text;
@@ -166,7 +186,7 @@ const productFallbacks = [
     category: 'Smart Bands',
     description: 'Shop TFX Smart Band for fitness tracking, sleep monitoring, activity tracking, heart rate insights, app sync, and comfortable daily wear.',
     image: '/images/aura-band-x1.webp',
-    price: 1499,
+    price: 4725,
   },
   {
     slug: 'tfx-touch-smart-ring',
@@ -213,6 +233,7 @@ const productFallbacks = [
 
 export const staticProductSeoRecords = productFallbacks.map((product) => ({
   ...product,
+  price: getCustomerFacingPrice(product),
   id: product.id || product.slug,
   canonicalSlug: product.canonicalSlug || getProductSlug(product),
   availability: product.availability || 'https://schema.org/InStock',
@@ -275,7 +296,7 @@ export const buildProductSeoRecord = (product = {}) => {
     fallback?.description ||
     cleanSeoText(product.description || '') ||
     `Shop ${product.name} from TheFutureX with secure checkout, India shipping, and product support.`;
-  const price = Number(product.salePrice || product.price || product.mrp || fallback?.price || 1);
+  const price = getCustomerFacingPrice({ ...fallback, ...product });
   const stock = getStock(product);
 
   return {
