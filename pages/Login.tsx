@@ -175,12 +175,12 @@ export const Login: React.FC = () => {
           <Button
             type="button"
             variant="outline"
-            className="w-full rounded-lg bg-white !text-slate-950 hover:!bg-slate-100"
+            className="auth-google-button w-full rounded-lg"
             onClick={handleGoogleLogin}
             disabled={loading}
             isLoading={googleLoading}
           >
-            <span className="mr-2 grid h-5 w-5 place-items-center rounded-full bg-white text-sm font-black text-[#4285f4]">G</span>
+            <span className="auth-google-button__icon mr-2 grid h-5 w-5 place-items-center rounded-full text-sm font-black">G</span>
             Continue with Google
           </Button>
 

@@ -29,6 +29,7 @@ import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, Offer
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 import { TFX5_AI_BAND_PRICE, isTfxV5Band } from '../utils/coupons';
+import { publishedBlogPosts } from '../utils/publishedBlogPosts';
 
 const logDevWarning = (...args: unknown[]) => {
   if (import.meta.env.DEV) {
@@ -666,15 +667,13 @@ const buildDefaultProductReviews = (product: Product): ProductPublicReview[] => 
 };
 
 const ensureProductReviews = (product: Product): Product => {
-  const existingReviews = Array.isArray(product.reviews) ? product.reviews : [];
-  const defaultReviews = buildDefaultProductReviews(product);
-  const customReviews = existingReviews.filter((review) => !String(review.id || '').includes('_seed_review_'));
-  const targetReviewCount = Math.max(getDefaultReviewCount(product), customReviews.length);
-  const reviews = [
-    ...customReviews,
-    ...defaultReviews.filter((review) => !customReviews.some((existing) => existing.id === review.id)),
-  ].slice(0, targetReviewCount);
-  const rating = Number((reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length).toFixed(1));
+  // Never manufacture social proof. Only persisted customer reviews may be
+  // displayed or included in Product structured data.
+  const reviews = (Array.isArray(product.reviews) ? product.reviews : [])
+    .filter((review) => !String(review.id || '').includes('_seed_review_'));
+  const rating = reviews.length
+    ? Number((reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length).toFixed(1))
+    : 0;
 
   return {
     ...product,
@@ -3462,10 +3461,15 @@ export const updateWebsiteSettings = async (
 // Published posts are stored separately from settings so drafts never leak into
 // the public sitemap or storefront.
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
-  const snapshot = await getDocs(collection(db, 'blog_posts'));
-  return snapshot.docs
-    .map((entry) => ({ id: entry.id, ...entry.data() } as BlogPost))
-    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  try {
+    const snapshot = await getDocs(collection(db, 'blog_posts'));
+    const remotePosts = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() } as BlogPost));
+    const posts = new Map(publishedBlogPosts.map((post) => [post.slug, post]));
+    remotePosts.forEach((post) => posts.set(post.slug, post));
+    return [...posts.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  } catch {
+    return publishedBlogPosts;
+  }
 };
 
 export const saveBlogPost = async (post: Omit<BlogPost, 'updatedAt'> & { updatedAt?: string }): Promise<void> => {

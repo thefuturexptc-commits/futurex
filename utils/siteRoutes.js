@@ -361,6 +361,13 @@ const rawInfoRoutes = [
 ];
 
 export const infoRoutes = dedupeRoutes(rawInfoRoutes);
+const publishedBlogRoutes = [
+  { path: '/blog/activity-tracker-band-guide', label: 'Activity Tracker Band Guide', changefreq: 'monthly', priority: '0.7' },
+  { path: '/blog/best-smart-bands-under-10000-india', label: 'Best Smart Bands Under ₹10,000 in India', changefreq: 'monthly', priority: '0.7' },
+  { path: '/blog/what-is-spo2-monitoring', label: 'What Is SpO2 Monitoring?', changefreq: 'monthly', priority: '0.7' },
+  { path: '/blog/smart-band-vs-smartwatch', label: 'Smart Band vs Smartwatch', changefreq: 'monthly', priority: '0.7' },
+  { path: '/blog/best-bladeless-fans-india-2026', label: 'Best Bladeless Fans for Indian Homes', changefreq: 'monthly', priority: '0.7' },
+];
 // Only publish pages that are real, maintained destinations.  The previous
 // sitemap included hundreds of planned/generated blog URLs with substantially
 // the same content; that creates crawl waste and thin-page signals. Blog posts
@@ -368,6 +375,7 @@ export const infoRoutes = dedupeRoutes(rawInfoRoutes);
 export const sitemapRoutes = [
   ...coreRoutes,
   { path: '/blog', label: 'TheFutureX Blog', changefreq: 'weekly', priority: '0.7' },
+  ...publishedBlogRoutes,
 ];
 
 // Do not generate fallback files for retired/blog-plan URLs. Unknown legacy
@@ -388,6 +396,10 @@ export const spaFallbackRoutes = [
   'profile',
   'shop',
   ...sitemapRoutes.map((route) => route.path.replace(/^\//, '')).filter(Boolean),
+  // InfoPage is served by the /info/:slug client route. Generate concrete
+  // fallbacks for every maintained info page so direct visits and refreshes
+  // reach the SPA on hosts without a rewrite rule.
+  ...infoRoutes.map((route) => route.path.replace(/^\//, '')).filter(Boolean),
   ...legacyBlogFallbackRoutes,
   ...[...new Set(staticProductSeoRecords
     .map((product) => product.canonicalSlug || product.slug)

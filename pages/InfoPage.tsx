@@ -5,6 +5,7 @@ import { Button } from '../components/ui/Button';
 import { getProductSlug, getProducts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
 import type { Product } from '../types';
+import { publishedBlogPosts } from '../utils/publishedBlogPosts';
 import ringHeroImage from '../assets/images/ring-overview-colors.jpg';
 import ringSleepImage from '../assets/images/ring-sleep-hero.webp';
 import ringProImage from '../assets/images/mainring.webp';
@@ -6392,7 +6393,7 @@ const BlogLandingPage: React.FC = () => {
     <Link
       key={item.href}
       to={item.href}
-      className="group block overflow-hidden rounded-2xl border border-white/10 bg-[#101119] transition hover:-translate-y-1 hover:border-[#0ad7bd]/60"
+      className="blog-landing-card group block overflow-hidden rounded-2xl border transition hover:-translate-y-1"
     >
       <div className="aspect-[4/3] bg-black">
         <img src={item.image} alt={item.title} className="h-full w-full object-contain p-5 transition duration-300 group-hover:scale-[1.03]" />
@@ -6411,7 +6412,7 @@ const BlogLandingPage: React.FC = () => {
   );
 
   return (
-    <main className="min-h-screen bg-[#07080d] px-4 py-12 text-slate-100 sm:px-6 lg:px-8">
+    <main className="blog-landing-page min-h-screen px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-6xl">
         <header className="max-w-3xl">
           <p className="text-xs font-black uppercase tracking-[0.3em] text-[#0ad7bd]">TheFutureX Journal</p>
@@ -6427,6 +6428,24 @@ const BlogLandingPage: React.FC = () => {
           <h2 className="text-2xl font-black text-white">Blogs</h2>
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
             {blogPages.map((item) => renderCard(item))}
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0ad7bd]">Latest guides</p>
+          <h2 className="mt-2 text-2xl font-black text-white">New from TheFutureX Journal</h2>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {publishedBlogPosts.map((post) => (
+              <Link
+                key={post.slug}
+                to={`/blog/${post.slug}`}
+                className="blog-landing-card rounded-lg border p-4 transition hover:-translate-y-1"
+              >
+                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0ad7bd]">TheFutureX Guide</p>
+                <h3 className="mt-2 text-sm font-black leading-6 text-white">{post.title}</h3>
+                <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{post.excerpt}</p>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -6448,7 +6467,7 @@ const BlogLandingPage: React.FC = () => {
                   <Link
                     key={post.href}
                     to={post.href}
-                    className="rounded-lg border border-white/10 bg-[#101119] p-4 transition hover:-translate-y-1 hover:border-[#0ad7bd]/60"
+                    className="blog-landing-card rounded-lg border p-4 transition hover:-translate-y-1"
                   >
                     <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0ad7bd]">{post.category}</p>
                     <h3 className="mt-2 text-sm font-black leading-6 text-white">{post.title}</h3>
@@ -6473,7 +6492,7 @@ const BlogLandingPage: React.FC = () => {
                 <Link
                   key={post.href}
                   to={post.href}
-                  className="rounded-lg border border-white/10 bg-[#101119] p-4 transition hover:-translate-y-1 hover:border-[#0ad7bd]/60"
+                  className="blog-landing-card rounded-lg border p-4 transition hover:-translate-y-1"
                 >
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0ad7bd]">{post.category}</p>
                   <h3 className="mt-2 text-sm font-black leading-6 text-white">{post.title}</h3>

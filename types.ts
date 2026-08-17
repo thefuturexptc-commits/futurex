@@ -309,6 +309,8 @@ export interface BlogPost {
   content: string;
   status: 'draft' | 'published';
   updatedAt: string;
+  image?: string;
+  faqs?: Array<{ question: string; answer: string }>;
 }
 
 export type Theme = 'light' | 'dark';

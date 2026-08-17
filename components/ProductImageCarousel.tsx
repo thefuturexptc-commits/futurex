@@ -30,7 +30,9 @@ const getYouTubeEmbedUrl = (url: string): string | null => {
       }
     }
 
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    // Use the privacy-enhanced player. It is more reliable in embedded
+    // storefront contexts and avoids a blank player before the viewer opts in.
+    return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
   } catch {
     return null;
   }
@@ -236,23 +238,25 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                   const embedUrl = getVideoEmbedUrl(item.src);
                   return embedUrl ? (
                     <iframe
-                      src={`${embedUrl}?rel=0&modestbranding=1&playsinline=1`}
+                      src={`${embedUrl}?rel=0&modestbranding=1&playsinline=1&controls=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
                       title={`${alt} video`}
                       className="h-full w-full bg-black"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
-                      loading="lazy"
+                      loading="eager"
+                      referrerPolicy="strict-origin-when-cross-origin"
                       onClick={(event) => event.stopPropagation()}
                     />
                   ) : (
-                    <video
-                      src={item.src}
+                  <video
+                    src={item.src}
                       className={`product-gallery-video h-full w-full bg-white object-center ${videoFit === 'cover' ? 'object-cover' : 'object-contain'}`}
                       autoPlay
                       muted
                       loop
                       playsInline
-                      preload="metadata"
+                    preload="metadata"
+                    controls
                     />
                   );
                 })() : (

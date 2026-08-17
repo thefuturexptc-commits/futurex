@@ -12,6 +12,7 @@ import { absoluteUrl, removeJsonLd, setJsonLd, setProductSocialMetadata, setSeoM
 import { formatInrAmount, getAutomaticOfferItemPricing, getPrepaidDiscountForItems, isTfxV5Band as isTfxV5OfferExcluded } from '../utils/coupons';
 import { getProductModelIdentifiers } from '../utils/productSearch';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
+import { buildProductSeoRecord } from '../utils/productSeoData.js';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringWellness from '../assets/images/ring-wellness.webp';
 import ringDailySync from '../assets/images/ring-daily-sync.webp';
@@ -50,6 +51,49 @@ import monitoringPhonePhoto from '../assets/images/monitoring-phone-photo.webp';
 
 const featureMarkerPattern = /^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/;
 const cleanFeatureText = (feature: string) => feature.replace(featureMarkerPattern, '').trim();
+
+const getYouTubeEmbedUrl = (url: string) => {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname.replace(/^www\./, '');
+    const pathParts = parsed.pathname.split('/').filter(Boolean);
+    const videoId = host === 'youtu.be'
+      ? pathParts[0]
+      : parsed.pathname.startsWith('/embed/') || parsed.pathname.startsWith('/shorts/')
+        ? pathParts[1]
+        : ['youtube.com', 'm.youtube.com', 'youtube-nocookie.com'].includes(host)
+          ? parsed.searchParams.get('v') || ''
+          : '';
+
+    return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
+  } catch {
+    return null;
+  }
+};
+
+const ProductOverviewVideo: React.FC<{ src: string; title: string; className: string }> = ({ src, title, className }) => {
+  const embedUrl = getYouTubeEmbedUrl(src);
+
+  if (embedUrl) {
+    return (
+      <iframe
+        src={`${embedUrl}?rel=0&modestbranding=1&playsinline=1&controls=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+        title={title}
+        className={className}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allowFullScreen
+        loading="eager"
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+    );
+  }
+
+  return (
+    <video className={className} autoPlay muted loop playsInline preload="metadata" controls aria-label={title}>
+      <source src={src} type="video/mp4" />
+    </video>
+  );
+};
 const normalizeOptionKey = (value?: string) =>
   String(value || '')
     .trim()
@@ -2011,13 +2055,14 @@ export const ProductDetail: React.FC = () => {
 
     const productPath = `/product/${getProductSlug(product)}`;
     const image = product.images?.[0] || product.colors?.[0]?.images?.[0] || '/images/fav.webp';
-    const baseDescription =
+    const seoRecord = buildProductSeoRecord(product);
+    const baseDescription = seoRecord?.description ||
       stripHtml(product.description).slice(0, 155) ||
       product.features?.slice(0, 3).join(', ') ||
       `Shop ${product.name} from TheFutureX.`;
-    const description = primaryProductModel && !baseDescription.toLowerCase().includes(primaryProductModel.toLowerCase())
+    const description = seoRecord?.description || (primaryProductModel && !baseDescription.toLowerCase().includes(primaryProductModel.toLowerCase())
       ? `${baseDescription.replace(/[. ]*$/, '')}. Model number: ${primaryProductModel}.`
-      : baseDescription;
+      : baseDescription);
     const price = Number(product.salePrice || product.price || product.mrp || 0);
     const schemaPrice = Math.max(price, 1).toFixed(0);
     const productImages = product.images?.length ? product.images : [image];
@@ -2042,7 +2087,7 @@ export const ProductDetail: React.FC = () => {
     }));
 
     setSeoMetadata({
-      title: product.name,
+      title: seoRecord?.seoTitle || `${product.name} - TheFutureX`,
       description,
       path: productPath,
       image,
@@ -3614,17 +3659,11 @@ export const ProductDetail: React.FC = () => {
               <RevealOnScroll key={section.title} className="product-banner-group mx-auto w-full max-w-[1200px] overflow-hidden rounded-xl bg-[#f8fbfb] shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
                 {section.video ? (
                   <div className="aspect-[4/3] w-full overflow-hidden bg-slate-950">
-                    <video
-                      className="product-banner-media h-full w-full object-contain object-center"
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                      aria-label={section.title}
-                    >
-                      <source src={section.video} type="video/mp4" />
-                    </video>
+                    <ProductOverviewVideo
+                      src={section.video}
+                      title={section.title}
+                      className="product-banner-media h-full w-full border-0 object-contain object-center"
+                    />
                   </div>
                 ) : section.image && (
                   <div className="relative overflow-hidden">
@@ -3924,17 +3963,11 @@ export const ProductDetail: React.FC = () => {
                 <RevealOnScroll key={section.title} className="product-banner-group overflow-hidden bg-transparent shadow-none">
                   {section.video ? (
                     <div className="aspect-[12/5] overflow-hidden bg-slate-950">
-                      <video
-                        className="band-hero-video product-banner-media h-full w-full object-contain object-center"
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        preload="metadata"
-                        aria-label={section.title}
-                      >
-                        <source src={section.video} type="video/mp4" />
-                      </video>
+                      <ProductOverviewVideo
+                        src={section.video}
+                        title={section.title}
+                        className="band-hero-video product-banner-media h-full w-full border-0 object-contain object-center"
+                      />
                     </div>
                   ) : section.image && (
                     <div className="relative w-full overflow-hidden bg-[#f8fbfb]">

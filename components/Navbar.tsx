@@ -17,6 +17,7 @@ const blogMenuGroups = [
   {
     title: 'Blogs',
     links: [
+      { name: 'All Blogs', path: '/blog' },
       { name: 'Smart Ring Blog', path: '/blog/what-is-a-smart-ring' },
       { name: 'Smart Band Blog', path: '/blog/what-is-a-smart-band' },
       { name: 'Smart Fan Blog', path: '/blog/what-is-a-bladeless-fan' },
@@ -154,6 +155,7 @@ const NavbarComponent: React.FC = () => {
     { name: 'Smart Band', path: '/smart-bands' },
     { name: 'Smart Ring', path: '/smart-rings' },
     { name: 'Fan', path: '/bladeless-fan' },
+    { name: 'Blogs', path: '/blog' },
     { name: 'Gifts', path: '/gifting-store' },
   ];
   const mobileNavRows = [
@@ -348,7 +350,7 @@ const NavbarComponent: React.FC = () => {
             <div className="hidden lg:flex items-center gap-1 xl:gap-3 2xl:gap-5">
               {mainNavLinks.map(({ name, path }) => {
                 const active = path === '/' ? location.pathname === path : location.pathname === path || location.pathname.startsWith(`${path}/`);
-                if (name === 'Blog') {
+                if (name === 'Blogs') {
                   const blogActive = location.pathname === '/blog' || location.pathname.startsWith('/blog/');
                   return (
                     <div
@@ -368,7 +370,7 @@ const NavbarComponent: React.FC = () => {
                         aria-haspopup="menu"
                         aria-expanded={blogMenuOpen}
                       >
-                        Blog
+                        Blogs
                         <svg className={`h-3.5 w-3.5 transition-transform ${blogMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 9l6 6 6-6" />
                         </svg>

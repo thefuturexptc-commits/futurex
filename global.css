@@ -8648,6 +8648,140 @@ html.dark .tfx-footer,
   color: #ffffff !important;
 }
 
+/* Blog index: explicit light reading surface so global theme overrides cannot
+   leave the page's dark cards and text with insufficient contrast. */
+.blog-landing-page {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.blog-landing-page h1,
+.blog-landing-page h2 {
+  color: #0f172a !important;
+}
+
+.blog-landing-page > div > header p,
+.blog-landing-page > div > section > div > div > p,
+.blog-landing-page .text-slate-400 {
+  color: #475569 !important;
+}
+
+.blog-landing-card {
+  border-color: #dbe4ee !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.blog-landing-card:hover {
+  border-color: #0ea5a4 !important;
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
+}
+
+.blog-landing-card h3 {
+  color: #0f172a !important;
+}
+
+.blog-landing-card .text-slate-400,
+.blog-landing-card .text-slate-500 {
+  color: #475569 !important;
+}
+
+/* Admin analytics uses dark data panels on a light dashboard. Keep all text
+   inside those panels readable; global light-theme rules must not recolour it
+   to black. */
+.admin-dashboard-dark .bg-slate-900,
+.admin-dashboard-dark .bg-gray-900,
+.admin-dashboard-dark .bg-gray-800,
+.admin-dashboard-dark .bg-dark-surface {
+  background-color: #0f172a !important;
+  border-color: rgba(148, 163, 184, 0.24) !important;
+}
+
+.admin-dashboard-dark .bg-slate-900 .text-white,
+.admin-dashboard-dark .bg-gray-900 .text-white,
+.admin-dashboard-dark .bg-gray-800 .text-white,
+.admin-dashboard-dark .bg-dark-surface .text-white {
+  color: #f8fafc !important;
+}
+
+.admin-dashboard-dark .bg-slate-900 .text-slate-400,
+.admin-dashboard-dark .bg-slate-900 .text-gray-400,
+.admin-dashboard-dark .bg-gray-900 .text-slate-400,
+.admin-dashboard-dark .bg-gray-900 .text-gray-400,
+.admin-dashboard-dark .bg-gray-800 .text-slate-400,
+.admin-dashboard-dark .bg-dark-surface .text-slate-400 {
+  color: #cbd5e1 !important;
+}
+
+.admin-dashboard-dark .bg-slate-900 input,
+.admin-dashboard-dark .bg-slate-900 select,
+.admin-dashboard-dark .bg-gray-900 input,
+.admin-dashboard-dark .bg-gray-900 select {
+  background-color: #172033 !important;
+  color: #f8fafc !important;
+}
+
+/* Analytics mixes white stat tiles inside dark panels. Set the foreground by
+   the immediate surface so values cannot disappear through inherited colour. */
+.admin-dashboard-dark .bg-slate-900 :is(h1, h2, h3, h4, p, span, td, th, label),
+.admin-dashboard-dark .bg-gray-900 :is(h1, h2, h3, h4, p, span, td, th, label),
+.admin-dashboard-dark .bg-gray-800 :is(h1, h2, h3, h4, p, span, td, th, label),
+.admin-dashboard-dark .bg-dark-surface :is(h1, h2, h3, h4, p, span, td, th, label) {
+  color: #e2e8f0 !important;
+}
+
+.admin-dashboard-dark .bg-slate-900 .bg-white :is(h1, h2, h3, h4, p, span, td, th, label),
+.admin-dashboard-dark .bg-gray-900 .bg-white :is(h1, h2, h3, h4, p, span, td, th, label),
+.admin-dashboard-dark .bg-gray-800 .bg-white :is(h1, h2, h3, h4, p, span, td, th, label),
+.admin-dashboard-dark .bg-dark-surface .bg-white :is(h1, h2, h3, h4, p, span, td, th, label) {
+  color: #0f172a !important;
+}
+
+/* Global contrast guardrails. The application uses these Tailwind surface
+   classes throughout storefront, account and admin views. Earlier legacy
+   rules mixed light-theme text into dark surfaces; keep the foreground tied
+   to the actual surface instead. */
+:where(.bg-slate-950, .bg-slate-900, .bg-gray-900, .bg-gray-800, .bg-dark-bg, .bg-dark-surface) {
+  color: #e2e8f0;
+}
+
+:where(.bg-slate-950, .bg-slate-900, .bg-gray-900, .bg-gray-800, .bg-dark-bg, .bg-dark-surface)
+  :is(.text-black, .text-slate-950, .text-slate-900, .text-slate-800, .text-slate-700, .text-gray-900, .text-gray-800, .text-gray-700) {
+  color: #f8fafc !important;
+}
+
+:where(.bg-slate-950, .bg-slate-900, .bg-gray-900, .bg-gray-800, .bg-dark-bg, .bg-dark-surface)
+  :is(.text-slate-600, .text-slate-500, .text-slate-400, .text-gray-600, .text-gray-500, .text-gray-400, .text-gray-300) {
+  color: #cbd5e1 !important;
+}
+
+:where(.bg-slate-950, .bg-slate-900, .bg-gray-900, .bg-gray-800, .bg-dark-bg, .bg-dark-surface) .text-white {
+  color: #ffffff !important;
+}
+
+/* A white card or control inside a dark panel is a light surface, so it must
+   never inherit a white value/label from the surrounding dark container. */
+:where(.bg-slate-950, .bg-slate-900, .bg-gray-900, .bg-gray-800, .bg-dark-bg, .bg-dark-surface)
+  :is(.bg-white, .bg-gray-50, .bg-slate-50)
+  :is(h1, h2, h3, h4, p, span, td, th, label, input, select, option) {
+  color: #0f172a !important;
+}
+
+/* Dashboard navigation has transparent inactive buttons on a dark bar. */
+.admin-dashboard-dark .bg-dark-surface button {
+  color: #cbd5e1 !important;
+}
+
+.admin-dashboard-dark .bg-dark-surface button.bg-primary-600,
+.admin-dashboard-dark .bg-dark-surface button.bg-red-600,
+.admin-dashboard-dark .bg-dark-surface button.bg-red-500 {
+  color: #ffffff !important;
+}
+
+.admin-dashboard-dark .bg-dark-surface button.bg-white {
+  color: #0f172a !important;
+}
+
 #root .product-detail-page .product-detail-color-selected-check,
 #root .product-detail-page .product-detail-color-selected-check * {
   color: #ffffff !important;
@@ -8774,4 +8908,651 @@ select,
 .product-detail-page .product-payment-offers .text-slate-500,
 .product-detail-page .product-payment-offers .text-slate-600 {
   color: #64748b !important;
+}
+
+
+/* ========================================================================= */
+/* PREMIUM / MINIMAL-LUXURY NAVBAR THEME                                     */
+/* Scoped to `.navbar-luxury` (added alongside the existing `.site-navbar`   */
+/* class on the <nav> and its mobile-menu portal wrapper) so it wins over    */
+/* every legacy .site-navbar rule above without touching them. Remove the    */
+/* `navbar-luxury` class from Navbar.tsx to fully revert.                    */
+/* ========================================================================= */
+
+.navbar-luxury {
+  --luxe-cream: #faf7f1;
+  --luxe-cream-soft: #fffdf9;
+  --luxe-ink: #17130f;
+  --luxe-charcoal: #2b241c;
+  --luxe-mute: #766a5a;
+  --luxe-gold: #ad8a4c;
+  --luxe-gold-deep: #8a6d38;
+  --luxe-gold-soft: #eadfc4;
+  --luxe-line: rgba(23, 19, 15, 0.1);
+  --luxe-shadow: 0 18px 44px rgba(23, 19, 15, 0.09);
+}
+
+/* ---- top announcement bar: black marquee with gold rule ---- */
+.navbar-luxury .tfx-current-offer-bar,
+.navbar-luxury .tfx-current-offer-bar-static,
+html.light .navbar-luxury .tfx-current-offer-bar,
+html.light .navbar-luxury .tfx-current-offer-bar-static,
+html.dark .navbar-luxury .tfx-current-offer-bar,
+html.dark .navbar-luxury .tfx-current-offer-bar-static {
+  background: var(--luxe-ink) !important;
+  border-bottom: 1px solid rgba(173, 138, 76, 0.35) !important;
+}
+
+.navbar-luxury .tfx-current-offer-track,
+.navbar-luxury .tfx-current-offer-track > span,
+html.light .navbar-luxury .tfx-current-offer-track > span,
+html.dark .navbar-luxury .tfx-current-offer-track > span {
+  color: var(--luxe-gold-soft) !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  font-size: 11px !important;
+}
+
+/* ---- main bar surface ---- */
+.navbar-luxury,
+.navbar-luxury > div,
+html.light .navbar-luxury,
+html.dark .navbar-luxury {
+  background: var(--luxe-cream-soft) !important;
+  backdrop-filter: saturate(1.1) blur(14px) !important;
+  -webkit-backdrop-filter: saturate(1.1) blur(14px) !important;
+}
+
+.navbar-luxury > div:first-of-type + div,
+.navbar-luxury > div:nth-of-type(2) {
+  border-bottom: 1px solid var(--luxe-line) !important;
+  box-shadow: var(--luxe-shadow) !important;
+}
+
+/* ---- logo lockup ---- */
+.navbar-luxury .brand-logo-link,
+html.light .navbar-luxury .brand-logo-link,
+html.dark .navbar-luxury .brand-logo-link {
+  position: relative;
+}
+
+.navbar-luxury .brand-logo-link img,
+html.light .navbar-luxury .brand-logo-link img,
+html.dark .navbar-luxury .brand-logo-link img {
+  filter: none !important;
+}
+
+/* ---- primary nav links: tracked small-caps + gold hairline signature ---- */
+.navbar-luxury .navbar-link,
+.navbar-luxury .navbar-link > span,
+html.light .navbar-luxury .navbar-link,
+html.dark .navbar-luxury .navbar-link {
+  position: relative !important;
+  color: var(--luxe-charcoal) !important;
+  background: transparent !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.14em !important;
+  text-transform: uppercase !important;
+  padding: 0.5rem 0.15rem !important;
+  border: 0 !important;
+  transition: color 0.25s ease !important;
+}
+
+.navbar-luxury .navbar-link::after {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  bottom: -2px !important;
+  width: 100% !important;
+  height: 1.5px !important;
+  background: var(--luxe-gold) !important;
+  transform: translateX(-50%) scaleX(0) !important;
+  transform-origin: center !important;
+  transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+.navbar-luxury .navbar-link:hover,
+.navbar-luxury .navbar-link-active,
+html.light .navbar-luxury .navbar-link:hover,
+html.light .navbar-luxury .navbar-link-active,
+html.dark .navbar-luxury .navbar-link:hover,
+html.dark .navbar-luxury .navbar-link-active {
+  color: var(--luxe-gold-deep) !important;
+  background: transparent !important;
+}
+
+.navbar-luxury .navbar-link:hover::after,
+.navbar-luxury .navbar-link-active::after {
+  transform: translateX(-50%) scaleX(1) !important;
+}
+
+.navbar-luxury .navbar-link-active::after {
+  content: none !important;
+}
+.navbar-luxury .navbar-link-active::before {
+  content: '' !important;
+  position: absolute !important;
+  left: 50% !important;
+  bottom: -2px !important;
+  width: 100% !important;
+  height: 1.5px !important;
+  background: var(--luxe-gold) !important;
+  transform: translateX(-50%) scaleX(1) !important;
+}
+
+/* ---- blog dropdown ---- */
+.navbar-luxury .blog-menu-panel,
+html.light .navbar-luxury .blog-menu-panel,
+html.dark .navbar-luxury .blog-menu-panel {
+  background: var(--luxe-cream-soft) !important;
+  border: 1px solid var(--luxe-line) !important;
+  box-shadow: var(--luxe-shadow) !important;
+  border-radius: 14px !important;
+}
+
+.navbar-luxury .blog-menu-heading,
+html.light .navbar-luxury .blog-menu-heading,
+html.dark .navbar-luxury .blog-menu-heading {
+  color: var(--luxe-gold-deep) !important;
+  letter-spacing: 0.18em !important;
+}
+
+.navbar-luxury .blog-menu-item,
+html.light .navbar-luxury .blog-menu-item,
+html.dark .navbar-luxury .blog-menu-item {
+  color: var(--luxe-charcoal) !important;
+  font-weight: 600 !important;
+}
+
+.navbar-luxury .blog-menu-item:hover,
+.navbar-luxury .blog-menu-item.is-active,
+html.light .navbar-luxury .blog-menu-item:hover,
+html.light .navbar-luxury .blog-menu-item.is-active {
+  background: var(--luxe-gold-soft) !important;
+  color: var(--luxe-ink) !important;
+}
+
+/* ---- icon controls (search / cart / hamburger) ---- */
+.navbar-luxury .mobile-nav-control,
+html.light .navbar-luxury .mobile-nav-control,
+html.dark .navbar-luxury .mobile-nav-control {
+  color: var(--luxe-charcoal) !important;
+  background: transparent !important;
+  border: 0 !important;
+}
+
+.navbar-luxury .mobile-nav-control svg,
+.navbar-luxury .mobile-nav-control span {
+  color: var(--luxe-charcoal) !important;
+}
+
+.navbar-luxury .mobile-nav-control:hover,
+html.light .navbar-luxury .mobile-nav-control:hover,
+html.dark .navbar-luxury .mobile-nav-control:hover {
+  color: var(--luxe-gold-deep) !important;
+}
+.navbar-luxury .mobile-nav-control:hover svg,
+.navbar-luxury .mobile-nav-control:hover span {
+  color: var(--luxe-gold-deep) !important;
+}
+
+.navbar-luxury .mobile-nav-control[aria-expanded="true"],
+.navbar-luxury .mobile-nav-control[aria-expanded="true"] svg {
+  color: var(--luxe-gold-deep) !important;
+}
+
+/* cart badge: gold on ink, not cyan */
+.navbar-luxury .mobile-nav-control .bg-primary-600 {
+  background: var(--luxe-gold) !important;
+  color: var(--luxe-ink) !important;
+  box-shadow: 0 3px 10px rgba(173, 138, 76, 0.5) !important;
+}
+
+/* ---- account pill + dropdown ---- */
+.navbar-luxury .navbar-account-pill,
+html.light .navbar-luxury .navbar-account-pill,
+html.dark .navbar-luxury .navbar-account-pill {
+  border: 1px solid var(--luxe-ink) !important;
+  color: var(--luxe-ink) !important;
+  background: transparent !important;
+  letter-spacing: 0.12em !important;
+}
+
+.navbar-luxury .navbar-account-pill:hover {
+  background: var(--luxe-ink) !important;
+  color: var(--luxe-cream) !important;
+}
+
+.navbar-luxury .navbar-account-menu,
+html.light .navbar-luxury .navbar-account-menu {
+  background: var(--luxe-cream-soft) !important;
+  border: 1px solid var(--luxe-line) !important;
+  box-shadow: var(--luxe-shadow) !important;
+  border-top: 2px solid var(--luxe-gold) !important;
+}
+
+.navbar-luxury .navbar-account-menu p,
+.navbar-luxury .navbar-account-menu a,
+.navbar-luxury .navbar-account-menu button,
+.navbar-luxury .navbar-account-menu span {
+  color: var(--luxe-charcoal) !important;
+}
+
+.navbar-luxury .navbar-account-menu-item:hover {
+  background: var(--luxe-gold-soft) !important;
+  color: var(--luxe-ink) !important;
+}
+
+.navbar-luxury .navbar-account-menu-danger,
+html.light .navbar-luxury .navbar-account-menu-danger {
+  color: #8a3324 !important;
+}
+
+/* ---- auth buttons ---- */
+.navbar-luxury .navbar-auth-link,
+html.light .navbar-luxury .navbar-auth-link,
+html.dark .navbar-luxury .navbar-auth-link {
+  color: var(--luxe-charcoal) !important;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+}
+
+.navbar-luxury .navbar-auth-link:hover {
+  color: var(--luxe-gold-deep) !important;
+}
+
+.navbar-luxury .navbar-auth-primary,
+html.light .navbar-luxury .navbar-auth-primary,
+html.dark .navbar-luxury .navbar-auth-primary {
+  background: var(--luxe-ink) !important;
+  color: var(--luxe-cream) !important;
+  border: 1px solid var(--luxe-ink) !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.08em !important;
+  border-radius: 999px !important;
+  padding-left: 1.1rem !important;
+  padding-right: 1.1rem !important;
+}
+
+.navbar-luxury .navbar-auth-primary span {
+  color: inherit !important;
+}
+
+.navbar-luxury .navbar-auth-primary:hover {
+  background: var(--luxe-gold) !important;
+  border-color: var(--luxe-gold) !important;
+  color: var(--luxe-ink) !important;
+}
+
+.navbar-luxury .mobile-auth-pill {
+  border: 1px solid var(--luxe-ink) !important;
+  background: transparent !important;
+  color: var(--luxe-ink) !important;
+}
+
+/* ---- search discovery panel ---- */
+.navbar-luxury .search-discovery-panel,
+html.light .navbar-luxury .search-discovery-panel {
+  background: var(--luxe-cream-soft) !important;
+  border-top: 1px solid var(--luxe-line) !important;
+}
+
+.navbar-luxury .search-discovery-panel input {
+  background: #ffffff !important;
+  border: 1px solid var(--luxe-line) !important;
+  color: var(--luxe-ink) !important;
+  border-radius: 10px !important;
+}
+
+.navbar-luxury .search-discovery-panel input:focus {
+  outline: none !important;
+  border-color: var(--luxe-gold) !important;
+  box-shadow: 0 0 0 3px rgba(173, 138, 76, 0.18) !important;
+}
+
+.navbar-luxury .search-discovery-panel .text-cyan-700 {
+  color: var(--luxe-gold-deep) !important;
+}
+
+.navbar-luxury .search-discovery-panel button.rounded-full {
+  border-color: var(--luxe-line) !important;
+  background: #ffffff !important;
+  color: var(--luxe-ink) !important;
+}
+
+.navbar-luxury .search-discovery-panel button.rounded-full:hover {
+  border-color: var(--luxe-gold) !important;
+  background: var(--luxe-gold-soft) !important;
+  color: var(--luxe-ink) !important;
+}
+
+/* ---- mobile drawer ---- */
+.navbar-luxury .mobile-menu-panel,
+.navbar-luxury .mobile-menu-card,
+html.light .navbar-luxury .mobile-menu-panel,
+html.light .navbar-luxury .mobile-menu-card,
+html.dark .navbar-luxury .mobile-menu-panel,
+html.dark .navbar-luxury .mobile-menu-card {
+  background: var(--luxe-cream-soft) !important;
+  border: 1px solid var(--luxe-line) !important;
+  box-shadow: var(--luxe-shadow) !important;
+}
+
+.navbar-luxury .mobile-menu-eyebrow {
+  color: var(--luxe-gold-deep) !important;
+  letter-spacing: 0.18em !important;
+  text-transform: uppercase !important;
+  font-weight: 700 !important;
+}
+
+.navbar-luxury .mobile-menu-title,
+html.light .navbar-luxury .mobile-menu-title,
+html.dark .navbar-luxury .mobile-menu-title {
+  color: var(--luxe-ink) !important;
+  font-weight: 700 !important;
+}
+
+.navbar-luxury .mobile-menu-close {
+  border: 1px solid var(--luxe-line) !important;
+  color: var(--luxe-charcoal) !important;
+  background: #ffffff !important;
+}
+
+.navbar-luxury .mobile-menu-link,
+html.light .navbar-luxury .mobile-menu-link,
+html.dark .navbar-luxury .mobile-menu-link {
+  background: #ffffff !important;
+  border: 1px solid var(--luxe-line) !important;
+  color: var(--luxe-charcoal) !important;
+  font-weight: 600 !important;
+}
+
+.navbar-luxury .mobile-menu-link span,
+.navbar-luxury .mobile-menu-link svg {
+  color: inherit !important;
+}
+
+.navbar-luxury .mobile-menu-link:hover {
+  border-color: var(--luxe-gold) !important;
+  color: var(--luxe-gold-deep) !important;
+}
+
+.navbar-luxury .mobile-menu-link-active,
+.navbar-luxury .mobile-menu-link-featured,
+html.light .navbar-luxury .mobile-menu-link-active {
+  background: var(--luxe-ink) !important;
+  border-color: var(--luxe-ink) !important;
+  color: var(--luxe-cream) !important;
+}
+
+.navbar-luxury .mobile-menu-link-active span,
+.navbar-luxury .mobile-menu-link-active svg {
+  color: var(--luxe-cream) !important;
+}
+
+.navbar-luxury .mobile-menu-actions {
+  border-top: 1px solid var(--luxe-line) !important;
+}
+
+.navbar-luxury .mobile-menu-user {
+  background: #ffffff !important;
+  border: 1px solid var(--luxe-line) !important;
+}
+
+.navbar-luxury .mobile-menu-avatar {
+  background: var(--luxe-ink) !important;
+  color: var(--luxe-gold-soft) !important;
+}
+
+.navbar-luxury .mobile-menu-user-name {
+  color: var(--luxe-ink) !important;
+}
+
+.navbar-luxury .mobile-menu-user-email {
+  color: var(--luxe-mute) !important;
+}
+
+@media (max-width: 1023px) {
+  .navbar-luxury .mobile-brand-logo {
+    filter: none !important;
+  }
+}
+
+
+/* ========================================================================= */
+/* PREMIUM / MINIMAL-LUXURY CHECKOUT THEME                                   */
+/* Scoped to `.checkout-page.checkout-luxury` (added on the page root) so    */
+/* it wins over the existing light-theme `.checkout-page` rules above        */
+/* without touching them. Remove `checkout-luxury` from Checkout.tsx to      */
+/* fully revert.                                                             */
+/* ========================================================================= */
+
+.checkout-page.checkout-luxury {
+  --luxe-cream: #faf7f1;
+  --luxe-cream-soft: #fffdf9;
+  --luxe-ink: #17130f;
+  --luxe-charcoal: #2b241c;
+  --luxe-mute: #766a5a;
+  --luxe-gold: #ad8a4c;
+  --luxe-gold-deep: #8a6d38;
+  --luxe-gold-soft: #eadfc4;
+  --luxe-line: rgba(23, 19, 15, 0.1);
+  position: relative;
+  overflow-x: clip;
+  background: var(--luxe-cream) !important;
+  color: var(--luxe-ink) !important;
+}
+
+/* ---- signature graphic: faint gold line-art shield watermark ---- */
+.checkout-page.checkout-luxury::before {
+  content: '';
+  position: absolute;
+  top: -60px;
+  right: -80px;
+  width: 460px;
+  height: 460px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200' fill='none' stroke='%23ad8a4c' stroke-width='0.6'%3E%3Cpath d='M100 12 L176 40 V96 C176 140 144 172 100 190 C56 172 24 140 24 96 V40 Z'/%3E%3Cpath d='M100 12 L176 40 V96 C176 140 144 172 100 190' opacity='0.5'/%3E%3Cpath d='M68 100 L90 122 L134 74' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'/%3E%3Ccircle cx='100' cy='101' r='58' opacity='0.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+}
+
+.checkout-page.checkout-luxury::after {
+  content: '';
+  position: absolute;
+  bottom: -120px;
+  left: -120px;
+  width: 380px;
+  height: 380px;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(173, 138, 76, 0.14), transparent 70%);
+}
+
+.checkout-page.checkout-luxury > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- entrance motion ---- */
+@keyframes luxe-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes luxe-pulse-ring {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(173, 138, 76, 0.35); }
+  50% { box-shadow: 0 0 0 6px rgba(173, 138, 76, 0); }
+}
+
+@keyframes luxe-check-pop {
+  0% { transform: scale(0.4); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes luxe-shimmer-sweep {
+  from { transform: translateX(-130%) skewX(-12deg); }
+  to { transform: translateX(230%) skewX(-12deg); }
+}
+
+.checkout-page.checkout-luxury .luxe-anim {
+  animation: luxe-fade-up 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.checkout-page.checkout-luxury .luxe-anim-d1 { animation-delay: 0.06s; }
+.checkout-page.checkout-luxury .luxe-anim-d2 { animation-delay: 0.12s; }
+
+/* Homepage light-surface contrast
+   The app contains legacy global theme rules that can override Tailwind's
+   utility colours. Keep the homepage FAQ and its nearby pagination controls
+   explicitly tied to their light surfaces. */
+.site-main-content .smart-bands-page > section.bg-slate-50 {
+  background-color: #f8fafc !important;
+}
+
+.site-main-content .smart-bands-page > section.bg-slate-50 h2 {
+  color: #020617 !important;
+}
+
+.site-main-content .smart-bands-page > section.bg-slate-50 > div > p {
+  color: #0e7490 !important;
+}
+
+.site-main-content .smart-bands-page > section.bg-slate-50 details {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.site-main-content .smart-bands-page > section.bg-slate-50 summary {
+  color: #0f172a !important;
+}
+
+.site-main-content .smart-bands-page > section.bg-slate-50 details > p {
+  color: #475569 !important;
+}
+
+.site-main-content .smart-bands-page #models nav button:not(.bg-\[\#0ea5e9\]) {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #334155 !important;
+}
+
+.site-main-content .smart-bands-page #models nav button.bg-\[\#0ea5e9\] {
+  background-color: #0ea5e9 !important;
+  border-color: #0ea5e9 !important;
+  color: #ffffff !important;
+}
+
+/* Google sign-in must remain a high-contrast white control on the auth card.
+   This is deliberately more specific than the legacy theme-wide button rules. */
+.auth-page .auth-google-button {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06) !important;
+}
+
+.auth-page .auth-google-button:hover:not(:disabled) {
+  background-color: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  color: #0f172a !important;
+}
+
+.auth-page .auth-google-button__icon {
+  color: #4285f4 !important;
+}
+.checkout-page.checkout-luxury .luxe-anim-d3 { animation-delay: 0.18s; }
+
+.checkout-page.checkout-luxury .luxe-lock-badge {
+  animation: luxe-pulse-ring 2.6s ease-out infinite;
+}
+
+.checkout-page.checkout-luxury .luxe-check-pop {
+  display: inline-flex;
+  animation: luxe-check-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.checkout-page.checkout-luxury .luxe-shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+.checkout-page.checkout-luxury .luxe-shimmer-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: translateX(-130%) skewX(-12deg);
+  pointer-events: none;
+}
+.checkout-page.checkout-luxury .luxe-shimmer-btn:hover::after {
+  animation: luxe-shimmer-sweep 0.9s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .checkout-page.checkout-luxury .luxe-anim,
+  .checkout-page.checkout-luxury .luxe-lock-badge,
+  .checkout-page.checkout-luxury .luxe-check-pop,
+  .checkout-page.checkout-luxury .luxe-shimmer-btn::after {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ---- typography ---- */
+.checkout-page.checkout-luxury h1,
+.checkout-page.checkout-luxury h2 {
+  color: var(--luxe-ink) !important;
+}
+
+.checkout-page.checkout-luxury .luxe-eyebrow {
+  color: var(--luxe-gold-deep) !important;
+}
+
+/* ---- panels ---- */
+.checkout-page.checkout-luxury .luxe-panel {
+  background: var(--luxe-cream-soft) !important;
+  border: 1px solid var(--luxe-line) !important;
+  box-shadow: 0 24px 50px rgba(23, 19, 15, 0.08) !important;
+}
+
+/* ---- inputs ---- */
+.checkout-page.checkout-luxury input {
+  background: #ffffff !important;
+  border: 1px solid var(--luxe-line) !important;
+  color: var(--luxe-ink) !important;
+  box-shadow: none !important;
+}
+
+.checkout-page.checkout-luxury input::placeholder {
+  color: var(--luxe-mute) !important;
+}
+
+.checkout-page.checkout-luxury input:focus {
+  outline: none !important;
+  border-color: var(--luxe-gold) !important;
+  box-shadow: 0 0 0 3px rgba(173, 138, 76, 0.18) !important;
+}
+
+/* ---- misc text ---- */
+.checkout-page.checkout-luxury .luxe-muted {
+  color: var(--luxe-mute) !important;
+}
+
+.checkout-page.checkout-luxury .luxe-total {
+  color: var(--luxe-gold-deep) !important;
+}
+
+.checkout-page.checkout-luxury .luxe-divider {
+  border-color: var(--luxe-line) !important;
 }
