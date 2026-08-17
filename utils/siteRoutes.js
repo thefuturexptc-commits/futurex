@@ -384,6 +384,9 @@ export const sitemapRoutes = [
 const legacyBlogFallbackRoutes = [];
 
 export const spaFallbackRoutes = [
+  // Active campaign route: keep a concrete fallback so direct visits and
+  // refreshes load the site shell before the /offers/:slug route hydrates.
+  'offers/exchange-bonusv',
   'delete-account',
   'cart',
   'checkout',
