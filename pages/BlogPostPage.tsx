@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { getBlogPosts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata } from '../services/seo';
 import type { BlogPost } from '../types';
+import { publishedBlogPosts } from '../utils/publishedBlogPosts';
+import { InfoPage } from './InfoPage';
 
 const formatDate = (value?: string) => {
   if (!value) return '';
@@ -24,8 +26,14 @@ export const BlogPostPage: React.FC = () => {
 
   useEffect(() => {
     getBlogPosts()
-      .then((posts) => setPost(posts.find((item) => item.slug === slug && item.status === 'published') || null))
-      .catch(() => setPost(null));
+      .then((posts) =>
+        setPost(
+          posts.find((item) => item.slug === slug && item.status === 'published') ||
+            publishedBlogPosts.find((item) => item.slug === slug) ||
+            null
+        )
+      )
+      .catch(() => setPost(publishedBlogPosts.find((item) => item.slug === slug) || null));
   }, [slug]);
 
   useEffect(() => {
@@ -61,7 +69,10 @@ export const BlogPostPage: React.FC = () => {
     );
   }
 
-  if (!post) return <Navigate to="/blog" replace />;
+  // The sitemap also includes long-form articles maintained in InfoPage.
+  // Render them at their indexed /blog URL rather than redirecting visitors
+  // (and Google) to the journal landing page.
+  if (!post) return <InfoPage />;
 
   const publishedLabel = formatDate(post.updatedAt);
   const readingTime = estimateReadingTime(post.content);
