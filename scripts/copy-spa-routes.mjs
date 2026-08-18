@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
@@ -24,6 +24,10 @@ const firebaseConfig = {
 if (!existsSync(indexFile)) {
   throw new Error('Missing dist/index.html. Run this script after vite build.');
 }
+
+// Remove stale product route directories from previous catalog builds so old
+// ID/slug aliases cannot remain indexable with duplicate titles.
+rmSync(join(distDir, 'product'), { recursive: true, force: true });
 
 const htmlEscape = (value = '') =>
   String(value)
@@ -552,6 +556,19 @@ const buildJsonLd = (product) => {
         '@type': 'OfferShippingDetails',
         shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
         shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
+          transitTime: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 7, unitCode: 'DAY' },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'IN',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 7,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
       },
     },
   };
