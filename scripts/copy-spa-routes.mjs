@@ -205,7 +205,9 @@ const upsertTag = (html, pattern, tag) => {
 };
 
 const injectStaticRoot = (html, bodyHtml) => {
-  const staticHtml = `<div id="root"><div class="seo-prerendered-page">${bodyHtml}</div></div>`;
+  // Keep crawler-visible fallback markup in the initial HTML without flashing it
+  // over the real app while React loads and replaces the root contents.
+  const staticHtml = `<div id="root"><div class="seo-prerendered-page" style="display:none">${bodyHtml}</div></div>`;
   return html.replace(/<div id="root"><\/div>/i, staticHtml);
 };
 
