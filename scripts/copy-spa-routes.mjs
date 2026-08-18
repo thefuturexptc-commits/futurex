@@ -760,7 +760,7 @@ writeFileSync(join(distDir, 'product-feed.xml'), buildMerchantXmlFeed(productRec
 writeFileSync(join(distDir, 'product-feed.csv'), buildMerchantCsvFeed(productRecords), 'utf8');
 writeFileSync(
   join(distDir, 'robots.txt'),
-  `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
+  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nDisallow: /checkout\nDisallow: /payment\nDisallow: /profile\nDisallow: /login\nDisallow: /signup\nDisallow: /cart\nDisallow: /verify-phone\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
   'utf8'
 );
 

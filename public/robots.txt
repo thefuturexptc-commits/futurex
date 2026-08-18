@@ -1,5 +1,14 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /payment
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /cart
+Disallow: /verify-phone
 
 Sitemap: https://thefuturex.in/sitemap.xml
 LLMS: https://thefuturex.in/llms.txt
