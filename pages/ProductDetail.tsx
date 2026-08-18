@@ -1588,44 +1588,12 @@ const RazorpayEmiModal: React.FC<{
   );
 };
 
-const REVIEW_NAMES = ['Aarav', 'Priya', 'Rohan', 'Sneha', 'Vikram', 'Neha', 'Aditya', 'Kavya'];
-
-const buildFallbackReviews = (product: Product) => {
-  const featureA = cleanFeatureText(product.features?.[0] || 'overall quality');
-  const featureB = cleanFeatureText(product.features?.[1] || 'daily usage');
-  const specA = product.specs ? Object.entries(product.specs)[0] : null;
-  const specText = specA ? `${formatSpecLabel(specA[0])} is ${specA[1]}` : 'it feels worth the price';
-
-  return REVIEW_NAMES.slice(0, 4).map((name, index) => ({
-    id: `fallback_${product.id}_${index}`,
-    productId: product.id,
-    name,
-    rating: [5, 4, 5, 4][index],
-    comment: [
-      `${product.name} looks great in hand and ${featureA.toLowerCase()} is the part I noticed most after using it for a few days.`,
-      `Bought this mainly for ${featureB.toLowerCase()} and it has been reliable so far. ${specText}.`,
-      `The finish, fit, and everyday performance of this ${product.category.slice(0, -1).toLowerCase() || 'product'} feel well balanced. Good value overall.`,
-      `Using it daily now and the experience has been smooth. Delivery was fine and the product matches the listing well.`,
-    ][index],
-    images: [],
-  }));
-};
-
-const getDisplayReviews = (product: Product, reviews: ProductPublicReview[]) => {
+const getDisplayReviews = (reviews: ProductPublicReview[]) => {
   const uniqueReviews = reviews.filter((review, index, list) => {
     const signature = `${review.name}|${review.comment}`.trim().toLowerCase();
     return list.findIndex((item) => `${item.name}|${item.comment}`.trim().toLowerCase() === signature) === index;
   });
-
-  if (uniqueReviews.length >= 4) return uniqueReviews;
-
-  const usedNames = new Set(uniqueReviews.map((review) => review.name.trim().toLowerCase()));
-  const usedComments = new Set(uniqueReviews.map((review) => review.comment.trim().toLowerCase()));
-  const fallback = buildFallbackReviews(product).filter(
-    (review) => !usedNames.has(review.name.trim().toLowerCase()) && !usedComments.has(review.comment.trim().toLowerCase())
-  );
-
-  return [...uniqueReviews, ...fallback].slice(0, Math.max(4, uniqueReviews.length));
+  return uniqueReviews;
 };
 
 const DetailIcon: React.FC<{ kind: 'delivery' | 'shield' | 'support' | 'payment' | 'location' }> = ({ kind }) => {
@@ -1782,16 +1750,14 @@ export const ProductDetail: React.FC = () => {
           setError('Product not found');
         } else {
           const publicReviews = await getProductReviews(p.id);
-          const embeddedReviews = p.reviews || [];
-          const mergedReviews = [
-            ...publicReviews,
-            ...embeddedReviews.filter((embedded) => !publicReviews.some((review) => review.id && review.id === embedded.id)),
-          ];
-          const displayReviews = getDisplayReviews(p, mergedReviews);
+          // The review collection is the source of truth for customer reviews.
+          // Product records can contain legacy/seeded review fields; do not expose
+          // those as customer proof or include them in Product structured data.
+          const displayReviews = getDisplayReviews(publicReviews);
           const nextReviewCount = displayReviews.length;
           const nextRating = nextReviewCount
             ? Number((displayReviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / nextReviewCount).toFixed(1))
-            : Number(p.rating || 0);
+            : 0;
           setProduct({ ...p, reviews: displayReviews, reviewCount: nextReviewCount, rating: nextRating });
           setSelectedColor(p.colors?.[0] ?? null);
         }
@@ -2065,14 +2031,17 @@ export const ProductDetail: React.FC = () => {
       : baseDescription);
     const price = Number(product.salePrice || product.price || product.mrp || 0);
     const customerFacingPrice = getAutomaticOfferItemPricing(product).unitOfferPrice || price;
-    const schemaPrice = Math.max(customerFacingPrice, 1).toFixed(2);
+    // Schema.org expects Offer.price to be a number, not a currency-formatted string.
+    const schemaPrice = Number(Math.max(customerFacingPrice, 1).toFixed(2));
     const productImages = product.images?.length ? product.images : [image];
     const categoryPath = getCategoryPathForSchema(product.category);
     const categoryUrl = absoluteUrl(categoryPath);
     const productUrl = absoluteUrl(productPath);
-    const reviewCount = Math.max(0, Number(product.reviewCount || product.reviews?.length || 0));
+    const reviewableReviews = (product.reviews || [])
+      .filter((review) => String(review.comment || '').trim() && Number.isFinite(Number(review.rating)) && Number(review.rating) > 0)
+    const reviewCount = reviewableReviews.length;
     const ratingValue = Math.max(1, Math.min(5, Number(product.rating || 0)));
-    const productReviews = (product.reviews || []).slice(0, 3).map((review) => ({
+    const productReviews = reviewableReviews.slice(0, 3).map((review) => ({
       '@type': 'Review',
       author: {
         '@type': 'Person',
@@ -2084,7 +2053,7 @@ export const ProductDetail: React.FC = () => {
         bestRating: '5',
         worstRating: '1',
       },
-      reviewBody: stripHtml(review.comment || `${product.name} customer review.`).slice(0, 300),
+      reviewBody: stripHtml(review.comment).slice(0, 300),
     }));
 
     setSeoMetadata({
@@ -2371,7 +2340,7 @@ export const ProductDetail: React.FC = () => {
 
       setProduct((current) => {
         if (!current) return current;
-        const nextReviews = getDisplayReviews(current, [savedReview, ...(current.reviews || [])]);
+        const nextReviews = getDisplayReviews([savedReview, ...(current.reviews || [])]);
         return {
           ...current,
           reviews: nextReviews,
