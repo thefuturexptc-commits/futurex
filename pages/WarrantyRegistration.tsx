@@ -469,7 +469,8 @@ export const WarrantyRegistration: React.FC = () => {
         html.dark .tfx-warranty .tfx-form select option,
         .tfx-warranty .tfx-form select option {
           background: var(--surface-raised) !important;
-          color: #0f172a !important;
+          color: #edf0f5 !important;
+          -webkit-text-fill-color: #edf0f5 !important;
         }
 
         html.dark .tfx-warranty .tfx-form select:disabled,
