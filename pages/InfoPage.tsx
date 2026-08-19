@@ -8049,6 +8049,21 @@ const warrantyNotApplicable = [
 
 const ReturnsWarrantyPolicyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => (
   <div className="tfx-standard-page min-h-screen bg-white text-slate-950">
+    <style>{`
+      .tfx-standard-page.bg-white,
+      .tfx-standard-page.bg-white h1,
+      .tfx-standard-page.bg-white h2,
+      .tfx-standard-page.bg-white h3,
+      .tfx-standard-page.bg-white p,
+      .tfx-standard-page.bg-white li,
+      .tfx-standard-page.bg-white span {
+        color: #0f172a !important;
+      }
+      .tfx-standard-page.bg-white .text-slate-600 { color: #475569 !important; }
+      .tfx-standard-page.bg-white .text-slate-700 { color: #334155 !important; }
+      .tfx-standard-page.bg-white .text-\[\#0369a1\] { color: #0369a1 !important; }
+      .tfx-standard-page.bg-white a.bg-\[\#0369a1\] { color: #ffffff !important; }
+    `}</style>
     <section className="border-b border-slate-200 bg-white px-4 py-7 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[minmax(0,1fr)_260px] lg:items-end">
         <div>
