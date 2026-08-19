@@ -607,9 +607,7 @@ export const Home: React.FC = () => {
                   <img
                     src={banner.image}
                     alt={banner.alt}
-                    className={`relative z-10 h-full w-full object-contain object-center transition-transform duration-[5000ms] ease-out ${
-                      index === homeWaterBannerIndex ? 'scale-[1.06]' : 'scale-100'
-                    }`}
+                    className="relative z-10 h-full w-full object-contain object-center"
                     loading={index === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
