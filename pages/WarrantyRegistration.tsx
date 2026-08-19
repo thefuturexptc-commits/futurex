@@ -57,6 +57,7 @@ export const WarrantyRegistration: React.FC = () => {
   const [city, setCity] = useState('');
   const [pincode, setPincode] = useState('');
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const orderId = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -394,6 +395,15 @@ export const WarrantyRegistration: React.FC = () => {
           margin-bottom: 3px;
         }
 
+        .tfx-form__error {
+          margin-bottom: 26px;
+          padding: 12px 14px;
+          border: 1px solid #f87171;
+          background: #3b1720;
+          color: #fecaca !important;
+          font-weight: 600;
+        }
+
         .tfx-form__grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
@@ -656,11 +666,33 @@ export const WarrantyRegistration: React.FC = () => {
 
           <form
             className="tfx-form"
+            noValidate
             onSubmit={(event) => {
               event.preventDefault();
+              const form = event.currentTarget;
+              if (!form.checkValidity()) {
+                setSubmitted(false);
+                setSubmitError('Please complete all required fields before registering.');
+                form.querySelector<HTMLElement>(':invalid')?.focus();
+                return;
+              }
+              if (!/^\d{10}$/.test(mobile)) {
+                setSubmitted(false);
+                setSubmitError('Please enter a valid 10-digit mobile number.');
+                return;
+              }
+              if (!/^\d{6}$/.test(pincode)) {
+                setSubmitted(false);
+                setSubmitError('Please enter a valid 6-digit pincode.');
+                return;
+              }
+              setSubmitError('');
               setSubmitted(true);
             }}
           >
+            {submitError && (
+              <div className="tfx-form__error" role="alert">{submitError}</div>
+            )}
             {submitted && (
               <div className="tfx-success" role="status">
                 <div>
