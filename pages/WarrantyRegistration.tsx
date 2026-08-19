@@ -387,6 +387,31 @@ export const WarrantyRegistration: React.FC = () => {
           color: var(--text);
         }
 
+        .tfx-form.is-submitted {
+          min-height: 0;
+          padding: 0;
+          border: 0;
+          background: transparent;
+        }
+
+        .tfx-form.is-submitted > :not(.tfx-success) {
+          display: none;
+        }
+
+        .tfx-form.is-submitted .tfx-success {
+          position: fixed;
+          inset: 50% auto auto 50%;
+          z-index: 100;
+          width: min(92vw, 520px);
+          transform: translate(-50%, -50%);
+          margin: 0;
+          padding: 28px;
+          border: 1px solid var(--teal);
+          background: var(--surface-raised);
+          box-shadow: 0 24px 80px rgba(0,0,0,.55);
+          font-size: 15px;
+        }
+
         .tfx-success strong {
           display: block;
           font-family: var(--font-display);
@@ -665,7 +690,7 @@ export const WarrantyRegistration: React.FC = () => {
           </aside>
 
           <form
-            className="tfx-form"
+            className={`tfx-form${submitted ? ' is-submitted' : ''}`}
             noValidate
             onSubmit={(event) => {
               event.preventDefault();
@@ -688,6 +713,9 @@ export const WarrantyRegistration: React.FC = () => {
               }
               setSubmitError('');
               setSubmitted(true);
+              window.requestAnimationFrame(() => {
+                form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              });
             }}
           >
             {submitError && (
