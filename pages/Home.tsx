@@ -15,9 +15,10 @@ import homeCollectionRingImage from '../assets/images/home-collection-smart-ring
 import homeRainReadyBandBanner from '../assets/images/home-rain-ready-band-banner.webp';
 import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
 import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
-import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
-import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
-import tfxVitalAppQr from '../assets/images/tfx-vital-app-qr-512.png';
+import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
+import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
+import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
+import homeScrollBannerFour from '../assets/images/home-scroll-banner-04.webp';
 import { homepageFaqs } from '../services/seo';
 
 /**
@@ -26,10 +27,20 @@ import { homepageFaqs } from '../services/seo';
  * instance; disconnects itself after firing once. No images, no libraries.
  * Respects prefers-reduced-motion by rendering fully visible immediately.
  */
-const RevealOnScroll: React.FC<{ children: React.ReactNode; className?: string; delayMs?: number }> = ({
+const RevealOnScroll: React.FC<{
+  children: React.ReactNode;
+  className?: string;
+  delayMs?: number;
+  hiddenClassName?: string;
+  visibleClassName?: string;
+  durationClassName?: string;
+}> = ({
   children,
   className = '',
   delayMs = 0,
+  hiddenClassName = 'opacity-0 translate-y-6',
+  visibleClassName = 'opacity-100 translate-y-0',
+  durationClassName = 'duration-700',
 }) => {
   const nodeRef = React.useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
@@ -61,9 +72,7 @@ const RevealOnScroll: React.FC<{ children: React.ReactNode; className?: string; 
     <div
       ref={nodeRef}
       style={{ transitionDelay: visible ? `${delayMs}ms` : '0ms' }}
-      className={`transition-all duration-700 ease-out ${
-        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
-      } ${className}`}
+      className={`transition-all ${durationClassName} ease-out ${visible ? visibleClassName : hiddenClassName} ${className}`}
     >
       {children}
     </div>
@@ -135,7 +144,6 @@ const TrustMarquee: React.FC = () => {
 };
 
 const CATALOG_PAGE_SIZE = 4;
-const FEATURED_BAND_PRODUCT_NAME = 'TFX5 AI Smart Band Heart Rate SpO2 Fitness Tracker';
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 const FEATURED_FAN_PRODUCT_PATH = '/product/tfx-advance';
@@ -182,6 +190,39 @@ const HOME_COLLECTION_CARDS = [
     alt: 'Smart fans collection',
   },
 ];
+
+const HOME_SCROLL_BANNERS = [
+  { image: homeScrollBannerOne, alt: 'TFX smart band banner' },
+  { image: homeScrollBannerTwo, alt: 'TFX bladeless fan banner' },
+  { image: homeScrollBannerThree, alt: 'TFX heart rate monitor banner' },
+  { image: homeScrollBannerFour, alt: 'TFX smart ring banner' },
+];
+
+const ScrollRevealBanners: React.FC = () => {
+  return (
+    <section className="bg-white" aria-label="Featured product banners">
+      <h2 className="sr-only">TheFutureX featured product banners</h2>
+      {HOME_SCROLL_BANNERS.map((banner, index) => (
+        <RevealOnScroll
+          key={banner.image}
+          delayMs={index === 0 ? 0 : 80}
+          className="overflow-hidden will-change-transform"
+          hiddenClassName="translate-y-20 scale-[0.94] opacity-0 blur-sm"
+          visibleClassName="translate-y-0 scale-100 opacity-100 blur-0"
+          durationClassName="duration-[1100ms]"
+        >
+          <img
+            src={banner.image}
+            alt={banner.alt}
+            className="block h-auto w-full"
+            loading={index === 0 ? 'eager' : 'lazy'}
+            decoding="async"
+          />
+        </RevealOnScroll>
+      ))}
+    </section>
+  );
+};
 
 const toCategorySlug = (name: string): string =>
   name
@@ -411,8 +452,6 @@ export const Home: React.FC = () => {
       return bScore - aScore || a.name.localeCompare(b.name);
     });
   }, [products]);
-  const featuredBandHref = FEATURED_BAND_PRODUCT_PATH;
-
   const totalCatalogPages = Math.max(1, Math.ceil(catalogProducts.length / CATALOG_PAGE_SIZE));
   const paginatedCatalogProducts = catalogProducts.slice(
     (catalogPage - 1) * CATALOG_PAGE_SIZE,
@@ -893,60 +932,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <section className="bg-[#c6d6e3] px-0 py-0" style={{ contentVisibility: 'auto', containIntrinsicSize: '1px 2400px' }}>
-        <h2 className="sr-only">TFX V5 smart band and TheFutureX app banners</h2>
-        <div className="mx-auto max-w-[1120px] overflow-hidden bg-[#c6d6e3]">
-          <div className="relative">
-            <Link
-              to={featuredBandHref}
-              className="block cursor-pointer"
-              aria-label={`View ${FEATURED_BAND_PRODUCT_NAME}`}
-            >
-              <img
-                src={tfxV5BannerOne}
-                alt="TFX5 AI Smart Band powered by TFX Vital Pro"
-                className="block w-full"
-                width="1080"
-                height="1920"
-                loading="lazy"
-                fetchPriority="low"
-                decoding="async"
-              />
-            </Link>
-            <div className="absolute bottom-[6.5%] left-[8%] z-10 flex flex-col items-center gap-1.5 sm:bottom-[7.5%] sm:left-[12%]">
-              <p className="max-w-[clamp(92px,18vw,210px)] rounded-md bg-white/92 px-2 py-1 text-center text-[clamp(8px,1.5vw,14px)] font-black uppercase leading-tight tracking-[0.08em] text-slate-950 shadow-[0_8px_22px_rgba(15,23,42,0.18)]">
-                TheFutureX app available on Play Store
-              </p>
-              <img
-                src={tfxVitalAppQr}
-                alt="TheFutureX Smartwear app QR code"
-                className="h-[clamp(72px,15vw,172px)] w-[clamp(72px,15vw,172px)] rounded-lg bg-white p-[clamp(4px,0.8vw,10px)] object-contain shadow-[0_10px_28px_rgba(15,23,42,0.24)]"
-                width="512"
-                height="512"
-                loading="lazy"
-                fetchPriority="low"
-                decoding="async"
-              />
-            </div>
-          </div>
-          <Link
-            to={featuredBandHref}
-            className="block cursor-pointer"
-            aria-label={`View ${FEATURED_BAND_PRODUCT_NAME} color variants`}
-          >
-            <img
-              src={tfxV5BannerTwo}
-              alt="TheFutureX app and TFX5 smart band color variants"
-              className="block w-full"
-              width="1080"
-              height="1920"
-              loading="lazy"
-              fetchPriority="low"
-              decoding="async"
-            />
-          </Link>
-        </div>
-      </section>
+      <ScrollRevealBanners />
 
       <section className="bg-slate-50 px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-4xl">

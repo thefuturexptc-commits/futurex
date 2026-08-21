@@ -230,7 +230,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                 onMouseMove={item.type === 'image' ? handleSideZoomMouseMove : undefined}
                 onMouseLeave={item.type === 'image' ? handleSideZoomMouseLeave : undefined}
                 className={`relative min-w-0 flex-[0_0_100%] cursor-zoom-in overflow-hidden border-0 bg-transparent p-0 ${
-                  bannerMode ? 'aspect-[4/3]' : 'aspect-[4/3] sm:aspect-square'
+                  'aspect-square'
                 }`}
                 aria-label={`View ${alt} ${item.type} ${idx + 1}`}
               >
@@ -263,7 +263,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                   <img
                     src={item.src}
                     alt={alt}
-                    className={`h-full w-full transform-gpu transition-transform duration-75 ease-out will-change-transform group-hover:scale-[1.025] ${
+                    className={`product-gallery-image h-full w-full transform-gpu transition-transform duration-200 ease-out will-change-transform group-hover:scale-[1.018] ${
                       bannerMode ? 'object-contain object-center' : 'object-contain'
                     }`}
                     draggable={false}
@@ -273,11 +273,6 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                     width={900}
                     height={900}
                   />
-                )}
-                {item.type === 'image' && (
-                  <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/65 px-3 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity duration-200 group-hover:opacity-100">
-                    Tap to open
-                  </span>
                 )}
               </div>
             ))}

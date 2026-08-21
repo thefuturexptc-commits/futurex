@@ -7315,6 +7315,12 @@ html.dark .site-navbar .brand-logo-link img {
   }
 }
 
+/* Product suppliers occasionally provide a near-white image canvas with rounded
+   corners baked into the photo. Lift that canvas to page white so it disappears. */
+.product-gallery-image {
+  filter: brightness(1.06) contrast(1.01);
+}
+
 /* Product detail/catalog typography: match the approved product-title feel. */
 .product-detail-page,
 .product-detail-dark,
