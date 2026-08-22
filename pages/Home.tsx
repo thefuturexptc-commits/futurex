@@ -164,10 +164,10 @@ const HOME_COLLECTION_CARDS = [
 ];
 
 const HOME_SCROLL_BANNERS = [
-  { label: 'Smart Band', image: homeScrollBannerOne, alt: 'TFX smart band banner' },
-  { label: 'Smart Fans', image: homeScrollBannerTwo, alt: 'TFX bladeless fan banner' },
-  { label: 'Smart Monitoring', image: homeScrollBannerThree, alt: 'TFX heart rate monitor banner' },
-  { label: 'Smart Rings', image: homeScrollBannerFour, alt: 'TFX smart ring banner' },
+  { label: 'Smart Band', href: '/smart-bands', image: homeScrollBannerOne, alt: 'TFX smart band banner' },
+  { label: 'Smart Fans', href: '/bladeless-fan', image: homeScrollBannerTwo, alt: 'TFX bladeless fan banner' },
+  { label: 'Smart Monitoring', href: '/smart-monitoring', image: homeScrollBannerThree, alt: 'TFX heart rate monitor banner' },
+  { label: 'Smart Rings', href: '/smart-rings', image: homeScrollBannerFour, alt: 'TFX smart ring banner' },
 ];
 
 const ScrollLinkedBanners: React.FC = () => {
@@ -208,6 +208,9 @@ const ScrollLinkedBanners: React.FC = () => {
   // normal vertical page scrolling brings the next layer to the front. There
   // is deliberately no translateX or horizontal slider behaviour.
   useLayoutEffect(() => {
+    // A pinned desktop scene creates a large pin-spacer on a short mobile
+    // banner. Phones use the tabs as a direct, space-efficient switcher.
+    if (isMobileViewport) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
     const context = gsap.context(() => {
@@ -294,13 +297,15 @@ const ScrollLinkedBanners: React.FC = () => {
               aria-labelledby={`home-scroll-tab-${index}`}
               className={`home-scroll-banner-panel${activeIndex === index ? ' home-scroll-banner-panel--active' : ''}`}
             >
-              <img
-                src={banner.image}
-                alt={banner.alt}
-                className="block h-auto w-full"
-                loading={index === 0 ? 'eager' : 'lazy'}
-                decoding="async"
-              />
+              <Link to={banner.href} className="block h-full w-full" aria-label={`Explore ${banner.label}`}>
+                <img
+                  src={banner.image}
+                  alt={banner.alt}
+                  className="block h-auto w-full"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  decoding="async"
+                />
+              </Link>
             </article>
           ))}
         </div>

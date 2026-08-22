@@ -9889,10 +9889,16 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
   }
 
   .home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-tab {
-    min-width: 132px;
-    padding: 0 14px;
-    font-size: 12px;
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0 6px;
+    font-size: clamp(9px, 2.55vw, 11px);
     line-height: 36px;
+    letter-spacing: 0;
+  }
+
+  .home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-tabs {
+    overflow: hidden;
   }
 }
 
@@ -10019,12 +10025,14 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
   .home-scroll-banner-scene .home-scroll-banner-panel img { object-position: 58% center; }
 }
 
-/* Mobile uses the same layered, pinned vertical-scroll story as desktop. */
+/* Keep the supplied wide banner artwork fully visible on phones.  The previous
+   full-viewport stage combined with `object-fit: cover` enlarged the artwork
+   until its headline and product were cut off at the sides. */
 @media (max-width: 639px) {
   .site-main-content .home-scroll-banner-section .home-scroll-banner-scene {
     display: flex !important;
-    height: calc(100svh - var(--tfx-sticky-header-height, 84px)) !important;
-    min-height: 520px !important;
+    height: auto !important;
+    min-height: 0 !important;
     padding: 0 !important;
     flex-direction: column;
   }
@@ -10042,8 +10050,8 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
     display: block;
     height: auto !important;
     min-height: 0 !important;
-    flex: 1 1 auto;
-    aspect-ratio: auto !important;
+    flex: 0 0 auto;
+    aspect-ratio: 3031 / 1875 !important;
     overflow: hidden;
   }
 
@@ -10054,10 +10062,22 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
     min-height: 0;
   }
 
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-panel:not(.home-scroll-banner-panel--active) {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none;
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-panel.home-scroll-banner-panel--active {
+    z-index: 1;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
   .site-main-content .home-scroll-banner-section .home-scroll-banner-panel img {
     width: 100% !important;
     height: 100% !important;
-    object-fit: cover !important;
+    object-fit: contain !important;
     object-position: center !important;
   }
 }
