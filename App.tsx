@@ -41,6 +41,7 @@ const AdminEditProductPage = React.lazy(() => import('./pages/AdminEditProductPa
 const Login = React.lazy(() => import('./pages/Login').then(module => ({ default: module.Login })));
 const Signup = React.lazy(() => import('./pages/Signup').then(module => ({ default: module.Signup })));
 const InfoPage = React.lazy(() => import('./pages/InfoPage').then(module => ({ default: module.InfoPage })));
+const OurStory = React.lazy(() => import('./pages/OurStory').then(module => ({ default: module.OurStory })));
 const BlogPostPage = React.lazy(() => import('./pages/BlogPostPage').then(module => ({ default: module.BlogPostPage })));
 const OfferPage = React.lazy(() => import('./pages/OfferPage').then(module => ({ default: module.OfferPage })));
 const DeleteAccount = React.lazy(() => import('./pages/DeleteAccount').then(module => ({ default: module.DeleteAccount })));
@@ -541,6 +542,7 @@ const App: React.FC = () => {
                       <Route path="/delete-account" element={<DeleteAccount />} />
                       <Route path="/privacy-policy-section" element={<PrivacyPolicySection />} />
                       <Route path="/blog" element={<InfoPage />} />
+                      <Route path="/our-story" element={<OurStory />} />
                       <Route path="/blog/:slug" element={<BlogPostPage />} />
                       <Route path="/info/:slug" element={<InfoPage />} />
                       <Route path="/offers/:slug" element={<OfferPage />} />

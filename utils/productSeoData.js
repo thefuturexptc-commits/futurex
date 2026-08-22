@@ -296,7 +296,12 @@ export const buildProductSeoRecord = (product = {}) => {
     fallback?.description ||
     cleanSeoText(product.description || '') ||
     `Shop ${product.name} from TheFutureX with secure checkout, India shipping, and product support.`;
-  const price = getCustomerFacingPrice({ ...fallback, ...product });
+  const requestedPrice = getCustomerFacingPrice({ ...fallback, ...product });
+  // A malformed live record previously let the glasses fall through as ₹1.
+  // Known catalog fallbacks are safer than publishing a token/placeholder price.
+  const price = requestedPrice <= 1 && Number(fallback?.price || 0) > 1
+    ? Number(fallback.price)
+    : requestedPrice;
   const stock = getStock(product);
 
   return {
@@ -309,7 +314,9 @@ export const buildProductSeoRecord = (product = {}) => {
     description: truncateText(description),
     image: images[0] || resolveUrl(fallback?.image || '/images/tfx-google-logo.webp'),
     images: images.length ? images : [resolveUrl(fallback?.image || '/images/tfx-google-logo.webp')],
-    price: Number.isFinite(price) && price > 0 ? price : 1,
+    // Never emit a token price such as ₹1 when a product record is incomplete.
+    // Prefer the known product fallback; otherwise omit the invalid record upstream.
+    price: Number.isFinite(price) && price > 0 ? price : Number(fallback?.price || 0),
     availability: stock > 0 || product.inStock !== false ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     brand: product.brand || fallback?.brand || 'The Future X',
     ratingValue: Number(product.rating || fallback?.ratingValue || 0),

@@ -315,13 +315,13 @@ const NavbarComponent: React.FC = () => {
           type="button"
           onClick={() => navigate('/product/tfx5-ai-smart-band')}
           className="tfx-current-offer-bar tfx-current-offer-bar-static"
-          aria-label="Open TFX5 price drop offer"
+          aria-label="View current offers"
         >
           <span className="tfx-current-offer-track">
             <span>Free shipping across India</span>
+            <span>10% off smart fans — applied automatically</span>
+            <span>5% off eligible bands &amp; rings — applied automatically</span>
             <span>COD available on eligible orders</span>
-            <span>Brand warranty support</span>
-            <span>TFX5 AI Smart Band now at ₹9,999</span>
           </span>
         </button>
 

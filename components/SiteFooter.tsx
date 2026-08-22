@@ -105,6 +105,7 @@ const quickLinks = [
 ];
 
 const companyLinks = [
+  { label: 'Our Story', to: '/our-story' },
   { label: 'About us', to: '/info/about-us' },
   { label: 'Why Choose The Future X', to: '/info/why-choose-the-future-x' },
   { label: 'Contact Us', to: '/info/contact' },

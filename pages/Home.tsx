@@ -1,6 +1,8 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Button } from '../components/ui/Button';
 import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -20,6 +22,8 @@ import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
 import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
 import homeScrollBannerFour from '../assets/images/home-scroll-banner-04.webp';
 import { homepageFaqs } from '../services/seo';
+
+gsap.registerPlugin(ScrollTrigger);
 
 /**
  * Fades and lifts its children into view the first time they scroll into the
@@ -111,38 +115,6 @@ const ScrollToTopButton: React.FC = () => {
   );
 };
 
-const TRUST_STRIP_ITEMS = [
-  'IP68 Water Resistant',
-  'Heart Rate & SpO2 Tracking',
-  'Smart Alerts',
-  '7-Day Easy Returns',
-  'Cash on Delivery Available',
-  '1 Year Warranty',
-];
-
-/**
- * Infinitely scrolling trust-badge strip. Duplicates the item list once so
- * the CSS marquee can loop seamlessly at -50% translate.
- */
-const TrustMarquee: React.FC = () => {
-  const items = [...TRUST_STRIP_ITEMS, ...TRUST_STRIP_ITEMS];
-  return (
-    <div className="relative overflow-hidden border-y border-slate-100 bg-slate-950 py-3">
-      <div className="tfx-marquee-track flex w-max items-center gap-10 whitespace-nowrap">
-        {items.map((item, index) => (
-          <span
-            key={`${item}-${index}`}
-            className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-white/90 sm:text-sm"
-          >
-            <span className="h-1.5 w-1.5 rounded-full bg-[#1ca9a4]" aria-hidden="true" />
-            {item}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 const CATALOG_PAGE_SIZE = 4;
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
@@ -192,34 +164,147 @@ const HOME_COLLECTION_CARDS = [
 ];
 
 const HOME_SCROLL_BANNERS = [
-  { image: homeScrollBannerOne, alt: 'TFX smart band banner' },
-  { image: homeScrollBannerTwo, alt: 'TFX bladeless fan banner' },
-  { image: homeScrollBannerThree, alt: 'TFX heart rate monitor banner' },
-  { image: homeScrollBannerFour, alt: 'TFX smart ring banner' },
+  { label: 'Smart Band', image: homeScrollBannerOne, alt: 'TFX smart band banner' },
+  { label: 'Smart Fans', image: homeScrollBannerTwo, alt: 'TFX bladeless fan banner' },
+  { label: 'Smart Monitoring', image: homeScrollBannerThree, alt: 'TFX heart rate monitor banner' },
+  { label: 'Smart Rings', image: homeScrollBannerFour, alt: 'TFX smart ring banner' },
 ];
 
-const ScrollRevealBanners: React.FC = () => {
+const ScrollLinkedBanners: React.FC = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
+  const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const sceneRef = useRef<HTMLDivElement | null>(null);
+  const tabListRef = React.useRef<HTMLDivElement | null>(null);
+  const tabRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
+  const panelRefs = React.useRef<Array<HTMLElement | null>>([]);
+  const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
+
+  const updatePill = useCallback(() => {
+    const list = tabListRef.current;
+    const tab = tabRefs.current[activeIndex];
+    if (!list || !tab) return;
+    const listBox = list.getBoundingClientRect();
+    const tabBox = tab.getBoundingClientRect();
+    setPillStyle({ left: `${tabBox.left - listBox.left}px`, width: `${tabBox.width}px`, opacity: 1 });
+  }, [activeIndex]);
+
+  useEffect(() => {
+    updatePill();
+    const observer = new ResizeObserver(updatePill);
+    if (tabListRef.current) observer.observe(tabListRef.current);
+    return () => observer.disconnect();
+  }, [updatePill]);
+
+  useEffect(() => {
+    const updateViewport = () => setIsMobileViewport(window.innerWidth < 640);
+    updateViewport();
+    window.addEventListener('resize', updateViewport);
+    return () => window.removeEventListener('resize', updateViewport);
+  }, []);
+
+  // One pinned, layered product stage. Every banner occupies the same space;
+  // normal vertical page scrolling brings the next layer to the front. There
+  // is deliberately no translateX or horizontal slider behaviour.
+  useLayoutEffect(() => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    const context = gsap.context(() => {
+      const panels = gsap.utils.toArray<HTMLElement>('.home-scroll-banner-panel');
+      if (!panels.length || !sectionRef.current || !sceneRef.current) return;
+
+      const incomingYOffset = isMobileViewport ? 8 : 10;
+      const incomingScale = isMobileViewport ? 1.02 : 1.04;
+      gsap.set(panels, { autoAlpha: 0, yPercent: incomingYOffset, scale: incomingScale, zIndex: 0 });
+      gsap.set(panels[0], { autoAlpha: 1, yPercent: 0, scale: 1, zIndex: 1 });
+
+      const timeline = gsap.timeline({ defaults: { ease: 'none' } });
+      panels.slice(1).forEach((panel, index) => {
+        const previous = panels[index];
+        timeline
+          .set(panel, { zIndex: index + 2 }, index)
+          .to(previous, { autoAlpha: 0, scale: 0.985, duration: 1 }, index)
+          .to(panel, { autoAlpha: 1, yPercent: 0, scale: 1, duration: 1 }, index);
+      });
+      // Reserve a final scroll segment for the last graphic so it is fully
+      // visible before the pinned product-story section releases.
+      timeline.to({}, { duration: 1 });
+
+      scrollTriggerRef.current = ScrollTrigger.create({
+        animation: timeline,
+        trigger: sectionRef.current,
+        start: 'top top+=104',
+        end: () => `+=${Math.max(window.innerHeight * panels.length, 2000)}`,
+        pin: sceneRef.current,
+        scrub: 0.7,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate: (trigger) => {
+          const nextIndex = Math.min(panels.length - 1, Math.round(trigger.progress * (panels.length - 1)));
+          setActiveIndex((current) => current === nextIndex ? current : nextIndex);
+        },
+      });
+    }, sectionRef);
+
+    return () => {
+      scrollTriggerRef.current = null;
+      context.revert();
+    };
+  }, [isMobileViewport]);
+
+  const selectBanner = (index: number) => {
+    setActiveIndex(index);
+    const trigger = scrollTriggerRef.current;
+    if (!trigger) return;
+    const progress = index / (HOME_SCROLL_BANNERS.length - 1);
+    window.scrollTo({ top: trigger.start + ((trigger.end - trigger.start) * progress), behavior: 'smooth' });
+  };
+
   return (
-    <section className="bg-white" aria-label="Featured product banners">
+    <section ref={sectionRef} className="home-scroll-banner-section bg-white px-0 py-0" aria-label="Featured product banners">
       <h2 className="sr-only">TheFutureX featured product banners</h2>
-      {HOME_SCROLL_BANNERS.map((banner, index) => (
-        <RevealOnScroll
-          key={banner.image}
-          delayMs={index === 0 ? 0 : 80}
-          className="overflow-hidden will-change-transform"
-          hiddenClassName="translate-y-20 scale-[0.94] opacity-0 blur-sm"
-          visibleClassName="translate-y-0 scale-100 opacity-100 blur-0"
-          durationClassName="duration-[1100ms]"
-        >
-          <img
-            src={banner.image}
-            alt={banner.alt}
-            className="block h-auto w-full"
-            loading={index === 0 ? 'eager' : 'lazy'}
-            decoding="async"
-          />
-        </RevealOnScroll>
-      ))}
+      <div ref={sceneRef} className="home-scroll-banner-scene mx-auto max-w-[1440px] px-3 sm:px-4">
+        <div className="home-scroll-banner-tabs sticky z-30 mx-auto max-w-6xl" role="tablist" aria-label="Featured product categories" ref={tabListRef}>
+          <span className="home-scroll-banner-pill" style={pillStyle} aria-hidden="true" />
+          {HOME_SCROLL_BANNERS.map((banner, index) => (
+            <button
+              key={banner.label}
+              id={`home-scroll-tab-${index}`}
+              ref={(node) => { tabRefs.current[index] = node; }}
+              type="button"
+              role="tab"
+              aria-selected={activeIndex === index}
+              aria-controls={`home-scroll-panel-${index}`}
+              onClick={() => selectBanner(index)}
+              className="home-scroll-banner-tab"
+            >
+              {banner.label}
+            </button>
+          ))}
+        </div>
+        <div className="home-scroll-banner-stage mt-3 sm:mt-4">
+          {HOME_SCROLL_BANNERS.map((banner, index) => (
+            <article
+              key={banner.image}
+              id={`home-scroll-panel-${index}`}
+              ref={(node) => { panelRefs.current[index] = node; }}
+              data-banner-index={index}
+              role="tabpanel"
+              aria-labelledby={`home-scroll-tab-${index}`}
+              className={`home-scroll-banner-panel${activeIndex === index ? ' home-scroll-banner-panel--active' : ''}`}
+            >
+              <img
+                src={banner.image}
+                alt={banner.alt}
+                className="block h-auto w-full"
+                loading={index === 0 ? 'eager' : 'lazy'}
+                decoding="async"
+              />
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   );
 };
@@ -289,7 +374,6 @@ export const Home: React.FC = () => {
   const [offerUnlocked, setOfferUnlocked] = useState(false);
   const [copiedOfferCode, setCopiedOfferCode] = useState('');
   const [homeWaterBannerIndex, setHomeWaterBannerIndex] = useState(0);
-  const [homeBannerAspects, setHomeBannerAspects] = useState<Record<number, number>>({});
   const [popupEntered, setPopupEntered] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -354,22 +438,6 @@ export const Home: React.FC = () => {
     }, 4500);
     return () => window.clearInterval(intervalId);
   }, [isHomeBannerPaused]);
-
-  useEffect(() => {
-    let cancelled = false;
-    HOME_WATER_RESISTANT_BANNERS.forEach((banner, index) => {
-      if (!banner.image) return;
-      const img = new Image();
-      img.onload = () => {
-        if (cancelled || !img.naturalWidth || !img.naturalHeight) return;
-        setHomeBannerAspects((prev) => ({ ...prev, [index]: img.naturalWidth / img.naturalHeight }));
-      };
-      img.src = banner.image;
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   const handleSeedDefaults = async () => {
     setSeeding(true);
@@ -470,13 +538,6 @@ export const Home: React.FC = () => {
   return (
     <div className="smart-bands-page relative min-h-screen overflow-x-hidden bg-white text-slate-950">
       <style>{`
-        @keyframes tfx-marquee {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-        .tfx-marquee-track {
-          animation: tfx-marquee 22s linear infinite;
-        }
         @keyframes tfx-shimmer {
           from { background-position: -400px 0; }
           to { background-position: 400px 0; }
@@ -487,7 +548,6 @@ export const Home: React.FC = () => {
           animation: tfx-shimmer 1.4s linear infinite;
         }
         @media (prefers-reduced-motion: reduce) {
-          .tfx-marquee-track { animation: none; }
           .tfx-shimmer { animation: none; background: #eef2f6; }
         }
       `}</style>
@@ -627,8 +687,7 @@ export const Home: React.FC = () => {
         onBlur={() => setIsHomeBannerPaused(false)}
       >
         <div
-          className="relative w-full aspect-[16/9]"
-          style={homeBannerAspects[homeWaterBannerIndex] ? { aspectRatio: String(homeBannerAspects[homeWaterBannerIndex]) } : undefined}
+          className="relative w-full aspect-[16/9] overflow-hidden sm:aspect-[21/9]"
         >
           {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
             <Link
@@ -701,8 +760,6 @@ export const Home: React.FC = () => {
           </>
         )}
       </section>
-
-      <TrustMarquee />
 
       <section id="explore-collection" className="relative z-10 bg-white px-5 pb-8 pt-2 sm:px-8 sm:pb-12 lg:px-10">
         <div className="mx-auto max-w-7xl">
@@ -932,7 +989,8 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <ScrollRevealBanners />
+      <ScrollLinkedBanners />
+
 
       <section className="bg-slate-50 px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-4xl">

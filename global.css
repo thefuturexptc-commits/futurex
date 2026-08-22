@@ -9456,6 +9456,29 @@ html.light .navbar-luxury .mobile-menu-link-active {
   color: #ffffff !important;
 }
 
+/* Homepage story: this dark surface needs an explicit override because the
+   site-wide light-theme typography rule above applies !important to all text. */
+.site-main-content .smart-bands-page .home-story-section {
+  background-color: #020617 !important;
+}
+
+.site-main-content .smart-bands-page .home-story-section .home-story-eyebrow {
+  color: #67e8f9 !important;
+}
+
+.site-main-content .smart-bands-page .home-story-section .home-story-heading {
+  color: #ffffff !important;
+}
+
+.site-main-content .smart-bands-page .home-story-section .home-story-copy,
+.site-main-content .smart-bands-page .home-story-section .home-story-copy p {
+  color: #e2e8f0 !important;
+}
+
+.site-main-content .smart-bands-page .home-story-section .home-story-link {
+  color: #a5f3fc !important;
+}
+
 /* Google sign-in must remain a high-contrast white control on the auth card.
    This is deliberately more specific than the legacy theme-wide button rules. */
 .auth-page .auth-google-button {
@@ -9561,4 +9584,480 @@ html.light .navbar-luxury .mobile-menu-link-active {
 
 .checkout-page.checkout-luxury .luxe-divider {
   border-color: var(--luxe-line) !important;
+}
+
+/* Scroll-linked homepage banners: the tab bar stays in view and its active
+   pill glides to the panel the visitor is reading. */
+.home-scroll-banner-tabs {
+  top: calc(var(--tfx-sticky-header-height, 72px) + 10px);
+  display: flex;
+  min-height: 54px;
+  padding: 5px;
+  overflow-x: auto;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.home-scroll-banner-pill {
+  position: absolute;
+  top: 5px;
+  bottom: 5px;
+  z-index: 0;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: left 460ms cubic-bezier(0.22, 1, 0.36, 1), width 460ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+}
+
+.site-main-content .home-scroll-banner-tab {
+  position: relative;
+  z-index: 1;
+  flex: 1 0 auto;
+  min-width: 145px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #f8fafc !important;
+  font-size: 14px;
+  font-weight: 800;
+  line-height: 42px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.home-scroll-banner-stage {
+  background: #ffffff;
+}
+
+.home-scroll-banner-panel {
+  overflow: hidden;
+  scroll-margin-top: calc(var(--tfx-sticky-header-height, 72px) + 76px);
+}
+
+@media (max-width: 639px) {
+  .home-scroll-banner-tabs {
+    top: calc(var(--tfx-sticky-header-height, 80px) + 8px);
+    min-height: 48px;
+  }
+
+  .site-main-content .home-scroll-banner-tab {
+    min-width: 132px;
+    padding: 0 16px;
+    font-size: 12px;
+    line-height: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-scroll-banner-pill { transition: none; }
+}
+
+/* Current offers stripe — always visible above the main site header. */
+:root {
+  --tfx-offer-strip-height: 32px;
+  --tfx-navbar-row-height: 72px;
+  --tfx-sticky-header-height: calc(var(--tfx-offer-strip-height) + var(--tfx-navbar-row-height));
+  --tfx-page-top-offset: var(--tfx-sticky-header-height);
+}
+
+.site-navbar > .tfx-current-offer-bar-static,
+html.light .site-navbar > .tfx-current-offer-bar-static,
+html.dark .site-navbar > .tfx-current-offer-bar-static {
+  position: relative !important;
+  z-index: 1 !important;
+  display: flex !important;
+  order: -1 !important;
+  width: 100% !important;
+  min-height: var(--tfx-offer-strip-height) !important;
+  max-height: var(--tfx-offer-strip-height) !important;
+  align-items: center !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid rgba(245, 158, 11, 0.42) !important;
+  border-radius: 0 !important;
+  background: #07111e !important;
+  color: #fff !important;
+  cursor: pointer !important;
+}
+
+.site-navbar > .tfx-current-offer-bar-static .tfx-current-offer-track {
+  display: inline-flex !important;
+  width: max-content !important;
+  min-width: 100% !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: clamp(1.5rem, 4vw, 4rem) !important;
+  padding: 0 1.25rem !important;
+  color: #f8fafc !important;
+  font-size: 0.69rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.045em !important;
+  line-height: 1 !important;
+  text-transform: uppercase !important;
+  white-space: nowrap !important;
+}
+
+.site-navbar > .tfx-current-offer-bar-static .tfx-current-offer-track span::before {
+  content: '✦';
+  margin-right: 0.55rem;
+  color: #fbbf24;
+}
+
+@media (max-width: 639px) {
+  :root {
+    --tfx-offer-strip-height: 28px;
+    --tfx-navbar-row-height: 64px;
+  }
+
+  .site-navbar > .tfx-current-offer-bar-static .tfx-current-offer-track {
+    justify-content: flex-start !important;
+    gap: 1.5rem !important;
+    font-size: 0.6rem !important;
+    animation: tfx-offer-ticker 24s linear infinite !important;
+  }
+}
+
+@keyframes tfx-offer-ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-36%); }
+}
+
+/* Pinned product-story stage: all supplied banner graphics occupy one full
+   viewport scene and GSAP swaps them according to scroll progress. */
+.home-scroll-banner-scene {
+  position: relative;
+  display: block;
+  width: 100%;
+  max-width: none !important;
+  height: auto;
+  min-height: 0;
+  padding-right: 0 !important;
+  padding-left: 0 !important;
+  flex-direction: column;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-tabs {
+  position: absolute !important;
+  top: 18px !important;
+  left: 50%;
+  z-index: 30;
+  width: min(calc(100% - 2rem), 980px);
+  transform: translateX(-50%);
+}
+
+.home-scroll-banner-scene .home-scroll-banner-stage {
+  position: relative;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  border-radius: 0;
+  background: #ffffff;
+  margin-top: 0 !important;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-panel {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+  will-change: transform, opacity;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-panel:first-child {
+  opacity: 1;
+  visibility: visible;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-panel img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 639px) {
+  .home-scroll-banner-scene {
+    height: calc(100svh - var(--tfx-sticky-header-height) - 16px);
+    min-height: 430px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+
+  .home-scroll-banner-scene .home-scroll-banner-stage { border-radius: 14px; }
+.home-scroll-banner-scene .home-scroll-banner-panel img { object-position: 58% center; }
+}
+
+/* Full-bleed banner: this final override intentionally defeats the older
+   max-width and spacing rules left from previous banner layouts. */
+.site-main-content .home-scroll-banner-section {
+  width: 100vw;
+  max-width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 0 !important;
+}
+
+.site-main-content .home-scroll-banner-section .home-scroll-banner-scene,
+.site-main-content .home-scroll-banner-section .home-scroll-banner-stage {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.site-main-content .home-scroll-banner-section .home-scroll-banner-stage {
+  aspect-ratio: 3031 / 1875;
+  border-radius: 0 !important;
+}
+
+.site-main-content .home-scroll-banner-section .home-scroll-banner-panel img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+}
+
+/* Final, scoped banner layout. This follows the product artwork rather than
+   legacy homepage container widths, and keeps the tab control centred over it. */
+.home-scroll-banner-section .home-scroll-banner-scene {
+  position: relative;
+  display: flex;
+  width: 100%;
+  max-width: none !important;
+  height: auto;
+  min-height: 0;
+  padding: 0 !important;
+}
+
+.home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-tabs {
+  position: relative !important;
+  top: auto !important;
+  left: auto;
+  z-index: 1;
+  width: min(calc(100% - 2rem), 980px);
+  margin: 0 auto 14px;
+  transform: none;
+}
+
+.home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3031 / 1875;
+  min-height: 0;
+  margin: 0 !important;
+  overflow: hidden;
+  border-radius: 0;
+  background: #09150f;
+}
+
+.home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-panel,
+.home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-panel:first-child {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0;
+}
+
+.home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-panel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: contain;
+  object-position: center;
+}
+
+@media (max-width: 639px) {
+  .home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-tabs {
+    top: auto !important;
+    width: calc(100% - 1rem);
+    margin-bottom: 10px;
+    min-height: 46px;
+    border-radius: 24px;
+  }
+
+  .home-scroll-banner-section .home-scroll-banner-scene .home-scroll-banner-tab {
+    min-width: 132px;
+    padding: 0 14px;
+    font-size: 12px;
+    line-height: 36px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-scroll-banner-scene { height: auto; min-height: 0; }
+  .home-scroll-banner-scene .home-scroll-banner-stage { display: grid; overflow: visible; }
+  .home-scroll-banner-scene .home-scroll-banner-panel { position: relative; grid-area: 1 / 1; }
+  .home-scroll-banner-scene .home-scroll-banner-panel:not(:first-child) { display: none; }
+  .home-scroll-banner-scene .home-scroll-banner-panel img { height: auto; }
+}
+
+/* Vertical product chapters. These rules intentionally replace the former
+   pinned overlay stage: every supplied banner follows the previous one in the
+   document, while GSAP scrubs its vertical reveal as it enters the viewport. */
+.home-scroll-banner-scene {
+  display: block;
+  height: auto;
+  min-height: 0;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-tabs {
+  position: sticky !important;
+  top: calc(var(--tfx-sticky-header-height) + 10px) !important;
+  z-index: 30;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-stage {
+  display: grid;
+  gap: 0;
+  overflow: visible;
+  border-radius: 0;
+  background: transparent;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-panel,
+.home-scroll-banner-scene .home-scroll-banner-panel:first-child {
+  position: relative;
+  inset: auto;
+  min-height: min(48vw, 700px);
+  opacity: 1;
+  visibility: visible;
+  overflow: hidden;
+  margin: 0;
+  border-radius: 0;
+  scroll-margin-top: calc(var(--tfx-sticky-header-height) + 78px);
+}
+
+.home-scroll-banner-scene .home-scroll-banner-panel img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  object-fit: cover;
+  object-position: center;
+}
+
+@media (max-width: 639px) {
+  .home-scroll-banner-scene { padding-right: 10px; padding-left: 10px; }
+  .home-scroll-banner-scene .home-scroll-banner-stage { gap: 0; }
+  .home-scroll-banner-scene .home-scroll-banner-panel,
+  .home-scroll-banner-scene .home-scroll-banner-panel:first-child { min-height: 116vw; border-radius: 0; }
+}
+
+/* Single-scene product animation (overrides the earlier vertical chapter
+   layout): the stage remains in place while scroll progress changes banners. */
+.home-scroll-banner-scene {
+  display: flex;
+  height: calc(100svh - var(--tfx-sticky-header-height) - 24px);
+  min-height: 510px;
+  flex-direction: column;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-tabs {
+  position: relative !important;
+  top: auto !important;
+  flex: 0 0 auto;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-stage {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 3031 / 1875;
+  min-height: 0;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #09150f;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-panel,
+.home-scroll-banner-scene .home-scroll-banner-panel:first-child {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 0;
+  will-change: transform, opacity;
+}
+
+.home-scroll-banner-scene .home-scroll-banner-panel img {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  object-fit: cover;
+  object-position: center;
+  will-change: transform, opacity;
+}
+
+@media (max-width: 639px) {
+  .home-scroll-banner-scene {
+    height: auto;
+    min-height: 0;
+    padding-right: 0 !important;
+    padding-left: 0 !important;
+  }
+
+  .home-scroll-banner-scene .home-scroll-banner-stage { border-radius: 0; }
+  .home-scroll-banner-scene .home-scroll-banner-tabs {
+    top: 10px !important;
+    width: calc(100% - 1rem);
+  }
+  .home-scroll-banner-scene .home-scroll-banner-panel img { object-position: 58% center; }
+}
+
+/* Mobile uses the same layered, pinned vertical-scroll story as desktop. */
+@media (max-width: 639px) {
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-scene {
+    display: flex !important;
+    height: calc(100svh - var(--tfx-sticky-header-height, 84px)) !important;
+    min-height: 520px !important;
+    padding: 0 !important;
+    flex-direction: column;
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-tabs {
+    position: relative !important;
+    top: auto !important;
+    width: calc(100% - 1rem);
+    margin: 0.5rem auto !important;
+    flex: 0 0 auto;
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-stage {
+    position: relative;
+    display: block;
+    height: auto !important;
+    min-height: 0 !important;
+    flex: 1 1 auto;
+    aspect-ratio: auto !important;
+    overflow: hidden;
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-panel,
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-panel:first-child {
+    position: absolute;
+    inset: 0;
+    min-height: 0;
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-panel img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center !important;
+  }
 }
