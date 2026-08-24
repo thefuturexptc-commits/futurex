@@ -319,8 +319,15 @@ const NavbarComponent: React.FC = () => {
         >
           <span className="tfx-current-offer-track">
             <span>Free shipping across India</span>
+            <span>10% off for Raksha Bandhan - applied automatically</span>
+            <span>10% off smart fans - applied automatically</span>
+            <span>5% off on the TFX5 AI Smart Band</span>
+            <span>Mega Price Drop on TFX5</span>
+            {/*
+            <span>10% off for Raksha Bandhan â€” applied automatically</span>
             <span>10% off smart fans — applied automatically</span>
             <span>5% off eligible bands &amp; rings — applied automatically</span>
+            */}
             <span>COD available on eligible orders</span>
           </span>
         </button>
@@ -410,20 +417,23 @@ const NavbarComponent: React.FC = () => {
                   );
                 }
                 return (
-                  <button
+                  <Link
                     key={name}
-                    type="button"
+                    to={path}
                     onMouseEnter={() => {
                       setProductsMegaOpen(false);
                       setBlogMenuOpen(false);
                     }}
-                    onClick={() => openCategory(path)}
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      setBlogMenuOpen(false);
+                    }}
                     className={`navbar-link inline-flex items-center gap-1 whitespace-nowrap text-sm font-medium tracking-wide transition-colors ${
                       active ? 'navbar-link-active' : ''
                     }`}
                   >
                     {name}
-                  </button>
+                  </Link>
                 );
               })}
             </div>
@@ -804,9 +814,13 @@ const NavbarComponent: React.FC = () => {
                         {row.links.map((link) => {
                           const active = link.path === '/' ? location.pathname === link.path : location.pathname === link.path || location.pathname.startsWith(`${link.path}/`);
                           return (
-                            <button
+                            <Link
                               key={link.name}
-                              onClick={() => openCategory(link.path)}
+                              to={link.path}
+                              onClick={() => {
+                                setMobileMenuOpen(false);
+                                setBlogMenuOpen(false);
+                              }}
                               className={`mobile-menu-link ${
                                 active ? 'mobile-menu-link-active' : ''
                               }`}
@@ -817,7 +831,7 @@ const NavbarComponent: React.FC = () => {
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M5 13l4 4L19 7" />
                                 </svg>
                               )}
-                            </button>
+                            </Link>
                           );
                         })}
                       </div>
