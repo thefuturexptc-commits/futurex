@@ -129,6 +129,13 @@ const categoryPages = {
   },
 };
 
+const blogSeoOverrides = {
+  'blog/tfx-smart-band-emi-guide': {
+    title: 'Buy a TFX Smart Band on EMI — Step-by-Step Guide | TheFutureX',
+    description: 'Want a TFX smart band without paying the full amount upfront? Here\'s exactly how EMI works at checkout, what you need, and what it actually costs per month.',
+  },
+};
+
 const blogPages = Object.fromEntries(
   sitemapRoutes
     .filter((route) => route.path === '/blog' || route.path.startsWith('/blog/'))
@@ -142,6 +149,7 @@ const blogPages = Object.fromEntries(
             route.path === '/blog'
               ? 'Explore TheFutureX smart wearable guides, smart band articles, smart ring articles, smart fan guides, heart rate monitoring posts, and sleep tracking resources.'
               : `Read ${route.label} on TheFutureX for practical smart wearable guidance, buying tips, and connected lifestyle insights.`,
+          ...blogSeoOverrides[cleanRoute],
         },
       ];
     })
@@ -696,7 +704,8 @@ const productRoutes = [...productRouteMap.keys()]
   .filter(Boolean)
   .map((slug) => `product/${slug}`);
 
-const routes = new Set(['', ...spaFallbackRoutes, ...productRoutes]);
+const publishedRoutes = sitemapRoutes.map((route) => route.path.replace(/^\//, ''));
+const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...productRoutes]);
 
 const getRouteHtml = (route, product) => {
   if (product) {
@@ -730,7 +739,7 @@ const getRouteHtml = (route, product) => {
 
   const blogPage = blogPages[route];
   if (blogPage) {
-    const title = route === 'blog' ? blogPage.title : `${blogPage.title} | TheFutureX Blog`;
+    const title = blogSeoOverrides[route]?.title || (route === 'blog' ? blogPage.title : `${blogPage.title} | TheFutureX Blog`);
     const html = injectPageSeo(baseHtml, {
       title,
       description: blogPage.description,

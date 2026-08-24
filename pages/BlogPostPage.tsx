@@ -19,6 +19,51 @@ const estimateReadingTime = (content?: string) => {
   return Math.max(1, Math.round(words / 200));
 };
 
+const renderInline = (value: string, key: string) => {
+  const parts = value.split(/(\[[^\]]+\]\([^\s)]+\)|\*\*[^*]+\*\*)/g).filter(Boolean);
+  return parts.map((part, index) => {
+    const link = part.match(/^\[([^\]]+)\]\(([^\s)]+)\)$/);
+    if (link) {
+      const [, label, href] = link;
+      const className = 'font-semibold text-[#8a6d38] underline decoration-[#ad8a4c]/50 underline-offset-4 transition hover:text-[#17130f]';
+      return href.startsWith('/') ? <Link key={`${key}-${index}`} to={href} className={className}>{label}</Link> : <a key={`${key}-${index}`} href={href} className={className}>{label}</a>;
+    }
+    if (part.startsWith('**') && part.endsWith('**')) return <strong key={`${key}-${index}`} className="font-semibold text-[#17130f]">{part.slice(2, -2)}</strong>;
+    return part;
+  });
+};
+
+const renderArticleContent = (content: string) => {
+  const lines = content.split('\n');
+  const blocks: React.ReactNode[] = [];
+  let index = 0;
+  while (index < lines.length) {
+    const line = lines[index].trim();
+    if (!line) { index += 1; continue; }
+    if (line.startsWith('## ')) {
+      blocks.push(<h2 key={`heading-${index}`} className="mt-12 font-serif text-3xl font-semibold leading-tight text-[#17130f]">{renderInline(line.slice(3), `heading-${index}`)}</h2>);
+      index += 1;
+      continue;
+    }
+    const isOrdered = /^\d+\.\s/.test(line);
+    const isUnordered = line.startsWith('- ');
+    if (isOrdered || isUnordered) {
+      const items: string[] = [];
+      const matcher = isOrdered ? /^\d+\.\s/ : /^-\s/;
+      while (index < lines.length && matcher.test(lines[index].trim())) {
+        items.push(lines[index].trim().replace(matcher, ''));
+        index += 1;
+      }
+      const List = isOrdered ? 'ol' : 'ul';
+      blocks.push(<List key={`list-${index}`} className={`${isOrdered ? 'list-decimal' : 'list-disc'} my-6 space-y-3 pl-6 marker:text-[#ad8a4c]`}>{items.map((item, itemIndex) => <li key={itemIndex}>{renderInline(item, `list-${index}-${itemIndex}`)}</li>)}</List>);
+      continue;
+    }
+    blocks.push(<p key={`paragraph-${index}`} className="mt-6">{renderInline(line, `paragraph-${index}`)}</p>);
+    index += 1;
+  }
+  return blocks;
+};
+
 export const BlogPostPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const [post, setPost] = useState<BlogPost | null | undefined>(undefined);
@@ -40,7 +85,7 @@ export const BlogPostPage: React.FC = () => {
     if (!post) return;
     const path = `/blog/${post.slug}`;
     const url = `https://thefuturex.in${path}`;
-    setSeoMetadata({ title: `${post.title} | TheFutureX Blog`, description: post.excerpt, path, type: 'website' });
+    setSeoMetadata({ title: post.metaTitle || `${post.title} | TheFutureX Blog`, description: post.metaDescription || post.excerpt, path, type: 'website' });
     setJsonLd('blog-article-json-ld', {
       '@context': 'https://schema.org', '@type': 'Article', headline: post.title,
       description: post.excerpt, mainEntityOfPage: { '@type': 'WebPage', '@id': url },
@@ -127,9 +172,28 @@ export const BlogPostPage: React.FC = () => {
 
       {/* ─── Article body ─────────────────────────────────────── */}
       <article className="mx-auto max-w-3xl px-5 py-14 sm:py-16">
-        <div className="whitespace-pre-wrap text-[17px] leading-[1.9] text-[#2b241c]">
-          {post.content}
+        <div className="text-[17px] leading-[1.9] text-[#2b241c]">
+          {renderArticleContent(post.content)}
         </div>
+
+        {post.featuredProduct && (
+          <section className="mt-14 overflow-hidden rounded-2xl border border-[#17130f14] bg-[#faf7f1]">
+            <div className="grid items-center sm:grid-cols-[180px_1fr]">
+              <div className="flex min-h-48 items-center justify-center bg-white p-6">
+                <img src={post.featuredProduct.image} alt={post.featuredProduct.name} className="max-h-40 w-full object-contain" />
+              </div>
+              <div className="p-7 sm:p-8">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#ad8a4c]">Featured product</p>
+                <h2 className="mt-2 font-serif text-2xl font-semibold text-[#17130f]">{post.featuredProduct.name}</h2>
+                {post.featuredProduct.price && <p className="mt-2 text-lg font-bold text-[#17130f]">{post.featuredProduct.price}</p>}
+                <p className="mt-3 text-[15px] leading-7 text-[#4a4238]">{post.featuredProduct.description}</p>
+                <Link to={post.featuredProduct.href} className="mt-5 inline-flex rounded-full bg-[#17130f] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#8a6d38]">
+                  View TFX5 AI Smart Band
+                </Link>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* ─── FAQs ────────────────────────────────────────────── */}
         {post.faqs && post.faqs.length > 0 && (

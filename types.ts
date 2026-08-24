@@ -311,6 +311,15 @@ export interface BlogPost {
   updatedAt: string;
   image?: string;
   faqs?: Array<{ question: string; answer: string }>;
+  metaTitle?: string;
+  metaDescription?: string;
+  featuredProduct?: {
+    name: string;
+    href: string;
+    image: string;
+    price?: string;
+    description: string;
+  };
 }
 
 export type Theme = 'light' | 'dark';

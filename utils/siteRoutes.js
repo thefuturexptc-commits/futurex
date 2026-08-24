@@ -362,6 +362,7 @@ const rawInfoRoutes = [
 
 export const infoRoutes = dedupeRoutes(rawInfoRoutes);
 const publishedBlogRoutes = [
+  { path: '/blog/tfx-smart-band-emi-guide', label: 'How to Buy a TFX Smart Band on EMI', changefreq: 'monthly', priority: '0.7' },
   { path: '/blog/activity-tracker-band-guide', label: 'Activity Tracker Band Guide', changefreq: 'monthly', priority: '0.7' },
   { path: '/blog/best-smart-bands-under-10000-india', label: 'Best Smart Bands Under ₹10,000 in India', changefreq: 'monthly', priority: '0.7' },
   { path: '/blog/what-is-spo2-monitoring', label: 'What Is SpO2 Monitoring?', changefreq: 'monthly', priority: '0.7' },

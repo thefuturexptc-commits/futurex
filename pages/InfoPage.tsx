@@ -6425,13 +6425,6 @@ const BlogLandingPage: React.FC = () => {
         </header>
 
         <section className="mt-12">
-          <h2 className="text-2xl font-black text-white">Blogs</h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
-            {blogPages.map((item) => renderCard(item))}
-          </div>
-        </section>
-
-        <section className="mt-12">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0ad7bd]">Latest guides</p>
           <h2 className="mt-2 text-2xl font-black text-white">New from TheFutureX Journal</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -6446,6 +6439,13 @@ const BlogLandingPage: React.FC = () => {
                 <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{post.excerpt}</p>
               </Link>
             ))}
+          </div>
+        </section>
+
+        <section className="mt-12">
+          <h2 className="text-2xl font-black text-white">Blogs</h2>
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
+            {blogPages.map((item) => renderCard(item))}
           </div>
         </section>
 
