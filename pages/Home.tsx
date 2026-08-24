@@ -3,11 +3,6 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-<<<<<<< HEAD
-=======
-
-gsap.registerPlugin(ScrollTrigger);
->>>>>>> 0070b30 (new)
 import { Button } from '../components/ui/Button';
 import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -22,15 +17,12 @@ import homeCollectionRingImage from '../assets/images/home-collection-smart-ring
 import homeRainReadyBandBanner from '../assets/images/home-rain-ready-band-banner.webp';
 import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
 import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
-<<<<<<< HEAD
 import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
 import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
 import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
 import homeScrollBannerFour from '../assets/images/home-scroll-banner-04.webp';
-=======
 import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
->>>>>>> 0070b30 (new)
 import { homepageFaqs } from '../services/seo';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -49,22 +41,8 @@ const RevealOnScroll: React.FC<{
   children: React.ReactNode;
   className?: string;
   delayMs?: number;
-<<<<<<< HEAD
-  hiddenClassName?: string;
-  visibleClassName?: string;
-  durationClassName?: string;
-}> = ({
-  children,
-  className = '',
-  delayMs = 0,
-  hiddenClassName = 'opacity-0 translate-y-6',
-  visibleClassName = 'opacity-100 translate-y-0',
-  durationClassName = 'duration-700',
-}) => {
-=======
   variant?: 'up' | 'scale' | 'blur' | 'left' | 'right';
 }> = ({ children, className = '', delayMs = 0, variant = 'up' }) => {
->>>>>>> 0070b30 (new)
   const nodeRef = React.useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -115,13 +93,9 @@ const RevealOnScroll: React.FC<{
     <div
       ref={nodeRef}
       style={{ transitionDelay: visible ? `${delayMs}ms` : '0ms' }}
-<<<<<<< HEAD
-      className={`transition-all ${durationClassName} ease-out ${visible ? visibleClassName : hiddenClassName} ${className}`}
-=======
       className={`transition-all duration-700 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
         visible ? visibleTransform : hiddenTransform
       } ${className}`}
->>>>>>> 0070b30 (new)
     >
       {children}
     </div>
@@ -160,8 +134,6 @@ const ScrollToTopButton: React.FC = () => {
   );
 };
 
-<<<<<<< HEAD
-=======
 const TRUST_STRIP_ITEMS = [
   'IP68 Water Resistant',
   'Heart Rate & SpO2 Tracking',
@@ -194,7 +166,6 @@ const TrustMarquee: React.FC = () => {
   );
 };
 
->>>>>>> 0070b30 (new)
 const CATALOG_PAGE_SIZE = 4;
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
@@ -754,8 +725,6 @@ export const Home: React.FC = () => {
   return (
     <div className="smart-bands-page relative min-h-screen overflow-x-hidden bg-white text-slate-950">
       <style>{`
-<<<<<<< HEAD
-=======
         @keyframes tfx-marquee {
           from { transform: translateX(0); }
           to { transform: translateX(-50%); }
@@ -767,7 +736,6 @@ export const Home: React.FC = () => {
           -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
           mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
         }
->>>>>>> 0070b30 (new)
         @keyframes tfx-shimmer {
           from { background-position: -400px 0; }
           to { background-position: 400px 0; }
@@ -1029,9 +997,7 @@ export const Home: React.FC = () => {
         }
 
         @media (prefers-reduced-motion: reduce) {
-<<<<<<< HEAD
           .tfx-shimmer { animation: none; background: #eef2f6; }
-=======
           .tfx-marquee-track,
           .tfx-shimmer,
           .tfx-gradient-heading,
@@ -1057,7 +1023,6 @@ export const Home: React.FC = () => {
             opacity: 1;
           }
           .tfx-shine::after { display: none; }
->>>>>>> 0070b30 (new)
         }
       `}</style>
 
@@ -1214,13 +1179,7 @@ export const Home: React.FC = () => {
                   <img
                     src={banner.image}
                     alt={banner.alt}
-<<<<<<< HEAD
                     className="relative z-10 h-full w-full object-contain object-center"
-=======
-                    className={`relative z-10 h-full w-full object-contain object-center transition-transform duration-[5000ms] ease-out ${
-                      index === homeWaterBannerIndex ? `scale-[1.06] ${'tfx-hero-slide-active'}` : 'scale-100'
-                    }`}
->>>>>>> 0070b30 (new)
                     loading={index === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
@@ -1519,12 +1478,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-<<<<<<< HEAD
       <ScrollLinkedBanners />
-
-=======
-      <FeaturedBannerTabs href={featuredBandHref} />
->>>>>>> 0070b30 (new)
 
       <section className="bg-slate-50 px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-4xl">

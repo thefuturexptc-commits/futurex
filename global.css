@@ -9480,7 +9480,6 @@ html.light .navbar-luxury .mobile-menu-link-active {
   color: #ffffff !important;
 }
 
-<<<<<<< HEAD
 /* Homepage story: this dark surface needs an explicit override because the
    site-wide light-theme typography rule above applies !important to all text. */
 .site-main-content .smart-bands-page .home-story-section {
@@ -9502,7 +9501,8 @@ html.light .navbar-luxury .mobile-menu-link-active {
 
 .site-main-content .smart-bands-page .home-story-section .home-story-link {
   color: #a5f3fc !important;
-=======
+}
+
 /* Homepage featured-banner tab switcher. The active pill's dimensions are
    measured in React so it glides between tab labels of different widths. */
 .tfx-featured-banner-tabs {
@@ -9671,7 +9671,6 @@ html.light .navbar-luxury .mobile-menu-link-active {
 
 @media (prefers-reduced-motion: reduce) {
   .tfx-featured-banner-pill, .tfx-featured-banner-cta { transition: none; }
->>>>>>> 0070b30 (new)
 }
 
 /* Google sign-in must remain a high-contrast white control on the auth card.
@@ -9781,7 +9780,6 @@ html.light .navbar-luxury .mobile-menu-link-active {
   border-color: var(--luxe-line) !important;
 }
 
-<<<<<<< HEAD
 /* Scroll-linked homepage banners: the tab bar stays in view and its active
    pill glides to the panel the visitor is reading. */
 .home-scroll-banner-tabs {
@@ -9854,10 +9852,7 @@ html.light .navbar-luxury .mobile-menu-link-active {
   .home-scroll-banner-pill { transition: none; }
 }
 
-/* Current offers stripe — always visible above the main site header. */
-=======
 /* Current offers stripe — keep this above the primary header at every breakpoint. */
->>>>>>> 0070b30 (new)
 :root {
   --tfx-offer-strip-height: 32px;
   --tfx-navbar-row-height: 72px;
@@ -9928,8 +9923,6 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
   from { transform: translateX(0); }
   to { transform: translateX(-36%); }
 }
-<<<<<<< HEAD
-
 /* Pinned product-story stage: all supplied banner graphics occupy one full
    viewport scene and GSAP swaps them according to scroll progress. */
 .home-scroll-banner-scene {
@@ -10281,5 +10274,3 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
     object-position: center !important;
   }
 }
-=======
->>>>>>> 0070b30 (new)

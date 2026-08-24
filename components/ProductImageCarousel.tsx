@@ -308,11 +308,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                   <img
                     src={item.src}
                     alt={alt}
-<<<<<<< HEAD
                     className={`product-gallery-image h-full w-full transform-gpu transition-transform duration-200 ease-out will-change-transform group-hover:scale-[1.018] ${
-=======
-                    className={`product-gallery-image h-full w-full transform-gpu transition-transform duration-75 ease-out will-change-transform group-hover:scale-[1.025] ${
->>>>>>> 0070b30 (new)
                       bannerMode ? 'object-contain object-center' : 'object-contain'
                     }`}
                     draggable={false}
