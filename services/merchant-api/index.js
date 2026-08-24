@@ -20,7 +20,7 @@ const products = [
     offerId: 'ring001',
     title: 'The Future X TP-09 Pro Heating & Cooling Air Safe for Kids Pets',
     description: 'Heating and cooling air device from FutureX, safe for kids and pets.',
-    link: 'https://thefuturex.in/product/the-future-x-tp-09-pro-heating-cooling-air-safe-for-kids-pets',
+    link: 'https://thefuturex.in/product/tfxhot-and-coolair-pro',
     imageLink: 'https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2F1777095640864_TP-09%20Pro%20slide%201.jpg.webp?alt=media&token=3336a46e-26d9-43aa-85e3-eecb1250914c',
     additionalImageLinks: [],
     price: '11499',

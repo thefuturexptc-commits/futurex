@@ -3,6 +3,11 @@ import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+<<<<<<< HEAD
+=======
+
+gsap.registerPlugin(ScrollTrigger);
+>>>>>>> 0070b30 (new)
 import { Button } from '../components/ui/Button';
 import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -17,10 +22,15 @@ import homeCollectionRingImage from '../assets/images/home-collection-smart-ring
 import homeRainReadyBandBanner from '../assets/images/home-rain-ready-band-banner.webp';
 import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
 import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
+<<<<<<< HEAD
 import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
 import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
 import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
 import homeScrollBannerFour from '../assets/images/home-scroll-banner-04.webp';
+=======
+import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
+import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
+>>>>>>> 0070b30 (new)
 import { homepageFaqs } from '../services/seo';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -30,11 +40,16 @@ gsap.registerPlugin(ScrollTrigger);
  * viewport. Pure CSS transition driven by one IntersectionObserver per
  * instance; disconnects itself after firing once. No images, no libraries.
  * Respects prefers-reduced-motion by rendering fully visible immediately.
+ *
+ * `variant` swaps the entrance style so back-to-back sections don't all feel
+ * identical: `up` (default lift), `scale` (punchy zoom-in), `blur` (soft
+ * focus-pull), `left` / `right` (directional slide).
  */
 const RevealOnScroll: React.FC<{
   children: React.ReactNode;
   className?: string;
   delayMs?: number;
+<<<<<<< HEAD
   hiddenClassName?: string;
   visibleClassName?: string;
   durationClassName?: string;
@@ -46,6 +61,10 @@ const RevealOnScroll: React.FC<{
   visibleClassName = 'opacity-100 translate-y-0',
   durationClassName = 'duration-700',
 }) => {
+=======
+  variant?: 'up' | 'scale' | 'blur' | 'left' | 'right';
+}> = ({ children, className = '', delayMs = 0, variant = 'up' }) => {
+>>>>>>> 0070b30 (new)
   const nodeRef = React.useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -72,11 +91,37 @@ const RevealOnScroll: React.FC<{
     return () => observer.disconnect();
   }, []);
 
+  const hiddenTransform =
+    variant === 'scale'
+      ? 'opacity-0 scale-90'
+      : variant === 'blur'
+        ? 'opacity-0 translate-y-3 blur-md'
+        : variant === 'left'
+          ? 'opacity-0 -translate-x-8'
+          : variant === 'right'
+            ? 'opacity-0 translate-x-8'
+            : 'opacity-0 translate-y-6';
+
+  const visibleTransform =
+    variant === 'scale'
+      ? 'opacity-100 scale-100'
+      : variant === 'blur'
+        ? 'opacity-100 translate-y-0 blur-0'
+        : variant === 'left' || variant === 'right'
+          ? 'opacity-100 translate-x-0'
+          : 'opacity-100 translate-y-0';
+
   return (
     <div
       ref={nodeRef}
       style={{ transitionDelay: visible ? `${delayMs}ms` : '0ms' }}
+<<<<<<< HEAD
       className={`transition-all ${durationClassName} ease-out ${visible ? visibleClassName : hiddenClassName} ${className}`}
+=======
+      className={`transition-all duration-700 [transition-timing-function:cubic-bezier(0.16,1,0.3,1)] ${
+        visible ? visibleTransform : hiddenTransform
+      } ${className}`}
+>>>>>>> 0070b30 (new)
     >
       {children}
     </div>
@@ -104,7 +149,7 @@ const ScrollToTopButton: React.FC = () => {
       type="button"
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label="Scroll back to top"
-      className={`fixed bottom-5 right-4 z-40 grid h-11 w-11 place-items-center rounded-full bg-slate-950 text-white shadow-[0_10px_26px_rgba(15,23,42,0.35)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-[#0ea5e9] active:scale-90 sm:bottom-7 sm:right-6 ${
+      className={`fixed bottom-5 right-4 z-40 grid h-11 w-11 place-items-center rounded-full bg-slate-950 text-white shadow-[0_10px_26px_rgba(15,23,42,0.35)] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-[#0ea5e9] hover:shadow-[0_12px_30px_rgba(14,165,233,0.45)] active:scale-90 sm:bottom-7 sm:right-6 ${
         visible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0'
       }`}
     >
@@ -115,10 +160,176 @@ const ScrollToTopButton: React.FC = () => {
   );
 };
 
+<<<<<<< HEAD
+=======
+const TRUST_STRIP_ITEMS = [
+  'IP68 Water Resistant',
+  'Heart Rate & SpO2 Tracking',
+  'Smart Alerts',
+  '7-Day Easy Returns',
+  'Cash on Delivery Available',
+  '1 Year Warranty',
+];
+
+/**
+ * Infinitely scrolling trust-badge strip. Duplicates the item list once so
+ * the CSS marquee can loop seamlessly at -50% translate.
+ */
+const TrustMarquee: React.FC = () => {
+  const items = [...TRUST_STRIP_ITEMS, ...TRUST_STRIP_ITEMS];
+  return (
+    <div className="tfx-marquee-mask group relative overflow-hidden border-y border-white/10 bg-slate-950 py-3">
+      <div className="tfx-marquee-track group-hover:[animation-play-state:paused] flex w-max items-center gap-10 whitespace-nowrap">
+        {items.map((item, index) => (
+          <span
+            key={`${item}-${index}`}
+            className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.18em] text-white/90 sm:text-sm"
+          >
+            <span className="h-1.5 w-1.5 rounded-full bg-[#1ca9a4] shadow-[0_0_10px_2px_rgba(28,169,164,0.7)]" aria-hidden="true" />
+            {item}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+>>>>>>> 0070b30 (new)
 const CATALOG_PAGE_SIZE = 4;
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 const FEATURED_FAN_PRODUCT_PATH = '/product/tfx-advance';
+const FEATURED_BANNER_SLIDES = [
+  {
+    id: 'tfx5',
+    tab: 'TFX5 AI Band',
+    image: tfxV5BannerOne,
+    alt: 'TFX5 AI Smart Band powered by TFX Vital Pro',
+    eyebrow: 'AI health tracking',
+    title: 'TFX5 AI Smart Band',
+    description: 'A smarter way to understand your everyday wellness.',
+    features: ['Heart rate & SpO2 insights', 'Sleep and activity tracking', 'TFX Vital app support'],
+  },
+  {
+    id: 'vital',
+    tab: 'TFX Vital App',
+    image: tfxV5BannerTwo,
+    alt: 'TheFutureX app and TFX5 smart band colour variants',
+    eyebrow: 'Connected insights',
+    title: 'Made for your everyday rhythm',
+    description: 'See your trends, stay consistent, and keep every insight in one place.',
+    features: ['Simple companion app', 'Wellness reports', 'Multi-day wearable support'],
+  },
+] as const;
+
+/**
+ * Pinned, scroll-scrubbed banner section for the TFX5 feature banners —
+ * matches the Noise "Master Series" scroll-scrub pattern: the section pins
+ * to the viewport while the user scrolls through it, and the banners
+ * crossfade/scale purely as a function of scroll position (GSAP
+ * ScrollTrigger `pin` + `scrub`). There is no autoplay, no click-driven
+ * slider, and no timer — the only thing that moves the animation forward
+ * is the user's scroll. A small progress-dot rail shows which banner is
+ * current; it is a passive indicator, not a control.
+ */
+const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const wrapperRef = useRef<HTMLElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
+  const panelRefs = useRef<Array<HTMLElement | null>>([]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setReducedMotion(Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches));
+  }, []);
+
+  useLayoutEffect(() => {
+    const wrapper = wrapperRef.current;
+    const stage = stageRef.current;
+    const panels = panelRefs.current.filter((panel): panel is HTMLElement => Boolean(panel));
+    if (!wrapper || !stage || panels.length < 2 || reducedMotion) return undefined;
+
+    const ctx = gsap.context(() => {
+      gsap.set(panels[0], { opacity: 1, scale: 1 });
+      panels.slice(1).forEach((panel) => gsap.set(panel, { opacity: 0, scale: 1.08 }));
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: wrapper,
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.6,
+          pin: stage,
+          anticipatePin: 1,
+          onUpdate: (self) => {
+            const raw = self.progress * (panels.length - 1);
+            const nearest = Math.min(panels.length - 1, Math.round(raw));
+            setActiveIndex((prev) => (prev === nearest ? prev : nearest));
+          },
+        },
+      });
+
+      panels.forEach((panel, index) => {
+        if (index === panels.length - 1) return;
+        const next = panels[index + 1];
+        tl.to(panel, { opacity: 0, scale: 0.94, ease: 'none' }, index)
+          .fromTo(next, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, ease: 'none' }, index);
+      });
+    }, wrapper);
+
+    return () => ctx.revert();
+  }, [reducedMotion]);
+
+  const slideCount = FEATURED_BANNER_SLIDES.length;
+
+  return (
+    <section
+      ref={wrapperRef}
+      className="tfx-featured-banner-section relative bg-white"
+      style={reducedMotion ? undefined : { height: `${slideCount * 100}vh` }}
+      aria-label="Featured TFX5 experiences"
+    >
+      <div ref={stageRef} className={reducedMotion ? '' : 'h-screen w-full'}>
+        <div className="mx-auto flex h-full max-w-[1120px] flex-col justify-center px-4 py-10 sm:py-14">
+          <div
+            className={`tfx-featured-banner-stage ${reducedMotion ? 'tfx-featured-banner-stage--stacked' : ''}`}
+          >
+            {FEATURED_BANNER_SLIDES.map((slide, index) => (
+              <article
+                key={slide.id}
+                ref={(node) => { panelRefs.current[index] = node; }}
+                aria-hidden={!reducedMotion && index !== activeIndex}
+                className={`tfx-featured-banner-panel ${reducedMotion || index === 0 ? 'tfx-featured-banner-panel--static' : ''}`}
+              >
+                <img src={slide.image} alt={slide.alt} className="tfx-featured-banner-image" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+                <div className="tfx-featured-banner-shade" aria-hidden="true" />
+                <div className="tfx-featured-banner-copy">
+                  <p className="tfx-featured-banner-eyebrow">{slide.eyebrow}</p>
+                  <h2>{slide.title}</h2>
+                  <p className="tfx-featured-banner-description">{slide.description}</p>
+                  <ul>
+                    {slide.features.map((feature) => <li key={feature}>{feature}</li>)}
+                  </ul>
+                  <Link to={href} className="tfx-featured-banner-cta">Shop Now</Link>
+                </div>
+              </article>
+            ))}
+
+            {!reducedMotion && (
+              <div className="tfx-featured-banner-dots" aria-hidden="true">
+                {FEATURED_BANNER_SLIDES.map((slide, index) => (
+                  <span key={slide.id} className={`tfx-featured-banner-dot ${index === activeIndex ? 'is-active' : ''}`} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+};
+
 const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: string; mobileImage?: string }> = [
   {
     image: homeWaterproofBandBanner,
@@ -543,6 +754,20 @@ export const Home: React.FC = () => {
   return (
     <div className="smart-bands-page relative min-h-screen overflow-x-hidden bg-white text-slate-950">
       <style>{`
+<<<<<<< HEAD
+=======
+        @keyframes tfx-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .tfx-marquee-track {
+          animation: tfx-marquee 22s linear infinite;
+        }
+        .tfx-marquee-mask {
+          -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+        }
+>>>>>>> 0070b30 (new)
         @keyframes tfx-shimmer {
           from { background-position: -400px 0; }
           to { background-position: 400px 0; }
@@ -552,8 +777,287 @@ export const Home: React.FC = () => {
           background-size: 800px 100%;
           animation: tfx-shimmer 1.4s linear infinite;
         }
+
+        /* Premium heading gradient sweep */
+        @keyframes tfx-gradient-flow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .tfx-gradient-heading {
+          background-image: linear-gradient(100deg, #0f172a 0%, #0ea5e9 22%, #df0b16 45%, #0f172a 68%, #0ea5e9 88%, #0f172a 100%);
+          background-size: 250% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: tfx-gradient-flow 7s ease-in-out infinite;
+        }
+
+        /* Animated underline accent that draws in on scroll */
+        @keyframes tfx-underline-draw {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+        .tfx-underline-draw {
+          animation: tfx-underline-draw 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+          transform-origin: left center;
+        }
+
+        /* Card shine sweep on hover - premium tech-site signature move */
+        .tfx-shine {
+          position: relative;
+          overflow: hidden;
+        }
+        .tfx-shine::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.55) 40%, transparent 60%);
+          transform: translateX(-130%);
+          transition: transform 0.75s cubic-bezier(0.22,1,0.36,1);
+          pointer-events: none;
+          z-index: 15;
+        }
+        .tfx-shine:hover::after {
+          transform: translateX(130%);
+        }
+
+        /* Soft ambient glow that intensifies on hover */
+        .tfx-glow-card {
+          transition: box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1), border-color 0.35s ease;
+        }
+        .tfx-glow-card:hover {
+          box-shadow: 0 20px 45px -12px rgba(14,165,233,0.28), 0 8px 20px -8px rgba(223,11,22,0.18);
+          border-color: rgba(14,165,233,0.35);
+        }
+
+        /* Pulsing badge glow for New/Best Seller/Price Drop pills */
+        @keyframes tfx-badge-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(223,11,22,0.45); }
+          50% { box-shadow: 0 0 0 6px rgba(223,11,22,0); }
+        }
+        .tfx-badge-pulse {
+          animation: tfx-badge-pulse 2.2s ease-out infinite;
+        }
+
+        /* Hero slide: cinematic scale + fade, more premium than a flat crossfade */
+        @keyframes tfx-hero-in {
+          from { opacity: 0; transform: scale(1.08); filter: saturate(0.85); }
+          to { opacity: 1; transform: scale(1); filter: saturate(1); }
+        }
+        .tfx-hero-slide-active {
+          animation: tfx-hero-in 1.1s cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        /* Floating micro-motion for the QR / app badge cluster */
+        @keyframes tfx-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .tfx-float {
+          animation: tfx-float 3.6s ease-in-out infinite;
+        }
+
+        /* Progress-filling story-style dots for the hero carousel */
+        @keyframes tfx-dot-fill {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+        .tfx-dot-fill {
+          animation: tfx-dot-fill 4.5s linear both;
+          transform-origin: left center;
+        }
+
+        /* Pinned scroll-scrub banner (TFX5 / TFX Vital app) */
+        .tfx-featured-banner-stage {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          border-radius: 1.5rem;
+          background: #0a0e17;
+          box-shadow: 0 24px 60px -20px rgba(15,23,42,0.35);
+        }
+        .tfx-featured-banner-stage--stacked {
+          height: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          border-radius: 0;
+          overflow: visible;
+          background: transparent;
+          box-shadow: none;
+        }
+        .tfx-featured-banner-dots {
+          position: absolute;
+          left: 50%;
+          bottom: 1.25rem;
+          transform: translateX(-50%);
+          z-index: 5;
+          display: flex;
+          gap: 0.5rem;
+        }
+        .tfx-featured-banner-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.4);
+          transition: width 0.3s ease, background 0.3s ease;
+        }
+        .tfx-featured-banner-dot.is-active {
+          width: 22px;
+          background: linear-gradient(120deg, #0ea5e9, #df0b16);
+        }
+        .tfx-featured-banner-panel {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          transform: scale(1.04);
+          pointer-events: none;
+          will-change: opacity, transform;
+        }
+        .tfx-featured-banner-panel--static {
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+        }
+        .tfx-featured-banner-stage--stacked .tfx-featured-banner-panel {
+          position: relative;
+          inset: auto;
+          aspect-ratio: 3 / 4;
+          border-radius: 1.5rem;
+          overflow: hidden;
+        }
+        @media (min-width: 640px) {
+          .tfx-featured-banner-stage--stacked .tfx-featured-banner-panel { aspect-ratio: 16 / 9; }
+        }
+        .tfx-featured-banner-image {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center 22%;
+        }
+        .tfx-featured-banner-shade {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(10,14,23,0) 34%, rgba(10,14,23,0.5) 72%, rgba(10,14,23,0.86) 100%);
+        }
+        .tfx-featured-banner-copy {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          padding: 1.5rem 1.5rem 2rem;
+          color: #fff;
+          max-width: 640px;
+        }
+        @media (min-width: 640px) {
+          .tfx-featured-banner-copy { padding: 2.5rem 3rem 3rem; }
+        }
+        .tfx-featured-banner-eyebrow {
+          font-size: 0.68rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.24em;
+          color: #38bdf8;
+          margin: 0 0 0.5rem;
+        }
+        .tfx-featured-banner-copy h2 {
+          font-size: clamp(1.4rem, 4vw, 2.6rem);
+          font-weight: 900;
+          line-height: 1.08;
+          margin: 0 0 0.6rem;
+        }
+        .tfx-featured-banner-description {
+          font-size: 0.9rem;
+          line-height: 1.5;
+          color: rgba(255,255,255,0.85);
+          max-width: 480px;
+          margin: 0 0 1rem;
+        }
+        .tfx-featured-banner-copy ul {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem 1.25rem;
+          list-style: none;
+          padding: 0;
+          margin: 0 0 1.5rem;
+        }
+        .tfx-featured-banner-copy ul li {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: rgba(255,255,255,0.92);
+        }
+        .tfx-featured-banner-copy ul li::before {
+          content: '';
+          width: 5px;
+          height: 5px;
+          border-radius: 999px;
+          background: #38bdf8;
+          box-shadow: 0 0 8px 2px rgba(56,189,248,0.6);
+          flex-shrink: 0;
+        }
+        .tfx-featured-banner-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          background: #fff;
+          color: #0a0e17;
+          font-weight: 900;
+          font-size: 0.82rem;
+          padding: 0.7rem 1.5rem;
+          border-radius: 999px;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .tfx-featured-banner-cta:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+        }
+
+        /* Section divider accent line */
+        @keyframes tfx-divider-grow {
+          from { width: 0; opacity: 0; }
+          to { width: 64px; opacity: 1; }
+        }
+        .tfx-divider {
+          animation: tfx-divider-grow 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+        }
+
         @media (prefers-reduced-motion: reduce) {
+<<<<<<< HEAD
           .tfx-shimmer { animation: none; background: #eef2f6; }
+=======
+          .tfx-marquee-track,
+          .tfx-shimmer,
+          .tfx-gradient-heading,
+          .tfx-underline-draw,
+          .tfx-shine::after,
+          .tfx-badge-pulse,
+          .tfx-hero-slide-active,
+          .tfx-float,
+          .tfx-dot-fill,
+          .tfx-divider {
+            animation: none !important;
+          }
+          .tfx-gradient-heading {
+            background: none;
+            -webkit-background-clip: initial;
+            background-clip: initial;
+            color: #0f172a;
+          }
+          .tfx-underline-draw,
+          .tfx-divider {
+            transform: none;
+            width: 64px;
+            opacity: 1;
+          }
+          .tfx-shine::after { display: none; }
+>>>>>>> 0070b30 (new)
         }
       `}</style>
 
@@ -710,13 +1214,20 @@ export const Home: React.FC = () => {
                   <img
                     src={banner.image}
                     alt={banner.alt}
+<<<<<<< HEAD
                     className="relative z-10 h-full w-full object-contain object-center"
+=======
+                    className={`relative z-10 h-full w-full object-contain object-center transition-transform duration-[5000ms] ease-out ${
+                      index === homeWaterBannerIndex ? `scale-[1.06] ${'tfx-hero-slide-active'}` : 'scale-100'
+                    }`}
+>>>>>>> 0070b30 (new)
                     loading={index === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
                 )}
               </picture>
               <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-1/4 bg-gradient-to-t from-black/45 via-black/0 to-transparent" />
+              <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1/5 bg-gradient-to-b from-black/25 via-black/0 to-transparent" />
             </Link>
           ))}
         </div>
@@ -731,7 +1242,7 @@ export const Home: React.FC = () => {
                 )
               }
               aria-label="Previous banner"
-              className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition hover:bg-white hover:scale-105 sm:flex"
+              className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition-all duration-200 hover:scale-110 hover:bg-white hover:shadow-[0_0_0_4px_rgba(14,165,233,0.25)] active:scale-95 sm:flex"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="15 18 9 12 15 6" />
@@ -741,7 +1252,7 @@ export const Home: React.FC = () => {
               type="button"
               onClick={() => setHomeWaterBannerIndex((current) => (current + 1) % HOME_WATER_RESISTANT_BANNERS.length)}
               aria-label="Next banner"
-              className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition hover:bg-white hover:scale-105 sm:flex"
+              className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition-all duration-200 hover:scale-110 hover:bg-white hover:shadow-[0_0_0_4px_rgba(14,165,233,0.25)] active:scale-95 sm:flex"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="9 18 15 12 9 6" />
@@ -756,10 +1267,17 @@ export const Home: React.FC = () => {
                   onClick={() => setHomeWaterBannerIndex(index)}
                   aria-label={`Show banner ${index + 1} of ${HOME_WATER_RESISTANT_BANNERS.length}`}
                   aria-current={index === homeWaterBannerIndex}
-                  className={`h-1.5 rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
-                    index === homeWaterBannerIndex ? 'w-8 bg-white' : 'w-1.5 bg-white/55 hover:bg-white/80'
+                  className={`relative h-1.5 overflow-hidden rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
+                    index === homeWaterBannerIndex ? 'w-8 bg-white/30' : 'w-1.5 bg-white/55 hover:bg-white/80'
                   }`}
-                />
+                >
+                  {index === homeWaterBannerIndex && !isHomeBannerPaused && (
+                    <span className="tfx-dot-fill absolute inset-0 rounded-full bg-white" />
+                  )}
+                  {index === homeWaterBannerIndex && isHomeBannerPaused && (
+                    <span className="absolute inset-0 rounded-full bg-white" />
+                  )}
+                </button>
               ))}
             </div>
           </>
@@ -768,25 +1286,28 @@ export const Home: React.FC = () => {
 
       <section id="explore-collection" className="relative z-10 bg-white px-5 pb-8 pt-2 sm:px-8 sm:pb-12 lg:px-10">
         <div className="mx-auto max-w-7xl">
-          <h2 className="text-center font-display text-2xl font-black leading-tight text-slate-950 sm:text-4xl">
-            Explore Collection
-          </h2>
+          <RevealOnScroll variant="blur">
+            <h2 className="tfx-gradient-heading text-center font-display text-2xl font-black leading-tight sm:text-4xl">
+              Explore Collection
+            </h2>
+            <div className="tfx-divider mx-auto mt-3 h-1 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#df0b16]" />
+          </RevealOnScroll>
 
           <div className="home-collection-strip mt-7 flex gap-3 overflow-x-auto pb-2 sm:mt-8 sm:gap-6 lg:grid lg:grid-cols-4 lg:gap-7 lg:overflow-visible">
             {HOME_COLLECTION_CARDS.map((card, index) => (
-              <RevealOnScroll key={card.title} delayMs={index * 80} className="shrink-0 lg:shrink">
+              <RevealOnScroll key={card.title} delayMs={index * 90} variant="scale" className="shrink-0 lg:shrink">
                 <Link
                   to={card.href}
-                  className="group flex min-w-[130px] shrink-0 flex-col items-center justify-center px-2 py-2 text-center transition sm:min-w-[160px] lg:min-h-[255px] lg:min-w-0 lg:rounded-xl lg:bg-white lg:px-5 lg:py-6 lg:shadow-[0_10px_22px_rgba(15,23,42,0.1)] lg:hover:-translate-y-1 lg:hover:shadow-[0_18px_34px_rgba(15,23,42,0.16)]"
+                  className="tfx-shine group flex min-w-[130px] shrink-0 flex-col items-center justify-center px-2 py-2 text-center transition-all duration-300 sm:min-w-[160px] lg:min-h-[255px] lg:min-w-0 lg:rounded-xl lg:border lg:border-transparent lg:bg-white lg:px-5 lg:py-6 lg:shadow-[0_10px_22px_rgba(15,23,42,0.1)] lg:hover:-translate-y-1.5 lg:hover:border-[#0ea5e9]/30 lg:hover:shadow-[0_20px_40px_rgba(14,165,233,0.2)]"
                 >
                   <img
                     src={card.image}
                     alt={card.alt}
-                    className="h-24 w-full object-contain transition duration-200 group-hover:scale-[1.04] sm:h-32 lg:h-40"
+                    className="h-24 w-full object-contain transition-transform duration-300 ease-out group-hover:scale-[1.08] group-hover:-rotate-1 sm:h-32 lg:h-40"
                     loading="lazy"
                     decoding="async"
                   />
-                  <h3 className="mt-3 text-sm font-black leading-tight text-slate-950 sm:text-base lg:mt-5 lg:text-lg">{card.title}</h3>
+                  <h3 className="mt-3 text-sm font-black leading-tight text-slate-950 transition-colors duration-200 group-hover:text-[#0369a1] sm:text-base lg:mt-5 lg:text-lg">{card.title}</h3>
                 </Link>
               </RevealOnScroll>
             ))}
@@ -797,16 +1318,20 @@ export const Home: React.FC = () => {
       <section id="models" className="bg-white px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 flex flex-col items-center justify-between gap-5 text-center lg:flex-row lg:text-left">
-            <div>
-              <h2 className="font-display text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
+            <RevealOnScroll variant="left">
+              <h2 className="tfx-gradient-heading font-display text-3xl font-black leading-tight sm:text-5xl">
                 New Launches
               </h2>
-            </div>
+              <div className="tfx-divider mx-auto mt-3 h-1 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#df0b16] lg:mx-0" />
+            </RevealOnScroll>
             <Link
               to="/new-arrivals"
-              className="text-xs font-black uppercase tracking-[0.34em] text-slate-950 underline underline-offset-4 transition hover:text-[#0ea5e9]"
+              className="group inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.34em] text-slate-950 transition hover:text-[#0ea5e9]"
             >
-              View All
+              <span className="underline underline-offset-4">View All</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:translate-x-1">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
             </Link>
           </div>
 
@@ -854,13 +1379,13 @@ export const Home: React.FC = () => {
                 const extraPreviewCount = Math.max(0, allPreviewImages.length - previewImages.length);
 
                 return (
-                  <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70} className="h-full">
+                  <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70} variant="up" className="h-full">
                   <article
-                    className="group relative flex h-full min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] sm:min-h-[436px]"
+                    className="tfx-shine tfx-glow-card group relative flex h-full min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1.5 sm:min-h-[436px]"
                   >
                     {(showMegaPriceDrop || product.isNewArrival || product.isBestSeller || product.isFeatured) && (
                       <div className={`absolute left-2.5 top-2.5 z-10 rounded-r-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white sm:px-3 sm:text-[10px] ${
-                        showMegaPriceDrop ? 'bg-[#df0b16] shadow-[0_8px_18px_rgba(223,11,22,0.18)]' : 'bg-[#86d8d2]'
+                        showMegaPriceDrop ? 'tfx-badge-pulse bg-[#df0b16] shadow-[0_8px_18px_rgba(223,11,22,0.18)]' : 'bg-[#86d8d2]'
                       }`}>
                         {showMegaPriceDrop ? 'Mega Price Drop' : product.isBestSeller ? 'Best Seller' : product.isNewArrival ? 'New Launch' : 'Featured'}
                       </div>
@@ -869,7 +1394,7 @@ export const Home: React.FC = () => {
                       <img
                         src={getProductImage(product)}
                         alt={product.name}
-                        className="h-full w-full object-contain transition-transform duration-300 ease-out group-hover:scale-[1.035]"
+                        className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.08]"
                         loading={catalogPage === 1 && index < 4 ? 'eager' : 'lazy'}
                         decoding="async"
                       />
@@ -930,14 +1455,14 @@ export const Home: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleHomeAddToCart(product)}
-                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#161b28] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
+                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#161b28] hover:shadow-[0_10px_22px_rgba(10,14,23,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
                         >
                           Add to Cart
                         </button>
                         <button
                           type="button"
                           onClick={() => handleHomeBuyNow(product)}
-                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#630000] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
+                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#630000] hover:shadow-[0_10px_22px_rgba(74,0,0,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
                         >
                           Buy Now
                         </button>
@@ -994,19 +1519,34 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
+<<<<<<< HEAD
       <ScrollLinkedBanners />
 
+=======
+      <FeaturedBannerTabs href={featuredBandHref} />
+>>>>>>> 0070b30 (new)
 
       <section className="bg-slate-50 px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-4xl">
-          <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-cyan-700">TheFutureX help centre</p>
-          <h2 className="mt-3 text-center text-3xl font-black text-slate-950 sm:text-4xl">Frequently Asked Questions</h2>
+          <RevealOnScroll variant="blur">
+            <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-cyan-700">TheFutureX help centre</p>
+            <h2 className="tfx-gradient-heading mt-3 text-center text-3xl font-black sm:text-4xl">Frequently Asked Questions</h2>
+            <div className="tfx-divider mx-auto mt-3 h-1 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#df0b16]" />
+          </RevealOnScroll>
           <div className="mt-8 space-y-3">
-            {homepageFaqs.map((item) => (
-              <details key={item.question} className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
-                <summary className="cursor-pointer list-none pr-8 text-base font-bold text-slate-900 marker:hidden">{item.question}</summary>
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{item.answer}</p>
-              </details>
+            {homepageFaqs.map((item, index) => (
+              <RevealOnScroll key={item.question} delayMs={Math.min(index, 6) * 60} variant="up">
+                <details className="group rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm transition-all duration-300 open:border-[#0ea5e9]/40 open:shadow-[0_14px_30px_rgba(14,165,233,0.12)] hover:border-slate-300">
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-base font-bold text-slate-900 marker:hidden">
+                    {item.question}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-[#0ea5e9] transition-transform duration-300 group-open:rotate-45">
+                      <line x1="12" y1="5" x2="12" y2="19" />
+                      <line x1="5" y1="12" x2="19" y2="12" />
+                    </svg>
+                  </summary>
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600 sm:text-base">{item.answer}</p>
+                </details>
+              </RevealOnScroll>
             ))}
           </div>
         </div>

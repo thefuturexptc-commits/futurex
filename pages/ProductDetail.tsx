@@ -3208,7 +3208,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      <section className="overflow-hidden bg-white px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-14">
+      <section className="overflow-hidden bg-transparent px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-14">
         <div
           className={`mx-auto grid w-full max-w-[calc(100vw-1.5rem)] min-w-0 gap-7 sm:max-w-2xl lg:max-w-7xl lg:items-start ${
             useMarketplaceArrangement
@@ -3227,14 +3227,14 @@ export const ProductDetail: React.FC = () => {
               videoFit={productGalleryVideoFit}
             />
             {displayedMediaCount > 1 && (
-              <div className="mx-auto flex w-full max-w-full items-center gap-2 bg-white py-2">
+              <div className="mx-auto flex w-full max-w-full items-center gap-2 bg-transparent py-2">
                 <div ref={productThumbnailStripRef} className="flex min-w-0 flex-1 snap-x justify-start gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-center sm:gap-3 [&::-webkit-scrollbar]:hidden">
                   {displayedImages.map((imgUrl, imgIdx) => (
                   <button
                     key={imgUrl + imgIdx}
                     type="button"
                     onClick={() => setSelectedImageIndex(imgIdx)}
-                    className={`h-14 w-14 shrink-0 snap-start overflow-hidden bg-white p-1.5 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
+                    className={`h-14 w-14 shrink-0 snap-start overflow-hidden bg-transparent p-1.5 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
                       selectedImageIndex === imgIdx ? 'opacity-100 ring-2 ring-slate-950/60' : 'opacity-55 hover:opacity-90'
                     }`}
                   >

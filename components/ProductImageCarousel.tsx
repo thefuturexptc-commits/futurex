@@ -12,6 +12,40 @@ interface ProductImageCarouselProps {
   videoFit?: 'contain' | 'cover';
 }
 
+const shouldRemoveStudioBackground = (src: string) => /V5-Pink-750\.webp/i.test(src);
+
+const removeStudioBackground = (source: string): Promise<string> => new Promise((resolve) => {
+  const image = new Image();
+  image.crossOrigin = 'anonymous';
+  image.onload = () => {
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = image.naturalWidth;
+      canvas.height = image.naturalHeight;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) return resolve(source);
+
+      context.drawImage(image, 0, 0);
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+      for (let index = 0; index < pixels.data.length; index += 4) {
+        const red = pixels.data[index];
+        const green = pixels.data[index + 1];
+        const blue = pixels.data[index + 2];
+        const brightness = (red + green + blue) / 3;
+        const chroma = Math.max(red, green, blue) - Math.min(red, green, blue);
+
+        if (brightness > 170 && chroma < 15) pixels.data[index + 3] = 0;
+      }
+      context.putImageData(pixels, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    } catch {
+      resolve(source);
+    }
+  };
+  image.onerror = () => resolve(source);
+  image.src = source;
+});
+
 const getYouTubeEmbedUrl = (url: string): string | null => {
   try {
     const parsed = new URL(url);
@@ -42,6 +76,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
   ({ images, videoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain' }) => {
     const fade = useMemo(() => Fade(), []);
     const [selectedIndex, setSelectedIndex] = useState(0);
+    const [processedImages, setProcessedImages] = useState<Record<string, string>>({});
     const [snapPoints, setSnapPoints] = useState<number[]>([]);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isPreviewZoomed, setIsPreviewZoomed] = useState(false);
@@ -67,6 +102,16 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
     );
 
     const mediaSignature = useMemo(() => mediaItems.map((item) => `${item.type}:${item.src}`).join('|'), [mediaItems]);
+
+    useEffect(() => {
+      const source = mediaItems.find((item) => item.type === 'image' && shouldRemoveStudioBackground(item.src))?.src;
+      if (!source || processedImages[source]) return;
+      let active = true;
+      removeStudioBackground(source).then((cutout) => {
+        if (active && cutout !== source) setProcessedImages((current) => ({ ...current, [source]: cutout }));
+      });
+      return () => { active = false; };
+    }, [mediaItems, processedImages]);
 
     const updatePreviewZoomPosition = (
       event: React.PointerEvent<HTMLElement> | React.MouseEvent<HTMLElement> | React.WheelEvent<HTMLElement>
@@ -211,7 +256,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
 
     return (
       <div className="relative w-full min-w-0 max-w-full">
-        <div className="group relative max-w-full overflow-hidden bg-white" ref={emblaRef}>
+        <div className="product-gallery-surface group relative max-w-full overflow-hidden bg-transparent" ref={emblaRef}>
           <div className="flex min-w-0 touch-pan-y">
             {mediaItems.map((item, idx) => (
               <div
@@ -249,7 +294,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                     />
                   ) : (
                   <video
-                    src={item.src}
+                    src={processedImages[item.src] || item.src}
                       className={`product-gallery-video h-full w-full bg-white object-center ${videoFit === 'cover' ? 'object-cover' : 'object-contain'}`}
                       autoPlay
                       muted
@@ -263,7 +308,11 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                   <img
                     src={item.src}
                     alt={alt}
+<<<<<<< HEAD
                     className={`product-gallery-image h-full w-full transform-gpu transition-transform duration-200 ease-out will-change-transform group-hover:scale-[1.018] ${
+=======
+                    className={`product-gallery-image h-full w-full transform-gpu transition-transform duration-75 ease-out will-change-transform group-hover:scale-[1.025] ${
+>>>>>>> 0070b30 (new)
                       bannerMode ? 'object-contain object-center' : 'object-contain'
                     }`}
                     draggable={false}

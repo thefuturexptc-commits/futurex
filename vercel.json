@@ -81,6 +81,16 @@
   ],
   "redirects": [
     {
+      "source": "/product/the-future-x-tp-09-pro-heating-cooling-air-safe-for-kids-pets",
+      "destination": "/product/tfxhot-and-coolair-pro",
+      "permanent": true
+    },
+    {
+      "source": "/product/ai-v5-smart-health-band-get-advanced-fitness-and-health-monitoring-with-the-future-x",
+      "destination": "/product/tfx5-ai-smart-band",
+      "permanent": true
+    },
+    {
       "source": "/product/tfx-display-pro-smart-ring-premium-tracking-with-display-and-wireless-charging",
       "destination": "/product/tfx-display-pro-smart-ring",
       "permanent": true
