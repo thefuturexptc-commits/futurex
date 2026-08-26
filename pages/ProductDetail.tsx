@@ -193,7 +193,54 @@ const formatSpecLabel = (key: string) =>
     .trim()
     .replace(/\b\w/g, (char) => char.toUpperCase());
 
+const WARRANTY_SPEC_LABELS = new Set([
+  'Warranty Period',
+  'Coverage Included',
+  'Coverage Excluded',
+  'Exchange For Delivery Issues',
+  'Return & Refund Policy',
+  'How To Claim',
+  'Warranty Eligibility',
+]);
+
+const getWarrantySpecEntries = (
+  productFamily: 'band' | 'ring' | 'fan' | 'monitoring' | 'glasses' | 'wearable'
+): Record<string, string> => {
+  const isFan = productFamily === 'fan';
+  // Warranty Period is always the fixed policy default for the product's family
+  // (fans = 1 year, everything else = 6 months) — deliberately not read from any
+  // backend "warranty"/"Warranty" field, or from any hardcoded per-product profile,
+  // since those can carry unrelated, stale, or generic placeholder values that
+  // should never override the stated policy.
+  const warrantyPeriod = isFan
+    ? '1-year warranty on the motor and internal components, from the delivery date'
+    : '6-month limited warranty, from the delivery date';
+
+  const coverageIncluded = isFan
+    ? 'Motor malfunction, internal electrical fault, and the fan not operating correctly under normal use'
+    : 'Device connection issues, internal electronic malfunction, and the product not functioning under normal use';
+
+  const coverageExcluded = isFan
+    ? 'Physical damage to the fan frame, improper installation, and damage caused by misuse'
+    : 'Physical damage, water damage (unless the listing states it is covered), and misuse or unauthorized repair';
+
+  return {
+    'Warranty Period': warrantyPeriod,
+    'Coverage Included': coverageIncluded,
+    'Coverage Excluded': coverageExcluded,
+    'Exchange For Delivery Issues':
+      'Verified delivery-time defects (product not turning on, shipping damage, missing parts/accessories, or not functioning correctly on first use) can be reviewed for exchange of the same model within 7 days of delivery.',
+    'Return & Refund Policy':
+      'Purchases are final once confirmed. Returns and cash refunds are not available after purchase; only verified delivery-time defects are reviewed for exchange.',
+    'How To Claim':
+      'Register the product with your order ID and product model, then share clear photos and a short video of the issue through the feedback form for support review.',
+    'Warranty Eligibility':
+      'Warranty support is available only to the original purchaser and is not transferable. Original purchase proof or invoice is required for exchange, repair, replacement, or warranty review.',
+  };
+};
+
 const getSpecGroupLabel = (key: string) => {
+  if (WARRANTY_SPEC_LABELS.has(key)) return 'Warranty & Support';
   const text = key.toLowerCase();
   if (/(shape|style|colour|color|finish|design|material|body|case|band)/.test(text)) return 'Style';
   if (/(battery|charging|charge|recharge|power|mah|watt|voltage|runtime|standby)/.test(text)) return 'Battery';
@@ -209,6 +256,7 @@ const getSpecGroupLabel = (key: string) => {
 const buildSpecGroups = (entries: Array<[string, unknown]>) => {
   const order = [
     'Additional details',
+    'Warranty & Support',
     'Style',
     'Battery',
     'Display',
@@ -282,6 +330,12 @@ const SPEC_GROUP_ICON_PATHS: Record<string, React.ReactNode> = {
       <path d="M12 8.2h.01M11 11.3h1.2v5.4h.8" strokeWidth="2.1" />
     </>
   ),
+  'Warranty & Support': (
+    <>
+      <path d="M12 3l7 3.2v5.9c0 4.4-2.9 7.3-7 8.9-4.1-1.6-7-4.5-7-8.9V6.2z" />
+      <path d="M9.2 12.3l1.8 1.8 3.8-4" />
+    </>
+  ),
 };
 
 const SpecGroupIcon: React.FC<{ title: string; className?: string; size?: number }> = ({ title, className = 'h-5 w-5', size = 20 }) => (
@@ -326,7 +380,6 @@ const TFX5_BAND_FEATURES = [
   'Wireless charging dock included',
   '7-10 day rechargeable battery',
   'Stainless steel build with free-size unisex fit',
-  '12 months domestic brand warranty',
 ];
 
 const TFX_SMART_BAND_DESCRIPTION =
@@ -372,7 +425,6 @@ const TFX5_SMART_BAND_SPECS: Record<string, string> = {
   'Water Resistance': 'IP68 water and dust resistant design with listed 10 m water-resistant depth',
   'Activity Tracking': 'GPS tracking, recovery check, stress count, calories count, step count, sleep tracking, activity duration, calories burned, and distance',
   'Health Features': 'AI Health Score, AI-powered insights, 24/7 vitals tracking, women\'s health tracking, and complete health management',
-  Warranty: '12 months domestic brand warranty covering manufacturing defects',
   'Care Instructions': 'Avoid prolonged exposure to soap or chemicals, wipe dry after use, and charge with the provided dock only',
 };
 
@@ -560,12 +612,6 @@ const FAN_PROFILES = {
       'Operational Current': '0.27 A',
       'Other Power Features': 'Low-noise operation, high-speed airflow, stable performance on 220-240V AC supply, optimized power consumption, advanced PTC ceramic heating, and efficient BLDC motor',
       Weight: '4 kg',
-      'Domestic Warranty': '12 Months',
-      'International Warranty': '0 Months',
-      'Warranty Summary': '1 Year Manufacturer Warranty',
-      'Warranty Service Type': 'Customer needs to contact the company',
-      'Covered in Warranty': 'Manufacturing defects, motor, and internal electrical components',
-      'Not Covered in Warranty': 'Physical damage, water damage, wear and tear, mishandled accessories',
       'Blade Sweep': '0 mm',
       Remote: 'Yes',
       'BEE Star Rating': 'NA',
@@ -1246,9 +1292,9 @@ const productCheckoutTrustSignals: Array<{ title: string; mobileTitle: string; t
   { title: 'Secure checkout', mobileTitle: 'Secure checkout', text: 'UPI, cards, wallet', icon: 'secure' },
 ];
 
-const getWarrantyDisplayText = (product: Product, productFamily: string) => {
-  const listedWarranty = String(product.warranty || product.specs?.Warranty || '').trim();
-  if (listedWarranty) return listedWarranty;
+const getWarrantyDisplayText = (productFamily: string) => {
+  // Fixed per-family policy — deliberately ignores product.warranty / product.specs.Warranty
+  // so a stray backend value never overrides the stated 1-year (fan) / 6-month (everything else) policy.
   if (productFamily === 'fan') return '1-year limited motor warranty';
   return '6-month limited warranty';
 };
@@ -1259,7 +1305,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
   dark = false,
 }) => {
   const [isWarrantyExpanded, setIsWarrantyExpanded] = useState(false);
-  const warrantyText = product ? getWarrantyDisplayText(product, productFamily) : 'Brand-backed help';
+  const warrantyText = product ? getWarrantyDisplayText(productFamily) : 'Brand-backed help';
   const registrationPath = product ? `/register-warranty?product=${encodeURIComponent(product.name)}` : '/register-warranty';
   const tileTitleClass = dark
     ? 'break-words text-[10px] font-semibold leading-3 text-primary-200 sm:text-xs sm:leading-normal'
@@ -1940,9 +1986,25 @@ export const ProductDetail: React.FC = () => {
           : {};
     const fanSpecs = isFanProductForSpecs ? FAN_PROFILES[getFanProfileKey(product?.name)].specs : {};
     const monitoringSpecs = isMonitoringProductForSpecs ? MONITORING_PROFILES[getMonitoringProfileKey(product?.name)].specs : {};
-    const mergedSpecs = isV5BandProduct || isRingProductForSpecs
+    const warrantyFamily = isFanProductForSpecs
+      ? 'fan'
+      : isBandProduct
+        ? 'band'
+        : isRingProductForSpecs
+          ? 'ring'
+          : isMonitoringProductForSpecs
+            ? 'monitoring'
+            : 'wearable';
+    // Merge everything except the warranty rows first. The warranty rows themselves
+    // always come from getWarrantySpecEntries(warrantyFamily) below, which is a fixed
+    // per-family policy (fans = 1 year, everything else = 6 months) — never read from
+    // product.warranty, product.specs.Warranty, or any hardcoded per-product profile,
+    // so a stray backend value or an old profile constant can never override it.
+    const baseMergedSpecs = isV5BandProduct || isRingProductForSpecs
       ? { ...(product?.specs || {}), ...bandSpecs, ...ringSpecs }
       : { ...bandSpecs, ...ringSpecs, ...fanSpecs, ...monitoringSpecs, ...(product?.specs || {}) };
+    const warrantySpecs = product ? getWarrantySpecEntries(warrantyFamily) : {};
+    const mergedSpecs = { ...baseMergedSpecs, ...warrantySpecs };
     const hasModelSpec = Object.keys(mergedSpecs).some((key) => /model|sku|serial|code|item\s*no|product\s*id|pid/i.test(key));
     const specsWithModel = primaryProductModel && !hasModelSpec
       ? { 'Model Number': primaryProductModel, ...mergedSpecs }
@@ -1999,18 +2061,18 @@ export const ProductDetail: React.FC = () => {
     return STANDARD_RING_SIZE_OPTIONS.map((size) => ({ size, stock: 1 }));
   }, [isRingProduct, product?.colors, ringColorSizeCatalog, selectedColor?.name, selectedVariant?.sizes]);
   const requiresRingSize = isRingProduct && availableSizes.length > 0;
-  const infoBadges = useMemo(
-    () => [
+  const infoBadges = useMemo(() => {
+    const isFanProductForBadges = /\bfan\b/i.test(`${product?.category || ''} ${product?.name || ''}`);
+    return [
       { title: 'Secure Payment', text: 'Trusted checkout and support', icon: 'payment' as const },
-      { title: 'Warranty', text: product?.warranty || 'Standard product warranty', icon: 'shield' as const },
-      { 
-  title: 'Cash on Delivery', 
-  text: 'COD available on eligible orders.', 
-  icon: 'support' as const 
-},
-    ],
-    [product?.warranty]
-  );
+      { title: 'Warranty', text: isFanProductForBadges ? '1-year limited motor warranty' : '6-month limited warranty', icon: 'shield' as const },
+      {
+        title: 'Cash on Delivery',
+        text: 'COD available on eligible orders.',
+        icon: 'support' as const,
+      },
+    ];
+  }, [product?.category, product?.name]);
   const visibleSpecEntries = useMemo(
     () => (showAllSpecs || isRingProduct ? specEntries : specEntries.slice(0, 8)),
     [isRingProduct, showAllSpecs, specEntries]
@@ -2752,7 +2814,7 @@ export const ProductDetail: React.FC = () => {
       ['Modes', product.specs?.Modes || product.specs?.Mode || 'Cool and warm'],
       ['Control', product.specs?.Control || product.specs?.Connectivity || 'Remote control'],
       ['Noise', product.specs?.Noise || 'Quiet operation'],
-      ['Warranty', product.warranty || product.specs?.Warranty || 'Brand warranty'],
+      ['Warranty', '1-year limited motor warranty'],
     ],
     glasses: [
       ['Camera', product.specs?.Camera || product.specs?.['HD Camera'] || 'Built-in HD camera'],
@@ -2773,7 +2835,7 @@ export const ProductDetail: React.FC = () => {
       ['App Support', product.specs?.['App Support'] || product.specs?.Compatibility || 'Android and iOS'],
  ['Sensors', product.specs?.Sensors || product.specs?.Hardware || 'Tracking'],
       ['Weight', product.specs?.Weight || product.weight || 'Comfortable wear'],
-      ['Warranty', product.warranty || product.specs?.Warranty || 'Brand warranty'],
+      ['Warranty', '6-month limited warranty'],
     ],
   } as const;
   const heroSpecs = heroSpecProfiles[productFamily].filter(([, value]) => String(value || '').trim().length > 0);
