@@ -6310,7 +6310,7 @@ const BlogShell: React.FC<{
   title: string;
   description: string;
 }> = ({ children, eyebrow, title, description }) => (
-  <main className="min-h-screen bg-[#07080d] px-4 py-10 text-slate-100 sm:px-6 lg:px-8">
+  <main className="blog-article-page min-h-screen bg-[#07080d] px-4 py-10 text-slate-100 sm:px-6 lg:px-8">
     <article className="mx-auto max-w-4xl">
       <div className="mb-8 flex items-center justify-between gap-4">
         <Link to="/" className="text-sm font-black text-[#18d5c3]">

@@ -123,7 +123,7 @@ export const BlogPostPage: React.FC = () => {
   const readingTime = estimateReadingTime(post.content);
 
   return (
-    <main className="bg-[#fffdf9]">
+    <main className="blog-post-page bg-[#fffdf9]">
       {/* ─── Hero ─────────────────────────────────────────────── */}
       <section className="border-b border-[#17130f0f] bg-[#faf7f1]">
         <div className="mx-auto max-w-3xl px-5 pb-10 pt-28 sm:pt-32">

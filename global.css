@@ -325,8 +325,7 @@ svg {
 
 /* Dark fallback for Tailwind CDN loading delays or blocked CDN requests. */
 html.dark,
-html.dark body,
-body {
+html.dark body {
   background: #050505;
   color: #f8fafc;
 }
@@ -7616,8 +7615,23 @@ body,
 body {
   color-scheme: light;
 }
-
-.site-main-content :where(h1, h2, h3, h4, h5, h6, p, span, li, label, strong, small, address, summary, dt, dd, td, th, a, button),
+.site-main-content :where(h1, h2, h3, h4, h5, h6, p, span, li, label, strong, small, address, summary, dt, dd, td, th, a, button):not(
+  .text-white,
+  .text-white *,
+  [class*="bg-black"] *,
+  [class*="bg-slate-950"] *,
+  [class*="bg-gray-900"] *,
+  [class*="bg-gray-800"] *,
+  .product-detail-dark *,
+  .product-card-dark *,
+  .admin-dashboard-dark .bg-slate-900 *,
+  .admin-dashboard-dark .bg-gray-900 *,
+  .home-story-section *,
+  .tfx-footer *,
+  .tfx-current-offer-bar-static *,
+  .blog-article-page *,
+  .blog-post-page *
+),
 .site-footer-dark :where(h1, h2, h3, h4, h5, h6, p, span, li, label, strong, small, address, summary, dt, dd, td, th, a, button) {
   color: var(--fx-ink) !important;
 }
@@ -10273,4 +10287,68 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
     object-fit: contain !important;
     object-position: center !important;
   }
+}
+
+/* ===================================================================== */
+/* BLOG ARTICLE — FORCE WHITE TEXT ON BLACK THEME                        */
+/* Everything inside the blog <article> gets white/light text,          */
+/* regardless of what Tailwind class was originally on it.               */
+/* ===================================================================== */
+
+.site-main-content .blog-article-page article,
+.site-main-content .blog-article-page article * {
+  color: #ffffff !important;
+}
+
+.site-main-content .blog-article-page article p,
+.site-main-content .blog-article-page article li,
+.site-main-content .blog-article-page article td {
+  color: #e2e8f0 !important;
+}
+
+.site-main-content .blog-article-page article h1,
+.site-main-content .blog-article-page article h2,
+.site-main-content .blog-article-page article h3,
+.site-main-content .blog-article-page article h4 {
+  color: #ffffff !important;
+}
+
+.site-main-content .blog-article-page article [class*="text-[#0ad7bd]"],
+.site-main-content .blog-article-page article [class*="text-[#18d5c3]"],
+.site-main-content .blog-article-page article a[class*="border-[#0ad7bd]"] {
+  color: #2dd4bf !important;
+}
+
+/* The generated blog cards use Tailwind slate utilities for their opening
+   descriptions. Keep those utilities light even when the global light-theme
+   text normalizer runs after Tailwind. */
+.blog-article-page .text-slate-300,
+.blog-article-page .text-slate-400,
+.blog-article-page .text-slate-500 {
+  color: #cbd5e1 !important;
+}
+
+/* Published posts use a separate renderer, but must keep the same contrast
+   when the app's dark theme recolours their light-theme source classes. */
+html.dark .site-main-content .blog-post-page,
+html.dark .site-main-content .blog-post-page article {
+  background-color: #07080d !important;
+  color: #e2e8f0 !important;
+}
+
+html.dark .site-main-content .blog-post-page :is(h1, h2, h3, h4, h5, h6) {
+  color: #ffffff !important;
+}
+
+html.dark .site-main-content .blog-post-page :is(p, li, td, th, summary, div, span) {
+  color: #e2e8f0 !important;
+}
+
+html.dark .site-main-content .blog-post-page [class*="text-[#ad8a4c]"],
+html.dark .site-main-content .blog-post-page [class*="text-[#8a6d38]"] {
+  color: #d6b36a !important;
+}
+
+html.dark .site-main-content .blog-post-page [class*="text-white"] {
+  color: #ffffff !important;
 }
