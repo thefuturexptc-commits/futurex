@@ -197,9 +197,12 @@ const WARRANTY_SPEC_LABELS = new Set([
   'Warranty Period',
   'Coverage Included',
   'Coverage Excluded',
+  'Water Resistance & Water-Damage Claims',
   'Exchange For Delivery Issues',
   'Return & Refund Policy',
   'How To Claim',
+  'Request Documents',
+  'Support Contact',
   'Warranty Eligibility',
 ]);
 
@@ -228,12 +231,18 @@ const getWarrantySpecEntries = (
     'Warranty Period': warrantyPeriod,
     'Coverage Included': coverageIncluded,
     'Coverage Excluded': coverageExcluded,
+    'Water Resistance & Water-Damage Claims':
+      'Where the product listing specifies IP68, 5 ATM, or another water-resistance rating, use the product only within the limits of that specific rating. IP68 and 5 ATM are different standards; an IP68 rating or stated water-resistant depth does not automatically mean the product is 5 ATM rated. Water-damage claims are considered only where the product listing or warranty terms specifically cover water damage, and remain subject to inspection and verification of the rating, product condition, and exposure circumstances.',
     'Exchange For Delivery Issues':
       'Verified delivery-time defects (product not turning on, shipping damage, missing parts/accessories, or not functioning correctly on first use) can be reviewed for exchange of the same model within 7 days of delivery.',
     'Return & Refund Policy':
-      'Purchases are final once confirmed. Returns and cash refunds are not available after purchase; only verified delivery-time defects are reviewed for exchange.',
+      'Purchases are final once confirmed. Returns and cash refunds are not available after purchase; only verified delivery-time defects are reviewed for exchange. Email return, refund, exchange, or delivery questions to thefuturex.ptc@gmail.com.',
     'How To Claim':
-      'Register the product with your order ID and product model, then share clear photos and a short video of the issue through the feedback form for support review.',
+      'For a warranty claim, register the product first, then email thefuturex.ptc@gmail.com or call 8530340676. Include your order ID or invoice, product name and model, delivery date, issue description, clear photos, and a short issue video.',
+    'Request Documents':
+      'Return, refund, exchange, or delivery issue: order ID/invoice, product name/model, reason, clear product photos, issue video, and packaging photos/videos where applicable. Warranty claim: order ID/invoice, product name/model, delivery date, issue description, clear photos, and an issue video.',
+    'Support Contact':
+      'Warranty claims, return/refund questions, exchanges, delivery issues, and product support: thefuturex.ptc@gmail.com | 8530340676',
     'Warranty Eligibility':
       'Warranty support is available only to the original purchaser and is not transferable. Original purchase proof or invoice is required for exchange, repair, replacement, or warranty review.',
   };
@@ -404,6 +413,7 @@ const TFX_SMART_BAND_FEATURES = [
 const TFX_SMART_BAND_SPECS: Record<string, string> = {
   'Product Highlights': 'Fitness and activity tracking, sleep monitoring, heart rate monitoring, lightweight wearable design, Bluetooth connectivity, companion mobile app support, comfortable daily use, modern minimalist appearance',
   'Suitable For': 'Daily activity monitoring, walking and fitness routines, wellness tracking, students, professionals, and general lifestyle monitoring',
+  'Sweatproof & Swimming Use': 'Sweatproof for workouts and daily wear. Waterproof protection is subject to the rating shown on this listing: 5 ATM-rated models are suitable for surface swimming within the stated limits, while IP68 alone does not automatically certify swimming. Avoid diving, hot water, sauna, soap, and chemicals.',
   'Package Contents': 'TFX Smart Band, charging cable, user manual',
   Connectivity: 'Bluetooth connectivity with compatible mobile devices',
   'App Support': 'Companion mobile app support',
@@ -423,6 +433,7 @@ const TFX5_SMART_BAND_SPECS: Record<string, string> = {
   'App Support': 'TFX Vital app support for Android and iOS smartphones',
   Battery: 'Rechargeable lithium polymer battery with 7-10 days battery life and about 1 hour charge time',
   'Water Resistance': 'IP68 water and dust resistant design with listed 10 m water-resistant depth',
+  'Sweatproof & Swimming Use': 'Sweatproof for workouts and daily wear. IP68 supports rain, splashes, and brief freshwater immersion within the stated limits; it is not automatically a 5 ATM swimming rating. Do not swim, dive, or expose the band to hot water, sauna, soap, or chemicals unless the product listing specifically confirms that use.',
   'Activity Tracking': 'GPS tracking, recovery check, stress count, calories count, step count, sleep tracking, activity duration, calories burned, and distance',
   'Health Features': 'AI Health Score, AI-powered insights, 24/7 vitals tracking, women\'s health tracking, and complete health management',
   'Care Instructions': 'Avoid prolonged exposure to soap or chemicals, wipe dry after use, and charge with the provided dock only',
@@ -504,6 +515,7 @@ const TFX_DISPLAY_PRO_RING_SPECS: Record<string, string> = {
   Connectivity: 'Bluetooth BLE app sync with compatible smartphones',
   Battery: 'Rechargeable battery with 4-5 days usage on a full charge',
   'Water Resistance': 'IP68 waterproof',
+  'Sweatproof & Swimming Use': 'Sweatproof for workouts and everyday wear. Use for surface swimming only when the listing confirms a swimming/5 ATM rating; IP68 is not automatically a swimming certification. Avoid diving, hot water, sauna, soap, and chemicals.',
   'User Manual': 'The FutureX TFX Smart Ring user manual included in the box',
 };
 
@@ -523,6 +535,7 @@ const TFX_RING_PRO_SPECS: Record<string, string> = {
   Design: 'Metal edition smart ring form factor designed for day and night wear',
   Battery: 'Rechargeable battery with 4-5 days usage on a full charge',
   'Water Resistance': 'IP68 water resistant',
+  'Sweatproof & Swimming Use': 'Sweatproof for workouts and everyday wear. Use for surface swimming only when the listing confirms a swimming/5 ATM rating; IP68 is not automatically a swimming certification. Avoid diving, hot water, sauna, soap, and chemicals.',
   'User Manual': 'The FutureX TFX Smart Ring user manual included in the box',
 };
 
@@ -545,6 +558,7 @@ const TFX_TOUCH_RING_SPECS: Record<string, string> = {
   Design: 'Touch edition smart ring with touch display for convenient interaction',
   Battery: 'Rechargeable battery with 4-5 days usage on a full charge',
   'Water Resistance': 'IP68 water resistant',
+  'Sweatproof & Swimming Use': 'Sweatproof for workouts and everyday wear. Use for surface swimming only when the listing confirms a swimming/5 ATM rating; IP68 is not automatically a swimming certification. Avoid diving, hot water, sauna, soap, and chemicals.',
   'User Manual': 'The FutureX TFX Smart Ring user manual included in the box',
 };
 
@@ -2929,7 +2943,21 @@ export const ProductDetail: React.FC = () => {
     ...specEntries,
   ];
   const shouldLimitSpecs = productFamily !== 'ring' && !showAllSpecs;
-  const displayedSpecEntries = shouldLimitSpecs ? productInformationSpecEntries.slice(0, 12) : productInformationSpecEntries;
+  const warrantySpecEntries = productInformationSpecEntries.filter(([key]) => WARRANTY_SPEC_LABELS.has(key));
+  const regularSpecEntries = productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key));
+  // Keep the warranty/contact details visible in the collapsed specification
+  // view for every product; customers should not have to expand the list to
+  // find out how to raise a support request.
+  const regularSpecLimit = Math.max(0, 12 - warrantySpecEntries.length);
+  const priorityWearableSpecEntries = regularSpecEntries.filter(([key]) => /sweatproof|swimming/i.test(key));
+  const otherRegularSpecEntries = regularSpecEntries.filter(([key]) => !/sweatproof|swimming/i.test(key));
+  const displayedRegularSpecEntries = [
+    ...priorityWearableSpecEntries.slice(0, regularSpecLimit),
+    ...otherRegularSpecEntries.slice(0, Math.max(0, regularSpecLimit - priorityWearableSpecEntries.length)),
+  ];
+  const displayedSpecEntries = shouldLimitSpecs
+    ? [...displayedRegularSpecEntries, ...warrantySpecEntries]
+    : productInformationSpecEntries;
   const specGroups = buildSpecGroups(displayedSpecEntries);
   const whyBuyCopy = isSmartGlassesProduct
     ? `${product.name} is designed for hands-free capture, Bluetooth calling, music, voice assistant support, and everyday smart eyewear convenience in one modern frame.`

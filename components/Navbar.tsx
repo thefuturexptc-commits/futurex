@@ -10,6 +10,7 @@ import bandHomeImage from '../assets/images/band-hero-cutout.webp';
 import ringHomeImage from '../assets/images/smart-ring-rotating.gif';
 import monitoringPhoneImage from '../assets/images/monitoring-phone-cutout.webp';
 import { getProductSlug } from '../services/backend';
+import { INITIAL_PRODUCTS } from '../services/mockData';
 import { scoreProductSearch } from '../utils/productSearch';
 import type { Product } from '../types';
 
@@ -167,8 +168,8 @@ const NavbarComponent: React.FC = () => {
     setSearchLoading(true);
     import('../services/backend')
       .then(({ getProducts }) => getProducts())
-      .then((items) => setAllProducts(items))
-      .catch(() => {})
+      .then((items) => setAllProducts(items.length > 0 ? items : INITIAL_PRODUCTS))
+      .catch(() => setAllProducts(INITIAL_PRODUCTS))
       .finally(() => setSearchLoading(false));
   }, [allProducts.length, searchLoading]);
 
@@ -179,9 +180,11 @@ const NavbarComponent: React.FC = () => {
       import('../services/backend')
         .then(({ getProducts }) => getProducts())
         .then((items) => {
-          if (isMounted) setAllProducts(items);
+          if (isMounted) setAllProducts(items.length > 0 ? items : INITIAL_PRODUCTS);
         })
-        .catch(() => {});
+        .catch(() => {
+          if (isMounted) setAllProducts(INITIAL_PRODUCTS);
+        });
     }, 9000);
     return () => {
       isMounted = false;
@@ -442,12 +445,15 @@ const NavbarComponent: React.FC = () => {
             <div className="mobile-nav-actions flex min-w-0 items-center gap-1 xl:gap-1.5">
               {/* Search Button */}
               <button
+                type="button"
                 onClick={() => {
                   setSearchOpen((o) => !o);
                   loadSearchProductsNow();
                 }}
                 aria-label="Search products"
-                className="mobile-nav-control relative inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors outline-none"
+                aria-expanded={searchOpen}
+                aria-controls="navbar-search-panel"
+                className="mobile-nav-control navbar-search-trigger relative z-[70] inline-flex items-center gap-1.5 rounded-lg px-2 py-1.5 transition-colors outline-none"
               >
                 {searchOpen ? (
                   <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -679,7 +685,7 @@ const NavbarComponent: React.FC = () => {
         )}
 
         {searchOpen && (
-          <div className="search-discovery-panel border-t border-slate-200 bg-white animate-slide-down">
+          <div id="navbar-search-panel" className="search-discovery-panel relative z-[60] border-t border-slate-200 bg-white animate-slide-down">
             <div className="mx-auto max-w-7xl px-3 py-3 sm:px-6 sm:py-4 lg:px-8">
               <div className="relative">
                 <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

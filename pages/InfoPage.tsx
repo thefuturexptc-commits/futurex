@@ -8016,13 +8016,22 @@ const warrantyCoverage = [
   },
 ];
 
-const claimRequirements = [
+const returnRequestRequirements = [
   'Order ID or invoice',
   'Product name and model',
-  'Short issue description',
-  'Clear product photos',
-  'Short video showing the issue',
-  'Packaging proof if the product arrived damaged',
+  'Reason for the request',
+  'Clear photos of the product, if applicable',
+  'Short video showing the issue, if applicable',
+  'Packaging photos/videos for delivery-time damage or missing items',
+];
+
+const warrantyClaimRequirements = [
+  'Order ID or invoice',
+  'Product name and model',
+  'Delivery date',
+  'Short description of the issue',
+  'Clear photos of the product',
+  'Short video demonstrating the issue',
 ];
 
 const warrantyGuidelines = [
@@ -8045,6 +8054,12 @@ const warrantyNotApplicable = [
   'The product is affected by extreme temperature, voltage fluctuation, pests, external force, or causes outside normal product control.',
   'The warranty period for the product has expired.',
   'Photo/video proof, order details, invoice, or product details are missing or cannot be verified.',
+];
+
+const waterResistancePolicy = [
+  'Where a product listing specifies a water-resistance rating such as IP68 or 5 ATM, the product must be used within the limits of that specific rating.',
+  'IP68 and 5 ATM are different water-resistance standards. An IP68 rating or a stated water-resistant depth does not automatically mean that the product is 5 ATM rated.',
+  'Water-damage claims will only be considered where the applicable product listing or warranty terms specifically state that water damage is covered. Any such claim is subject to inspection and verification of the product condition, stated water-resistance rating, and circumstances of exposure.',
 ];
 
 const ReturnsWarrantyPolicyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => (
@@ -8199,6 +8214,15 @@ const ReturnsWarrantyPolicyPage: React.FC<{ onBack: () => void }> = ({ onBack })
           </div>
         </section>
 
+        <section className="mt-8 rounded-lg border border-[#0ea5e9]/20 bg-[#f0f9ff] p-5 sm:p-6">
+          <h2 className="text-base font-semibold text-slate-950">Water Resistance &amp; Water-Damage Claims</h2>
+          <div className="mt-4 space-y-3 text-sm leading-7 text-slate-700">
+            <p>{waterResistancePolicy[0]}</p>
+            <p><strong className="text-slate-950">Important:</strong> {waterResistancePolicy[1]}</p>
+            <p>{waterResistancePolicy[2]}</p>
+          </div>
+        </section>
+
         <section className="mt-8 rounded-lg border border-slate-200 bg-white p-5 sm:p-6">
           <h2 className="text-base font-semibold text-slate-950">Exclusions</h2>
           <div className="mt-5 grid gap-3 lg:grid-cols-2">
@@ -8212,11 +8236,28 @@ const ReturnsWarrantyPolicyPage: React.FC<{ onBack: () => void }> = ({ onBack })
 
         <section id="register" className="mt-8 grid gap-6 lg:grid-cols-[0.45fr_0.55fr]">
           <div className="rounded-lg border border-slate-200 bg-white p-5 sm:p-6">
-            <h2 className="text-base font-semibold text-slate-950">Claim checklist</h2>
-            <div className="mt-5 grid gap-2">
-              {claimRequirements.map((item) => (
-                <div key={item} className="rounded-md bg-slate-50 px-4 py-3 text-sm text-slate-700">{item}</div>
-              ))}
+            <h2 className="text-base font-semibold text-slate-950">How to Claim / Raise a Request</h2>
+            <p className="mt-3 text-sm leading-7 text-slate-600">
+              For return, refund, exchange, delivery, or warranty assistance, contact TheFutureX Support. Our team will review your order and guide you according to the applicable policy.
+            </p>
+            <div className="mt-5 grid gap-5 sm:grid-cols-2">
+              <div>
+                <h3 className="text-sm font-semibold text-slate-950">Return / Refund / Exchange</h3>
+                <a className="mt-1 block break-words text-xs font-semibold text-[#0369a1]" href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a>
+                <ul className="mt-3 list-disc space-y-2 pl-4 text-xs leading-6 text-slate-700">
+                  {returnRequestRequirements.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-950">Warranty Claims</h3>
+                <a className="mt-1 block break-words text-xs font-semibold text-[#0369a1]" href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a>
+                <ul className="mt-3 list-disc space-y-2 pl-4 text-xs leading-6 text-slate-700">
+                  {warrantyClaimRequirements.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </div>
+            </div>
+            <div className="mt-5 rounded-md bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-700">
+              Support number: <a className="font-semibold text-[#0369a1]" href="tel:8530340676">8530340676</a>. Submitting a request does not guarantee a return, refund, exchange, repair, or replacement; all requests are subject to verification and the applicable policy.
             </div>
           </div>
           <div className="rounded-lg border border-[#0ea5e9]/20 bg-[#f0f9ff] p-5 sm:p-6">

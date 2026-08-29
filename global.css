@@ -7630,7 +7630,10 @@ body {
   .tfx-footer *,
   .tfx-current-offer-bar-static *,
   .blog-article-page *,
-  .blog-post-page *
+  .blog-post-page *,
+  .complaint-page *,
+  .tfx-warranty *,
+  .tfx-standard-page *
 ),
 .site-footer-dark :where(h1, h2, h3, h4, h5, h6, p, span, li, label, strong, small, address, summary, dt, dd, td, th, a, button) {
   color: var(--fx-ink) !important;
@@ -10351,4 +10354,167 @@ html.dark .site-main-content .blog-post-page [class*="text-[#8a6d38]"] {
 
 html.dark .site-main-content .blog-post-page [class*="text-white"] {
   color: #ffffff !important;
+}
+
+/* Standalone content pages must keep their own contrast instead of inheriting
+   the global light-theme text normalizer. */
+.site-main-content .home-story-section {
+  background-color: #020617 !important;
+  color: #f8fafc !important;
+}
+
+.site-main-content .home-story-section .home-story-eyebrow {
+  color: #67e8f9 !important;
+}
+
+.site-main-content .home-story-section .home-story-heading {
+  color: #ffffff !important;
+}
+
+.site-main-content .home-story-section .home-story-copy,
+.site-main-content .home-story-section .home-story-copy p {
+  color: #e2e8f0 !important;
+}
+
+.site-main-content .home-story-section .home-story-link {
+  color: #a5f3fc !important;
+}
+
+.site-main-content .tfx-warranty {
+  background: #0a0e15 !important;
+  color: #edf0f5 !important;
+}
+
+.site-main-content .tfx-warranty :is(h1, h2, h3, h4, h5, h6, strong, label) {
+  color: #edf0f5 !important;
+}
+
+.site-main-content .tfx-warranty :is(p, li, span) {
+  color: #8e97ab !important;
+}
+
+.site-main-content .tfx-warranty .tfx-hero__eyebrow {
+  color: #c9a876 !important;
+}
+
+.site-main-content .tfx-warranty .tfx-hero__sub,
+.site-main-content .tfx-warranty .tfx-success,
+.site-main-content .tfx-warranty .tfx-success strong {
+  color: #edf0f5 !important;
+}
+
+.site-main-content .tfx-warranty .tfx-seal__status {
+  color: #e9d19b !important;
+}
+
+.site-main-content .tfx-warranty .tfx-form input,
+.site-main-content .tfx-warranty .tfx-form select {
+  background-color: #1a2330 !important;
+  border-color: #2a3546 !important;
+  color: #edf0f5 !important;
+  -webkit-text-fill-color: #edf0f5 !important;
+}
+
+.site-main-content .tfx-warranty .tfx-form input::placeholder {
+  color: #8e97ab !important;
+  -webkit-text-fill-color: #8e97ab !important;
+}
+
+.site-main-content .tfx-warranty .tfx-form select option {
+  background-color: #1a2330 !important;
+  color: #edf0f5 !important;
+}
+
+.site-main-content .complaint-page {
+  background: #f3f8fb !important;
+  color: #0f172a !important;
+}
+
+.site-main-content .complaint-page :is(h1, h2, h3, h4, p, li, label, span, strong) {
+  color: #0f172a !important;
+}
+
+.site-main-content .complaint-page > div > section > div:first-child {
+  background: #063b4a !important;
+  color: #ffffff !important;
+}
+
+.site-main-content .complaint-page > div > section > div:first-child :is(h1, h2, h3, h4, p, li, label, span, strong) {
+  color: #ffffff !important;
+}
+
+.site-main-content .complaint-page form {
+  background: #ffffff !important;
+}
+
+.site-main-content .complaint-page form input,
+.site-main-content .complaint-page form select,
+.site-main-content .complaint-page form textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+.site-main-content .complaint-page .text-\[\#65e4dd\] {
+  color: #65e4dd !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white > section,
+.site-main-content .tfx-standard-page.bg-white .bg-white {
+  background-color: #ffffff !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white [class*="bg-[#f8"],
+.site-main-content .tfx-standard-page.bg-white [class*="bg-[#fb"],
+.site-main-content .tfx-standard-page.bg-white [class*="bg-red-50"] {
+  background-color: #f8fbfb !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white [class*="bg-[#0369a1]"] {
+  background-color: #0369a1 !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white :is(h1, h2, h3, h4, h5, h6, p, li, span, label, summary, dt, dd, td, th, a) {
+  color: #0f172a !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white .text-slate-600 {
+  color: #475569 !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white .text-slate-700 {
+  color: #334155 !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white .text-\[\#0369a1\] {
+  color: #0369a1 !important;
+}
+
+.site-main-content .tfx-standard-page.bg-white a.bg-\[\#0369a1\] {
+  color: #ffffff !important;
+}
+
+/* Keep the navbar search trigger and its panel interactive above page content. */
+.site-navbar .navbar-search-trigger {
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 70 !important;
+}
+
+.site-navbar #navbar-search-panel {
+  pointer-events: auto !important;
+  position: relative !important;
+  z-index: 60 !important;
+}
+
+.site-navbar #navbar-search-panel input {
+  cursor: text !important;
+  pointer-events: auto !important;
+  user-select: text !important;
 }
