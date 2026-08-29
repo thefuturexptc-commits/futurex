@@ -10508,6 +10508,7 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
 }
 
 .site-navbar #navbar-search-panel {
+  display: block !important;
   pointer-events: auto !important;
   position: relative !important;
   z-index: 60 !important;
