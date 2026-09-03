@@ -392,7 +392,7 @@ const TFX5_BAND_FEATURES = [
 ];
 
 const TFX_SMART_BAND_DESCRIPTION =
-  'The TFX Smart Band - Modern Fitness Tracking Band is designed for users who want a simple and convenient way to monitor daily activity and wellness metrics. Featuring a lightweight and comfortable design, this smart band can be worn throughout the day while tracking essential fitness and lifestyle data. The band helps users stay informed about their activity levels, movement patterns, and daily routines through companion app connectivity. Its minimalist design makes it suitable for both professional and active lifestyles.';
+  'The FutureX Smart Band - Modern Fitness Tracking Band is designed for users who want a simple and convenient way to monitor daily activity and wellness metrics. Featuring a lightweight and comfortable design, this smart band can be worn throughout the day while tracking essential fitness and lifestyle data. The band helps users stay informed about their activity levels, movement patterns, and daily routines through companion app connectivity. Its minimalist design makes it suitable for both professional and active lifestyles.';
 
 const TFX5_SMART_BAND_DESCRIPTION =
  'The Futurex AI Smart Band TFX5 is a screenless fitness and wellness tracker built for daily wear without wrist distractions. It tracks heart rate, blood oxygen SpO2, blood pressure wellness trends, VO2, vital age, sleep quality, stress, mood, recovery, steps, calories burned, distance, activity duration, GPS activity, and workout routines, then turns the data into simple AI-powered app insights. The IP68 water and dust resistant design, Bluetooth 5.0 Android and iOS sync, wireless charging dock, 7-10 day rechargeable battery, free-size unisex fit, and women\'s health tracking make it practical for workouts, outdoor use, sleep tracking, and everyday health management.';
@@ -414,7 +414,7 @@ const TFX_SMART_BAND_SPECS: Record<string, string> = {
   'Product Highlights': 'Fitness and activity tracking, sleep monitoring, heart rate monitoring, lightweight wearable design, Bluetooth connectivity, companion mobile app support, comfortable daily use, modern minimalist appearance',
   'Suitable For': 'Daily activity monitoring, walking and fitness routines, wellness tracking, students, professionals, and general lifestyle monitoring',
   'Sweatproof & Swimming Use': 'Sweatproof for workouts and daily wear. Waterproof protection is subject to the rating shown on this listing: 5 ATM-rated models are suitable for surface swimming within the stated limits, while IP68 alone does not automatically certify swimming. Avoid diving, hot water, sauna, soap, and chemicals.',
-  'Package Contents': 'TFX Smart Band, charging cable, user manual',
+  'Package Contents': 'The FutureX Smart Band, charging cable, user manual',
   Connectivity: 'Bluetooth connectivity with compatible mobile devices',
   'App Support': 'Companion mobile app support',
   Design: 'Slim, lightweight, comfortable wearable design',
@@ -430,7 +430,7 @@ const TFX5_SMART_BAND_SPECS: Record<string, string> = {
   'Display Type': 'Screenless design with LED status indicator',
   Sensors: 'Heart rate, SpO2, blood pressure wellness trends, VO2, sleep, stress, mood, recovery, activity, step, calorie, distance, and GPS activity sensors',
   Connectivity: 'Bluetooth 5.0 with Bluetooth Low Energy app-based sync and up to 10 m connectivity range',
-  'App Support': 'TFX Vital app support for Android and iOS smartphones',
+  'App Support': 'The FutureX Vital app support for Android and iOS smartphones',
   Battery: 'Rechargeable lithium polymer battery with 7-10 days battery life and about 1 hour charge time',
   'Water Resistance': 'IP68 water and dust resistant design with listed 10 m water-resistant depth',
   'Sweatproof & Swimming Use': 'Sweatproof for workouts and daily wear. IP68 supports rain, splashes, and brief freshwater immersion within the stated limits; it is not automatically a 5 ATM swimming rating. Do not swim, dive, or expose the band to hot water, sauna, soap, or chemicals unless the product listing specifically confirms that use.',
@@ -451,13 +451,13 @@ const isInvalidTfx5BandSpec = ([key, value]: [string, unknown]): boolean => {
 };
 
 const TFX_DISPLAY_PRO_RING_DESCRIPTION =
- 'The TFX Display Pro Smart Ring combines wearable technology with a compact ring design, offering convenient access to essential and activity information directly from the ring. Featuring an integrated display, this smart ring allows users to view selected data while maintaining a lightweight and comfortable form factor suitable for everyday wear. Designed for fitness tracking, activity monitoring and wellness insights, the TFX Display Pro Smart Ring helps users stay connected to their daily metrics throughout work, exercise, travel and daily activities.';
+ 'The FutureX Display Pro Smart Ring combines wearable technology with a compact ring design, offering convenient access to essential and activity information directly from the ring. Featuring an integrated display, this smart ring allows users to view selected data while maintaining a lightweight and comfortable form factor suitable for everyday wear. Designed for fitness tracking, activity monitoring and wellness insights, the FutureX Display Pro Smart Ring helps users stay connected to their daily metrics throughout work, exercise, travel and daily activities.';
 
 const TFX_RING_PRO_DESCRIPTION =
- 'The TFX Ring Pro Smart Ring with App Control is designed for users who want a compact wearable for daily fitness, sleep, and wellness tracking. With companion app connectivity, the ring helps users review activity, heart rate trends, sleep patterns, and everyday progress from a lightweight stainless steel form factor. Its comfortable design supports day and night wear, making it practical for workouts, routines, travel, and connected daily use.';
+ 'The FutureX Ring Pro Smart Ring with App Control is designed for users who want a compact wearable for daily fitness, sleep, and wellness tracking. With companion app connectivity, the ring helps users review activity, heart rate trends, sleep patterns, and everyday progress from a lightweight stainless steel form factor. Its comfortable design supports day and night wear, making it practical for workouts, routines, travel, and connected daily use.';
 
 const TFX_TOUCH_RING_DESCRIPTION =
- 'The TFX Touch Smart Ring combines a sleek wearable design with fitness tracking functionality. Designed for users who prefer a discreet alternative to traditional smartwatches, this smart ring helps monitor daily activities, wellness metrics and fitness progress while maintaining a lightweight and comfortable profile. Its compact design makes it suitable for continuous wear throughout the day, supporting users in tracking movement, sleep and wellness trends through connected mobile app integration.';
+ 'The FutureX Touch Smart Ring combines a sleek wearable design with fitness tracking functionality. Designed for users who prefer a discreet alternative to traditional smartwatches, this smart ring helps monitor daily activities, wellness metrics and fitness progress while maintaining a lightweight and comfortable profile. Its compact design makes it suitable for continuous wear throughout the day, supporting users in tracking movement, sleep and wellness trends through connected mobile app integration.';
 
 const TFX_DISPLAY_PRO_RING_FEATURES = [
   'OLED display',
@@ -516,7 +516,7 @@ const TFX_DISPLAY_PRO_RING_SPECS: Record<string, string> = {
   Battery: 'Rechargeable battery with 4-5 days usage on a full charge',
   'Water Resistance': 'IP68 waterproof',
   'Sweatproof & Swimming Use': 'Sweatproof for workouts and everyday wear. Use for surface swimming only when the listing confirms a swimming/5 ATM rating; IP68 is not automatically a swimming certification. Avoid diving, hot water, sauna, soap, and chemicals.',
-  'User Manual': 'The FutureX TFX Smart Ring user manual included in the box',
+  'User Manual': 'The FutureX The FutureX Smart Ring user manual included in the box',
 };
 
 const TFX_RING_PRO_SPECS: Record<string, string> = {
@@ -536,7 +536,7 @@ const TFX_RING_PRO_SPECS: Record<string, string> = {
   Battery: 'Rechargeable battery with 4-5 days usage on a full charge',
   'Water Resistance': 'IP68 water resistant',
   'Sweatproof & Swimming Use': 'Sweatproof for workouts and everyday wear. Use for surface swimming only when the listing confirms a swimming/5 ATM rating; IP68 is not automatically a swimming certification. Avoid diving, hot water, sauna, soap, and chemicals.',
-  'User Manual': 'The FutureX TFX Smart Ring user manual included in the box',
+  'User Manual': 'The FutureX The FutureX Smart Ring user manual included in the box',
 };
 
 const TFX_TOUCH_RING_SPECS: Record<string, string> = {
@@ -559,13 +559,13 @@ const TFX_TOUCH_RING_SPECS: Record<string, string> = {
   Battery: 'Rechargeable battery with 4-5 days usage on a full charge',
   'Water Resistance': 'IP68 water resistant',
   'Sweatproof & Swimming Use': 'Sweatproof for workouts and everyday wear. Use for surface swimming only when the listing confirms a swimming/5 ATM rating; IP68 is not automatically a swimming certification. Avoid diving, hot water, sauna, soap, and chemicals.',
-  'User Manual': 'The FutureX TFX Smart Ring user manual included in the box',
+  'User Manual': 'The FutureX The FutureX Smart Ring user manual included in the box',
 };
 
 const FAN_PROFILES = {
   advance: {
     description:
-      'The TFX Advance All-Season Bladeless Fan is designed to provide smooth and consistent airflow throughout the year. Featuring bladeless air circulation technology, the fan delivers comfortable cooling while maintaining a modern and space-efficient design suitable for homes, offices, bedrooms, and living areas. Its streamlined construction helps improve safety around children and pets while offering convenient operation and adjustable airflow settings for everyday comfort.',
+      'The FutureX Advance All-Season Bladeless Fan is designed to provide smooth and consistent airflow throughout the year. Featuring bladeless air circulation technology, the fan delivers comfortable cooling while maintaining a modern and space-efficient design suitable for homes, offices, bedrooms, and living areas. Its streamlined construction helps improve safety around children and pets while offering convenient operation and adjustable airflow settings for everyday comfort.',
     features: [
       'Bladeless airflow technology',
       'Multi-season comfort',
@@ -587,7 +587,7 @@ const FAN_PROFILES = {
   },
   tp09Pro: {
     description:
-      'The FutureX TP09 PLUS Bladeless Hot & Cool Tower Fan is designed to deliver powerful, year-round comfort with advanced technology, premium safety, and modern style. Equipped with a high-performance BLDC motor up to 14,000 RPM, 10-speed airflow control, and a PTC ceramic heating system, it provides fast cooling in summer and efficient heating during winter. The 180-degree wide-angle oscillation distributes air evenly across the room, ensuring every corner receives consistent airflow. Its bladeless design offers a safer and more comfortable experience than conventional fans. With no exposed blades, it is an excellent choice for homes with children, pets, and elderly family members, while also making it easier to clean and maintain. The smooth, uninterrupted airflow reduces harsh air blasts, creating a more natural and pleasant cooling experience that is ideal for bedrooms, offices, nurseries, and living rooms. Designed for everyday convenience, the TP09 PLUS features remote control operation, a 9-hour timer, quiet low-noise performance, and adjustable temperature settings for personalized comfort. Its sleek, space-saving tower design complements modern interiors while delivering powerful airflow without occupying much floor space. Whether you are looking for safe cooling, energy-efficient heating, whisper-quiet operation, or premium airflow performance, the The FutureX TP09 PLUS Bladeless Hot & Cool Tower Fan is the perfect all-season solution. For complete peace of mind, it is backed by a 1-Year Warranty on the Motor and Internal Components, ensuring dependable performance and long-lasting reliability.',
+      'The FutureX TP09 PLUS Bladeless Hot & Cool Tower Fan is designed to deliver powerful, year-round comfort with advanced technology, premium safety, and modern style. Equipped with a high-performance BLDC motor up to 14,000 RPM, 10-speed airflow control, and a PTC ceramic heating system, it provides fast cooling in summer and efficient heating during winter. The 180-degree wide-angle oscillation distributes air evenly across the room, ensuring every corner receives consistent airflow. Its bladeless design offers a safer and more comfortable experience than conventional fans. With no exposed blades, it is an excellent choice for homes with children, pets, and elderly family members, while also making it easier to clean and maintain. The smooth, uninterrupted airflow reduces harsh air blasts, creating a more natural and pleasant cooling experience that is ideal for bedrooms, offices, nurseries, and living rooms. Designed for everyday convenience, the TP09 PLUS features remote control operation, a 9-hour timer, quiet low-noise performance, and adjustable temperature settings for personalized comfort. Its sleek, space-saving tower design complements modern interiors while delivering powerful airflow without occupying much floor space. Whether you are looking for safe cooling, energy-efficient heating, whisper-quiet operation, or premium airflow performance, the FutureX TP09 PLUS Bladeless Hot & Cool Tower Fan is the perfect all-season solution. For complete peace of mind, it is backed by a 1-Year Warranty on the Motor and Internal Components, ensuring dependable performance and long-lasting reliability.',
     features: [
       'Hot and cool dual function',
       'Advanced bladeless technology',
@@ -655,7 +655,7 @@ const FAN_PROFILES = {
   },
   hotCool: {
     description:
-      'The TFX Hot & CoolAir Pro combines cooling and heating functions in a single bladeless appliance, making it suitable for changing indoor temperature requirements throughout the year. The system provides airflow circulation for cooling during warmer months and heated airflow for added comfort during cooler conditions. Designed with a modern bladeless structure, the unit supports comfortable operation while complementing a variety of residential and office environments.',
+      'The FutureX Hot & CoolAir Pro combines cooling and heating functions in a single bladeless appliance, making it suitable for changing indoor temperature requirements throughout the year. The system provides airflow circulation for cooling during warmer months and heated airflow for added comfort during cooler conditions. Designed with a modern bladeless structure, the unit supports comfortable operation while complementing a variety of residential and office environments.',
     features: [
       'Cooling and heating functions',
       'Bladeless technology',
@@ -677,7 +677,7 @@ const FAN_PROFILES = {
   },
   airWall: {
     description:
-      'The TFX AirWall Pro Smart Wall-Mounted Bladeless Fan is designed for efficient airflow distribution while maximizing floor space. Its wall-mounted installation makes it suitable for homes, offices, retail spaces, and commercial environments where space optimization is important. The bladeless design helps provide smooth airflow while maintaining a modern appearance and convenient operation.',
+      'The FutureX AirWall Pro Smart Wall-Mounted Bladeless Fan is designed for efficient airflow distribution while maximizing floor space. Its wall-mounted installation makes it suitable for homes, offices, retail spaces, and commercial environments where space optimization is important. The bladeless design helps provide smooth airflow while maintaining a modern appearance and convenient operation.',
     features: [
       'Wall-mounted design',
       'Bladeless airflow system',
@@ -699,7 +699,7 @@ const FAN_PROFILES = {
   },
   luxAir: {
     description:
-      'The TFX LuxAir Pro Premium Bladeless Fan combines modern aesthetics with efficient airflow performance. Designed for users seeking a refined cooling solution, the fan delivers smooth airflow while maintaining a compact and visually appealing design. Suitable for bedrooms, offices, lounges, and living spaces, the LuxAir Pro provides comfortable air circulation with adjustable operating modes.',
+      'The FutureX LuxAir Pro Premium Bladeless Fan combines modern aesthetics with efficient airflow performance. Designed for users seeking a refined cooling solution, the fan delivers smooth airflow while maintaining a compact and visually appealing design. Suitable for bedrooms, offices, lounges, and living spaces, the LuxAir Pro provides comfortable air circulation with adjustable operating modes.',
     features: [
       'Premium bladeless design',
       'Adjustable airflow modes',
@@ -721,7 +721,7 @@ const FAN_PROFILES = {
   },
   breezePro: {
     description:
-      'The TFX Breeze Pro Bladeless Tower Fan is designed to provide smooth, consistent airflow for homes, offices, bedrooms, and living spaces. Featuring an upgraded airflow system and modern bladeless technology, the fan helps circulate air efficiently while maintaining a sleek and space-saving design. Its streamlined construction supports everyday comfort while reducing the maintenance typically associated with traditional exposed-blade fans. Suitable for modern interiors, the TFX Breeze Pro combines functionality with contemporary styling.',
+      'The FutureX Breeze Pro Bladeless Tower Fan is designed to provide smooth, consistent airflow for homes, offices, bedrooms, and living spaces. Featuring an upgraded airflow system and modern bladeless technology, the fan helps circulate air efficiently while maintaining a sleek and space-saving design. Its streamlined construction supports everyday comfort while reducing the maintenance typically associated with traditional exposed-blade fans. Suitable for modern interiors, the FutureX Breeze Pro combines functionality with contemporary styling.',
     features: [
       'Upgraded airflow technology',
       'Bladeless design',
@@ -735,7 +735,7 @@ const FAN_PROFILES = {
     specs: {
       'Product Highlights': 'Bladeless airflow technology, upgraded air circulation system, multiple speed settings, oscillation support, quiet performance, modern tower design, space-saving construction, easy maintenance',
       'Suitable For': 'Bedrooms, living rooms, offices, apartments, home workspaces, and indoor cooling applications',
-      'Package Contents': 'TFX Breeze Pro Bladeless Tower Fan, remote control, user manual',
+      'Package Contents': 'The FutureX Breeze Pro Bladeless Tower Fan, remote control, user manual',
       Airflow: 'Upgraded airflow technology delivers consistent and balanced air circulation',
       Speed: 'Multiple speed settings for room conditions and personal preference',
       Oscillation: 'Oscillation function distributes airflow across a wider area',
@@ -744,7 +744,7 @@ const FAN_PROFILES = {
   },
   hepaPureAir: {
     description:
-      'The TFX HEPA PureAir Pro Bladeless Tower Fan combines advanced airflow technology with integrated HEPA filtration support to help improve indoor air circulation. Designed for modern homes and workspaces, the unit delivers smooth bladeless airflow while incorporating a filtration system intended to capture airborne particles as air passes through the unit. Its sleek tower design makes it suitable for bedrooms, offices, living rooms, and shared indoor environments where efficient airflow and air management are priorities.',
+      'The FutureX HEPA PureAir Pro Bladeless Tower Fan combines advanced airflow technology with integrated HEPA filtration support to help improve indoor air circulation. Designed for modern homes and workspaces, the unit delivers smooth bladeless airflow while incorporating a filtration system intended to capture airborne particles as air passes through the unit. Its sleek tower design makes it suitable for bedrooms, offices, living rooms, and shared indoor environments where efficient airflow and air management are priorities.',
     features: [
       'HEPA filtration system',
       'Bladeless airflow technology',
@@ -767,7 +767,7 @@ const FAN_PROFILES = {
   },
   pureAir: {
     description:
-      'The TFX PureAir 3-in-1 Bladeless Tower Fan combines air circulation, filtration support, and modern bladeless airflow technology in a single appliance. Designed for indoor comfort, the unit helps circulate air efficiently while incorporating filtration components that assist with air management. Its tower-style design makes it suitable for homes, offices, bedrooms, and shared indoor spaces.',
+      'The FutureX PureAir 3-in-1 Bladeless Tower Fan combines air circulation, filtration support, and modern bladeless airflow technology in a single appliance. Designed for indoor comfort, the unit helps circulate air efficiently while incorporating filtration components that assist with air management. Its tower-style design makes it suitable for homes, offices, bedrooms, and shared indoor spaces.',
     features: [
       '3-in-1 functionality',
       'Bladeless airflow technology',
@@ -789,7 +789,7 @@ const FAN_PROFILES = {
   },
   smart10x: {
     description:
-      'The TFX Smart 10X Air Bladeless Hot & Cool Fan is designed to provide versatile indoor comfort through cooling and heating functionality combined with modern airflow technology. Its bladeless construction helps deliver smooth airflow while supporting safer operation in family environments. Suitable for year-round use, the Smart 10X Air is designed for bedrooms, living rooms, offices, and personal workspaces.',
+      'The FutureX Smart 10X Air Bladeless Hot & Cool Fan is designed to provide versatile indoor comfort through cooling and heating functionality combined with modern airflow technology. Its bladeless construction helps deliver smooth airflow while supporting safer operation in family environments. Suitable for year-round use, the Smart 10X Air is designed for bedrooms, living rooms, offices, and personal workspaces.',
     features: [
       'Hot and cool functionality',
       'Bladeless airflow system',
@@ -895,380 +895,6 @@ const getProductFaqSchema = (productName: string) => ({
   ],
 });
 
-type SeoComparisonBrief = {
-  eyebrow: string;
-  title: string;
-  intro: string;
-  columns: [string, string];
-  rows: Array<[string, string, string]>;
-  verdict: string;
-  keywords: string[];
-};
-
-const getCurrentPriceText = (price: number) => (price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'See current listing');
-
-const getProductSpecValue = (product: Product, patterns: RegExp[], fallback = 'See current listing') => {
-  const entries = Object.entries(product.specs || {});
-  const match = entries.find(([key, value]) => patterns.some((pattern) => pattern.test(`${key} ${value}`)));
-  if (match) return String(match[1]);
-
-  const feature = (product.features || []).find((item) => patterns.some((pattern) => pattern.test(item)));
-  return feature || fallback;
-};
-
-const getSeoComparisonBrief = (product: Product, productFamily: string, price: number): SeoComparisonBrief | null => {
-  const productName = product.name;
-  const productPrice = getCurrentPriceText(price);
-  const battery = getProductSpecValue(product, [/battery|7\s*day|charging|runtime/i]);
-  const waterResistance = getProductSpecValue(product, [/ip68|5\s*atm|water|splash|dust/i]);
-  const sensors = getProductSpecValue(product, [/heart|spo2|spO2|hrv|stress|temperature|sensor|sleep/i]);
-  const app = getProductSpecValue(product, [/app|bluetooth|connect/i], 'TheFutureX app / compatible app');
-
-  if (productFamily === 'band') {
-    return {
-      eyebrow: 'Smart band comparison',
-      title: `${productName} vs Other Brands`,
-      intro:
-        'Screen-free smart bands are popular in India because they keep daily health tracking simple without adding another distracting display. Here is a practical comparison of TheFutureX and other brands on price, battery, sensors, water resistance, and app-led insights.',
-      columns: [productName, 'Other Brands'],
-      rows: [
-        ['Price', productPrice, 'Varies by model and offer'],
-        ['Design', 'Screenless smart health band built for distraction-free wear', 'Usually screenless or basic wearable designs'],
-        ['Feature stack', 'Heart rate, SpO2, HRV, stress, sleep, recovery, strain, activity, calories, and smart wellness trends', 'Usually basic heart rate, steps, sleep, and selected alerts'],
-        ['AI health insights', 'AI coach style insights, BioAge / Vital Age style wellness review, weekly reports, and long-term trend analysis', 'Usually basic summaries without deeper AI coaching'],
-        ['Recovery and readiness', 'Recovery cues, strain awareness, body energy style guidance, and sleep quality context in one flow', 'Often missing deeper recovery and readiness guidance'],
-        ['Health alerts', 'SpO2 awareness, irregular heart-rate style alerts, stress cues, and wellness reminders on supported models', 'Usually simple reminders and basic notification alerts'],
-        ['App experience', 'TheFutureX app reports with trend charts, wellness summaries, and smarter habit guidance', 'Brand app support varies and is often focused on basic sync'],
-        ['Battery life', battery, 'Varies by model'],
-        ['Water resistance', waterResistance, '5 ATM'],
-        ['Sensors', sensors, 'Sensor set varies by model; check current listing'],
-        ['Sleep tracking', 'Sleep stages, sleep score style summaries, recovery context, and app-based improvement insights', 'Basic sleep tracking on many models'],
-        ['Smart alerts', 'AI health reports, app summaries, smart reminders, and wellness trend cues', 'Usually reminders, call alerts, and basic notifications'],
-        ['Charging', getProductSpecValue(product, [/wireless|charging|dock|magnetic/i], 'Wireless charging dock on supported models'), 'Charging method varies by model'],
-        ['App', app, 'Brand app support varies'],
-      ],
-      verdict:
-        'TheFutureX is built for buyers who want more than basic band alerts. It brings together AI health reports, SpO2, HRV, sleep tracking, stress, recovery, strain, smart wellness reminders, and long-term app trend review in one screen-free smart band experience.',
-      keywords: [
-        'thefuturex vs other smart bands',
-        'best screen-free smart band india 2026',
-        'smart band without screen india',
-        'other brands smart band alternative',
-        'thefuturex v5 review',
-        'smart band 7 day battery india',
-        'ai smart health band india',
-      ],
-    };
-  }
-
-  if (productFamily === 'ring') {
-    const isDisplayRingComparison = /\bdisplay|screen\b/i.test(productName);
-    const displayRingComparisonRows: Array<[string, string, string]> = [
-      ['Built-in display', 'Yes, quick stats on the ring', 'Usually no built-in display'],
-      ['On-ring convenience', 'Display models let users check quick stats without opening the phone', 'Usually phone app required for every detail'],
-    ];
-    const ringComparisonRows: Array<[string, string, string]> = [
-      ['Price', productPrice, 'Varies by model and offer'],
-      ...(isDisplayRingComparison ? displayRingComparisonRows : []),
-      [
-        'Feature stack',
-        isDisplayRingComparison
-          ? 'Built-in display, heart rate, SpO2, HRV, sleep, temperature trends, activity tracking, app sync, and app reports on supported models'
-          : 'Heart rate, SpO2, HRV, sleep, temperature trends, activity tracking, app sync, and app reports on supported models',
-        'Often focused on only a few core tracking features',
-      ],
-      ['AI wellness insights', 'AI-assisted health summaries, recovery context, sleep insights, and long-term wellness trends', 'Usually basic metric history and selected alerts'],
-      ['App connectivity', 'Companion app support for wellness review, sleep reports, activity history, and supported settings', 'App features vary by model and brand'],
-      ['Sleep and recovery', 'Sleep tracking with HRV-style recovery context and app-based nightly summaries', 'Available on selected models, often with fewer insights'],
-      ['Material', getProductSpecValue(product, [/steel|metal|titanium|material/i]), 'Material varies by model'],
-      ['Water resistance', waterResistance, 'Varies by model'],
-      ['Battery life', battery, 'Varies by model'],
-      ['Charging', getProductSpecValue(product, [/wireless|charging|dock|magnetic/i], 'Wireless charging dock on supported models'), 'Charging method varies by model'],
-      ['Sensors', sensors, 'Common health sensors vary by model'],
-      ['App experience', 'TheFutureX app support for wellness review, sleep reports, activity history, and trend tracking', 'Brand app support varies'],
-    ];
-
-    return {
-      eyebrow: 'Smart ring comparison',
-      title: `${productName} vs Other Brands`,
-      intro:
-        isDisplayRingComparison
-          ? 'Smart rings are becoming a serious wearable category in India. This chart compares TheFutureX against other brands on display, price, battery, water resistance, app connectivity, sleep tracking, and daily usability.'
-          : 'Smart rings are becoming a serious wearable category in India. This chart compares TheFutureX against other brands on price, battery, water resistance, app connectivity, sleep tracking, and daily usability.',
-      columns: [productName, 'Other Brands'],
-      rows: ringComparisonRows,
-      verdict:
-        isDisplayRingComparison
-          ? 'TheFutureX Display Pro stands out by combining a smart ring form factor with a built-in display, wellness tracking, sleep and recovery insights, app sync, and app-based health reports. Other brands may cover basic tracking, but TheFutureX is built to feel more complete in daily use.'
-          : 'TheFutureX stands out by combining a smart ring form factor with wellness tracking, sleep and recovery insights, app sync, and app-based health reports. Other brands may cover basic tracking, but TheFutureX is built to feel more complete in daily use.',
-      keywords: [
-        'thefuturex vs other smart rings',
-        'smart ring with display india',
-        'best smart ring under 5000',
-        'other brands smart ring alternative',
-        'smart ring with screen india',
-        'thefuturex display pro ring review',
-        'smart ring comparison india 2026',
-      ],
-    };
-  }
-
-  if (productFamily === 'monitoring' && /\bsleep|bedside|recovery|rest\b/i.test(`${product.name} ${product.description}`)) {
-    return {
-      eyebrow: 'Sleep tracker comparison',
-      title: `${productName} vs Other Brands`,
-      intro:
-        'The core question for sleep tracking is simple: do you want to wear a device to bed, or track sleep without wearing anything on your wrist? This comparison frames the real trade-off between a non-wearable TheFutureX sleep monitor and other brands.',
-      columns: [productName, 'Other Brands'],
-      rows: [
-        ['Tracking style', 'Non-wearable bedside sleep monitor', 'Wearable band on the wrist'],
-        ['Comfort while sleeping', 'Nothing to wear during sleep', 'Requires wearing a band overnight'],
-        ['Feature focus', 'Built specifically around sleep monitoring, sleep patterns, wellness insights, nightly routine review, and recovery context', 'Often sleep is only one small feature inside a general wearable'],
-        ['Sleep insights', 'Sleep duration, pattern review, historical sleep trends, and app-based night reports', 'Usually basic sleep stages with limited bedtime context'],
-        ['Ease of use', 'Place it near the bed and review sleep data without wearing a device', 'Must be worn correctly and charged before sleeping'],
-        ['Wellness reports', 'Designed for focused sleep and recovery reports over time', 'Usually mixed into a general fitness dashboard'],
-        ['Best use case', 'Sleep duration, sleep patterns, and nightly routine review', '24/7 activity, heart rate, alerts, and sleep stages'],
-        ['Setup', getProductSpecValue(product, [/setup|wireless|app|connect/i], 'Simple bedside setup with app review'), 'Pair band, wear correctly, and keep charged'],
-        ['Sleep tracking', 'Designed specifically for sleep monitoring', 'Sleep tracking is one feature among many'],
-        ['Daytime tracking', 'Focused on sleep and recovery context', 'Better for steps, workouts, and daily alerts'],
-      ],
-      verdict:
-        'Choose TheFutureX if you want more focused sleep features without wearing band hardware at night. It is designed around comfort, sleep insights, recovery context, and nightly app reports instead of treating sleep as a small add-on feature.',
-      keywords: [
-        'non wearable sleep tracker india',
-        'sleep monitor without wearing band',
-        'best sleep tracker device india',
-        'track sleep without smartwatch',
-        'bedside sleep monitor india',
-        'sleep stage tracker device',
-      ],
-    };
-  }
-
-  if (productFamily === 'fan') {
-    return {
-      eyebrow: 'Fan comparison',
-      title: `${productName} vs Other Brands`,
-      intro:
-        'Bladeless tower fans and regular fans solve the same cooling problem in different ways. This comparison focuses on safety, noise, space, controls, and all-season comfort so buyers can see how TheFutureX offers more practical features than other brands.',
-      columns: [productName, 'Other Brands'],
-      rows: [
-        ['Design', 'Bladeless tower fan for compact rooms', 'Often exposed blade or basic tower designs'],
-        ['Feature stack', 'Bladeless airflow, safety-focused design, quiet operation, remote controls, oscillation, timer, and selected 3-in-1 comfort features', 'Usually limited to basic cooling and speed control'],
-        ['All-season comfort', 'Selected models support cooling, heating, and air purification in one product', 'Usually fan-only cooling'],
-        ['Air quality support', 'Selected HEPA / purifier models support cleaner indoor airflow while cooling the room', 'Usually no purification feature'],
-        ['Smart controls', 'Remote, touch, timer, mode controls, and flexible airflow settings on supported models', 'Usually basic buttons or speed control'],
-        ['Safety', 'No exposed spinning blades, easier around family spaces', 'Many models use exposed blades behind a grille'],
-        ['Noise and airflow', getProductSpecValue(product, [/quiet|silent|airflow|oscillation|speed/i], 'Smooth, quiet tower airflow'), 'Strong direct airflow, noise varies by model'],
-        ['Floor space', 'Slim tower footprint', 'Wider stand and head need more room'],
-        ['Controls', getProductSpecValue(product, [/remote|touch|timer|control|mode/i], 'Remote and mode controls on supported models'), 'Usually basic speed and swing controls'],
-        ['Extra functions', getProductSpecValue(product, [/heat|heater|purifier|filter|hepa|cool|3\s*in\s*1/i], 'Cooling-focused; selected TheFutureX models add heat or purification'), 'Fan-only in most models'],
-        ['Upfront cost', productPrice, 'Usually cheaper upfront'],
-      ],
-      verdict:
-        'A regular fan is often the lowest-cost option, but TheFutureX shows more practical comfort features: bladeless safety, quiet tower airflow, compact footprint, remote control, oscillation, timer, and selected cooling, heating, and purification options in one modern appliance.',
-      keywords: [
-        'bladeless fan vs normal fan',
-        'bladeless tower fan india',
-        '3 in 1 fan cooler heater purifier india',
-        'best bladeless fan for bedroom india',
-        'silent tower fan india',
-        'smart fan with remote india',
-        'wall mounted bladeless fan india',
-      ],
-    };
-  }
-
-  return null;
-};
-
-const CompareCrownIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
-    <path
-      d="M3 8.5l4 3 5-6 5 6 4-3-1.6 9.5a1 1 0 01-1 .84H5.6a1 1 0 01-1-.84L3 8.5z"
-      fill="currentColor"
-    />
-    <circle cx="3" cy="6.5" r="1.6" fill="currentColor" />
-    <circle cx="12" cy="4" r="1.6" fill="currentColor" />
-    <circle cx="21" cy="6.5" r="1.6" fill="currentColor" />
-  </svg>
-);
-
-const CompareCheckIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
-    <circle cx="10" cy="10" r="9" fill="currentColor" fillOpacity="0.18" />
-    <path d="M6 10.2l2.4 2.4L14.2 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-  </svg>
-);
-
-const CompareDotIcon: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <svg viewBox="0 0 20 20" fill="none" className={className} aria-hidden="true">
-    <circle cx="10" cy="10" r="9" stroke="currentColor" strokeWidth="1.4" strokeOpacity="0.5" />
-    <circle cx="10" cy="10" r="2.2" fill="currentColor" fillOpacity="0.6" />
-  </svg>
-);
-
-const ProductSeoComparisonChart: React.FC<{ brief: SeoComparisonBrief }> = ({ brief }) => {
-  const showExtraCopy = brief.eyebrow !== 'Smart ring comparison';
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const [inView, setInView] = useState(false);
-
-  useEffect(() => {
-    const node = sectionRef.current;
-    if (!node) return;
-    if (typeof IntersectionObserver === 'undefined') {
-      setInView(true);
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setInView(true);
-            observer.unobserve(entry.target);
-          }
-        });
-      },
-      { threshold: 0.12, rootMargin: '0px 0px -6% 0px' }
-    );
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, []);
-
-  return (
-    <section
-      ref={sectionRef as any}
-      id="comparison"
-      className="relative scroll-mt-32 overflow-hidden bg-[#05070d] px-4 py-12 text-white sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16"
-    >
-      <style>{`
-        @keyframes tfxCompareGlowA { 0%,100% { transform: translate(-8%,-8%) scale(1); opacity:.5; } 50% { transform: translate(6%,4%) scale(1.18); opacity:.85; } }
-        @keyframes tfxCompareGlowB { 0%,100% { transform: translate(8%,6%) scale(1); opacity:.35; } 50% { transform: translate(-6%,-8%) scale(1.22); opacity:.65; } }
-        @keyframes tfxCompareShimmer { from { background-position: 0% 0; } to { background-position: -200% 0; } }
-        @keyframes tfxCompareCrownFloat { 0%,100% { transform: translateY(0) rotate(-4deg); } 50% { transform: translateY(-4px) rotate(4deg); } }
-        .tfx-compare-glow-a { animation: tfxCompareGlowA 9s ease-in-out infinite; }
-        .tfx-compare-glow-b { animation: tfxCompareGlowB 11s ease-in-out infinite; }
-        .tfx-compare-title-shine {
-          background: linear-gradient(110deg, #fef3c7 10%, #fff 30%, #a5f3fc 50%, #fff 70%, #fef3c7 90%);
-          background-size: 220% 100%;
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
-          animation: tfxCompareShimmer 6s linear infinite;
-        }
-        .tfx-compare-crown { display: inline-block; animation: tfxCompareCrownFloat 3.2s ease-in-out infinite; }
-        .tfx-compare-header {
-          opacity: 0;
-          transform: translateY(20px);
-          transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1), transform 0.7s cubic-bezier(0.22,1,0.36,1);
-        }
-        .tfx-compare-header-in { opacity: 1; transform: translateY(0); }
-        .tfx-compare-card {
-          opacity: 0;
-          transform: translateY(24px) scale(0.99);
-          transition: opacity 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s, transform 0.7s cubic-bezier(0.22,1,0.36,1) 0.1s;
-        }
-        .tfx-compare-card-in { opacity: 1; transform: translateY(0) scale(1); }
-        .tfx-compare-row {
-          opacity: 0;
-          transform: translateY(14px);
-          transition: opacity 0.55s cubic-bezier(0.22,1,0.36,1), transform 0.55s cubic-bezier(0.22,1,0.36,1), background-color 0.3s ease;
-        }
-        .tfx-compare-row-in { opacity: 1; transform: translateY(0); }
-        @media (prefers-reduced-motion: reduce) {
-          .tfx-compare-glow-a, .tfx-compare-glow-b, .tfx-compare-title-shine, .tfx-compare-crown,
-          .tfx-compare-header, .tfx-compare-card, .tfx-compare-row {
-            animation: none !important;
-            transition: none !important;
-            opacity: 1 !important;
-            transform: none !important;
-          }
-        }
-      `}</style>
-
-      <div aria-hidden="true" className="tfx-compare-glow-a pointer-events-none absolute -left-24 -top-24 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
-      <div aria-hidden="true" className="tfx-compare-glow-b pointer-events-none absolute -right-20 bottom-0 h-80 w-80 rounded-full bg-amber-400/20 blur-3xl" />
-
-      <div className="relative mx-auto max-w-7xl">
-        <div className={`tfx-compare-header ${inView ? 'tfx-compare-header-in' : ''} grid gap-5 ${showExtraCopy ? 'lg:grid-cols-[0.86fr_1.14fr]' : ''}`}>
-          <div>
-            <span className="inline-flex items-center gap-2 rounded-full border border-cyan-300/25 bg-cyan-300/10 px-3 py-1.5 text-xs font-black uppercase tracking-[0.24em] text-cyan-200">
-              <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
-                <path d="M10 1.4l2.3 5.5 5.9.5-4.5 3.9 1.4 5.8L10 14 5 17.1l1.4-5.8-4.5-3.9 5.9-.5z" />
-              </svg>
-              {brief.eyebrow}
-            </span>
-            <h2 className="tfx-compare-title-shine mt-3 font-display text-3xl font-black leading-tight sm:text-5xl">{brief.title}</h2>
-          </div>
-          {showExtraCopy && (
-            <p className="max-w-3xl text-sm font-semibold leading-7 text-slate-300 sm:text-base">{brief.intro}</p>
-          )}
-        </div>
-
-        <div
-          className={`tfx-compare-card ${inView ? 'tfx-compare-card-in' : ''} mt-7 overflow-hidden rounded-[1.5rem] border border-white/10 bg-white/[0.03] shadow-[0_28px_90px_rgba(2,6,23,0.5)] backdrop-blur-sm`}
-        >
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[560px] table-fixed border-collapse text-left text-[11px] sm:text-sm">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/[0.05] text-xs uppercase tracking-[0.12em] text-slate-200">
-                  <th className="w-[26%] px-3 py-4 font-black sm:w-[28%] sm:px-6">Feature</th>
-                  <th className="relative w-[39%] bg-gradient-to-b from-amber-400/12 via-cyan-400/6 to-transparent px-3 py-4 font-black sm:w-[36%] sm:px-6">
-                    <span className="tfx-compare-crown absolute -top-2 right-3 text-base sm:right-6">
-                      <CompareCrownIcon className="h-4 w-4 text-amber-300 sm:h-5 sm:w-5" />
-                    </span>
-                    <span className="bg-gradient-to-r from-amber-200 via-yellow-100 to-cyan-200 bg-clip-text text-transparent">{brief.columns[0]}</span>
-                  </th>
-                  <th className="w-[35%] px-3 py-4 font-black text-slate-400 sm:w-[36%] sm:px-6">{brief.columns[1]}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {brief.rows.map(([feature, first, second], i) => (
-                  <tr
-                    key={feature}
-                    className={`tfx-compare-row group border-b border-white/[0.06] last:border-b-0 hover:bg-white/[0.04] ${inView ? 'tfx-compare-row-in' : ''}`}
-                    style={{ transitionDelay: inView ? `${Math.min(i, 12) * 55}ms` : '0ms' }}
-                  >
-                    <td className="break-words px-3 py-3.5 font-bold leading-4 text-slate-100 sm:px-6 sm:leading-6">{feature}</td>
-                    <td className="break-words bg-gradient-to-r from-amber-400/10 via-cyan-400/5 to-transparent px-3 py-3.5 font-semibold leading-4 text-white transition-transform duration-300 group-hover:translate-x-0.5 sm:px-6 sm:leading-6">
-                      <span className="flex items-start gap-2">
-                        <CompareCheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-amber-300" />
-                        <span>{first}</span>
-                      </span>
-                    </td>
-                    <td className="break-words px-3 py-3.5 font-semibold leading-4 text-slate-400 sm:px-6 sm:leading-6">
-                      <span className="flex items-start gap-2">
-                        <CompareDotIcon className="mt-0.5 h-4 w-4 shrink-0 text-slate-600" />
-                        <span>{second}</span>
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {showExtraCopy && brief.keywords.length > 0 && (
-            <div className="border-t border-white/10 px-4 py-5 sm:px-6 lg:px-8">
-              <p className="text-[11px] font-black uppercase tracking-[0.22em] text-slate-500">Trending searches</p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {brief.keywords.map((keyword) => (
-                  <span
-                    key={keyword}
-                    className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1.5 text-[11px] font-bold text-cyan-100 transition-colors duration-300 hover:border-cyan-300/40 hover:bg-cyan-300/15"
-                  >
-                    {keyword}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-};
-
 const TRUST_TILE_ICONS: Record<'shipping' | 'cod' | 'warranty' | 'secure', React.ReactNode> = {
   shipping: (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1302,7 +928,7 @@ const TRUST_TILE_ICONS: Record<'shipping' | 'cod' | 'warranty' | 'secure', React
 const productCheckoutTrustSignals: Array<{ title: string; mobileTitle: string; text: string; icon: keyof typeof TRUST_TILE_ICONS }> = [
   { title: 'Free shipping across India', mobileTitle: 'Free shipping', text: '', icon: 'shipping' },
   { title: 'COD available on eligible orders', mobileTitle: 'Cash on delivery', text: '', icon: 'cod' },
-  { title: 'Brand warranty support', mobileTitle: 'Brand warranty', text: 'TheFutureX help', icon: 'warranty' },
+  { title: 'Brand warranty support', mobileTitle: 'Brand warranty', text: 'Need help? thefuturex.ptc@gmail.com | 8530340676', icon: 'warranty' },
   { title: 'Secure checkout', mobileTitle: 'Secure checkout', text: 'UPI, cards, wallet', icon: 'secure' },
 ];
 
@@ -1330,9 +956,12 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
   const tileMutedClass = dark
     ? 'mt-1 break-words text-[10px] font-medium leading-4 text-gray-400'
     : 'mt-1 break-words text-[10px] font-medium leading-4 text-slate-500';
-  const tileLinkClass = dark
-    ? 'inline-flex text-[11px] font-semibold text-primary-200 hover:text-white'
-    : 'inline-flex text-[11px] font-semibold text-[#8a6a20] hover:text-slate-950';
+  const registerBadgeClass = dark
+    ? 'inline-flex items-center rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-semibold leading-4 text-primary-100 transition hover:bg-white/25 hover:text-white'
+    : 'inline-flex items-center rounded-md bg-[#eddcae] px-2 py-0.5 text-[10px] font-semibold leading-4 text-[#6b4f14] transition hover:bg-[#e3cd8e] hover:text-slate-950';
+  const warrantyPolicyBadgeClass = dark
+    ? 'inline-flex items-center rounded-md bg-sky-400/20 px-2 py-0.5 text-[10px] font-semibold leading-4 text-sky-100 transition hover:bg-sky-400/30 hover:text-white'
+    : 'inline-flex items-center rounded-md bg-sky-200 px-2 py-0.5 text-[10px] font-semibold leading-4 text-sky-900 transition hover:bg-sky-300 hover:text-sky-950';
   const tileBaseClass = dark
     ? 'tfx-trust-tile min-w-0 border-r border-white/10 px-1 py-3 text-center last:border-r-0 sm:rounded-xl sm:border sm:border-white/10 sm:bg-white/5 sm:px-3.5 sm:py-3.5 sm:text-left sm:shadow-[0_10px_24px_rgba(0,0,0,0.12)]'
     : 'tfx-trust-tile min-w-0 border-r border-slate-200 px-1 py-3 text-center last:border-r-0 sm:rounded-xl sm:border sm:border-slate-200 sm:bg-[#fbfaf7] sm:px-3.5 sm:py-3.5 sm:text-left sm:shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
@@ -1422,15 +1051,17 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
                   <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
                   <div className="min-w-0">
                     <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
-                    <p className={`${tileTextClass} hidden sm:block`}>{text}</p>
+                    <a href="mailto:thefuturex.ptc@gmail.com" className={`${tileTextClass} hidden hover:underline sm:block`}>
+                      {text}
+                    </a>
                     {isWarrantyExpanded ? (
                       <>
                         <p className={tileMutedClass}>{warrantyText}</p>
-                        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-                          <Link to={registrationPath} className={tileLinkClass}>
+                        <div className="mt-2 flex flex-wrap gap-x-1.5 gap-y-1.5">
+                          <Link to={registrationPath} className={registerBadgeClass}>
                             Register product
                           </Link>
-                          <Link to="/info/warranty-policy" className={tileLinkClass}>
+                          <Link to="/info/warranty-policy" className={warrantyPolicyBadgeClass}>
                             Warranty policy
                           </Link>
                         </div>
@@ -1768,6 +1399,7 @@ export const ProductDetail: React.FC = () => {
 
   const [activeDetailTab, setActiveDetailTab] = useState<ProductDetailTabKey>('description');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [isHeroDescriptionExpanded, setIsHeroDescriptionExpanded] = useState(false);
   const [showAllMobileOverview, setShowAllMobileOverview] = useState(false);
   const [showAllSpecs, setShowAllSpecs] = useState(false);
   const [visibleReviewCount, setVisibleReviewCount] = useState(2);
@@ -2440,14 +2072,9 @@ export const ProductDetail: React.FC = () => {
   useEffect(() => {
     if (!product) return;
 
-    const familyText = `${product.category || ''} ${product.name || ''}`.toLowerCase();
-    const hasComparisonForScroll =
-      /\b(band|bracelet|ring|fan)\b/.test(familyText) ||
-      /\bsleep\b/.test(familyText);
     const sectionIds: ProductDetailTabKey[] = [
       'features',
       'description',
-      ...(hasComparisonForScroll ? ['comparison' as const] : []),
       'specs',
       'faq',
     ];
@@ -2571,7 +2198,6 @@ export const ProductDetail: React.FC = () => {
             ? 'monitoring'
             : 'wearable';
   const isRingOverview = productFamily === 'ring';
-  const hasSeoComparisonForTabs = productFamily === 'band' || productFamily === 'ring' || productFamily === 'fan' || (productFamily === 'monitoring' && /\bsleep\b/i.test(productFamilyText));
   const useMarketplaceArrangement = true;
   const isFanMarketplacePage = productFamily === 'fan';
   const productGalleryVideoFit: 'contain' | 'cover' = productFamily === 'fan' ? 'contain' : 'cover';
@@ -2579,7 +2205,6 @@ export const ProductDetail: React.FC = () => {
   const detailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
     { key: 'features', label: 'Features' },
     ...(showProductOverview || isFanMarketplacePage ? [{ key: 'description' as const, label: isFanMarketplacePage ? 'Description' : 'Overview' }] : []),
-    ...(hasSeoComparisonForTabs ? [{ key: 'comparison' as const, label: 'Comparison' }] : []),
     { key: 'specs', label: 'Specifications' },
     { key: 'faq', label: 'FAQs' },
     { key: 'reviews', label: 'Reviews' },
@@ -2589,7 +2214,6 @@ export const ProductDetail: React.FC = () => {
   };
   const mobileDetailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
     { key: 'description', label: isFanMarketplacePage ? 'Description' : 'Overview' },
-    ...(hasSeoComparisonForTabs ? [{ key: 'comparison' as const, label: 'Comparison' }] : []),
     { key: 'features', label: 'Features' },
     { key: 'specs', label: 'Specs' },
     { key: 'battery', label: 'Battery' },
@@ -2685,7 +2309,6 @@ export const ProductDetail: React.FC = () => {
   const fanProfile = productFamily === 'fan' ? FAN_PROFILES[getFanProfileKey(product.name)] : null;
   const monitoringProfile = productFamily === 'monitoring' ? MONITORING_PROFILES[getMonitoringProfileKey(product.name)] : null;
   const isTfxV5Band = productFamily === 'band' && /\btfx\s*5\b|\btfx5\b|\bv5\b|\bai\s*v5\b/i.test(product.name);
-  const productSeoComparison = getSeoComparisonBrief(product, productFamily, salePrice);
   const isPremiumSmartBand = productFamily === 'band' && /premium|modern\s+fitness|smart\s+band/i.test(product.name) && !isTfxV5Band;
   const productFlipkartLink = product.marketplaceLinks?.find((link) => /flipkart/i.test(link.label) || /flipkart\.com/i.test(link.url));
   const tfx5FlipkartListing = {
@@ -2708,42 +2331,42 @@ export const ProductDetail: React.FC = () => {
     {
       family: 'ring',
       match: /\brq11\b.*display|display.*\brq11\b/i,
-      product: 'TFX RQ11 Smart Ring Display',
+      product: 'The FutureX RQ11 Smart Ring Display',
       code: 'STNHJKY3URWEFBBV',
       url: 'https://www.flipkart.com/futurex-tfx-rq11-smart-ring-display/p/itm0b66b77950f87?pid=STNHJKY3URWEFBBV',
     },
     {
       family: 'ring',
       match: /\brq11\b/i,
-      product: 'TFX RQ11 Smart Ring',
+      product: 'The FutureX RQ11 Smart Ring',
       code: 'STNHGXDFAFGRMNFF',
       url: 'https://www.flipkart.com/futurex-tfx-rq11-smart-ring/p/itm71a8a8da3869e?pid=STNHGXDFAFGRMNFF',
     },
     {
       family: 'ring',
       match: /\bsrq11\b/i,
-      product: 'TFX SRQ11 Smart Ring',
+      product: 'The FutureX SRQ11 Smart Ring',
       code: 'STNHFUJZEMQPGBBK',
       url: 'https://www.flipkart.com/futurex-tfx-srq11-smart-ring/p/itmfd3d19e1e6110?pid=STNHFUJZEMQPGBBK',
     },
     {
       family: 'ring',
       match: /\bq11\b|tfxq11/i,
-      product: 'TFX Q11 Smart Ring',
+      product: 'The FutureX Q11 Smart Ring',
       code: 'STNHHGRGPGZFJG4J',
       url: 'https://www.flipkart.com/futurex-tfxq11-smart-ring/p/itmc14673293d022?pid=STNHHGRGPGZFJG4J',
     },
     {
       family: 'ring',
       match: /\bsr8\b/i,
-      product: 'TFX SR8 Smart Ring',
+      product: 'The FutureX SR8 Smart Ring',
       code: 'STNHEWD6C7FYEBGT',
       url: 'https://www.flipkart.com/futurex-tfx-sr8-smart-ring/p/itm325cbdf5b55fa?pid=STNHEWD6C7FYEBGT',
     },
     {
       family: 'ring',
       match: /\bq10\b|tfxq10/i,
-      product: 'TFX Q10 Smart Ring',
+      product: 'The FutureX Q10 Smart Ring',
       code: 'STNHGC9MUBNWSPXX',
       url: 'https://www.flipkart.com/futurex-tfxq10-smart-ring/p/itm51deb48effded?pid=STNHGC9MUBNWSPXX',
     },
@@ -2778,7 +2401,7 @@ export const ProductDetail: React.FC = () => {
     {
       family: 'fan',
       match: /tp\s*-?\s*02|tp02|3\s*-?\s*in\s*-?\s*1/i,
-      product: 'TFX TP02 3-in-1 Tower Fan',
+      product: 'The FutureX TP02 3-in-1 Tower Fan',
       code: 'FANHGFHRP7AZWWX7',
       url: 'https://www.flipkart.com/futurex-tfx-tp02-3-1-year-warranty-bldc-motor-tower-fan/p/itm40fc888dfc521?pid=FANHGFHRP7AZWWX7',
     },
@@ -2974,7 +2597,7 @@ export const ProductDetail: React.FC = () => {
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`;
   const ringOverviewSections = [
     {
-      title: 'TFX Ring Pro',
+      title: 'The FutureX Ring Pro',
       copy:
         TFX_RING_PRO_DESCRIPTION,
       image: ringProCharging,
@@ -3000,7 +2623,7 @@ export const ProductDetail: React.FC = () => {
   ];
   const displayRingOverviewSections = [
     {
-      title: 'TFX Display Pro Smart Ring',
+      title: 'The FutureX Display Pro Smart Ring',
       copy:
         TFX_DISPLAY_PRO_RING_DESCRIPTION,
       video: ringTouchProOverviewVideo,
@@ -3036,9 +2659,9 @@ export const ProductDetail: React.FC = () => {
   const touchRingOverviewSections = [];
   const tfxV5OverviewSections = [
     {
-      title: 'TFX Vital App Experience',
+      title: 'The FutureX Vital App Experience',
       copy:
-        'The TFX Vital app brings exercise tracking, recovery insights, and AI health assistance together for the TFX5 AI Smart Band.',
+        'The FutureX Vital app brings exercise tracking, recovery insights, and AI health assistance together for the TFX5 AI Smart Band.',
       image: tfxVitalAppOverviewBanner,
       overlayText: 'One App. Total Wellness.',
     },
@@ -3057,7 +2680,7 @@ export const ProductDetail: React.FC = () => {
   ];
   const premiumBandOverviewSections = [
     {
-      title: 'TFX Smart Band',
+      title: 'The FutureX Smart Band',
       copy:
         TFX_SMART_BAND_DESCRIPTION,
       image: premiumBandModelBanner,
@@ -3118,20 +2741,20 @@ export const ProductDetail: React.FC = () => {
   const familyProductFaqs: Record<string, Array<{ q: string; a: string }>> = {
     band: [
       { q: `What does ${product.name} track?`, a: `${product.name} supports fitness and wellness tracking such as activity, sleep, heart rate and connected app insights depending on the model.` },
-      { q: `Does ${product.name} support SpO2 monitoring?`, a: 'Selected TFX smart band models support blood oxygen (SpO2) monitoring. Check the product specifications for the exact model features.' },
-      { q: 'Can this smart band connect to a smartphone?', a: 'Yes. Compatible TFX smart bands connect to smartphones using Bluetooth and app integration for wellness summaries and trend review.' },
-      { q: 'Is this smart band suitable for daily wear?', a: 'Yes. TFX smart bands are designed with lightweight everyday wearability for work, workouts, sleep tracking and daily activities.' },
+      { q: `Does ${product.name} support SpO2 monitoring?`, a: 'Selected The FutureX smart band models support blood oxygen (SpO2) monitoring. Check the product specifications for the exact model features.' },
+      { q: 'Can this smart band connect to a smartphone?', a: 'Yes. Compatible The FutureX smart bands connect to smartphones using Bluetooth and app integration for wellness summaries and trend review.' },
+      { q: 'Is this smart band suitable for daily wear?', a: 'Yes. The FutureX smart bands are designed with lightweight everyday wearability for work, workouts, sleep tracking and daily activities.' },
     ],
     ring: [
  { q: `What can ${product.name} track?`, a: `${product.name} is designed for compact wellness tracking such as activity, sleep, heart rate trends and app-connected insights depending on the model.` },
-      { q: 'Does this smart ring connect to an app?', a: 'Yes. TFX smart rings connect with compatible smartphones through app-based sync for wellness, activity and sleep insights.' },
-      { q: 'Is this smart ring suitable for daily wear?', a: 'Yes. TFX smart rings use a compact ring form factor designed for daily wellness monitoring, activity tracking and overnight sleep tracking.' },
+      { q: 'Does this smart ring connect to an app?', a: 'Yes. The FutureX smart rings connect with compatible smartphones through app-based sync for wellness, activity and sleep insights.' },
+      { q: 'Is this smart ring suitable for daily wear?', a: 'Yes. The FutureX smart rings use a compact ring form factor designed for daily wellness monitoring, activity tracking and overnight sleep tracking.' },
       { q: 'How is a smart ring different from a smart band?', a: 'A smart ring offers discreet ring-style tracking, while a smart band is worn on the wrist and may suit users who prefer wrist-based fitness tracking.' },
     ],
     fan: [
       { q: 'What is a bladeless fan?', a: 'A bladeless fan uses airflow amplification technology to circulate air without exposed rotating blades.' },
-      { q: 'Can this fan be used in a bedroom?', a: 'Yes. Many TFX bladeless fans are suitable for bedrooms because they offer smooth airflow, modern styling and selected quiet operating modes.' },
-      { q: 'Can hot and cool fan models be used year-round?', a: 'Selected TFX hot and cool models provide cooling airflow and heating functionality for year-round indoor comfort.' },
+      { q: 'Can this fan be used in a bedroom?', a: 'Yes. Many The FutureX bladeless fans are suitable for bedrooms because they offer smooth airflow, modern styling and selected quiet operating modes.' },
+      { q: 'Can hot and cool fan models be used year-round?', a: 'Selected The FutureX hot and cool models provide cooling airflow and heating functionality for year-round indoor comfort.' },
       { q: 'Do bladeless fans require less maintenance?', a: 'Bladeless fans can be easier to clean because there are no exposed blades, though filters, vents and surfaces should still be maintained as recommended.' },
     ],
     monitoring: [
@@ -3143,11 +2766,11 @@ export const ProductDetail: React.FC = () => {
     glasses: [
       { q: 'What can smart glasses be used for?', a: 'Smart glasses can support hands-free calling, music, voice assistant access and selected capture features depending on the model.' },
       { q: 'Do smart glasses connect to a smartphone?', a: 'Yes. Compatible smart glasses connect with supported smartphones through Bluetooth for calling, media and smart controls.' },
-      { q: 'Are smart glasses suitable for everyday use?', a: 'TFX smart glasses are designed as modern eyewear with connected features for daily convenience, travel and hands-free use.' },
+      { q: 'Are smart glasses suitable for everyday use?', a: 'The FutureX smart glasses are designed as modern eyewear with connected features for daily convenience, travel and hands-free use.' },
     ],
     wearable: [
       { q: `What is ${product.name} used for?`, a: `${product.name} is designed for everyday connected wellness, smart convenience and practical daily use depending on its features.` },
-      { q: 'Does this product support app connectivity?', a: 'Compatible TFX products support app or Bluetooth connectivity for setup, summaries or connected features depending on the model.' },
+      { q: 'Does this product support app connectivity?', a: 'Compatible The FutureX products support app or Bluetooth connectivity for setup, summaries or connected features depending on the model.' },
     ],
   };
   const productFaqs = [
@@ -3369,7 +2992,7 @@ export const ProductDetail: React.FC = () => {
             )}
           </div>
 
-          <div className="product-panel-in order-3 min-w-0 text-center lg:order-none lg:text-left">
+          <div className="product-panel-in order-2 min-w-0 text-center lg:order-none lg:text-left">
             <div className="hidden">
               {product.colors && product.colors.length > 0 && (
                 <div className="rounded-xl bg-[#f5fbfb] p-3 text-left sm:p-4">
@@ -3440,17 +3063,34 @@ export const ProductDetail: React.FC = () => {
             <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
               {product.name}
             </h1>
-            <p className="mt-2.5 max-w-none text-left text-xs font-medium leading-5 text-slate-600 sm:text-sm sm:leading-6">
-              {product.features?.[0] ? cleanFeatureText(product.features[0]) : 'Premium smart technology with everyday TheFutureX support'}
-            </p>
-            <div className="mt-4 flex flex-wrap items-center justify-start gap-3">
-              {product.rating != null && (
-                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]">
-                  <span className="text-[#a9812f] tracking-tight">{'\u2605'.repeat(Math.round(Number(product.rating || 0)))}</span>
-                  <span>{Number(product.rating || 0).toFixed(1)}</span>
-                  <span className="text-xs font-medium text-slate-400">({product.reviewCount || product.reviews?.length || 0} reviews)</span>
-                </div>
+            <span className="mt-2.5 inline-flex w-fit items-center rounded-md bg-[#fbf6ea] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#8a6a20]">
+              Overview
+            </span>
+            <div className="relative mt-1.5 max-w-none">
+              <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? 'line-clamp-3' : ''}`}>
+                {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
+              </p>
+              {!isHeroDescriptionExpanded && (
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent sm:h-5" />
               )}
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsHeroDescriptionExpanded((prev) => !prev)}
+              className="mt-1.5 w-fit text-xs font-bold text-[#8a6a20] transition hover:text-slate-950 sm:text-sm"
+            >
+              {isHeroDescriptionExpanded ? 'Read Less' : 'Read More'}
+            </button>
+            <div className="mt-4 flex flex-wrap items-center justify-start gap-3">
+              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]">
+                <span className="tracking-tight text-[#a9812f]">
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <span key={index}>{index < Math.round(Number(product.rating || 0)) ? '\u2605' : '\u2606'}</span>
+                  ))}
+                </span>
+                <span>{Number(product.rating || 0).toFixed(1)}</span>
+                <span className="text-xs font-medium text-slate-400">({product.reviewCount || product.reviews?.length || 0} reviews)</span>
+              </div>
               <a
                 href="#reviews"
                 onClick={(event) => {
@@ -3466,7 +3106,7 @@ export const ProductDetail: React.FC = () => {
           </div>
 
           {useMarketplaceArrangement && (
-            <aside className="product-panel-in order-2 w-full min-w-0 max-w-full overflow-hidden bg-white text-left lg:col-start-2 lg:row-start-2 lg:order-none">
+            <aside className="product-panel-in order-3 w-full min-w-0 max-w-full overflow-hidden bg-white text-left lg:col-start-2 lg:row-start-2 lg:order-none">
               <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-[#f8fbfb] to-white p-4 shadow-[0_2px_14px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_6px_22px_rgba(15,23,42,0.08)] sm:p-5">
                 <div className="flex flex-wrap items-end gap-2.5">
                   {couponRate > 0 ? (
@@ -4068,8 +3708,6 @@ export const ProductDetail: React.FC = () => {
           </section>
         </>
       )}
-
-      {productSeoComparison && <ProductSeoComparisonChart brief={productSeoComparison} />}
 
       <section id="specs" className="hidden scroll-mt-32 bg-gradient-to-b from-[#f8fbfb] to-[#f2f5f4] px-4 py-12 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16">
         <div className="mx-auto max-w-6xl">
