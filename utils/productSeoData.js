@@ -321,6 +321,17 @@ export const buildProductSeoRecord = (product = {}) => {
     brand: product.brand || fallback?.brand || 'The Future X',
     ratingValue: Number(product.rating || fallback?.ratingValue || 0),
     reviewCount: Math.max(0, Number(product.reviewCount || product.reviews?.length || fallback?.reviewCount || 0)),
+    // Preserve customer-facing details for the build-time product pages. These
+    // fields are rendered in the HTML snapshot as well as the interactive SPA.
+    features: Array.isArray(product.features)
+      ? product.features.map((feature) => cleanSeoText(String(feature))).filter(Boolean).slice(0, 8)
+      : [],
+    specs: Object.fromEntries(
+      Object.entries(product.specs || {})
+        .filter(([name, value]) => String(name).trim() && String(value).trim())
+        .slice(0, 12)
+        .map(([name, value]) => [cleanSeoText(String(name)), cleanSeoText(String(value))])
+    ),
   };
 };
 

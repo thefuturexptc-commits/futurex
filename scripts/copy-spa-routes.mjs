@@ -331,6 +331,14 @@ const buildBlogPostStaticHtml = (page) => `${buildStaticStyles()}
 const buildProductStaticHtml = (product) => {
   const image = resolveUrl(product.image || product.images?.[0] || DEFAULT_IMAGE);
   const faqs = getProductFaqs(product);
+  const highlights = Array.isArray(product.features) && product.features.length
+    ? product.features.slice(0, 6)
+    : [
+      'Secure checkout and India shipping from TheFutureX.',
+      'App-connected features and everyday support depending on product model.',
+      'Designed for practical daily use, comfort, and modern connected living.',
+    ];
+  const specs = Object.entries(product.specs || {}).slice(0, 10);
   return `${buildStaticStyles()}
     <main>
       <nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="${htmlEscape(getCategoryUrl(product.category).replace(SITE_URL, ''))}">${htmlEscape(product.category || 'Products')}</a> / <span>${htmlEscape(product.name)}</span></nav>
@@ -344,18 +352,34 @@ const buildProductStaticHtml = (product) => {
       </article>
       <section>
         <h2>Product Highlights</h2>
-        <ul>
-          <li>Secure checkout and India shipping from TheFutureX.</li>
-          <li>App-connected features and everyday support depending on product model.</li>
-          <li>Designed for practical daily use, comfort, and modern connected living.</li>
-        </ul>
+        <ul>${highlights.map((highlight) => `<li>${htmlEscape(highlight)}</li>`).join('')}</ul>
       </section>
+      ${specs.length ? `<section><h2>Key Specifications</h2><dl>${specs.map(([name, value]) => `<dt><strong>${htmlEscape(name)}</strong></dt><dd>${htmlEscape(value)}</dd>`).join('')}</dl></section>` : ''}
       <section class="seo-faq">
         <h2>Frequently Asked Questions</h2>
         ${faqs.map(([question, answer]) => `<details><summary>${htmlEscape(question)}</summary><p>${htmlEscape(answer)}</p></details>`).join('')}
       </section>
     </main>`;
 };
+
+const buildProductNoscriptHtml = (product) => {
+  const specs = Object.entries(product.specs || {}).slice(0, 8);
+  const highlights = Array.isArray(product.features) ? product.features.slice(0, 5) : [];
+  const details = highlights.length
+    ? highlights
+    : specs.map(([name, value]) => `${name}: ${value}`).slice(0, 5);
+  return `<main>
+      <h1>${htmlEscape(product.name)}</h1>
+      <p>${htmlEscape(product.description)}</p>
+      <p><strong>Price: ${htmlEscape(formatPrice(product.price))}</strong></p>
+      <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
+      ${details.length ? `<h2>Key specifications</h2><ul>${details.map((detail) => `<li>${htmlEscape(detail)}</li>`).join('')}</ul>` : ''}
+      <p><a href="${htmlEscape(getProductUrl(product))}">View ${htmlEscape(product.name)}</a></p>
+    </main>`;
+};
+
+const injectNoscript = (html, bodyHtml) =>
+  html.replace(/<noscript>[\s\S]*?<\/noscript>/i, `<noscript>${bodyHtml}</noscript>`);
 
 const buildCollectionJsonLd = (route, page, products = []) => {
   const url = `${SITE_URL}/${route}`;
@@ -709,7 +733,10 @@ const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...product
 
 const getRouteHtml = (route, product) => {
   if (product) {
-    return injectStaticRoot(injectProductSeo(baseHtml, product), buildProductStaticHtml(product));
+    return injectStaticRoot(
+      injectNoscript(injectProductSeo(baseHtml, product), buildProductNoscriptHtml(product)),
+      buildProductStaticHtml(product)
+    );
   }
 
   if (route === '') {
@@ -769,7 +796,7 @@ writeFileSync(join(distDir, 'product-feed.xml'), buildMerchantXmlFeed(productRec
 writeFileSync(join(distDir, 'product-feed.csv'), buildMerchantCsvFeed(productRecords), 'utf8');
 writeFileSync(
   join(distDir, 'robots.txt'),
-  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nDisallow: /checkout\nDisallow: /payment\nDisallow: /profile\nDisallow: /login\nDisallow: /signup\nDisallow: /cart\nDisallow: /verify-phone\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
+  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nDisallow: /checkout\nDisallow: /payment\nDisallow: /profile\nDisallow: /login\nDisallow: /signup\nDisallow: /cart\nDisallow: /verify-phone\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: Applebot-Extended\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
   'utf8'
 );
 
