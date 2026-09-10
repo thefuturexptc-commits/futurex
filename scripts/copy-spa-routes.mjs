@@ -393,8 +393,16 @@ const buildProductNoscriptHtml = (product) => {
     </main>`;
 };
 
-const injectNoscript = (html, bodyHtml) =>
-  html.replace(/<noscript>[\s\S]*?<\/noscript>/i, `<noscript>${bodyHtml}</noscript>`);
+// Product pages must replace the site-wide marketing fallback, not the font or
+// tag-manager noscript tags. Keeping both content fallbacks creates duplicate
+// H1s and conflicting crawler-visible page descriptions.
+const injectProductNoscript = (html, bodyHtml) => {
+  const genericFallback = /<noscript>\s*<main\b[^>]*>\s*<h1\b[^>]*>\s*TheFutureX Smart Wearables and Connected Lifestyle Products\s*<\/h1>[\s\S]*?<\/main>\s*<\/noscript>/i;
+  if (!genericFallback.test(html)) {
+    throw new Error('Could not find the generic noscript fallback to replace for a product page.');
+  }
+  return html.replace(genericFallback, `<noscript>${bodyHtml}</noscript>`);
+};
 
 const buildCollectionJsonLd = (route, page, products = []) => {
   const url = `${SITE_URL}/${route}`;
@@ -757,7 +765,7 @@ const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...product
 const getRouteHtml = (route, product) => {
   if (product) {
     return injectStaticRoot(
-      injectNoscript(injectProductSeo(baseHtml, product), buildProductNoscriptHtml(product)),
+      injectProductNoscript(injectProductSeo(baseHtml, product), buildProductNoscriptHtml(product)),
       buildProductStaticHtml(product)
     );
   }
@@ -809,6 +817,13 @@ for (const route of routes) {
   const productSlug = cleanRoute.startsWith('product/') ? cleanRoute.slice('product/'.length) : '';
   const product = productSlug ? productRouteMap.get(productSlug) : null;
   const html = getRouteHtml(cleanRoute, product);
+  if (product) {
+    const requiredSchemaTypes = ['Product', 'Offer', 'BreadcrumbList', 'FAQPage'];
+    const missingSchemaTypes = requiredSchemaTypes.filter((type) => !html.includes(`"@type":"${type}"`));
+    if (missingSchemaTypes.length) {
+      throw new Error(`Missing required JSON-LD schema on /${cleanRoute}: ${missingSchemaTypes.join(', ')}`);
+    }
+  }
 
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, html, 'utf8');
