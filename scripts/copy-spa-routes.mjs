@@ -362,6 +362,21 @@ const buildProductStaticHtml = (product) => {
     </main>`;
 };
 
+const crawlerDisallowRules = [
+  '/admin',
+  '/api/',
+  '/checkout',
+  '/payment',
+  '/profile',
+  '/login',
+  '/signup',
+  '/cart',
+  '/verify-phone',
+];
+
+const buildRobotsBlock = (userAgent) =>
+  `User-agent: ${userAgent}\nAllow: /\n${crawlerDisallowRules.map((path) => `Disallow: ${path}`).join('\n')}`;
+
 const buildProductNoscriptHtml = (product) => {
   const specs = Object.entries(product.specs || {}).slice(0, 8);
   const highlights = Array.isArray(product.features) ? product.features.slice(0, 5) : [];
@@ -712,6 +727,14 @@ const injectProductSeo = (html, product) => {
 
 const baseHtml = readFileSync(indexFile, 'utf8');
 const remoteProducts = await fetchRemoteProducts();
+// A production snapshot must represent the live catalog. Vercel exposes VERCEL=1
+// during builds; other CI systems can opt in with REQUIRE_LIVE_PRODUCT_DATA=true.
+// This turns a transient Firestore/network problem into a failed deploy rather
+// than quietly publishing stale fallback pricing, stock, or specifications.
+const requireLiveProductData = process.env.VERCEL === '1' || process.env.REQUIRE_LIVE_PRODUCT_DATA === 'true';
+if (requireLiveProductData && remoteProducts.length === 0) {
+  throw new Error('Live Firestore product data was unavailable. Refusing to publish SEO snapshots from static fallbacks.');
+}
 const productRecords = mergeProductSeoRecords(remoteProducts);
 const productRouteMap = new Map();
 
@@ -796,7 +819,7 @@ writeFileSync(join(distDir, 'product-feed.xml'), buildMerchantXmlFeed(productRec
 writeFileSync(join(distDir, 'product-feed.csv'), buildMerchantCsvFeed(productRecords), 'utf8');
 writeFileSync(
   join(distDir, 'robots.txt'),
-  `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\nDisallow: /checkout\nDisallow: /payment\nDisallow: /profile\nDisallow: /login\nDisallow: /signup\nDisallow: /cart\nDisallow: /verify-phone\n\nUser-agent: GPTBot\nAllow: /\n\nUser-agent: Google-Extended\nAllow: /\n\nUser-agent: ClaudeBot\nAllow: /\n\nUser-agent: PerplexityBot\nAllow: /\n\nUser-agent: Applebot-Extended\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
+  `${['*', 'GPTBot', 'Google-Extended', 'ClaudeBot', 'PerplexityBot', 'Applebot-Extended'].map(buildRobotsBlock).join('\n\n')}\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
   'utf8'
 );
 

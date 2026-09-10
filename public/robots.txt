@@ -12,18 +12,63 @@ Disallow: /verify-phone
 
 User-agent: GPTBot
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /payment
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /cart
+Disallow: /verify-phone
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /payment
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /cart
+Disallow: /verify-phone
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /payment
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /cart
+Disallow: /verify-phone
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /payment
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /cart
+Disallow: /verify-phone
 
 User-agent: Applebot-Extended
 Allow: /
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /payment
+Disallow: /profile
+Disallow: /login
+Disallow: /signup
+Disallow: /cart
+Disallow: /verify-phone
 
 Sitemap: https://thefuturex.in/sitemap.xml
 LLMS: https://thefuturex.in/llms.txt
