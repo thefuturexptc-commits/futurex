@@ -188,6 +188,7 @@ const NavbarComponent: React.FC = () => {
     { name: 'Fan', path: '/bladeless-fan' },
     { name: 'Smart Monitoring', path: '/smart-monitoring' },
     { name: 'Gifts', path: '/gifting-store' },
+    { name: 'About Us', path: '/info/about-us' },
   ];
   const mobileNavRows = [
     { title: 'Shop', links: mainNavLinks },

@@ -8669,7 +8669,7 @@ export const InfoPage: React.FC = () => {
   }
 
   return (
-    <div className="info-page-dark tfx-standard-page min-h-screen max-w-5xl mx-auto px-4 py-10 text-white">
+    <div className={`info-page-dark tfx-standard-page min-h-screen max-w-5xl mx-auto px-4 py-10 text-white${slug === 'about-us' ? ' tfx-about-page' : ''}`}>
       <div className="rounded-2xl border border-white/10 bg-dark-surface p-6 sm:p-8">
         <div className="flex items-center justify-between gap-3 mb-4">
           <h1 className="text-2xl sm:text-3xl font-bold">{pageLabel || 'Information'}</h1>

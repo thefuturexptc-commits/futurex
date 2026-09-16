@@ -543,6 +543,8 @@ const App: React.FC = () => {
                       <Route path="/privacy-policy-section" element={<PrivacyPolicySection />} />
                       <Route path="/blog" element={<InfoPage />} />
                       <Route path="/our-story" element={<OurStory />} />
+                      <Route path="/about-us" element={<Navigate to="/info/about-us" replace />} />
+                      <Route path="/about" element={<Navigate to="/info/about-us" replace />} />
                       <Route path="/blog/:slug" element={<BlogPostPage />} />
                       <Route path="/info/:slug" element={<InfoPage />} />
                       <Route path="/offers/:slug" element={<OfferPage />} />

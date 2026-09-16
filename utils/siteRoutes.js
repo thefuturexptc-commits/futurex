@@ -391,6 +391,8 @@ export const spaFallbackRoutes = [
   // refreshes load the site shell before the /offers/:slug route hydrates.
   'offers/exchange-bonus',
   'delete-account',
+  'about-us',
+  'about',
   'cart',
   'checkout',
   'verify-phone',

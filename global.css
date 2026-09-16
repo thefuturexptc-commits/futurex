@@ -10611,3 +10611,19 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
 @keyframes tfx-phone-menu-enter { from { transform: translateX(-100%); } to { transform: translateX(0); } }
 @media (prefers-reduced-motion: reduce) { .tfx-phone-menu-drawer { animation: none; } }
 @media (min-width: 1024px) { .tfx-phone-menu-overlay { display: none; } }
+
+/* Keep About Us readable despite legacy dark-surface overrides. */
+.site-main-content .tfx-about-page,
+.site-main-content .tfx-about-page > div,
+.site-main-content .tfx-about-page .rounded-2xl {
+  background: #fff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+.site-main-content .tfx-about-page :is(h1, h2, p, div, address, a, button) {
+  color: #0f172a !important;
+}
+.site-main-content .tfx-about-page a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

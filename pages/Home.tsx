@@ -608,6 +608,9 @@ export const Home: React.FC = () => {
   const [offerUnlocked, setOfferUnlocked] = useState(false);
   const [copiedOfferCode, setCopiedOfferCode] = useState('');
   const [homeWaterBannerIndex, setHomeWaterBannerIndex] = useState(0);
+  const bannerGesture = useRef<{ x: number; y: number } | null>(null);
+  const suppressBannerClick = useRef(false);
+  const [isBannerTouching, setIsBannerTouching] = useState(false);
   const [popupEntered, setPopupEntered] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -663,7 +666,7 @@ export const Home: React.FC = () => {
   const [isHomeBannerPaused, setIsHomeBannerPaused] = useState(false);
 
   useEffect(() => {
-    if (isHomeBannerPaused || HOME_WATER_RESISTANT_BANNERS.length <= 1) return undefined;
+    if (isHomeBannerPaused || isBannerTouching || HOME_WATER_RESISTANT_BANNERS.length <= 1) return undefined;
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       return undefined;
     }
@@ -671,7 +674,7 @@ export const Home: React.FC = () => {
       setHomeWaterBannerIndex((current) => (current + 1) % HOME_WATER_RESISTANT_BANNERS.length);
     }, 4500);
     return () => window.clearInterval(intervalId);
-  }, [isHomeBannerPaused]);
+  }, [isHomeBannerPaused, isBannerTouching, homeWaterBannerIndex]);
 
   const handleSeedDefaults = async () => {
     setSeeding(true);
@@ -1209,6 +1212,54 @@ export const Home: React.FC = () => {
       >
         <div
           className="relative w-full aspect-[21/9] overflow-hidden"
+          style={{ touchAction: 'pan-y pinch-zoom' }}
+          onTouchStart={(event) => {
+            suppressBannerClick.current = false;
+            const touch = event.touches[0];
+            bannerGesture.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+            setIsBannerTouching(true);
+          }}
+          onTouchMove={(event) => {
+            const start = bannerGesture.current;
+            if (!start) return;
+            const touch = event.touches[0];
+            if (event.touches.length !== 1) {
+              bannerGesture.current = null;
+              suppressBannerClick.current = true;
+            } else if (Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 10) {
+              suppressBannerClick.current = true;
+            }
+          }}
+          onTouchEnd={(event) => {
+            const start = bannerGesture.current;
+            bannerGesture.current = null;
+            setIsBannerTouching(false);
+            if (!start) return;
+            const touch = event.changedTouches[0];
+            const dx = touch.clientX - start.x;
+            const dy = touch.clientY - start.y;
+            if (Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+              suppressBannerClick.current = true;
+              setHomeWaterBannerIndex((current) =>
+                (current + (dx < 0 ? 1 : -1) + HOME_WATER_RESISTANT_BANNERS.length) % HOME_WATER_RESISTANT_BANNERS.length
+              );
+            }
+          }}
+          onTouchCancel={() => {
+            bannerGesture.current = null;
+            suppressBannerClick.current = true;
+            setIsBannerTouching(false);
+          }}
+          onClickCapture={(event) => {
+            if (suppressBannerClick.current && event.detail !== 0) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+            suppressBannerClick.current = false;
+          }}
+          onPointerDown={(event) => {
+            if (event.pointerType === 'mouse') suppressBannerClick.current = false;
+          }}
         >
           {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
             <Link
