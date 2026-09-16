@@ -12,7 +12,7 @@ interface SeoMetadata {
   description?: string;
   path?: string;
   image?: string;
-  type?: 'website' | 'product';
+  type?: 'website' | 'product' | 'article';
   robots?: string;
 }
 

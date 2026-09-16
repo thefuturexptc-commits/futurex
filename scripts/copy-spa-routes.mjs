@@ -7,6 +7,7 @@ import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/
 import { generateSitemapXML } from '../utils/generateSitemap.js';
 import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
 import { productOfferPolicies, buildReviewSchema } from '../utils/productSchema.js';
+import { tfx5BlogPosts } from '../utils/tfx5BlogPosts.js';
 
 const distDir = 'dist';
 const indexFile = join(distDir, 'index.html');
@@ -132,6 +133,7 @@ const categoryPages = {
 };
 
 const blogSeoOverrides = {
+  ...Object.fromEntries(tfx5BlogPosts.map((post) => [`blog/${post.slug}`, { title: post.metaTitle, description: post.metaDescription, post }])),
   'blog/tfx-smart-band-emi-guide': {
     title: 'Buy a TFX Smart Band on EMI — Step-by-Step Guide | TheFutureX',
     description: 'Want a TFX smart band without paying the full amount upfront? Here\'s exactly how EMI works at checkout, what you need, and what it actually costs per month.',
@@ -340,7 +342,7 @@ const buildBlogPostStaticHtml = (page) => `${buildStaticStyles()}
       <article>
         <h1>${htmlEscape(page.title)}</h1>
         <p>${htmlEscape(page.description)}</p>
-        <p>Read this TheFutureX guide for practical smart wearable context, product education, and buying support.</p>
+        ${page.post ? `<img src="${htmlEscape(page.post.image)}" alt="The FutureX AI Smart Band TFX5" />${page.post.contentHtml}` : '<p>Read this TheFutureX guide for practical smart wearable context, product education, and buying support.</p>'}
       </article>
     </main>`;
 
@@ -799,8 +801,14 @@ const getRouteHtml = (route, product) => {
       title,
       description: blogPage.description,
       url: `${SITE_URL}/${route}`,
-      image: DEFAULT_IMAGE,
+      image: blogPage.post?.image || DEFAULT_IMAGE,
       type: 'article',
+      jsonLd: blogPage.post ? `<script id="blog-article-json-ld" type="application/ld+json">${JSON.stringify({
+        '@context': 'https://schema.org', '@type': 'Article', headline: blogPage.post.title,
+        description: blogPage.description, image: resolveUrl(blogPage.post.image),
+        mainEntityOfPage: `${SITE_URL}/${route}`, datePublished: blogPage.post.updatedAt, dateModified: blogPage.post.updatedAt,
+        author: { '@type': 'Organization', name: 'TheFutureX' },
+      }).replace(/</g, '\\u003c')}</script>` : '',
     });
     return injectStaticRoot(html, route === 'blog' ? buildBlogIndexStaticHtml() : buildBlogPostStaticHtml(blogPage));
   }

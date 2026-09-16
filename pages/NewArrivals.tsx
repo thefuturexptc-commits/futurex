@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { ProductCard } from '../components/ProductCard';
-import { ProductComparisonSection } from '../components/ProductComparisonSection';
 import { Product } from '../types';
 import { getProducts } from '../services/backend';
 import { getEffectivePrice, isNewArrivalProduct } from '../utils/productCollections';
@@ -207,15 +206,6 @@ export const NewArrivals: React.FC = () => {
           </div>
         )}
       </div>
-      {!loading && newArrivals.length > 0 && (
-        <ProductComparisonSection
-          products={newArrivals}
-          eyebrow="New arrival comparison"
-          title="Compare New Arrivals"
-          subtitle="Use this quick view to compare fresh models by price, highlights, availability, and everyday fit."
-          className="relative mt-14 bg-[#f8fbfb] text-slate-950"
-        />
-      )}
     </div>
   );
 };

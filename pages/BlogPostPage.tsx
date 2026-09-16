@@ -40,6 +40,20 @@ const renderArticleContent = (content: string) => {
   while (index < lines.length) {
     const line = lines[index].trim();
     if (!line) { index += 1; continue; }
+    if (line.startsWith('### ')) {
+      blocks.push(<h3 key={`subheading-${index}`} className="mt-8 text-xl font-semibold">{renderInline(line.slice(4), `subheading-${index}`)}</h3>);
+      index += 1;
+      continue;
+    }
+    if (line.startsWith('|') && /^\|[\s:|\-]+\|$/.test(lines[index + 1]?.trim() || '')) {
+      const cells = (row: string) => row.trim().slice(1, -1).split('|').map((cell) => cell.trim());
+      const headings = cells(line);
+      index += 2;
+      const rows: string[][] = [];
+      while (index < lines.length && lines[index].trim().startsWith('|')) rows.push(cells(lines[index++]));
+      blocks.push(<div key={`table-${index}`} className="my-8 overflow-x-auto"><table className="w-full min-w-[520px] border-collapse text-left text-sm"><thead><tr>{headings.map((heading, i) => <th key={i} scope="col" className="border border-slate-200 p-3">{renderInline(heading, `th-${index}-${i}`)}</th>)}</tr></thead><tbody>{rows.map((row, r) => <tr key={r}>{row.map((cell, c) => <td key={c} className="border border-slate-200 p-3">{renderInline(cell, `td-${index}-${r}-${c}`)}</td>)}</tr>)}</tbody></table></div>);
+      continue;
+    }
     if (line.startsWith('## ')) {
       blocks.push(<h2 key={`heading-${index}`} className="mt-12 font-serif text-3xl font-semibold leading-tight text-[#17130f]">{renderInline(line.slice(3), `heading-${index}`)}</h2>);
       index += 1;
@@ -85,7 +99,7 @@ export const BlogPostPage: React.FC = () => {
     if (!post) return;
     const path = `/blog/${post.slug}`;
     const url = `https://thefuturex.in${path}`;
-    setSeoMetadata({ title: post.metaTitle || `${post.title} | TheFutureX Blog`, description: post.metaDescription || post.excerpt, path, type: 'website' });
+    setSeoMetadata({ title: post.metaTitle || `${post.title} | TheFutureX Blog`, description: post.metaDescription || post.excerpt, path, type: 'article', ...(post.image ? { image: post.image } : {}) });
     setJsonLd('blog-article-json-ld', {
       '@context': 'https://schema.org', '@type': 'Article', headline: post.title,
       description: post.excerpt, mainEntityOfPage: { '@type': 'WebPage', '@id': url },
