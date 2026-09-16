@@ -30,6 +30,7 @@ import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 import { TFX5_AI_BAND_PRICE, isTfxV5Band } from '../utils/coupons';
 import { publishedBlogPosts } from '../utils/publishedBlogPosts';
+import { formatProductName } from '../utils/productName.js';
 
 const logDevWarning = (...args: unknown[]) => {
   if (import.meta.env.DEV) {
@@ -924,6 +925,7 @@ const normalizeProductColors = (product: Product): Product => {
 
   return ensureProductReviews({
     ...pricedProduct,
+    name: formatProductName(pricedProduct.name),
     slug,
     description: buildSeoProductDescription(pricedProduct),
     features: buildSeoProductFeatures(pricedProduct),

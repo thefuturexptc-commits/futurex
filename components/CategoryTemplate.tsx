@@ -317,28 +317,6 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
         </div>
       </section>
 
-      <section id="overview" className="bg-white px-5 py-12 text-slate-950 sm:px-8 lg:px-10 lg:py-16">
-        <div className="mx-auto max-w-7xl">
-          <h2 className="text-center font-display text-3xl font-black leading-tight text-slate-950 sm:text-6xl">
-            Product Line Overview
-          </h2>
-
-          <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <div className="overflow-hidden rounded-[1.5rem] bg-[#eff8f8] sm:rounded-[2rem]">
-              <img src={overviewImage || heroImage} alt={`${category} overview`} className="h-full min-h-[260px] w-full object-contain p-6 sm:min-h-[380px] sm:p-8" loading="lazy" decoding="async" />
-            </div>
-            <div className="flex flex-col justify-center">
-              <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">Product Overview</p>
-              <h3 className="mt-4 font-display text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
-                Premium {category} for Everyday Confidence
-              </h3>
-              <p className="mt-5 text-lg font-bold leading-8 text-slate-950 sm:text-xl">Smart hardware, clean design, and useful data in one refined experience.</p>
-              <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg">{subtitle}</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section id="catalog" className="bg-[#f2fbfb] px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
           {loadError && (
@@ -412,11 +390,11 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                           : 'min-h-[394px] w-[min(82vw,286px)] min-[420px]:w-[280px] sm:min-h-[420px] sm:w-[292px]'
                       }`}
                     >
-                      {(promoBadgeLabel || product.isNewArrival || product.isBestSeller || product.isFeatured) && (
+                      {(promoBadgeLabel || product.isNewArrival || product.isFeatured) && (
                         <div className={`absolute left-2.5 top-2.5 z-10 rounded-r-full px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white ${
                           promoBadgeLabel ? 'bg-[#df0b16] shadow-[0_8px_18px_rgba(223,11,22,0.18)]' : 'bg-[#86d8d2]'
                         }`}>
-                          {promoBadgeLabel || (product.isBestSeller ? 'Best Seller' : product.isNewArrival ? 'New Launch' : 'Featured')}
+                          {promoBadgeLabel || (product.isNewArrival ? 'New Launch' : 'Featured')}
                         </div>
                       )}
                       <Link to={`/product/${getProductSlug(product)}`} className={`flex items-center justify-center overflow-hidden rounded-md bg-white ${
@@ -523,6 +501,28 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
         </div>
       </section>
 
+      <section id="overview" className="bg-white px-5 py-12 text-slate-950 sm:px-8 lg:px-10 lg:py-16">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="text-center font-display text-3xl font-black leading-tight text-slate-950 sm:text-6xl">
+            Product Line Overview
+          </h2>
+
+          <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div className="overflow-hidden rounded-[1.5rem] bg-[#eff8f8] sm:rounded-[2rem]">
+              <img src={overviewImage || heroImage} alt={`${category} overview`} className="h-full min-h-[260px] w-full object-contain p-6 sm:min-h-[380px] sm:p-8" loading="lazy" decoding="async" />
+            </div>
+            <div className="flex flex-col justify-center">
+              <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">Product Overview</p>
+              <h3 className="mt-4 font-display text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
+                Premium {category} for Everyday Confidence
+              </h3>
+              <p className="mt-5 text-lg font-bold leading-8 text-slate-950 sm:text-xl">Smart hardware, clean design, and useful data in one refined experience.</p>
+              <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg">{subtitle}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {showComparisonSection && (
         <ProductComparisonSection
           products={filteredProducts}
@@ -535,10 +535,10 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
 
       {showcaseImages.length > 0 && (
         <section className="bg-white px-0 py-10 sm:px-0 lg:py-14">
-          <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="flex flex-col gap-4 sm:gap-6">
             {showcaseImages.map((image) => (
-              <article key={image.src} className="min-h-[280px] overflow-hidden bg-slate-950 sm:min-h-[360px] xl:min-h-[420px]">
-                <img src={image.src} alt={image.alt} className="h-full w-full object-cover" loading="lazy" decoding="async" />
+              <article key={image.src} className="w-full overflow-hidden bg-slate-950">
+                <img src={image.src} alt={image.alt} className="block h-auto w-full scale-[1.02] object-contain" loading="lazy" decoding="async" />
               </article>
             ))}
           </div>

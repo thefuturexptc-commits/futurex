@@ -99,11 +99,11 @@ const getRouteSeo = (pathname: string) => {
  description: 'Explore TheFutureX smart bands for activity tracking, everyday insights and connected living.',
     },
     '/smart-rings': {
-      title: 'Smart Rings',
+      title: 'The FutureX Smart Rings',
       description: 'Explore TheFutureX smart rings for compact wellness tracking, modern style, and everyday comfort.',
     },
     '/bladeless-fan': {
-      title: 'Bladeless Fan',
+      title: 'The FutureX Bladeless Fans',
       description: 'Shop TheFutureX bladeless fans built for connected comfort, energy-conscious cooling, and modern homes.',
     },
     '/smart-monitoring': {

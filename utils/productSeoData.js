@@ -1,3 +1,6 @@
+import { formatProductName } from './productName.js';
+import { getSchemaReviews } from './productSchema.js';
+
 export const SITE_URL = 'https://thefuturex.in';
 
 const DISPLAY_PRO_LEGACY_SLUG = 'tfx-display-pro-smart-ring-premium-tracking-with-display-and-wireless-charging';
@@ -233,6 +236,8 @@ const productFallbacks = [
 
 export const staticProductSeoRecords = productFallbacks.map((product) => ({
   ...product,
+  name: formatProductName(product.name),
+  seoTitle: formatProductName(product.name),
   price: getCustomerFacingPrice(product),
   id: product.id || product.slug,
   canonicalSlug: product.canonicalSlug || getProductSlug(product),
@@ -303,13 +308,14 @@ export const buildProductSeoRecord = (product = {}) => {
     ? Number(fallback.price)
     : requestedPrice;
   const stock = getStock(product);
+  const hasStockData = product.stock != null || product.variants?.length > 0 || product.colors?.length > 0;
 
   return {
     id: product.id || slug,
     slug,
     canonicalSlug: slug,
-    name: cleanSeoText(product.name),
-    seoTitle: fallback?.seoTitle || `${cleanSeoText(product.name)} - TheFutureX`,
+    name: formatProductName(cleanSeoText(product.name)),
+    seoTitle: formatProductName(cleanSeoText(product.name)),
     category: product.category || fallback?.category || 'Products',
     description: truncateText(description),
     image: images[0] || resolveUrl(fallback?.image || '/images/tfx-google-logo.webp'),
@@ -317,9 +323,10 @@ export const buildProductSeoRecord = (product = {}) => {
     // Never emit a token price such as ₹1 when a product record is incomplete.
     // Prefer the known product fallback; otherwise omit the invalid record upstream.
     price: Number.isFinite(price) && price > 0 ? price : Number(fallback?.price || 0),
-    availability: stock > 0 || product.inStock !== false ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    availability: (hasStockData ? stock > 0 : product.inStock !== false) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     brand: product.brand || fallback?.brand || 'The Future X',
     ratingValue: Number(product.rating || fallback?.ratingValue || 0),
+    reviews: getSchemaReviews(product.reviews),
     reviewCount: Math.max(0, Number(product.reviewCount || product.reviews?.length || fallback?.reviewCount || 0)),
     // Preserve customer-facing details for the build-time product pages. These
     // fields are rendered in the HTML snapshot as well as the interactive SPA.

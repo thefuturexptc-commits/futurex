@@ -5,6 +5,8 @@ import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { sitemapRoutes, spaFallbackRoutes } from '../utils/siteRoutes.js';
 import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/productSeoData.js';
 import { generateSitemapXML } from '../utils/generateSitemap.js';
+import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
+import { productOfferPolicies, buildReviewSchema } from '../utils/productSchema.js';
 
 const distDir = 'dist';
 const indexFile = join(distDir, 'index.html');
@@ -105,13 +107,13 @@ const categoryPages = {
   },
   'smart-rings': {
     name: 'Smart Rings',
-    title: 'Smart Rings | TheFutureX',
+    title: 'The FutureX Smart Rings',
     description: 'Explore TheFutureX smart rings for compact activity tracking, sleep insights, heart rate trends, app connectivity, and everyday ring comfort.',
     category: 'Smart Rings',
   },
   'bladeless-fan': {
     name: 'Bladeless Fan',
-    title: 'Bladeless Fan | TheFutureX',
+    title: 'The FutureX Bladeless Fans',
     description: 'Shop TheFutureX bladeless fans built for smooth airflow, modern homes, quiet room comfort, remote control, and all-season living.',
     category: 'Smart Fans',
   },
@@ -202,8 +204,25 @@ const fetchRemoteProducts = async () => {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const snapshot = await withTimeout(getDocs(collection(db, 'products')), 6500);
+    const reviewsByProduct = new Map();
+    try {
+      const reviewsSnapshot = await withTimeout(getDocs(collection(db, 'product_reviews')), 6500);
+      reviewsSnapshot.forEach((reviewDoc) => {
+        const review = { ...reviewDoc.data(), id: reviewDoc.id };
+        const reviews = reviewsByProduct.get(review.productId) || [];
+        reviews.push(review);
+        reviewsByProduct.set(review.productId, reviews);
+      });
+    } catch (error) {
+      console.warn('Product review fetch failed; using persisted product reviews only.');
+    }
     return snapshot.docs
-      .map((doc) => ({ id: doc.id, ...doc.data() }))
+      .map((doc) => {
+        const product = { ...doc.data(), id: doc.id };
+        const reviews = new Map((Array.isArray(product.reviews) ? product.reviews : []).map((review, index) => [review.id || `embedded-${index}`, review]));
+        (reviewsByProduct.get(doc.id) || []).forEach((review) => reviews.set(review.id, review));
+        return { ...product, reviews: [...reviews.values()] };
+      })
       .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
   } catch (error) {
     console.warn('Using static product SEO fallbacks because Firebase product fetch failed:', error instanceof Error ? error.message : error);
@@ -278,10 +297,7 @@ const buildHomeStaticHtml = (products = []) => {
       </section>
       <section class="seo-faq">
         <h2>Frequently Asked Questions</h2>
-        <details><summary>What is TheFutureX (TFX)?</summary><p>TheFutureX (TFX) is an Indian brand of smart wearables and connected lifestyle products, including smart bands, smart rings, bladeless fans, smart monitoring devices, and AI smart glasses.</p></details>
-        <details><summary>Does TheFutureX ship across India?</summary><p>Yes, TheFutureX ships smart wearables and connected lifestyle products across India when ordered directly from thefuturex.in.</p></details>
-        <details><summary>Does TheFutureX offer a warranty?</summary><p>Smart bands and smart rings include a 6-month limited warranty. Bladeless fans include a 1-year warranty on the motor and internal components. See the warranty policy for applicable terms and exclusions.</p></details>
-        <details><summary>Does TheFutureX have a mobile app?</summary><p>TheFutureX Smartwear is available on Google Play and connects compatible smart bands and rings to display device insights.</p></details>
+        ${homepageFaqs.map(({ question, answer }) => `<details><summary>${htmlEscape(question)}</summary><p>${htmlEscape(answer)}</p></details>`).join('')}
       </section>
     </main>`;
 };
@@ -355,6 +371,7 @@ const buildProductStaticHtml = (product) => {
         <ul>${highlights.map((highlight) => `<li>${htmlEscape(highlight)}</li>`).join('')}</ul>
       </section>
       ${specs.length ? `<section><h2>Key Specifications</h2><dl>${specs.map(([name, value]) => `<dt><strong>${htmlEscape(name)}</strong></dt><dd>${htmlEscape(value)}</dd>`).join('')}</dl></section>` : ''}
+      ${buildProductReviewHtml(product)}
       <section class="seo-faq">
         <h2>Frequently Asked Questions</h2>
         ${faqs.map(([question, answer]) => `<details><summary>${htmlEscape(question)}</summary><p>${htmlEscape(answer)}</p></details>`).join('')}
@@ -377,6 +394,12 @@ const crawlerDisallowRules = [
 const buildRobotsBlock = (userAgent) =>
   `User-agent: ${userAgent}\nAllow: /\n${crawlerDisallowRules.map((path) => `Disallow: ${path}`).join('\n')}`;
 
+const buildProductReviewHtml = (product) => {
+  const { aggregateRating, review } = buildReviewSchema(product.reviews);
+  if (!aggregateRating) return '';
+  return `<section><h2>Customer Reviews</h2><p>${aggregateRating.ratingValue} out of 5 (${aggregateRating.reviewCount} reviews)</p>${review.map((item) => `<article><h3>${htmlEscape(item.author.name)}</h3><p>${item.reviewRating.ratingValue} out of 5</p><p>${htmlEscape(item.reviewBody)}</p></article>`).join('')}</section>`;
+};
+
 const buildProductNoscriptHtml = (product) => {
   const specs = Object.entries(product.specs || {}).slice(0, 8);
   const highlights = Array.isArray(product.features) ? product.features.slice(0, 5) : [];
@@ -390,7 +413,8 @@ const buildProductNoscriptHtml = (product) => {
       <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
       ${details.length ? `<h2>Key specifications</h2><ul>${details.map((detail) => `<li>${htmlEscape(detail)}</li>`).join('')}</ul>` : ''}
       <p><a href="${htmlEscape(getProductUrl(product))}">View ${htmlEscape(product.name)}</a></p>
-    </main>`;
+      ${buildProductReviewHtml(product)}
+    </main>${buildJsonLd(product).replace(/ id="[^"]*"/g, '')}`;
 };
 
 // Product pages must replace the site-wide marketing fallback, not the font or
@@ -574,8 +598,6 @@ const buildJsonLd = (product) => {
   // Keep Offer.price numeric in the crawler-visible JSON-LD.
   const schemaPrice = Number(Math.max(1, Number(product.price || 1)).toFixed(2));
   const images = (product.images?.length ? product.images : [product.image || DEFAULT_IMAGE]).map(resolveUrl).filter(Boolean);
-  const ratingValue = Math.max(1, Math.min(5, Number(product.ratingValue || 0))).toFixed(1);
-  const reviewCount = Math.max(0, Number(product.reviewCount || 0));
   const faqItems = getProductFaqs(product);
   const additionalProperty = Object.entries(product.specs || {})
     .filter(([name, value]) => String(name).trim() && String(value).trim())
@@ -607,36 +629,11 @@ const buildJsonLd = (product) => {
         '@type': 'Organization',
         name: BRAND_NAME,
       },
-      shippingDetails: {
-        '@type': 'OfferShippingDetails',
-        shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
-        shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
-        deliveryTime: {
-          '@type': 'ShippingDeliveryTime',
-          handlingTime: { '@type': 'QuantitativeValue', minValue: 0, maxValue: 1, unitCode: 'DAY' },
-          transitTime: { '@type': 'QuantitativeValue', minValue: 2, maxValue: 7, unitCode: 'DAY' },
-        },
-      },
-      hasMerchantReturnPolicy: {
-        '@type': 'MerchantReturnPolicy',
-        applicableCountry: 'IN',
-        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
-        merchantReturnDays: 7,
-        returnMethod: 'https://schema.org/ReturnByMail',
-        returnFees: 'https://schema.org/FreeReturn',
-      },
+      ...productOfferPolicies,
     },
   };
 
-  if (reviewCount > 0) {
-    productSchema.aggregateRating = {
-      '@type': 'AggregateRating',
-      ratingValue,
-      reviewCount,
-      bestRating: '5',
-      worstRating: '1',
-    };
-  }
+  Object.assign(productSchema, buildReviewSchema(product.reviews));
 
   return [
     {
@@ -686,7 +683,7 @@ const buildJsonLd = (product) => {
       },
     },
   ]
-    .map(({ id, data }) => `    <script id="${id}" type="application/ld+json">${JSON.stringify(data)}</script>`)
+    .map(({ id, data }) => `    <script id="${id}" type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`)
     .join('\n');
 };
 
@@ -778,7 +775,7 @@ const getRouteHtml = (route, product) => {
       description,
       url: `${SITE_URL}/`,
       image: DEFAULT_IMAGE,
-      jsonLd: buildHomepageJsonLd(),
+      jsonLd: `${buildHomepageJsonLd()}\n    <script id="homepage-faq-json-ld" type="application/ld+json">${JSON.stringify(homepageFaqSchema)}</script>`,
     });
     return injectStaticRoot(html, buildHomeStaticHtml(productRecords));
   }
@@ -822,6 +819,16 @@ for (const route of routes) {
     const missingSchemaTypes = requiredSchemaTypes.filter((type) => !html.includes(`"@type":"${type}"`));
     if (missingSchemaTypes.length) {
       throw new Error(`Missing required JSON-LD schema on /${cleanRoute}: ${missingSchemaTypes.join(', ')}`);
+    }
+    const head = html.split('</head>')[0];
+    const schemaMatch = head.match(/<script id="product-json-ld" type="application\/ld\+json">([\s\S]*?)<\/script>/);
+    const schema = schemaMatch ? JSON.parse(schemaMatch[1]) : null;
+    if (!schema?.offers?.shippingDetails?.deliveryTime || !schema.offers.hasMerchantReturnPolicy || schema.offers.price <= 0) {
+      throw new Error(`Incomplete initial HTML Product offer on /${cleanRoute}`);
+    }
+    if (JSON.stringify(schema.offers.shippingDetails) !== JSON.stringify(productOfferPolicies.shippingDetails) ||
+        JSON.stringify(schema.offers.hasMerchantReturnPolicy) !== JSON.stringify(productOfferPolicies.hasMerchantReturnPolicy)) {
+      throw new Error(`Product policies differ from the storefront on /${cleanRoute}`);
     }
   }
 

@@ -62,6 +62,36 @@ const NavbarComponent: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileDrawerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+    const previousFocus = document.activeElement as HTMLElement | null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    mobileDrawerRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setMobileMenuOpen(false);
+      if (event.key !== 'Tab') return;
+      const items = mobileDrawerRef.current?.querySelectorAll<HTMLElement>('a[href], button:not([disabled])');
+      if (!items?.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    const onResize = () => { if (window.innerWidth >= 1024) setMobileMenuOpen(false); };
+    document.addEventListener('keydown', onKeyDown);
+    window.addEventListener('resize', onResize);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKeyDown);
+      window.removeEventListener('resize', onResize);
+      previousFocus?.focus();
+    };
+  }, [mobileMenuOpen]);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchLoading, setSearchLoading] = useState(false);
@@ -156,7 +186,7 @@ const NavbarComponent: React.FC = () => {
     { name: 'Smart Band', path: '/smart-bands' },
     { name: 'Smart Ring', path: '/smart-rings' },
     { name: 'Fan', path: '/bladeless-fan' },
-    { name: 'Blogs', path: '/blog' },
+    { name: 'Smart Monitoring', path: '/smart-monitoring' },
     { name: 'Gifts', path: '/gifting-store' },
   ];
   const mobileNavRows = [
@@ -773,119 +803,40 @@ const NavbarComponent: React.FC = () => {
         )}
 
         {/* ─── Mobile Dropdown Menu ──────────────────────────────────── */}
-        {createPortal(
-          <div className="site-navbar" style={{ display: 'contents' }}>
-            <div
-              id="mobile-navigation"
-              className="mobile-menu-panel lg:hidden animate-slide-down"
-              style={{
-                position: 'fixed',
-                top: 'var(--fx-header-height, 64px)',
-                right: '0.75rem',
-                left: '0.75rem',
-                zIndex: 2147483647,
-                display: mobileMenuOpen ? 'block' : 'none',
-                maxHeight: 'calc(100dvh - var(--fx-header-height, 64px) - 0.75rem)',
-                overflowY: 'auto',
-                background: '#ffffff',
-                borderRadius: '0 0 1rem 1rem',
-                boxShadow: '0 18px 40px rgba(15, 23, 42, 0.2)',
-              }}
-            >
-            <div className="px-3 pb-4 pt-3">
-              <div className="mobile-menu-card">
-                <div className="mb-3 flex items-center justify-between gap-3 border-b border-white/10 px-3 pb-3">
-                  <div>
-                    <p className="mobile-menu-eyebrow">Browse</p>
-                    <p className="mobile-menu-title">TheFutureX Store</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="mobile-menu-close"
-                    aria-label="Close menu"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
+        {mobileMenuOpen && createPortal(
+          <div className="tfx-phone-menu-overlay">
+            <button className="tfx-phone-menu-backdrop" aria-label="Close menu" onClick={() => setMobileMenuOpen(false)} />
+            <div ref={mobileDrawerRef} id="mobile-navigation" role="dialog" aria-modal="true" aria-label="Mobile navigation" className="tfx-phone-menu-drawer">
+              <div className="tfx-phone-menu-header">
+                <button type="button" className="tfx-phone-menu-close" onClick={() => setMobileMenuOpen(false)} aria-label="Close menu">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="m6 6 12 12M18 6 6 18" /></svg>
+                </button>
+                <Link to="/" onClick={() => setMobileMenuOpen(false)} className="tfx-phone-menu-logo"><img src={defaultBrandLogo} alt="The FutureX" /></Link>
+                <div className="tfx-phone-menu-icons">
+                  <button type="button" aria-label="Search products" onClick={() => { setMobileMenuOpen(false); setSearchOpen(true); loadSearchProductsNow(); }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="10.5" cy="10.5" r="6.5" /><path d="m16 16 5 5" /></svg>
+                  </button>
+                  <Link to={user ? '/profile' : '/login'} aria-label="My account" onClick={() => setMobileMenuOpen(false)}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="7" r="4" /><path d="M4 22v-3a8 8 0 0 1 16 0v3" /></svg>
+                  </Link>
+                  <button type="button" aria-label={`Open cart, ${totalItems} items`} onClick={() => { setMobileMenuOpen(false); openCart(); }}>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M3 3h2l2 13h12l2-9H6" /><circle cx="9" cy="20" r="1" /><circle cx="18" cy="20" r="1" /></svg>
                   </button>
                 </div>
-
-                {/* Nav Links */}
-                <div className="space-y-3">
-                  {mobileNavRows.map((row) => (
-                    <div key={row.title}>
-                      <p className="mobile-menu-eyebrow mb-2">{row.title}</p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {row.links.map((link) => {
-                          const active = link.path === '/' ? location.pathname === link.path : location.pathname === link.path || location.pathname.startsWith(`${link.path}/`);
-                          return (
-                            <Link
-                              key={link.name}
-                              to={link.path}
-                              onClick={() => {
-                                setMobileMenuOpen(false);
-                                setBlogMenuOpen(false);
-                              }}
-                              className={`mobile-menu-link ${
-                                active ? 'mobile-menu-link-active' : ''
-                              }`}
-                            >
-                              <span>{link.name}</span>
-                              {active && (
-                                <svg className="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.2" d="M5 13l4 4L19 7" />
-                                </svg>
-                              )}
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Divider */}
-                <div className="mobile-menu-actions">
-                  {!isAuthReady ? null : user ? (
-                    <>
-                      {/* User Info */}
-                      <div className="mobile-menu-user">
-                        <div className="mobile-menu-avatar">
-                          {user.name[0]}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="mobile-menu-user-name">{user.name}</p>
-                          <p className="mobile-menu-user-email">{user.email}</p>
-                        </div>
-                      </div>
-
-                      <Button size="sm" className="w-full justify-center" onClick={() => { navigate('/profile'); setMobileMenuOpen(false); }}>
-                        Profile
-                      </Button>
-                      {isAdmin && (
-                        <Button size="sm" variant="outline" className="w-full justify-center text-amber-600 border-amber-300" onClick={() => { navigate('/admin'); setMobileMenuOpen(false); }}>
-                          Admin Dashboard
-                        </Button>
-                      )}
-                      <Button size="sm" variant="outline" className="w-full justify-center text-red-600 border-red-200" onClick={handleLogout}>
-                        Sign out
-                      </Button>
-                    </>
-                  ) : (
-                    <div className="flex gap-2">
-                      <Button size="sm" className="flex-1 justify-center" onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}>
-                        Login
-                      </Button>
-                      <Button size="sm" variant="outline" className="flex-1 justify-center" onClick={() => { navigate('/signup'); setMobileMenuOpen(false); }}>
-                        Sign up
-                      </Button>
-                    </div>
-                  )}
-                </div>
               </div>
-
-            </div>
+              <nav aria-label="Shop and support" className="tfx-phone-menu-links">
+                {mobileNavRows.flatMap(row => row.links).map(link => (
+                  <Link key={link.path} to={link.path} onClick={() => { setMobileMenuOpen(false); setBlogMenuOpen(false); }} aria-current={location.pathname === link.path ? 'page' : undefined}>
+                    <span>{link.name}</span>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden="true"><path d="M4 12h15m-6-6 6 6-6 6" /></svg>
+                  </Link>
+                ))}
+                {isAuthReady && user && <>
+                  <Link to="/profile" onClick={() => setMobileMenuOpen(false)}>My Account</Link>
+                  {isAdmin && <Link to="/admin" onClick={() => setMobileMenuOpen(false)}>Admin Dashboard</Link>}
+                  <button type="button" onClick={handleLogout}>Sign out</button>
+                </>}
+              </nav>
             </div>
           </div>,
           document.body

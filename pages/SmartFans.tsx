@@ -137,7 +137,7 @@ export const SmartFans: React.FC = () => {
     <section className="bg-white px-5 py-12 text-slate-950 sm:px-8 lg:px-10 lg:py-16">
       <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.46fr_0.54fr] lg:items-start">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">TFX Bladeless Fans</p>
+          <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">The FutureX Bladeless Fans</p>
           <h2 className="mt-3 font-display text-3xl font-black leading-tight sm:text-5xl">
             Smart airflow solutions for modern living
           </h2>

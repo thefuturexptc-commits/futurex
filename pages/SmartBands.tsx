@@ -225,40 +225,6 @@ export const SmartBands: React.FC = () => {
         </div>
       </section>
 
-      <section id="band-overview" className="relative z-10 bg-white px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
-        <div className="mx-auto max-w-7xl">
-          <h2 className="text-center font-display text-3xl font-black leading-tight text-slate-950 sm:text-6xl">
-            Product Line Overview
-          </h2>
-
-          <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <div className="overflow-hidden rounded-[1.5rem] bg-[#eff8f8] sm:rounded-[2rem]">
-              <img src={bandHeroLifestyle} alt="TFX smart band lifestyle" className="h-full min-h-[300px] w-full object-cover object-center sm:min-h-[420px]" loading="lazy" />
-            </div>
-            <div className="flex flex-col justify-center">
-            <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">Product Overview</p>
-            <h3 className="mt-4 font-display text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
-              Elevating Wellness from Your Wrist
-            </h3>
-            <p className="mt-5 text-lg font-bold leading-8 text-slate-950 sm:text-xl">
-              Smart bands and screen-light fitness bands for advanced tracking.
-            </p>
-            <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg">
- TFX bands are built for long battery life, all-day comfort and clear app-based summaries. The device stays light on your wrist while TFXVital turns synced data into trends you can actually use.
-            </p>
-            <div className="mt-8 grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:grid-cols-4">
-              {stats.map(([value, label]) => (
-                <div key={value} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                  <p className="text-xl font-black text-slate-950">{value}</p>
-                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-                </div>
-              ))}
-            </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section id="models" className="bg-[#f2fbfb] px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 flex flex-col items-center justify-between gap-5 text-center lg:flex-row lg:text-left">
@@ -421,6 +387,40 @@ export const SmartBands: React.FC = () => {
               <p className="text-xl font-black text-slate-950">Smart band models are coming soon.</p>
             </div>
           )}
+        </div>
+      </section>
+
+      <section id="band-overview" className="relative z-10 bg-white px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="text-center font-display text-3xl font-black leading-tight text-slate-950 sm:text-6xl">
+            Product Line Overview
+          </h2>
+
+          <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div className="overflow-hidden rounded-[1.5rem] bg-[#eff8f8] sm:rounded-[2rem]">
+              <img src={bandHeroLifestyle} alt="TFX smart band lifestyle" className="h-full min-h-[300px] w-full object-cover object-center sm:min-h-[420px]" loading="lazy" />
+            </div>
+            <div className="flex flex-col justify-center">
+            <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">Product Overview</p>
+            <h3 className="mt-4 font-display text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
+              Elevating Wellness from Your Wrist
+            </h3>
+            <p className="mt-5 text-lg font-bold leading-8 text-slate-950 sm:text-xl">
+              Smart bands and screen-light fitness bands for advanced tracking.
+            </p>
+            <p className="mt-5 text-base leading-8 text-slate-600 sm:text-lg">
+ TFX bands are built for long battery life, all-day comfort and clear app-based summaries. The device stays light on your wrist while TFXVital turns synced data into trends you can actually use.
+            </p>
+            <div className="mt-8 grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:grid-cols-4">
+              {stats.map(([value, label]) => (
+                <div key={value} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                  <p className="text-xl font-black text-slate-950">{value}</p>
+                  <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+                </div>
+              ))}
+            </div>
+            </div>
+          </div>
         </div>
       </section>
 

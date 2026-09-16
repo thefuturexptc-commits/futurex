@@ -13,6 +13,7 @@ import { formatInrAmount, getAutomaticOfferItemPricing, getPrepaidDiscountForIte
 import { getProductModelIdentifiers } from '../utils/productSearch';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
 import { buildProductSeoRecord } from '../utils/productSeoData.js';
+import { productOfferPolicies, buildReviewSchema } from '../utils/productSchema.js';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringWellness from '../assets/images/ring-wellness.webp';
 import ringDailySync from '../assets/images/ring-daily-sync.webp';
@@ -37,6 +38,8 @@ import bandFashionableWear from '../assets/images/band-fashionable-wear.webp';
 import bandLifestyle from '../assets/images/band-men-women-lifestyle.webp';
 import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
+import tfx5FitnessTrackingBanner from '../assets/images/tfx5-overview-fitness-tracking.webp';
+import tfx5PrecisionSensorsBanner from '../assets/images/tfx5-overview-precision-sensors.webp';
 import premiumBandModelBanner from '../assets/images/premium-band-model-banner.webp';
 import premiumBandLifestyleHiking from '../assets/images/premium-band-lifestyle-hiking.webp';
 import premiumBandWaterproofPool from '../assets/images/premium-band-waterproof-pool.webp';
@@ -395,7 +398,7 @@ const TFX_SMART_BAND_DESCRIPTION =
   'The FutureX Smart Band - Modern Fitness Tracking Band is designed for users who want a simple and convenient way to monitor daily activity and wellness metrics. Featuring a lightweight and comfortable design, this smart band can be worn throughout the day while tracking essential fitness and lifestyle data. The band helps users stay informed about their activity levels, movement patterns, and daily routines through companion app connectivity. Its minimalist design makes it suitable for both professional and active lifestyles.';
 
 const TFX5_SMART_BAND_DESCRIPTION =
- 'The Futurex AI Smart Band TFX5 is a screenless fitness and wellness tracker built for daily wear without wrist distractions. It tracks heart rate, blood oxygen SpO2, blood pressure wellness trends, VO2, vital age, sleep quality, stress, mood, recovery, steps, calories burned, distance, activity duration, GPS activity, and workout routines, then turns the data into simple AI-powered app insights. The IP68 water and dust resistant design, Bluetooth 5.0 Android and iOS sync, wireless charging dock, 7-10 day rechargeable battery, free-size unisex fit, and women\'s health tracking make it practical for workouts, outdoor use, sleep tracking, and everyday health management.';
+ 'The FutureX AI Smart Band TFX5 is a screenless fitness and wellness tracker built for daily wear without wrist distractions. It tracks heart rate, blood oxygen SpO2, blood pressure wellness trends, VO2, vital age, sleep quality, stress, mood, recovery, steps, calories burned, distance, activity duration, GPS activity, and workout routines, then turns the data into simple AI-powered app insights. The IP68 water and dust resistant design, Bluetooth 5.0 Android and iOS sync, wireless charging dock, 7-10 day rechargeable battery, free-size unisex fit, and women\'s health tracking make it practical for workouts, outdoor use, sleep tracking, and everyday health management.';
 
 const TFX_SMART_BAND_FEATURES = [
   'Activity tracking',
@@ -1748,25 +1751,6 @@ export const ProductDetail: React.FC = () => {
     const categoryPath = getCategoryPathForSchema(product.category);
     const categoryUrl = absoluteUrl(categoryPath);
     const productUrl = absoluteUrl(productPath);
-    const reviewableReviews = (product.reviews || [])
-      .filter((review) => String(review.comment || '').trim() && Number.isFinite(Number(review.rating)) && Number(review.rating) > 0)
-    const reviewCount = reviewableReviews.length;
-    const ratingValue = Math.max(1, Math.min(5, Number(product.rating || 0)));
-    const productReviews = reviewableReviews.slice(0, 3).map((review) => ({
-      '@type': 'Review',
-      author: {
-        '@type': 'Person',
-        name: review.name || 'TheFutureX customer',
-      },
-      reviewRating: {
-        '@type': 'Rating',
-        ratingValue: Math.max(1, Math.min(5, Number(review.rating || ratingValue))).toFixed(1),
-        bestRating: '5',
-        worstRating: '1',
-      },
-      reviewBody: stripHtml(review.comment).slice(0, 300),
-    }));
-
     setSeoMetadata({
       title: seoRecord?.seoTitle || `${product.name} - TheFutureX`,
       description,
@@ -1809,17 +1793,10 @@ export const ProductDetail: React.FC = () => {
           '@type': 'Organization',
           name: 'The Future X',
         },
-        shippingDetails: {
-          '@type': 'OfferShippingDetails',
-          shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
-          shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
-        },
+        ...productOfferPolicies,
       },
     };
-    if (reviewCount > 0 && Number.isFinite(ratingValue) && ratingValue > 0) {
-      productSchema.aggregateRating = { '@type': 'AggregateRating', ratingValue: ratingValue.toFixed(1), reviewCount, bestRating: '5', worstRating: '1' };
-    }
-    if (productReviews.length) productSchema.review = productReviews;
+    Object.assign(productSchema, buildReviewSchema(product.reviews));
     setJsonLd('product-json-ld', productSchema);
 
     setJsonLd('product-breadcrumb-json-ld', {
@@ -2600,7 +2577,7 @@ export const ProductDetail: React.FC = () => {
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`;
   const ringOverviewSections = [
     {
-      title: 'The FutureX Ring Pro',
+      title: 'The FutureX TFX Ring Pro',
       copy:
         TFX_RING_PRO_DESCRIPTION,
       image: ringProCharging,
@@ -2626,7 +2603,7 @@ export const ProductDetail: React.FC = () => {
   ];
   const displayRingOverviewSections = [
     {
-      title: 'The FutureX Display Pro Smart Ring',
+      title: 'The FutureX TFX Display Pro Smart Ring',
       copy:
         TFX_DISPLAY_PRO_RING_DESCRIPTION,
       video: ringTouchProOverviewVideo,
@@ -2662,6 +2639,18 @@ export const ProductDetail: React.FC = () => {
   const touchRingOverviewSections = [];
   const tfxV5OverviewSections = [
     {
+      title: 'The FutureX TFX5 fitness tracking and everyday activity banner',
+      copy: '',
+      image: tfx5FitnessTrackingBanner,
+      cleanBanner: true,
+    },
+    {
+      title: 'The FutureX TFX5 precision sensors and durable design banner',
+      copy: '',
+      image: tfx5PrecisionSensorsBanner,
+      cleanBanner: true,
+    },
+    {
       title: 'The FutureX Vital App Experience',
       copy:
         'The FutureX Vital app brings exercise tracking, recovery insights, and AI health assistance together for the TFX5 AI Smart Band.',
@@ -2669,7 +2658,7 @@ export const ProductDetail: React.FC = () => {
       overlayText: 'One App. Total Wellness.',
     },
     {
-      title: 'TFX5 AI Smart Band',
+      title: 'The FutureX AI Smart Band TFX5',
       copy:
         TFX5_SMART_BAND_DESCRIPTION,
       image: tfxV5BannerOne,
@@ -3100,7 +3089,7 @@ export const ProductDetail: React.FC = () => {
                   event.preventDefault();
                   scrollToDetailSection('reviews');
                 }}
-                className="product-detail-review-link inline-flex h-9 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-xs font-semibold uppercase tracking-[0.06em] text-slate-700 transition duration-300 hover:-translate-y-0.5 hover:border-slate-950 hover:text-slate-950 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]"
+                className="product-detail-review-link inline-flex h-9 items-center justify-center rounded-full border border-slate-950 bg-slate-950 px-4 text-xs font-semibold uppercase tracking-[0.06em] text-white transition duration-300 hover:-translate-y-0.5 hover:border-teal-700 hover:bg-teal-700 hover:text-white hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]"
               >
                 Write Review
               </a>
@@ -3421,11 +3410,25 @@ export const ProductDetail: React.FC = () => {
       <section className="bg-white px-4 py-5 sm:hidden">
         {activeDetailTab === 'description' && (
           <div className="space-y-4">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">{isFanMarketplacePage ? 'Description' : 'Overview'}</p>
-              <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">
+            <div className="rounded border border-slate-200">
+              <p className="border-b border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-900">
+                {isFanMarketplacePage ? 'Description' : 'Product Description'}
+              </p>
+              <p className={`px-3 py-3 text-sm leading-6 text-slate-700 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
                 {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
               </p>
+              {(isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || '')).length > 260 && (
+                <button
+                  type="button"
+                  onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                  className="flex w-full items-center justify-between border-t border-slate-200 px-3 py-2.5 text-left text-xs font-bold text-[#2874f0]"
+                >
+                  <span>{isDescriptionExpanded ? 'Read Less' : 'Read More'}</span>
+                  <svg viewBox="0 0 24 24" fill="none" className={`h-4 w-4 shrink-0 transition-transform duration-200 ${isDescriptionExpanded ? 'rotate-180' : ''}`}>
+                    <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              )}
             </div>
             {showProductOverview && mobileProductBannerSections.length === 0 && (
               <div className="space-y-3">
@@ -3484,54 +3487,30 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'specs' && (
           <div>
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.24em] text-[#8a6a20]">Under The Hood</p>
-                <h3 className="mt-1 font-display text-lg font-black text-slate-950">Product Specifications</h3>
-              </div>
-              {productInformationSpecEntries.length > 0 && (
-                <span className="shrink-0 rounded-full border border-[#e6d9a8] bg-[#fbf6e4] px-3 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-[#8a6a20]">
-                  {productInformationSpecEntries.length} details
-                </span>
-              )}
-            </div>
+            <h3 className="text-base font-bold text-slate-900">Specifications</h3>
             {productInformationSpecEntries.length > 0 ? (
-              <div className="mt-4 space-y-3">
-                {specGroups.map((group) => (
+              <div className="mt-3 overflow-hidden rounded border border-slate-200">
+                {specGroups.map((group, groupIndex) => (
                   <details
                     key={group.title}
-                    className="group overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.05)] transition-all duration-300 open:border-[#d9c88a] open:shadow-[0_16px_32px_-14px_rgba(15,23,42,0.2)]"
-                    {...(group.title === 'Style' ? { open: true } : {})}
+                    className={`group ${groupIndex > 0 ? 'border-t border-slate-200' : ''}`}
+                    open={groupIndex === 0}
                   >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-gradient-to-r from-white to-[#fbfaf5] px-4 py-3.5 transition-colors group-open:from-[#fdf9ee] group-open:to-white">
-                      <span className="flex items-center gap-3">
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-950 text-white shadow-[0_4px_10px_rgba(15,23,42,0.28)]">
-                          <SpecGroupIcon title={group.title} className="h-5 w-5" size={20} />
-                        </span>
-                        <span>
-                          <span className="block text-sm font-black leading-tight text-slate-950">{group.title}</span>
-                          <span className="block text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-400">
-                            {group.entries.length} {group.entries.length === 1 ? 'detail' : 'details'}
-                          </span>
-                        </span>
-                      </span>
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-300 group-open:rotate-180 group-open:border-[#8a6a20] group-open:text-[#8a6a20]">
-                        <svg viewBox="0 0 24 24" fill="none" className="h-3.5 w-3.5">
-                          <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </span>
+                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 bg-slate-50 px-3 py-2.5">
+                      <span className="text-[13px] font-bold text-slate-900">{group.title}</span>
+                      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 group-open:rotate-180">
+                        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
                     </summary>
-                    <div className="divide-y divide-slate-100 border-t border-slate-100">
-                      {group.entries.map(([key, value], rowIndex) => (
-                        <div
-                          key={key}
-                          className={`grid grid-cols-[0.42fr_0.58fr] gap-2 px-4 py-3 ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : 'bg-white'}`}
-                        >
-                          <p className="pr-2 text-[10px] font-bold uppercase tracking-[0.08em] text-[#8a6a20]">{formatSpecLabel(key)}</p>
-                          <p className="text-xs font-bold leading-5 text-slate-900">{String(value ?? '')}</p>
-                        </div>
-                      ))}
-                    </div>
+                    {group.entries.map(([key, value], rowIndex) => (
+                      <div
+                        key={key}
+                        className={`grid grid-cols-[0.42fr_0.58fr] gap-2 border-t border-slate-100 px-3 py-2.5 ${rowIndex % 2 === 1 ? 'bg-slate-50/70' : 'bg-white'}`}
+                      >
+                        <p className="pr-2 text-xs text-slate-500">{formatSpecLabel(key)}</p>
+                        <p className="text-xs font-medium leading-5 text-slate-800">{String(value ?? '')}</p>
+                      </div>
+                    ))}
                   </details>
                 ))}
               </div>
@@ -3542,7 +3521,7 @@ export const ProductDetail: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setShowAllSpecs((prev) => !prev)}
-                className="mt-4 w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-950 transition hover:border-slate-950"
+                className="mt-4 w-full rounded border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-[#2874f0] transition hover:bg-slate-50"
               >
                 {showAllSpecs ? 'Show Less' : 'Show More Specs'}
               </button>
@@ -3613,22 +3592,19 @@ export const ProductDetail: React.FC = () => {
 
       {isFanMarketplacePage && (
         <section id="description" className="hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
-          <div className="mx-auto grid max-w-5xl gap-6 lg:grid-cols-[0.34fr_0.66fr]">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a6a20]">Description</p>
-              <h2 className="mt-2 font-display text-xl font-black text-slate-950 sm:text-3xl">Smart comfort for every season</h2>
-            </div>
-            <div>
-              <p className={`text-sm leading-7 text-slate-600 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
+          <div className="mx-auto max-w-5xl rounded border border-slate-200">
+            <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Description</h2>
+            <div className="px-5 py-5">
+              <p className={`text-sm leading-7 text-slate-700 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
                 {fanMarketplaceDescription}
               </p>
               {fanMarketplaceDescription.length > 260 && (
                 <button
                   type="button"
                   onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                  className="mt-4 text-sm font-semibold text-[#8a6a20] hover:text-slate-950"
+                  className="mt-4 text-sm font-bold text-[#2874f0]"
                 >
-                  {isDescriptionExpanded ? 'Show Less' : 'Read More'}
+                  {isDescriptionExpanded ? 'Read Less' : 'Read More'}
                 </button>
               )}
             </div>
@@ -3639,24 +3615,22 @@ export const ProductDetail: React.FC = () => {
       {showProductOverview && (
         <>
           <section id="description" className="hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
-            <div className="mx-auto max-w-5xl">
-              <article className="grid gap-6 lg:grid-cols-[0.36fr_0.64fr]">
-                <h2 className="font-display text-xl font-black leading-tight text-slate-950 sm:text-3xl lg:text-4xl">Product Overview</h2>
-                <div>
-                  <p className={`text-sm leading-7 text-slate-600 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
-                    {overviewSections[0].copy}
-                  </p>
-                  {!isRingOverview && shortDescription.length > 260 && (
-                    <button
-                      type="button"
-                      onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                      className="mt-4 text-sm font-semibold text-[#8a6a20] hover:text-slate-950"
-                    >
-                      {isDescriptionExpanded ? 'Show Less' : 'Read More'}
-                    </button>
-                  )}
-                </div>
-              </article>
+            <div className="mx-auto max-w-5xl rounded border border-slate-200">
+              <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Product Description</h2>
+              <div className="px-5 py-5">
+                <p className={`text-sm leading-7 text-slate-700 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
+                  {overviewSections[0].copy}
+                </p>
+                {!isRingOverview && shortDescription.length > 260 && (
+                  <button
+                    type="button"
+                    onClick={() => setIsDescriptionExpanded((prev) => !prev)}
+                    className="mt-4 text-sm font-bold text-[#2874f0]"
+                  >
+                    {isDescriptionExpanded ? 'Read Less' : 'Read More'}
+                  </button>
+                )}
+              </div>
             </div>
           </section>
 
@@ -3712,68 +3686,34 @@ export const ProductDetail: React.FC = () => {
         </>
       )}
 
-      <section id="specs" className="hidden scroll-mt-32 bg-gradient-to-b from-[#f8fbfb] to-[#f2f5f4] px-4 py-12 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.28em] text-[#8a6a20]">Under The Hood</p>
-              <h2 className="mt-2 font-display text-2xl font-black text-slate-950 sm:text-3xl lg:text-4xl">Product Specifications</h2>
-              <p className="mt-2 max-w-lg text-sm font-medium leading-6 text-slate-500">Every detail, verified and organized so you know exactly what you're getting.</p>
-            </div>
-            {productInformationSpecEntries.length > 0 && (
-              <span className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full border border-[#e6d9a8] bg-[#fbf6e4] px-4 py-2 text-xs font-black uppercase tracking-[0.1em] text-[#8a6a20]">
-                {productInformationSpecEntries.length} verified details
-              </span>
-            )}
-          </div>
+      <section id="specs" className="hidden scroll-mt-32 bg-white px-4 py-12 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16">
+        <div className="mx-auto max-w-5xl">
+          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Specifications</h2>
           {productInformationSpecEntries.length > 0 ? (
-            <div className="mt-8 grid items-start gap-5 lg:grid-cols-2">
-              {specGroups.map((group) => (
-                <details
-                  key={group.title}
-                  className="group overflow-hidden rounded-[1.5rem] border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all duration-300 open:border-[#d9c88a] open:shadow-[0_24px_50px_-18px_rgba(15,23,42,0.2)]"
-                  {...(group.title === 'Style' ? { open: true } : {})}
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-4 bg-gradient-to-r from-white to-[#fbfaf5] px-6 py-5 transition-colors group-open:from-[#fdf9ee] group-open:to-white">
-                    <span className="flex items-center gap-4">
-                      <span className="product-detail-spec-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#e6d9a8] bg-[#fbf6ea] text-[#8a6a20] shadow-[0_8px_16px_rgba(169,129,47,0.16)] transition-transform duration-300 group-open:scale-105">
-                        <SpecGroupIcon title={group.title} className="h-6 w-6" size={24} />
-                      </span>
-                      <span>
-                        <span className="block text-base font-black leading-tight text-slate-950 sm:text-lg">{group.title}</span>
-                        <span className="block text-[11px] font-bold uppercase tracking-[0.14em] text-slate-400">
-                          {group.entries.length} {group.entries.length === 1 ? 'detail' : 'details'}
-                        </span>
-                      </span>
-                    </span>
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-all duration-300 group-open:rotate-180 group-open:border-[#8a6a20] group-open:text-[#8a6a20]">
-                      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4">
-                        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </span>
-                  </summary>
-                  <div className="divide-y divide-slate-100 border-t border-slate-100">
-                    {group.entries.map(([key, value], rowIndex) => (
-                      <div
-                        key={key}
-                        className={`grid gap-1 px-6 py-3.5 transition-colors hover:bg-[#fdf9ee] sm:grid-cols-[0.38fr_0.62fr] sm:gap-4 ${rowIndex % 2 === 1 ? 'bg-[#fafafa]' : 'bg-white'}`}
-                      >
-                        <p className="text-xs font-bold uppercase tracking-[0.1em] text-[#8a6a20]">{formatSpecLabel(key)}</p>
-                        <p className="text-sm font-bold leading-6 text-slate-900">{String(value ?? '')}</p>
-                      </div>
-                    ))}
-                  </div>
-                </details>
+            <div className="mt-5 overflow-hidden rounded border border-slate-200">
+              {specGroups.map((group, groupIndex) => (
+                <div key={group.title} className={groupIndex > 0 ? 'border-t border-slate-200' : ''}>
+                  <p className="bg-slate-50 px-5 py-3 text-sm font-bold text-slate-900 sm:text-base">{group.title}</p>
+                  {group.entries.map(([key, value], rowIndex) => (
+                    <div
+                      key={key}
+                      className={`grid grid-cols-[0.3fr_0.7fr] gap-4 border-t border-slate-100 px-5 py-3 sm:grid-cols-[0.26fr_0.74fr] ${rowIndex % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}`}
+                    >
+                      <p className="text-sm text-slate-500">{formatSpecLabel(key)}</p>
+                      <p className="text-sm font-medium leading-6 text-slate-800">{String(value ?? '')}</p>
+                    </div>
+                  ))}
+                </div>
               ))}
             </div>
           ) : (
-            <p className="mt-6 text-slate-500">No specifications added.</p>
+            <p className="mt-4 text-slate-500">No specifications added.</p>
           )}
           {productFamily !== 'ring' && productInformationSpecEntries.length > 12 && (
             <button
               type="button"
               onClick={() => setShowAllSpecs((prev) => !prev)}
-              className="mt-6 rounded-full border border-slate-300 bg-white px-6 py-3 text-xs font-black uppercase tracking-[0.12em] text-slate-950 transition hover:border-slate-950 hover:shadow-md sm:px-7 sm:text-sm"
+              className="mt-5 rounded border border-slate-300 bg-white px-6 py-2.5 text-sm font-bold text-[#2874f0] transition hover:bg-slate-50"
             >
               {showAllSpecs ? 'See Less' : 'See More'}
             </button>

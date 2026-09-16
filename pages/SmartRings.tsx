@@ -285,64 +285,16 @@ export const SmartRings: React.FC = () => {
           loading="eager"
           decoding="async"
         />
-        <Link to={FEATURED_RING_PRODUCT_PATH} className="absolute inset-0 z-10" aria-label="View TFX Display Pro Smart Ring">
-          <span className="sr-only">View TFX Display Pro Smart Ring</span>
+        <Link to={FEATURED_RING_PRODUCT_PATH} className="absolute inset-0 z-10" aria-label="View The FutureX TFX Display Pro Smart Ring">
+          <span className="sr-only">View The FutureX TFX Display Pro Smart Ring</span>
         </Link>
-      </section>
-
-      <section id="ring-overview" className="relative z-10 overflow-hidden bg-white px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
-        <div className="mx-auto max-w-7xl">
-          <div className="mb-5 max-w-3xl">
-            <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">Product Overview</p>
-            <h2 className="mt-3 font-display text-3xl font-black leading-tight text-slate-950 sm:text-4xl lg:text-5xl">
-              A cleaner way to understand your body
-            </h2>
-          </div>
-
-          <div className="grid gap-5 lg:grid-cols-[minmax(260px,0.7fr)_minmax(320px,0.95fr)] lg:items-center">
-            <div className="relative mx-auto w-full max-w-[390px] overflow-hidden rounded-2xl bg-black shadow-[0_22px_70px_rgba(15,23,42,0.14)] sm:max-w-[430px] sm:rounded-3xl lg:mx-0">
-              <video
-                className="block aspect-[3/4] w-full object-contain object-center"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                aria-label="TFX smart ring product video"
-              >
-                <source src={smartRingHeroVideo} type="video/mp4" />
-              </video>
-            </div>
-            <div className="flex flex-col justify-between p-1 sm:p-3 lg:p-6">
-              <div>
-                <h3 className="font-display text-2xl font-black leading-tight text-slate-950 sm:text-3xl lg:text-4xl">
- Discovering encased in a ring
-                </h3>
-                <p className="mt-4 text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
-                  TFX rings pack multi-sensor wellness tracking into a compact ring form. They support sleep, recovery, activity, heart-rate trends, and app-based summaries without adding another screen to your day.
-                </p>
-              </div>
-              <div className="mt-5 grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
-                {stats.map(([value, label]) => (
-                  <div key={value} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-                    <p className="text-xl font-black text-slate-950">{value}</p>
-                    <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
-                  </div>
-                ))}
-              </div>
-              <a href="#ring-catalog" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-black px-5 text-sm font-black text-white transition hover:bg-slate-800 sm:w-fit">
-                View Catalog
-              </a>
-            </div>
-          </div>
-        </div>
       </section>
 
       <section id="ring-catalog" className="scroll-mt-0 bg-[#f2fbfb] px-4 pb-6 pt-0 sm:px-8 sm:pb-8 sm:pt-0 lg:px-10 lg:pb-10 lg:pt-0">
         <div className="mx-auto max-w-7xl">
           <div className="mb-5 flex flex-col items-center justify-between gap-3 pt-4 text-center sm:pt-5 lg:flex-row lg:text-left">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">TFX smart rings</p>
+              <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">The FutureX Smart Rings</p>
               <h2 className="mt-1 font-display text-3xl font-black leading-tight text-slate-950 sm:text-5xl">
                 Product Catalog
               </h2>
@@ -397,9 +349,9 @@ export const SmartRings: React.FC = () => {
                     key={product.id}
                     className="group relative flex min-h-[394px] w-[min(82vw,286px)] shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] min-[420px]:w-[280px] sm:min-h-[420px] sm:w-[292px]"
                   >
-                    {(product.isNewArrival || product.isBestSeller || product.isFeatured) && (
+                    {(product.isNewArrival || product.isFeatured) && (
                       <div className="absolute left-2.5 top-2.5 z-10 rounded-r-full bg-[#86d8d2] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white">
-                        {product.isBestSeller ? 'Best Seller' : product.isNewArrival ? 'New Launch' : 'Featured'}
+                        {product.isNewArrival ? 'New Launch' : 'Featured'}
                       </div>
                     )}
                     <Link to={`/product/${getProductSlug(product)}`} className="flex h-60 items-center justify-center overflow-hidden rounded-md bg-white sm:h-64">
@@ -488,6 +440,54 @@ export const SmartRings: React.FC = () => {
               <p className="text-xl font-black text-slate-950">Smart ring models are coming soon.</p>
             </div>
           )}
+        </div>
+      </section>
+
+      <section id="ring-overview" className="relative z-10 overflow-hidden bg-white px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-5 max-w-3xl">
+            <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">Product Overview</p>
+            <h2 className="mt-3 font-display text-3xl font-black leading-tight text-slate-950 sm:text-4xl lg:text-5xl">
+              A cleaner way to understand your body
+            </h2>
+          </div>
+
+          <div className="grid gap-5 lg:grid-cols-[minmax(260px,0.7fr)_minmax(320px,0.95fr)] lg:items-center">
+            <div className="relative mx-auto w-full max-w-[390px] overflow-hidden rounded-2xl bg-black shadow-[0_22px_70px_rgba(15,23,42,0.14)] sm:max-w-[430px] sm:rounded-3xl lg:mx-0">
+              <video
+                className="block aspect-[3/4] w-full object-contain object-center"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-label="TFX smart ring product video"
+              >
+                <source src={smartRingHeroVideo} type="video/mp4" />
+              </video>
+            </div>
+            <div className="flex flex-col justify-between p-1 sm:p-3 lg:p-6">
+              <div>
+                <h3 className="font-display text-2xl font-black leading-tight text-slate-950 sm:text-3xl lg:text-4xl">
+ Discovering encased in a ring
+                </h3>
+                <p className="mt-4 text-base leading-8 text-slate-600 sm:text-lg sm:leading-9">
+                  TFX rings pack multi-sensor wellness tracking into a compact ring form. They support sleep, recovery, activity, heart-rate trends, and app-based summaries without adding another screen to your day.
+                </p>
+              </div>
+              <div className="mt-5 grid grid-cols-1 gap-3 min-[380px]:grid-cols-2">
+                {stats.map(([value, label]) => (
+                  <div key={value} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+                    <p className="text-xl font-black text-slate-950">{value}</p>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
+                  </div>
+                ))}
+              </div>
+              <a href="#ring-catalog" className="mt-5 inline-flex h-11 w-full items-center justify-center rounded-lg bg-black px-5 text-sm font-black text-white transition hover:bg-slate-800 sm:w-fit">
+                View Catalog
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 

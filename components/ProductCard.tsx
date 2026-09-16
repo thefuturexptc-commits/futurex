@@ -286,12 +286,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           } ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'}`}
       />
       <div className={`pointer-events-none absolute inset-0 ${monochrome ? 'bg-gradient-to-b from-white/5 via-transparent to-black/30 opacity-80' : isLightCard ? 'bg-gradient-to-b from-white/10 via-transparent to-transparent opacity-70' : 'bg-gradient-to-b from-white/4 via-transparent to-transparent opacity-45 sm:opacity-60'}`} />
-      {product.isBestSeller && (
-        <div className="product-best-seller-badge absolute right-3 top-3 z-20 rounded-full border border-white/25 bg-white px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-black shadow-[0_10px_22px_-14px_rgba(255,255,255,0.9)]">
-          Best Seller
-        </div>
-      )}
-      {!product.isBestSeller && product.isNewArrival && (
+      {product.isNewArrival && (
         <div className="product-new-arrival-badge absolute right-3 top-3 z-20 rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-[0_10px_22px_-14px_rgba(14,165,233,0.9)]">
           New Arrival
         </div>
@@ -346,11 +341,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </h3>
         </Link>
 
-        <div className="mt-2 flex items-center gap-1.5 text-[11px] font-black text-[#ff9f43] sm:text-xs">
-          <span aria-hidden="true">{'\u2605\u2605\u2605\u2605\u2605'}</span>
-          <span className={cardTextClass}>{Number(product.rating || 4.8).toFixed(1)}</span>
-          <span className={mutedTextClass}>({product.reviewCount || product.reviews?.length || 48})</span>
-        </div>
 
         <div className="product-card-price-row mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
           {offerPricing.rate <= 0 && mrp > salePrice && (

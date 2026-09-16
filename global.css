@@ -7618,6 +7618,8 @@ body {
 .site-main-content :where(h1, h2, h3, h4, h5, h6, p, span, li, label, strong, small, address, summary, dt, dd, td, th, a, button):not(
   .text-white,
   .text-white *,
+  .product-detail-review-link,
+  .product-detail-review-link *,
   [class*="bg-black"] *,
   [class*="bg-slate-950"] *,
   [class*="bg-gray-900"] *,
@@ -7982,7 +7984,7 @@ html.dark .mobile-menu-link {
   color: var(--fx-ink) !important;
 }
 
-#explore-collection a,
+#explore-collection .collection-card,
 #models article,
 .product-card-dark,
 .glass-card,
@@ -7998,7 +8000,7 @@ html.dark .mobile-menu-link {
   color: var(--fx-ink) !important;
 }
 
-#explore-collection a:hover,
+#explore-collection .collection-card:hover,
 #models article:hover,
 .product-card-dark:hover {
   border-color: rgba(255, 0, 51, 0.42) !important;
@@ -8196,6 +8198,17 @@ html.dark .product-card-action-maroon {
 
 .product-detail-page .product-detail-review-link:hover {
   background: #0f766e !important;
+}
+
+/* Keep this dark control readable above the standard white-page link colors. */
+html body .site-main-content .product-detail-page a.product-detail-review-link {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+html body .site-main-content .product-detail-page a.product-detail-review-link:focus-visible {
+  outline: 2px solid #0f766e;
+  outline-offset: 3px;
 }
 
 .product-detail-page .product-detail-emi-strip {
@@ -8607,7 +8620,7 @@ html.dark .site-navbar {
   border-color: transparent !important;
 }
 
-#explore-collection a,
+#explore-collection .collection-card,
 #models article,
 .product-card-dark,
 .glass-card,
@@ -8881,7 +8894,7 @@ select,
   box-shadow: none !important;
 }
 
-#explore-collection a:hover,
+#explore-collection .collection-card:hover,
 #models article:hover,
 .product-card-dark:hover {
   border-color: transparent !important;
@@ -10293,6 +10306,65 @@ html.dark .site-navbar > .tfx-current-offer-bar-static {
 }
 
 /* ===================================================================== */
+/* Only the selected product is visible, including reduced-motion mode. */
+.site-main-content .home-scroll-banner-section .home-scroll-banner-panel[hidden] {
+  display: none !important;
+}
+
+.site-main-content .home-scroll-banner-section .home-scroll-banner-panel.home-scroll-banner-panel--active {
+  display: block !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  z-index: 1;
+}
+
+@keyframes home-banner-reveal {
+  from { opacity: 0.65; }
+  to { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .home-scroll-banner-panel--active img {
+    animation: home-banner-reveal 280ms ease-out;
+  }
+}
+
+/* Use the artwork's natural proportions so wide screens have no side gaps. */
+@media (min-width: 640px) {
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-scene {
+    height: auto;
+    min-height: 0;
+    flex-direction: column;
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-stage {
+    flex: 0 0 auto;
+    height: auto;
+    min-height: 0;
+    aspect-ratio: 3031 / 1875;
+  }
+}
+
+@media (min-width: 640px) {
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-scene--scrolling {
+    height: calc(100svh - var(--tfx-sticky-header-height, 110px) - 16px);
+    overflow: hidden;
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-scene--scrolling .home-scroll-banner-stage {
+    flex: 1 1 0;
+    height: 0;
+    aspect-ratio: auto;
+    max-height: calc(100vw * 1875 / 3031);
+  }
+
+  .site-main-content .home-scroll-banner-section .home-scroll-banner-scene--scrolling .home-scroll-banner-panel img {
+    object-fit: cover !important;
+    object-position: center var(--banner-pan, 0%) !important;
+  }
+}
+
 /* BLOG ARTICLE — FORCE WHITE TEXT ON BLACK THEME                        */
 /* Everything inside the blog <article> gets white/light text,          */
 /* regardless of what Tailwind class was originally on it.               */
@@ -10519,3 +10591,23 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
   pointer-events: auto !important;
   user-select: text !important;
 }
+
+/* Mobile navigation: a full-height left drawer with a compact utility header. */
+.tfx-phone-menu-overlay { position: fixed; inset: 0; z-index: 2147483647; }
+.tfx-phone-menu-backdrop { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: rgba(14, 35, 42, .48); cursor: pointer; }
+.tfx-phone-menu-drawer { position: relative; display: flex; flex-direction: column; width: min(91vw, 420px); height: 100dvh; background: #fff; color: #073448; box-shadow: 12px 0 40px rgba(0,0,0,.12); animation: tfx-phone-menu-enter 240ms ease-out; }
+.tfx-phone-menu-header { display: flex; flex-shrink: 0; align-items: center; gap: 10px; min-height: 70px; padding: max(12px, env(safe-area-inset-top)) 12px 12px; background: #f8f9fa; }
+.tfx-phone-menu-header button, .tfx-phone-menu-icons a { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 32px; height: 36px; padding: 5px; border: 0; background: transparent; color: #073448; cursor: pointer; }
+.tfx-phone-menu-header .tfx-phone-menu-close { width: 30px; height: 30px; border-radius: 50%; background: #e7edef; }
+.tfx-phone-menu-header svg { width: 22px; height: 22px; }
+.tfx-phone-menu-logo { display: flex; align-items: center; min-width: 0; flex: 1; }
+.tfx-phone-menu-logo img { width: 130px; max-width: 100%; height: auto; max-height: 42px; object-fit: contain; }
+.tfx-phone-menu-icons { display: flex; gap: 2px; }
+.tfx-phone-menu-links { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: 4px 20px max(24px, env(safe-area-inset-bottom)); }
+.tfx-phone-menu-links > a, .tfx-phone-menu-links > button { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; gap: 16px; padding: 10px 0; border: 0; background: #fff; color: #073448; text-align: left; text-decoration: none; font-size: 16px; font-weight: 500; line-height: 1.5; cursor: pointer; }
+.tfx-phone-menu-links svg { width: 19px; height: 19px; flex-shrink: 0; }
+.tfx-phone-menu-links > a:hover, .tfx-phone-menu-links > a[aria-current="page"] { color: #008f9b; }
+.tfx-phone-menu-drawer :is(a, button):focus-visible { outline: 2px solid #008f9b; outline-offset: 2px; }
+@keyframes tfx-phone-menu-enter { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+@media (prefers-reduced-motion: reduce) { .tfx-phone-menu-drawer { animation: none; } }
+@media (min-width: 1024px) { .tfx-phone-menu-overlay { display: none; } }

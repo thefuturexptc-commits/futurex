@@ -10,13 +10,13 @@ import { useCart } from '../context/CartContext';
 import { addOfferLead, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import bandCutout from '../assets/images/band-hero-cutout.webp';
-import bestSellerTfx5AiBandImage from '../assets/images/best-seller-tfx5-ai-band.webp';
-import homeCollectionBandImage from '../assets/images/home-collection-smart-band.webp';
-import homeCollectionFanImage from '../assets/images/home-collection-smart-fan.webp';
-import homeCollectionRingImage from '../assets/images/home-collection-smart-ring.png';
+import homeCollectionBandImage from '../assets/images/home-collection-bands-banner.webp';
+import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
+import homeCollectionFanImage from '../assets/images/home-collection-fans-banner.webp';
 import homeRainReadyBandBanner from '../assets/images/home-rain-ready-band-banner.webp';
 import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
 import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
+import tfx5PrecisionSensorsBanner from '../assets/images/tfx5-overview-precision-sensors.webp';
 import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
 import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
 import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
@@ -177,7 +177,7 @@ const FEATURED_BANNER_SLIDES = [
     image: tfxV5BannerOne,
     alt: 'TFX5 AI Smart Band powered by TFX Vital Pro',
     eyebrow: 'AI health tracking',
-    title: 'TFX5 AI Smart Band',
+    title: 'The FutureX AI Smart Band TFX5',
     description: 'A smarter way to understand your everyday wellness.',
     features: ['Heart rate & SpO2 insights', 'Sleep and activity tracking', 'TFX Vital app support'],
   },
@@ -301,7 +301,14 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: string; mobileImage?: string }> = [
+const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: string; mobileImage?: string; backgroundColor?: string; scale?: number }> = [
+  {
+    image: tfx5PrecisionSensorsBanner,
+    href: FEATURED_BAND_PRODUCT_PATH,
+    alt: 'The FutureX AI Smart Band TFX5 — Bold. Beautiful. Precise. Sensors engineered for precision and durability.',
+    backgroundColor: '#ffffff',
+    scale: 1.15,
+  },
   {
     image: homeWaterproofBandBanner,
     href: FEATURED_BAND_PRODUCT_PATH,
@@ -320,28 +327,36 @@ const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: st
 ];
 const HOME_COLLECTION_CARDS = [
   {
-    title: 'Best Seller',
-    image: bestSellerTfx5AiBandImage,
-    href: FEATURED_BAND_PRODUCT_PATH,
-    alt: 'TFX5 AI Smart Band best seller collection',
-  },
-  {
     title: 'Smart Bands',
     image: homeCollectionBandImage,
     href: '/smart-bands',
     alt: 'Smart bands collection',
+    products: [
+      { name: 'The FutureX AI Smart Band TFX5', slug: 'tfx5-ai-smart-band' },
+      { name: 'The FutureX TFX Smart Band', slug: 'tfx-smart-band' },
+    ],
   },
   {
     title: 'Smart Rings',
     image: homeCollectionRingImage,
     href: '/smart-rings',
     alt: 'Smart rings collection',
+    products: [
+      { name: 'The FutureX TFX Ring Pro', slug: 'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
+      { name: 'The FutureX TFX Touch Smart Ring', slug: 'tfx-touch-smart-ring' },
+      { name: 'The FutureX TFX Display Pro Smart Ring', slug: 'tfx-display-pro-smart-ring' },
+    ],
   },
   {
     title: 'Smart Fans',
     image: homeCollectionFanImage,
     href: '/bladeless-fan',
     alt: 'Smart fans collection',
+    products: [
+      { name: 'The FutureX TFX AirWall Pro', slug: 'tfx-airwall-pro' },
+      { name: 'The FutureX TFX Hot and CoolAir Pro', slug: 'tfxhot-and-coolair-pro' },
+      { name: 'The FutureX TFX HEPA PureAir Pro', slug: 'tfx-hepa-pureair-pro' },
+    ],
   },
 ];
 
@@ -354,6 +369,7 @@ const HOME_SCROLL_BANNERS = [
 
 const ScrollLinkedBanners: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [viewportVersion, setViewportVersion] = useState(0);
   const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
   const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
   const sectionRef = useRef<HTMLElement | null>(null);
@@ -380,15 +396,17 @@ const ScrollLinkedBanners: React.FC = () => {
   }, [updatePill]);
 
   useEffect(() => {
-    const updateViewport = () => setIsMobileViewport(window.innerWidth < 640);
+    const updateViewport = () => {
+      setIsMobileViewport(window.innerWidth < 640);
+      setViewportVersion((current) => current + 1);
+    };
     updateViewport();
     window.addEventListener('resize', updateViewport);
     return () => window.removeEventListener('resize', updateViewport);
   }, []);
 
-  // One pinned, layered product stage. Every banner occupies the same space;
-  // normal vertical page scrolling brings the next layer to the front. There
-  // is deliberately no translateX or horizontal slider behaviour.
+  // Give each product an equal scroll segment. React selects one opaque panel
+  // so stopping midway through a scroll never leaves two artworks blended.
   useLayoutEffect(() => {
     // A pinned desktop scene creates a large pin-spacer on a short mobile
     // banner. Phones use the tabs as a direct, space-efficient switcher.
@@ -399,34 +417,22 @@ const ScrollLinkedBanners: React.FC = () => {
       const panels = gsap.utils.toArray<HTMLElement>('.home-scroll-banner-panel');
       if (!panels.length || !sectionRef.current || !sceneRef.current) return;
 
-      const incomingYOffset = isMobileViewport ? 8 : 10;
-      const incomingScale = isMobileViewport ? 1.02 : 1.04;
-      gsap.set(panels, { autoAlpha: 0, yPercent: incomingYOffset, scale: incomingScale, zIndex: 0 });
-      gsap.set(panels[0], { autoAlpha: 1, yPercent: 0, scale: 1, zIndex: 1 });
-
-      const timeline = gsap.timeline({ defaults: { ease: 'none' } });
-      panels.slice(1).forEach((panel, index) => {
-        const previous = panels[index];
-        timeline
-          .set(panel, { zIndex: index + 2 }, index)
-          .to(previous, { autoAlpha: 0, scale: 0.985, duration: 1 }, index)
-          .to(panel, { autoAlpha: 1, yPercent: 0, scale: 1, duration: 1 }, index);
-      });
-      // Reserve a final scroll segment for the last graphic so it is fully
-      // visible before the pinned product-story section releases.
-      timeline.to({}, { duration: 1 });
+      sceneRef.current.classList.add('home-scroll-banner-scene--scrolling');
+      sceneRef.current.style.setProperty('--banner-pan', '0%');
 
       scrollTriggerRef.current = ScrollTrigger.create({
-        animation: timeline,
         trigger: sectionRef.current,
-        start: 'top top+=104',
+        start: () => 'top top+=' + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tfx-sticky-header-height')) || 110),
         end: () => `+=${Math.max(window.innerHeight * panels.length, 2000)}`,
         pin: sceneRef.current,
-        scrub: 0.7,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         onUpdate: (trigger) => {
-          const nextIndex = Math.min(panels.length - 1, Math.round(trigger.progress * (panels.length - 1)));
+          const nextIndex = Math.min(panels.length - 1, Math.floor(trigger.progress * panels.length));
+          const segmentProgress = trigger.progress * panels.length - nextIndex;
+          // Hold the top and bottom briefly; scroll through taller artwork in between.
+          const pan = Math.max(0, Math.min(1, (segmentProgress - 0.15) / 0.7));
+          sceneRef.current?.style.setProperty('--banner-pan', `${pan * 100}%`);
           setActiveIndex((current) => current === nextIndex ? current : nextIndex);
         },
       });
@@ -435,14 +441,16 @@ const ScrollLinkedBanners: React.FC = () => {
     return () => {
       scrollTriggerRef.current = null;
       context.revert();
+      sceneRef.current?.classList.remove('home-scroll-banner-scene--scrolling');
+      sceneRef.current?.style.removeProperty('--banner-pan');
     };
-  }, [isMobileViewport]);
+  }, [isMobileViewport, viewportVersion]);
 
   const selectBanner = (index: number) => {
     setActiveIndex(index);
     const trigger = scrollTriggerRef.current;
     if (!trigger) return;
-    const progress = index / (HOME_SCROLL_BANNERS.length - 1);
+    const progress = (index + 0.5) / HOME_SCROLL_BANNERS.length;
     window.scrollTo({ top: trigger.start + ((trigger.end - trigger.start) * progress), behavior: 'smooth' });
   };
 
@@ -462,7 +470,14 @@ const ScrollLinkedBanners: React.FC = () => {
               aria-selected={activeIndex === index}
               aria-controls={`home-scroll-panel-${index}`}
               onClick={() => selectBanner(index)}
-              className="home-scroll-banner-tab"
+              onPointerEnter={(event) => {
+                if (event.pointerType === 'mouse') {
+                  setActiveIndex(index);
+                  sceneRef.current?.style.setProperty('--banner-pan', '50%');
+                }
+              }}
+              onFocus={() => setActiveIndex(index)}
+              className="home-scroll-banner-tab text-white"
             >
               {banner.label}
             </button>
@@ -476,6 +491,8 @@ const ScrollLinkedBanners: React.FC = () => {
               ref={(node) => { panelRefs.current[index] = node; }}
               data-banner-index={index}
               role="tabpanel"
+              hidden={activeIndex !== index}
+              aria-hidden={activeIndex !== index}
               aria-labelledby={`home-scroll-tab-${index}`}
               className={`home-scroll-banner-panel${activeIndex === index ? ' home-scroll-banner-panel--active' : ''}`}
             >
@@ -484,7 +501,8 @@ const ScrollLinkedBanners: React.FC = () => {
                   src={banner.image}
                   alt={banner.alt}
                   className="block h-auto w-full"
-                  loading={index === 0 ? 'eager' : 'lazy'}
+                  loading="eager"
+                  fetchPriority="low"
                   decoding="async"
                 />
               </Link>
@@ -525,14 +543,6 @@ const getHomeCatalogCategoryRank = (product: Product): number => {
 const getProductImage = (product: Product): string =>
   product.colors?.[0]?.images?.[0] || product.images?.[0] || bandCutout;
 
-const getProductPreviewImages = (product: Product): string[] => {
-  const colorImages = (product.colors || []).map((color) => color.images?.[0]).filter(Boolean);
-  const variantImages = (product.variants || []).map((variant) => variant.images?.[0]).filter(Boolean);
-  const productImages = (product.images || []).filter(Boolean);
-  const images = colorImages.length ? colorImages : variantImages.length ? variantImages : productImages;
-  return Array.from(new Set(images));
-};
-
 const getCatalogBullets = (product: Product): string[] => {
   const features = product.features?.filter(Boolean) || [];
   if (features.length) return features.slice(0, 3);
@@ -545,6 +555,43 @@ const getCatalogBullets = (product: Product): string[] => {
     .map((item) => item.trim())
     .filter(Boolean)
     .slice(0, 3);
+};
+
+/** Up to 4 round color-swatch dots, cropped from each color variant's image. */
+const getColorSwatches = (product: Product): { image: string; label: string }[] => {
+  const colors = product.colors || [];
+  return colors
+    .filter((color) => color.images?.[0])
+    .slice(0, 4)
+    .map((color, index) => ({ image: color.images![0] as string, label: `Color ${index + 1}` }));
+};
+
+/**
+ * Colored feature strip that sits above the Add To Cart button, e.g.
+ * "BT Calling" (yellow), "GPS Tracking" (green), "Real-Time GPS Tracking"
+ * (orange). Picks the most relevant keyword out of the product's own
+ * features/category text so it works without a dedicated backend field.
+ */
+const getFeatureStrip = (product: Product): { label: string; className: string } | null => {
+  const haystack = `${product.category || ''} ${(product.features || []).join(' ')} ${product.name || ''}`.toLowerCase();
+
+  if (/\bgps\b/.test(haystack) && /real[\s-]?time/.test(haystack)) {
+    return { label: 'Real-Time GPS Tracking', className: 'bg-[#f59e0b] text-slate-950' };
+  }
+  if (/\bgps\b/.test(haystack)) {
+    return { label: 'GPS Tracking', className: 'bg-emerald-400 text-slate-950' };
+  }
+  if (/\b(bt|bluetooth)\b.*call|call.*\b(bt|bluetooth)\b|bluetooth calling/.test(haystack)) {
+    return { label: 'BT Calling', className: 'bg-amber-400 text-slate-950' };
+  }
+  if (/voice|video/.test(haystack)) {
+    return { label: 'Voice & Video Calls', className: 'bg-sky-400 text-slate-950' };
+  }
+  if (/\bamoled\b/.test(haystack)) {
+    return { label: 'AMOLED Display', className: 'bg-violet-400 text-white' };
+  }
+
+  return null;
 };
 
 export const Home: React.FC = () => {
@@ -1161,25 +1208,27 @@ export const Home: React.FC = () => {
         onBlur={() => setIsHomeBannerPaused(false)}
       >
         <div
-          className="relative w-full aspect-[16/9] overflow-hidden sm:aspect-[21/9]"
+          className="relative w-full aspect-[21/9] overflow-hidden"
         >
           {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
             <Link
               key={banner.alt}
               to={banner.href || '#'}
+              style={{ backgroundColor: banner.backgroundColor }}
               className={`absolute inset-0 overflow-hidden transition-opacity duration-[900ms] ease-out ${
                 index === homeWaterBannerIndex ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'
               }`}
               aria-hidden={index !== homeWaterBannerIndex}
               tabIndex={index === homeWaterBannerIndex ? 0 : -1}
             >
-              <picture>
+              <picture className="block h-full w-full">
                 {banner.mobileImage && <source media="(max-width: 639px)" srcSet={banner.mobileImage} />}
                 {banner.image && (
                   <img
                     src={banner.image}
                     alt={banner.alt}
                     className="relative z-10 h-full w-full object-contain object-center"
+                    style={{ transform: banner.scale ? `scale(${banner.scale})` : undefined }}
                     loading={index === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
@@ -1243,40 +1292,54 @@ export const Home: React.FC = () => {
         )}
       </section>
 
-      <section id="explore-collection" className="relative z-10 bg-white px-5 pb-8 pt-2 sm:px-8 sm:pb-12 lg:px-10">
-        <div className="mx-auto max-w-7xl">
+      <section id="explore-collection" className="relative z-10 bg-[#fbfbfc] px-3 pb-4 pt-6 sm:px-4 sm:pb-12 sm:pt-12 lg:px-5">
+        <div className="mx-auto max-w-[1600px]">
           <RevealOnScroll variant="blur">
-            <h2 className="tfx-gradient-heading text-center font-display text-2xl font-black leading-tight sm:text-4xl">
+            <h2 className="text-center font-display text-3xl font-black leading-tight tracking-tight text-[#14161a] sm:text-5xl">
               Explore Collection
             </h2>
             <div className="tfx-divider mx-auto mt-3 h-1 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#df0b16]" />
           </RevealOnScroll>
 
-          <div className="home-collection-strip mt-7 flex gap-3 overflow-x-auto pb-2 sm:mt-8 sm:gap-6 lg:grid lg:grid-cols-4 lg:gap-7 lg:overflow-visible">
+          <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-5">
             {HOME_COLLECTION_CARDS.map((card, index) => (
-              <RevealOnScroll key={card.title} delayMs={index * 90} variant="scale" className="shrink-0 lg:shrink">
-                <Link
-                  to={card.href}
-                  className="tfx-shine group flex min-w-[130px] shrink-0 flex-col items-center justify-center px-2 py-2 text-center transition-all duration-300 sm:min-w-[160px] lg:min-h-[255px] lg:min-w-0 lg:rounded-xl lg:border lg:border-transparent lg:bg-white lg:px-5 lg:py-6 lg:shadow-[0_10px_22px_rgba(15,23,42,0.1)] lg:hover:-translate-y-1.5 lg:hover:border-[#0ea5e9]/30 lg:hover:shadow-[0_20px_40px_rgba(14,165,233,0.2)]"
+              <RevealOnScroll key={card.title} delayMs={index * 90} variant="scale" className="h-full min-w-0">
+                <div
+                  className="collection-card group flex h-full flex-col items-center overflow-hidden rounded-xl bg-white text-center shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(15,23,42,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
                 >
-                  <img
-                    src={card.image}
-                    alt={card.alt}
-                    className="h-24 w-full object-contain transition-transform duration-300 ease-out group-hover:scale-[1.08] group-hover:-rotate-1 sm:h-32 lg:h-40"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                  <h3 className="mt-3 text-sm font-black leading-tight text-slate-950 transition-colors duration-200 group-hover:text-[#0369a1] sm:text-base lg:mt-5 lg:text-lg">{card.title}</h3>
-                </Link>
+                  <div className="relative flex aspect-[2/1] w-full items-center justify-center overflow-hidden">
+                    <img
+                      src={card.image}
+                      alt={card.alt}
+                      className="h-full w-full object-contain"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <div className="absolute inset-0 flex">
+                      {card.products.map((item) => (
+                        <Link
+                          key={item.slug}
+                          to={`/product/${item.slug}`}
+                          aria-label={`View ${item.name}`}
+                          title={item.name}
+                          className="h-full min-w-0 flex-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-500"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <h3 className="px-1 py-3 text-[clamp(10px,2.7vw,14px)] font-bold leading-tight text-[#14161a] sm:px-3 sm:py-4 sm:text-xl lg:py-5 lg:text-2xl">
+                    <Link to={card.href}>{card.title}</Link>
+                  </h3>
+                </div>
               </RevealOnScroll>
             ))}
           </div>
         </div>
       </section>
 
-      <section id="models" className="bg-white px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
+      <section id="models" className="bg-white px-4 pb-8 pt-5 sm:px-8 sm:py-12 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-8 flex flex-col items-center justify-between gap-5 text-center lg:flex-row lg:text-left">
+          <div className="mb-5 flex flex-col items-center justify-between gap-3 text-center sm:mb-8 sm:gap-5 lg:flex-row lg:text-left">
             <RevealOnScroll variant="left">
               <h2 className="tfx-gradient-heading font-display text-3xl font-black leading-tight sm:text-5xl">
                 New Launches
@@ -1333,20 +1396,38 @@ export const Home: React.FC = () => {
                 const offerPricing = getAutomaticOfferItemPricing(product);
                 const detailLine = getCatalogBullets(product).slice(0, 2).join(' | ');
                 const showMegaPriceDrop = isMegaPriceDropBand(product);
-                const allPreviewImages = getProductPreviewImages(product);
-                const previewImages = allPreviewImages.slice(0, 2);
-                const extraPreviewCount = Math.max(0, allPreviewImages.length - previewImages.length);
+                const swatches = getColorSwatches(product);
+                const extraSwatchCount = Math.max(0, (product.colors?.length || 0) - swatches.length);
+                const featureStrip = getFeatureStrip(product);
+                const hasDiscount = offerPricing.rate > 0 || mrp > salePrice;
+                const strikeThroughPrice = offerPricing.rate > 0 ? salePrice : mrp;
+                const discountLabel =
+                  offerPricing.rate > 0
+                    ? offerPricing.rateLabel
+                    : mrp > 0 && salePrice > 0
+                      ? `${Math.round(((mrp - salePrice) / mrp) * 100)}%`
+                      : '';
+
+                // Top-left tag: an offer callout takes priority, then "Just Launched" for new arrivals.
+                const topLeftTag = showMegaPriceDrop
+                  ? { label: 'Mega Price Drop', className: 'tfx-badge-pulse bg-[#df0b16]' }
+                  : hasDiscount && discountLabel
+                    ? { label: `Extra ${discountLabel} Off`, className: 'bg-emerald-600' }
+                    : product.isNewArrival
+                      ? { label: 'Just Launched', className: 'bg-slate-950' }
+                      : product.isFeatured
+                        ? { label: 'Featured', className: 'bg-[#86d8d2]' }
+                        : null;
 
                 return (
                   <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70} variant="up" className="h-full">
                   <article
                     className="tfx-shine tfx-glow-card group relative flex h-full min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1.5 sm:min-h-[436px]"
                   >
-                    {(showMegaPriceDrop || product.isNewArrival || product.isBestSeller || product.isFeatured) && (
-                      <div className={`absolute left-2.5 top-2.5 z-10 rounded-r-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white sm:px-3 sm:text-[10px] ${
-                        showMegaPriceDrop ? 'tfx-badge-pulse bg-[#df0b16] shadow-[0_8px_18px_rgba(223,11,22,0.18)]' : 'bg-[#86d8d2]'
-                      }`}>
-                        {showMegaPriceDrop ? 'Mega Price Drop' : product.isBestSeller ? 'Best Seller' : product.isNewArrival ? 'New Launch' : 'Featured'}
+                    {/* Top-left: offer / launch status tag */}
+                    {topLeftTag && (
+                      <div className={`absolute left-2.5 top-2.5 z-10 rounded-r-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-[0_8px_18px_rgba(15,23,42,0.18)] sm:px-3 sm:text-[10px] ${topLeftTag.className}`}>
+                        {topLeftTag.label}
                       </div>
                     )}
                     <Link to={catalogHref} className="flex h-48 items-center justify-center overflow-hidden rounded-md bg-white sm:h-64">
@@ -1359,72 +1440,66 @@ export const Home: React.FC = () => {
                       />
                     </Link>
                     <div className="flex flex-1 flex-col px-1 pb-1 pt-3">
-                      {previewImages.length > 0 && (
-                        <div className="mb-3 flex items-center gap-2">
-                          {previewImages.map((image, previewIndex) => (
-                            <Link
-                              key={`${image}-${previewIndex}`}
-                              to={catalogHref}
-                              className="grid h-11 w-11 place-items-center rounded-lg border-2 border-rose-300 bg-white p-1 shadow-sm transition hover:border-rose-500"
-                              aria-label={`View ${product.name} preview ${previewIndex + 1}`}
-                            >
-                              <img src={image} alt="" className="h-full w-full object-contain" loading="lazy" decoding="async" aria-hidden="true" />
-                            </Link>
-                          ))}
-                          {extraPreviewCount > 0 && (
-                            <Link
-                              to={catalogHref}
-                              className="grid h-11 w-11 place-items-center rounded-lg border-2 border-rose-300 bg-white text-slate-700 shadow-sm transition hover:border-rose-500 hover:text-rose-500"
-                              aria-label={`View ${extraPreviewCount} more ${product.name} previews`}
-                            >
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <polyline points="9 18 15 12 9 6" />
-                              </svg>
-                            </Link>
-                          )}
-                        </div>
-                      )}
-                      <Link to={catalogHref} className="min-w-0">
+                      <Link to={catalogHref} className="mt-1.5 min-w-0">
                         <h3 className="product-catalog-title truncate text-slate-950 transition hover:text-[#1ca9a4]">
                           {product.name}
                         </h3>
                       </Link>
-                      <p className="mt-2 truncate text-xs font-medium leading-5 text-slate-600">{detailLine}</p>
-                      <div className="mt-2 flex flex-wrap items-end gap-2">
-                        {offerPricing.rate <= 0 && mrp > salePrice && (
-                          <span className="text-xs font-bold leading-none text-slate-400 line-through">
-                            &#8377;{mrp.toLocaleString('en-IN')}
-                          </span>
-                        )}
-                        {offerPricing.rate > 0 && (
-                          <span className="text-xs font-bold leading-none text-slate-400 line-through">
-                            {formatInrAmount(salePrice)}
-                          </span>
-                        )}
-                        <span className={`text-base font-black leading-none ${offerPricing.rate > 0 ? 'text-emerald-600' : 'text-slate-950'}`}>
+                      {/* Price stack: sale price first, then strikethrough MRP, then % off */}
+                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                        <span className="text-base font-black leading-none text-slate-950">
                           {formatInrAmount(offerPricing.unitOfferPrice)}
                         </span>
+                        {strikeThroughPrice > offerPricing.unitOfferPrice && (
+                          <span className="text-xs font-bold leading-none text-slate-400 line-through">
+                            {formatInrAmount(strikeThroughPrice)}
+                          </span>
+                        )}
+                        {discountLabel && (
+                          <span className="text-xs font-black leading-none text-emerald-600">{discountLabel} off</span>
+                        )}
                       </div>
-                      {offerPricing.rate > 0 && (
-                        <p className="mt-1 text-[11px] font-bold text-emerald-600">
-                          Save {formatInrAmount(offerPricing.unitDiscount)} ({offerPricing.rateLabel} off)
-                        </p>
+                      <p className="mt-1.5 truncate text-xs font-medium leading-5 text-slate-600">{detailLine}</p>
+                      {/* Round color-swatch dots */}
+                      {swatches.length > 0 && (
+                        <div className="mt-2 flex items-center gap-1.5">
+                          {swatches.map((swatch, swatchIndex) => (
+                            <span
+                              key={`${swatch.label}-${swatchIndex}`}
+                              className="h-4 w-4 overflow-hidden rounded-full border border-slate-200 bg-slate-100 shadow-sm"
+                              title={swatch.label}
+                            >
+                              <img src={swatch.image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" aria-hidden="true" />
+                            </span>
+                          ))}
+                          {extraSwatchCount > 0 && (
+                            <span className="text-[10px] font-bold text-slate-500">+{extraSwatchCount}</span>
+                          )}
+                        </div>
                       )}
-                      <div className="relative z-20 mt-auto grid shrink-0 grid-cols-2 gap-2 pt-3">
-                        <button
-                          type="button"
-                          onClick={() => handleHomeAddToCart(product)}
-                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#161b28] hover:shadow-[0_10px_22px_rgba(10,14,23,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
-                        >
-                          Add to Cart
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => handleHomeBuyNow(product)}
-                          className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#630000] hover:shadow-[0_10px_22px_rgba(74,0,0,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
-                        >
-                          Buy Now
-                        </button>
+                      {/* Colored feature strip, sits right above the CTA */}
+                      <div className="relative z-20 mt-auto pt-3">
+                        {featureStrip && (
+                          <div className={`mb-2 rounded-md py-1.5 text-center text-[11px] font-black uppercase tracking-wide ${featureStrip.className}`}>
+                            {featureStrip.label}
+                          </div>
+                        )}
+                        <div className="grid shrink-0 grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleHomeAddToCart(product)}
+                            className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#161b28] hover:shadow-[0_10px_22px_rgba(10,14,23,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
+                          >
+                            Add to Cart
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleHomeBuyNow(product)}
+                            className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#630000] hover:shadow-[0_10px_22px_rgba(74,0,0,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
+                          >
+                            Buy Now
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </article>

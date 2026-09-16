@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { formatProductName } from "../utils/productName.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,7 +71,7 @@ function buildRow(product) {
 
   return {
     id: product.id,
-    title: product.name,
+    title: formatProductName(product.name),
     description: buildDescription(product),
     link: `${SITE_URL}/product/${slug}`,
     image_link: imageLink,

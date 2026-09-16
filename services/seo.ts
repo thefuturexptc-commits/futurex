@@ -1,3 +1,6 @@
+import { homepageFaqSchema } from '../utils/homepageFaqs.js';
+export { homepageFaqs } from '../utils/homepageFaqs.js';
+
 const SITE_NAME = 'TheFutureX';
 const SITE_URL = 'https://thefuturex.in';
 const DEFAULT_DESCRIPTION =
@@ -219,29 +222,9 @@ export const setHomepageJsonLd = () => {
       },
     ],
   });
-  setJsonLd('homepage-faq-json-ld', {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: homepageFaqs.map(({ question, answer }) => ({
-      '@type': 'Question',
-      name: question,
-      acceptedAnswer: { '@type': 'Answer', text: answer },
-    })),
-  });
+  setJsonLd('homepage-faq-json-ld', homepageFaqSchema);
 };
 
-export const homepageFaqs = [
-  { question: 'What is TheFutureX (TFX)?', answer: 'TheFutureX (TFX) is an Indian brand of smart wearables and connected lifestyle products, including smart bands, smart rings, bladeless fans, smart monitoring devices, and AI smart glasses for everyday tracking and modern living.' },
-  { question: 'What products does TheFutureX sell?', answer: 'TheFutureX sells smart bands, smart rings, bladeless fans, smart monitoring systems, and AI smart glasses. The full product catalog is available online.' },
-  { question: 'Does TheFutureX ship across India?', answer: 'Yes, TheFutureX ships smart wearables and connected lifestyle products across India when ordered directly from thefuturex.in.' },
-  { question: 'Are TheFutureX smart bands and rings screenless?', answer: 'Some products, including the TFX5 AI Smart Band, are screenless for background tracking, while selected smart rings include a built-in display.' },
-  { question: 'What metrics do TheFutureX wearables track?', answer: 'Depending on the model, TheFutureX wearables can track heart-rate trends, blood oxygen (SpO2), sleep, stress, recovery, steps, calories, and activity through a connected app.' },
-  { question: 'Do TheFutureX bladeless fans have features beyond cooling?', answer: 'Selected TheFutureX bladeless fans offer features such as heating, HEPA air-purification support, or wall-mounted airflow support alongside no-exposed-blade airflow.' },
-  { question: 'What can TheFutureX AI Smart Glasses do?', answer: 'TFX AI Smart Glasses support Bluetooth calling, music playback, voice assistant access, and selected HD recording features for hands-free everyday use.' },
-  { question: 'Where can I buy TheFutureX products?', answer: 'You can buy TheFutureX products directly at thefuturex.in and browse the complete catalog at thefuturex.in/shop/all.' },
-  { question: 'Does TheFutureX offer a warranty?', answer: 'Smart bands and smart rings include a 6-month limited warranty. Bladeless fans include a 1-year warranty on the motor and internal components. See the warranty policy for applicable terms and exclusions.' },
-  { question: 'Does TheFutureX have a mobile app?', answer: 'TheFutureX Smartwear is available on Google Play and connects compatible smart bands and rings to display device insights.' },
-];
 
 export const setCollectionPageJsonLd = ({
   path,
