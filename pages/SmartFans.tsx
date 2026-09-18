@@ -1,4 +1,5 @@
 import React from 'react';
+import '../components/CategoryInfoCards.css';
 import { CategoryTemplate } from '../components/CategoryTemplate';
 import fanHero from '../assets/images/fan-family-hero.webp';
 import fanMobileHero from '../assets/images/fan-mobile-hero.webp';
@@ -148,12 +149,12 @@ export const SmartFans: React.FC = () => {
             The collection includes cooling fans, hot and cool models, wall-mounted systems, and multi-function tower fans designed to support various room sizes and indoor requirements.
           </p>
         </div>
-        <div className="grid gap-5">
+        <div className="category-info-cards grid gap-5">
           <div className="rounded-2xl border border-slate-200 bg-[#f7fbfb] p-5">
             <h3 className="text-lg font-black text-slate-950">Category Features</h3>
             <div className="mt-4 grid grid-cols-2 gap-2">
               {fanCategoryFeatures.map((feature) => (
-                <div key={feature} className="rounded-lg bg-white px-3 py-3 text-xs font-black leading-5 text-slate-800 shadow-sm sm:text-sm">
+                <div key={feature} className="category-feature-item rounded-lg bg-white px-3 py-3 text-xs font-black leading-5 text-slate-800 shadow-sm sm:text-sm">
                   {feature}
                 </div>
               ))}
@@ -163,7 +164,7 @@ export const SmartFans: React.FC = () => {
             <h3 className="text-lg font-black text-slate-950">Ideal Applications</h3>
             <div className="mt-4 grid grid-cols-2 gap-2">
               {fanIdealApplications.map((application) => (
-                <div key={application} className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-black leading-5 text-slate-800 shadow-sm sm:text-sm">
+                <div key={application} className="category-feature-item rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-xs font-black leading-5 text-slate-800 shadow-sm sm:text-sm">
                   {application}
                 </div>
               ))}
@@ -173,7 +174,7 @@ export const SmartFans: React.FC = () => {
             <h3 className="text-lg font-black text-slate-950">Popular Searches</h3>
             <div className="mt-4 flex flex-wrap gap-2">
               {fanPopularSearches.map((search) => (
-                <span key={search} className="rounded-full border border-[#bdebea] bg-[#f0f9ff] px-3 py-1.5 text-xs font-bold text-[#117c78]">
+                <span key={search} className="category-search-tag rounded-full border border-[#bdebea] bg-[#f0f9ff] px-3 py-1.5 text-xs font-bold text-[#117c78]">
                   {search}
                 </span>
               ))}

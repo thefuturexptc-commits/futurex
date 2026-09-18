@@ -1,4 +1,5 @@
 import React from 'react';
+import '../components/CategoryInfoCards.css';
 import { CategoryTemplate } from '../components/CategoryTemplate';
 import heroImage from '../assets/images/monitoring-proactive-wellness-hero.webp';
 import mobileHeroImage from '../assets/images/monitoring-mobile-hero.webp';
@@ -109,12 +110,12 @@ export const SmartMonitoring: React.FC = () => {
  The Future X develops technology products that combine fitness tracking, wellness monitoring and user-friendly connectivity. Whether you're monitoring workout performance with a Bluetooth heart rate chest belt or tracking sleep patterns with a dedicated sleep monitoring system, TFX products are designed to help users access meaningful and activity data through modern connected technology.
             </p>
           </div>
-          <div className="grid gap-5">
+          <div className="category-info-cards grid gap-5">
             <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
               <h3 className="text-lg font-black text-slate-950">Category Features</h3>
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {monitoringCategoryFeatures.map((feature) => (
-                  <div key={feature} className="rounded-lg bg-white px-3 py-3 text-xs font-black leading-5 text-slate-800 shadow-sm sm:text-sm">
+                  <div key={feature} className="category-feature-item rounded-lg bg-white px-3 py-3 text-xs font-black leading-5 text-slate-800 shadow-sm sm:text-sm">
                     {feature}
                   </div>
                 ))}
@@ -124,7 +125,7 @@ export const SmartMonitoring: React.FC = () => {
               <h3 className="text-lg font-black text-slate-950">Popular Searches</h3>
               <div className="mt-4 flex flex-wrap gap-2">
                 {monitoringPopularSearches.map((search) => (
-                  <span key={search} className="rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800">
+                  <span key={search} className="category-search-tag rounded-full border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-800">
                     {search}
                   </span>
                 ))}

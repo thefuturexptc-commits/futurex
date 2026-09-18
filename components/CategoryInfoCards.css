@@ -1,0 +1,23 @@
+/* These cards stay light even when their category page uses a dark theme. */
+html .site-main-content .category-info-cards > div {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html .site-main-content .category-info-cards h3 {
+  color: #0f172a !important;
+}
+
+html .site-main-content .category-info-cards .category-feature-item {
+  background-color: #f3f8f8 !important;
+  color: #1e293b !important;
+  border: 1px solid #e2e8f0 !important;
+  overflow-wrap: anywhere;
+}
+
+html .site-main-content .category-info-cards .category-search-tag {
+  background-color: #f0f9ff !important;
+  border-color: #bdebea !important;
+  color: #115e59 !important;
+}
