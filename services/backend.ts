@@ -31,7 +31,7 @@ import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } f
 import { TFX5_AI_BAND_PRICE, isTfxV5Band } from '../utils/coupons';
 import { publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { formatProductName } from '../utils/productName.js';
-import { getProductModelNumbers, getProductTitleWithModel } from '../utils/productModel';
+import { correctRingModel, getProductModelNumbers, getProductTitleWithModel } from '../utils/productModel';
 import { getFanTitle } from '../utils/fanListings';
 
 const logDevWarning = (...args: unknown[]) => {
@@ -787,7 +787,7 @@ export const resolveAuthenticatedUser = async (firebaseUser: FirebaseAuthUser): 
 
 const normalizeProductColors = (product: Product): Product => {
   const slug = normalizeProductSlug(product);
-  const displayProduct = sanitizeUnsupportedRingGestureClaims(product);
+  const displayProduct = correctRingModel(sanitizeUnsupportedRingGestureClaims(product));
   const pricedProduct = isTfxV5Band(displayProduct)
     ? {
         ...displayProduct,

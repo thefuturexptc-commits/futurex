@@ -1,5 +1,24 @@
 import type { Product } from '../types';
 
+export const correctRingModel = (product: Product): Product => {
+  if (!/\bring\b/i.test(`${product.category} ${product.name}`)) return product;
+  const replaceR11 = (value: string) => value.replace(/\bR11\b/gi, 'Q11');
+  const isMetalRing = product.slug === 'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features'
+    || /\b(?:ring\s+pro|metal(?:\s+smart)?\s+ring)\b/i.test(product.name);
+  const specs = Object.fromEntries(Object.entries(product.specs || {}).map(([key, value]) => [
+    key,
+    /\bmodel\b/i.test(key) ? replaceR11(value) : value,
+  ]));
+  return {
+    ...product,
+    name: replaceR11(product.name),
+    ...(product.modelNumber ? { modelNumber: replaceR11(product.modelNumber) } : {}),
+    ...(product.modelNumbers ? { modelNumbers: product.modelNumbers.map(replaceR11) } : {}),
+    specs,
+    ...(isMetalRing ? { modelNumber: 'Q10', specs: { ...specs, 'Model Number': 'Q10' } } : {}),
+  };
+};
+
 export const getProductModelNumbers = (product: Product): string[] => {
   const values = [
     product.modelNumber,

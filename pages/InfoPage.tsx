@@ -1,5 +1,3 @@
-\]0]]
-
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
