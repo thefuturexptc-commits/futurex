@@ -530,16 +530,6 @@ const getHomeCatalogHref = (product: Product): string => {
   return `/product/${getProductSlug(product)}`;
 };
 
-const getHomeCatalogCategoryRank = (product: Product): number => {
-  const categoryText = `${product.category || ''} ${product.name || ''}`.toLowerCase();
-  if (/\b(band|bracelet)\b/.test(categoryText)) return 0;
-  if (/\bring\b/.test(categoryText)) return 1;
-  if (/\bfan\b/.test(categoryText)) return 2;
-  if (/\b(monitor|watch|belt|spo2|ecg|blood\s*pressure|glucose)\b/.test(categoryText)) return 3;
-  if (/\b(glass|glasses|eyewear|ar|vr)\b/.test(categoryText)) return 4;
-  return 5;
-};
-
 const getProductImage = (product: Product): string =>
   product.colors?.[0]?.images?.[0] || product.images?.[0] || bandCutout;
 
@@ -748,14 +738,8 @@ export const Home: React.FC = () => {
   };
 
   const catalogProducts = useMemo(() => {
-    return [...products].sort((a, b) => {
-      const categoryRank = getHomeCatalogCategoryRank(a) - getHomeCatalogCategoryRank(b);
-      if (categoryRank !== 0) return categoryRank;
-
-      const aScore = Number(Boolean(a.isFeatured || a.isNewArrival)) + Number(Boolean(a.isBestSeller));
-      const bScore = Number(Boolean(b.isFeatured || b.isNewArrival)) + Number(Boolean(b.isBestSeller));
-      return bScore - aScore || a.name.localeCompare(b.name);
-    });
+    // Keep the homepage launch spotlight focused on the current TFX5 offer.
+    return products.filter(isMegaPriceDropBand).slice(0, 1);
   }, [products]);
   const totalCatalogPages = Math.max(1, Math.ceil(catalogProducts.length / CATALOG_PAGE_SIZE));
   const paginatedCatalogProducts = catalogProducts.slice(
@@ -1425,9 +1409,9 @@ export const Home: React.FC = () => {
           )}
 
           {loading ? (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
-              {Array.from({ length: CATALOG_PAGE_SIZE }).map((_, item) => (
-                <div key={item} className="flex min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] sm:min-h-[436px]">
+            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-5">
+              {Array.from({ length: 1 }).map((_, item) => (
+                <div key={item} className="flex min-h-[436px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)]">
                   <div className="tfx-shimmer h-48 w-full rounded-md sm:h-64" />
                   <div className="flex flex-1 flex-col gap-2 px-1 pb-1 pt-3">
                     <div className="tfx-shimmer h-4 w-3/4 rounded" />
@@ -1439,7 +1423,7 @@ export const Home: React.FC = () => {
             </div>
           ) : catalogProducts.length > 0 ? (
             <>
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 sm:gap-5 xl:grid-cols-4">
+            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-5">
               {paginatedCatalogProducts.map((product, index) => {
                 const catalogHref = getHomeCatalogHref(product);
                 const salePrice = Number(product.salePrice || product.price || 0);
@@ -1461,7 +1445,7 @@ export const Home: React.FC = () => {
 
                 // Top-left tag: an offer callout takes priority, then "Just Launched" for new arrivals.
                 const topLeftTag = showMegaPriceDrop
-                  ? { label: 'Mega Price Drop', className: 'tfx-badge-pulse bg-[#df0b16]' }
+                  ? { label: 'Mega Price Drop', className: 'tfx-badge-pulse bg-emerald-600' }
                   : hasDiscount && discountLabel
                     ? { label: `Extra ${discountLabel} Off`, className: 'bg-emerald-600' }
                     : product.isNewArrival
@@ -1473,7 +1457,7 @@ export const Home: React.FC = () => {
                 return (
                   <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70} variant="up" className="h-full">
                   <article
-                    className="tfx-shine tfx-glow-card group relative flex h-full min-h-[362px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1.5 sm:min-h-[436px]"
+                    className="tfx-shine tfx-glow-card group relative flex h-full min-h-[436px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-3 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1.5 sm:p-4"
                   >
                     {/* Top-left: offer / launch status tag */}
                     {topLeftTag && (
@@ -1481,7 +1465,7 @@ export const Home: React.FC = () => {
                         {topLeftTag.label}
                       </div>
                     )}
-                    <Link to={catalogHref} className="flex h-48 items-center justify-center overflow-hidden rounded-md bg-white sm:h-64">
+                    <Link to={catalogHref} className="flex h-64 items-center justify-center overflow-hidden rounded-md bg-white sm:h-80">
                       <img
                         src={getProductImage(product)}
                         alt={product.name}
