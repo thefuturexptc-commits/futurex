@@ -335,7 +335,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         )}
         <Link to={`/product/${getProductSlug(product)}`}>
           <h3
-            className={`${compact ? 'truncate text-[13px] sm:text-sm' : 'truncate text-sm sm:text-base'} font-semibold ${cardTextClass} leading-tight transition-colors [font-family:Arial,Helvetica,sans-serif] ${hoverTextClass}`}
+            className={`${compact ? 'text-[13px] sm:text-sm' : 'text-sm sm:text-base'} ${/\bfans?\b/i.test(`${product.category} ${product.name}`) ? 'whitespace-normal break-words' : 'truncate'} font-semibold ${cardTextClass} leading-tight transition-colors [font-family:Arial,Helvetica,sans-serif] ${hoverTextClass}`}
           >
             {product.name}
           </h3>

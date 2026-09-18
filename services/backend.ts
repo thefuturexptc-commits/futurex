@@ -31,6 +31,8 @@ import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } f
 import { TFX5_AI_BAND_PRICE, isTfxV5Band } from '../utils/coupons';
 import { publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { formatProductName } from '../utils/productName.js';
+import { getProductModelNumbers, getProductTitleWithModel } from '../utils/productModel';
+import { getFanTitle } from '../utils/fanListings';
 
 const logDevWarning = (...args: unknown[]) => {
   if (import.meta.env.DEV) {
@@ -554,7 +556,10 @@ const buildSeoProductDescription = (product: Product): string => {
       `${model} is a TheFutureX smart technology product designed for everyday convenience, modern lifestyle use, dependable performance, and connected digital experiences. It is built for shoppers in India looking for reliable smart gadgets, premium electronics, useful accessories, and practical tech products with customer support.`,
   };
 
-  return descriptions[family];
+  const models = getProductModelNumbers(product);
+  return models.length
+    ? `Model number: ${models.join(', ')}. ${descriptions[family]}`
+    : descriptions[family];
 };
 
 const buildSeoProductFeatures = (product: Product): string[] => {
@@ -925,7 +930,7 @@ const normalizeProductColors = (product: Product): Product => {
 
   return ensureProductReviews({
     ...pricedProduct,
-    name: formatProductName(pricedProduct.name),
+    name: getFanTitle(pricedProduct) || getProductTitleWithModel({ ...pricedProduct, name: formatProductName(pricedProduct.name) }),
     slug,
     description: buildSeoProductDescription(pricedProduct),
     features: buildSeoProductFeatures(pricedProduct),

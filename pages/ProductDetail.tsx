@@ -11,6 +11,7 @@ import { ProductComparisonSection } from '../components/ProductComparisonSection
 import { absoluteUrl, removeJsonLd, setJsonLd, setProductSocialMetadata, setSeoMetadata, stripHtml } from '../services/seo';
 import { formatInrAmount, getAutomaticOfferItemPricing, getPrepaidDiscountForItems, isTfxV5Band as isTfxV5OfferExcluded } from '../utils/coupons';
 import { getProductModelIdentifiers } from '../utils/productSearch';
+import { getFanFlipkartListing } from '../utils/fanListings';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
 import { buildProductSeoRecord } from '../utils/productSeoData.js';
 import { productOfferPolicies, buildReviewSchema } from '../utils/productSchema.js';
@@ -1636,7 +1637,7 @@ export const ProductDetail: React.FC = () => {
         : isRingProductForSpecs
           ? TFX_RING_PRO_SPECS
           : {};
-    const fanSpecs = isFanProductForSpecs ? FAN_PROFILES[getFanProfileKey(product?.name)].specs : {};
+    const fanSpecs = isFanProductForSpecs ? FAN_PROFILES[getFanProfileKey(product?.slug?.replace(/-/g, ' ') || product?.name)].specs : {};
     const monitoringSpecs = isMonitoringProductForSpecs ? MONITORING_PROFILES[getMonitoringProfileKey(product?.name)].specs : {};
     const warrantyFamily = isFanProductForSpecs
       ? 'fan'
@@ -2286,7 +2287,7 @@ export const ProductDetail: React.FC = () => {
   const isDisplayProduct = /\bdisplay\b/i.test(product.name);
   const isRingProProduct = productFamily === 'ring' && /\bring\s*pro\b/i.test(product.name);
   const isTouchRingProduct = productFamily === 'ring' && !isDisplayProduct && !isRingProProduct && /\b(touch|ip68)\b/i.test(product.name);
-  const fanProfile = productFamily === 'fan' ? FAN_PROFILES[getFanProfileKey(product.name)] : null;
+  const fanProfile = productFamily === 'fan' ? FAN_PROFILES[getFanProfileKey(product.slug?.replace(/-/g, ' ') || product.name)] : null;
   const monitoringProfile = productFamily === 'monitoring' ? MONITORING_PROFILES[getMonitoringProfileKey(product.name)] : null;
   const isTfxV5Band = productFamily === 'band' && /\btfx\s*5\b|\btfx5\b|\bv5\b|\bai\s*v5\b/i.test(product.name);
   const isPremiumSmartBand = productFamily === 'band' && /premium|modern\s+fitness|smart\s+band/i.test(product.name) && !isTfxV5Band;
@@ -2378,30 +2379,9 @@ export const ProductDetail: React.FC = () => {
       code: 'STNHE5EHC9TW3QZN',
       url: 'https://www.flipkart.com/futurex-smart-ring-stainless-steel-build-5atm-waterproof-app-gesture-control/p/itme30f0c5daa85c?pid=STNHE5EHC9TW3QZN',
     },
-    {
-      family: 'fan',
-      match: /tp\s*-?\s*02|tp02|3\s*-?\s*in\s*-?\s*1/i,
-      product: 'The FutureX TP02 3-in-1 Tower Fan',
-      code: 'FANHGFHRP7AZWWX7',
-      url: 'https://www.flipkart.com/futurex-tfx-tp02-3-1-year-warranty-bldc-motor-tower-fan/p/itm40fc888dfc521?pid=FANHGFHRP7AZWWX7',
-    },
-    {
-      family: 'fan',
-      match: /q8\s*pro|q8/i,
-      product: 'Q8 Pro Tower Fan',
-      code: 'FANHE6R3DGEPYU6S',
-      url: 'https://www.flipkart.com/futurex-q8-pro-6-months-warranty-tower-fan/p/itm0e517add10d0c?pid=FANHE6R3DGEPYU6S',
-    },
-    {
-      family: 'fan',
-      match: /tp\s*-?\s*09|tp09/i,
-      product: 'TP09 Pro Tower Fan',
-      code: 'FANHE8ZUUMNZEMYS',
-      url: 'https://www.flipkart.com/futurex-tp09-pro-12-months-warranty-remote-controlled-tower-fan/p/itm63090878457ac?pid=FANHE8ZUUMNZEMYS',
-    },
   ];
   const matchedFallbackFlipkartListing =
-    fallbackFlipkartListings.find((listing) => listing.family === productFamily && listing.match.test(product.name));
+    getFanFlipkartListing(product) || fallbackFlipkartListings.find((listing) => listing.family === productFamily && listing.match.test(product.name));
   const flipkartListing = (isTfxV5Band || isMegaPriceDropBand)
     ? tfx5FlipkartListing
     : matchedFallbackFlipkartListing || (product.flipkartUrl || productFlipkartLink?.url
@@ -3287,7 +3267,7 @@ export const ProductDetail: React.FC = () => {
                 >
                   <span className="min-w-0">
                     <span className="block text-[10px] font-black uppercase tracking-[0.16em] text-yellow-500">Also on Flipkart</span>
-                    <span className="mt-1 block truncate text-sm font-bold text-slate-950">{flipkartListing.product}</span>
+                    <span className="mt-1 block whitespace-normal break-words text-sm font-bold text-slate-950">{flipkartListing.product}</span>
                   </span>
                   <span className="shrink-0 rounded-lg bg-[#ffe500] px-3 py-2 text-[11px] font-black text-slate-950">View</span>
                 </a>
