@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '../types';
 import { getProductSlug } from '../services/backend';
+import './ProductComparisonSection.css';
 
 interface ProductComparisonSectionProps {
   products: Product[];
@@ -160,17 +161,17 @@ export const ProductComparisonSection: React.FC<ProductComparisonSectionProps> =
                 </div>
                 <div className="min-w-0 self-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1ca9a4]">Model</p>
-                  <h3 className="mt-1 text-sm font-black leading-5 text-slate-950">{product.name}</h3>
+                  <h3 className="comparison-product-title mt-1 text-sm font-black leading-5 text-slate-950">{product.name}</h3>
                 </div>
               </Link>
               <table className="w-full table-fixed border-collapse text-left text-xs">
                 <tbody>
                   {comparisonRows.map(([label, getValue]) => (
                     <tr key={`${product.id}-${label}`} className="border-b border-slate-100 last:border-b-0">
-                      <th className="w-[38%] bg-[#f3f8f8] px-3 py-3 align-top text-[10px] font-black uppercase tracking-[0.08em] text-slate-600">
+                      <th scope="row" className="comparison-label w-[38%] bg-[#f3f8f8] px-3 py-3 align-top text-[10px] font-black uppercase tracking-[0.08em] text-slate-600">
                         {label}
                       </th>
-                      <td className="break-words px-3 py-3 align-top font-semibold leading-5 text-slate-800">
+                      <td className="comparison-value break-words px-3 py-3 align-top font-semibold leading-5 text-slate-800">
                         {getValue(product)}
                       </td>
                     </tr>
@@ -181,9 +182,9 @@ export const ProductComparisonSection: React.FC<ProductComparisonSectionProps> =
           ))}
         </div>
 
-        <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-[#fbfdfd] shadow-[0_18px_55px_rgba(15,63,70,0.08)] sm:block">
+        <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-[#fbfdfd] shadow-[0_18px_55px_rgba(15,63,70,0.08)] sm:block">
           <div className="grid min-w-[760px]" style={{ gridTemplateColumns: `180px repeat(${comparisonProducts.length}, minmax(145px, 1fr))` }}>
-            <div className="border-b border-r border-slate-200 bg-slate-950 p-4 text-xs font-black uppercase tracking-[0.2em] text-white">
+            <div className="comparison-models-label border-b border-r border-slate-200 bg-slate-950 p-4 text-xs font-black uppercase tracking-[0.2em] text-white">
               Models
             </div>
             {comparisonProducts.map((product) => (
@@ -199,17 +200,17 @@ export const ProductComparisonSection: React.FC<ProductComparisonSectionProps> =
                     <span className="text-xs font-bold text-slate-400">TheFutureX</span>
                   )}
                 </div>
-                <h3 className="mt-3 line-clamp-2 text-sm font-black leading-5 text-slate-950 transition group-hover:text-[#117c78]">{product.name}</h3>
+                <h3 className="comparison-product-title mt-3 text-sm font-black leading-5 text-slate-950 transition group-hover:text-[#117c78]">{product.name}</h3>
               </Link>
             ))}
 
             {comparisonRows.map(([label, getValue]) => (
               <React.Fragment key={label}>
-                <div className="border-b border-r border-slate-200 bg-[#f3f8f8] p-4 text-xs font-black uppercase tracking-[0.12em] text-slate-600">
+                <div className="comparison-label border-b border-r border-slate-200 bg-[#f3f8f8] p-4 text-xs font-black uppercase tracking-[0.12em] text-slate-600">
                   {label}
                 </div>
                 {comparisonProducts.map((product) => (
-                  <div key={`${product.id}-${label}`} className="border-b border-r border-slate-200 bg-white p-4 text-sm font-semibold leading-6 text-slate-800">
+                  <div key={`${product.id}-${label}`} className="comparison-value min-w-0 break-words border-b border-r border-slate-200 bg-white p-4 text-sm font-semibold leading-6 text-slate-800">
                     {getValue(product)}
                   </div>
                 ))}

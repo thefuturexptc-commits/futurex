@@ -1,0 +1,36 @@
+/* This light comparison surface can appear inside dark category pages.
+   Override the legacy global theme rules for both desktop and mobile cells. */
+html .site-main-content .product-comparison-section,
+html .site-main-content .product-comparison-section :is(article, a, .comparison-value) {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+}
+
+html .site-main-content .product-comparison-section :is(h2, p, .comparison-product-title) {
+  color: #0f172a !important;
+}
+
+html .site-main-content .product-comparison-section .comparison-label {
+  background-color: #f3f8f8 !important;
+  color: #475569 !important;
+}
+
+html .site-main-content .product-comparison-section .comparison-models-label {
+  background-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+html .site-main-content .product-comparison-section .comparison-product-title {
+  font-size: 0.875rem !important;
+  line-height: 1.5 !important;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+html .site-main-content .product-comparison-section a:hover .comparison-product-title {
+  color: #117c78 !important;
+}
+
+html .site-main-content .product-comparison-section :is(.comparison-label, .comparison-value, .comparison-models-label, article, a) {
+  border-color: #e2e8f0 !important;
+}
