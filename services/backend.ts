@@ -28,7 +28,7 @@ import { db, auth, storage, app as mainApp } from './firebaseConfig';
 import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, OfferLead, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails, SiteAnalyticsEvent, BlogPost } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
-import { TFX5_AI_BAND_PRICE, isTfxV5Band } from '../utils/coupons';
+import { TFX5_AI_BAND_PRICE, isTfxV5Band, isPureAirThreeInOne, PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE } from '../utils/coupons';
 import { publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { formatProductName } from '../utils/productName.js';
 import { correctRingModel, getProductModelNumbers, getProductTitleWithModel } from '../utils/productModel';
@@ -795,7 +795,15 @@ const normalizeProductColors = (product: Product): Product => {
         salePrice: TFX5_AI_BAND_PRICE,
         price: TFX5_AI_BAND_PRICE,
       }
-    : displayProduct;
+    : isPureAirThreeInOne({ ...displayProduct, slug })
+      ? {
+          ...displayProduct,
+          mrp: PUREAIR_3_IN_1_MRP,
+          salePrice: PUREAIR_3_IN_1_SALE_PRICE,
+          price: PUREAIR_3_IN_1_SALE_PRICE,
+          variants: displayProduct.variants?.map((variant) => ({ ...variant, price: PUREAIR_3_IN_1_SALE_PRICE })),
+        }
+      : displayProduct;
   const rawColors = Array.isArray(product.colors) ? product.colors : [];
   const existingColorMap = new Map<string, ProductColor>(
     rawColors
@@ -818,7 +826,7 @@ const normalizeProductColors = (product: Product): Product => {
       .filter(Boolean) as Array<readonly [string, ProductColor]>
   );
 
-  const rawVariants = Array.isArray(product.variants) ? product.variants : [];
+  const rawVariants = Array.isArray(pricedProduct.variants) ? pricedProduct.variants : [];
   const mappedFromVariants: NonNullable<Product['variants']> = rawVariants
     .map((variant: any) => {
       const colorName = String(variant?.colorName || variant?.color || '').trim();

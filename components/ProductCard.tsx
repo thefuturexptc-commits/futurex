@@ -169,7 +169,9 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const enableHoverEffects = !disableHoverEffects && supportsHover;
 
   const salePrice = Number(product.salePrice || product.price || 0);
-  const mrp = salePrice > 0 ? salePrice + 2000 : 0;
+  const mrp = getProductSlug(product) === 'tfx-pureair-3-in-1'
+    ? Number(product.mrp)
+    : salePrice > 0 ? salePrice + 2000 : 0;
   const offerPricing = getAutomaticOfferItemPricing(product);
 
   const selectedColorStock = useMemo(() => {

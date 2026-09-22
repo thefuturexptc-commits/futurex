@@ -419,7 +419,9 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                   {group.products.length === 0 && <p className="rounded-lg bg-white p-6 text-sm text-slate-600">Products coming soon.</p>}
                   {group.products.map((product, index) => {
                   const salePrice = Number(product.salePrice || product.price || 0);
-                  const mrp = salePrice > 0 ? salePrice + 2000 : 0;
+                  const mrp = getProductSlug(product) === 'tfx-pureair-3-in-1'
+                    ? Number(product.mrp)
+                    : salePrice > 0 ? salePrice + 2000 : 0;
                   const offerPricing = getAutomaticOfferItemPricing(product);
                   const canAdd = getProductStock(product) > 0;
                   const allPreviewImages = getProductPreviewImages(product);

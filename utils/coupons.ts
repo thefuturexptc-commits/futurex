@@ -7,7 +7,15 @@ export const WEARABLE_OFFER_COUPON_CODE = 'NEW5';
 export const SUPPORTED_COUPON_CODES = [TFX_COUPON_CODE, SURPRISE_COUPON_CODE, FAN_OFFER_COUPON_CODE, WEARABLE_OFFER_COUPON_CODE, 'TFXSAVE'];
 export const normalizeCouponCode = (code: string) => code.trim().toUpperCase();
 
-type OfferPricedItem = Pick<CartItem, 'category' | 'name'> & Partial<Pick<CartItem, 'price' | 'salePrice' | 'quantity'>>;
+type OfferItemIdentity = Pick<CartItem, 'category' | 'name'> & Partial<Pick<CartItem, 'slug'>>;
+type OfferPricedItem = OfferItemIdentity & Partial<Pick<CartItem, 'price' | 'salePrice' | 'quantity'>>;
+
+export const PUREAIR_3_IN_1_MRP = 15000;
+export const PUREAIR_3_IN_1_SALE_PRICE = 13500;
+export const isPureAirThreeInOne = (item: OfferItemIdentity) => {
+  if (item.slug) return item.slug === 'tfx-pureair-3-in-1';
+  return /\bpureair\s*3[\s-]*in[\s-]*1\b|\btfx[\s-]*tp02\s+3[\s-]*in[\s-]*1\b/i.test(item.name);
+};
 
 export const TFX5_AI_BAND_PRICE = 9999;
 
@@ -23,6 +31,7 @@ export const isTfxV5Band = (item: Pick<CartItem, 'category' | 'name'>) => {
 };
 
 export const getOfferBaseUnitPrice = (item: OfferPricedItem) => {
+  if (isPureAirThreeInOne(item)) return PUREAIR_3_IN_1_SALE_PRICE;
   if (isTfxV5Band(item)) return TFX5_AI_BAND_PRICE;
   const salePrice = Number(item.salePrice || 0);
   const regularPrice = Number(item.price || 0);
@@ -39,7 +48,8 @@ export const isWearableOfferItem = (item: Pick<CartItem, 'category' | 'name'>) =
   return text.includes('ring') || text.includes('band');
 };
 
-export const getAutomaticOfferRateForItem = (item: Pick<CartItem, 'category' | 'name'>) => {
+export const getAutomaticOfferRateForItem = (item: OfferItemIdentity) => {
+  if (isPureAirThreeInOne(item)) return 0;
   if (isTfxV5Band(item)) return 0;
   if (isFanOfferItem(item)) return 0.1;
   if (isWearableOfferItem(item)) return 0.05;

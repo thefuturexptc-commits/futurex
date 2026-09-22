@@ -1390,7 +1390,9 @@ export const Home: React.FC = () => {
               {paginatedCatalogProducts.map((product, index) => {
                 const catalogHref = getHomeCatalogHref(product);
                 const salePrice = Number(product.salePrice || product.price || 0);
-                const mrp = salePrice > 0 ? salePrice + 2000 : 0;
+                const mrp = getProductSlug(product) === 'tfx-pureair-3-in-1'
+                  ? Number(product.mrp)
+                  : salePrice > 0 ? salePrice + 2000 : 0;
                 const offerPricing = getAutomaticOfferItemPricing(product);
                 const detailLine = getCatalogBullets(product).slice(0, 2).join(' | ');
                 const showMegaPriceDrop = isMegaPriceDropBand(product);
