@@ -1,6 +1,7 @@
 import React from 'react';
 import '../components/CategoryInfoCards.css';
 import { CategoryTemplate } from '../components/CategoryTemplate';
+import type { Product } from '../types';
 import fanHero from '../assets/images/fan-family-hero.webp';
 import fanMobileHero from '../assets/images/fan-mobile-hero.webp';
 import fanHeroVideo from '../assets/images/bladeless-fan-hero-video.mp4';
@@ -15,6 +16,25 @@ const FanIcon = ({ path }: { path: React.ReactNode }) => (
     {path}
   </svg>
 );
+
+const isPurifyingFan = (product: Product): boolean => {
+  const identity = `${product.name} ${product.slug || ''}`;
+  // Purifying models belong here even when they also offer heating and cooling.
+  return /hepa|purif|pureair/i.test(identity);
+};
+
+const fanCatalogGroups = [
+  {
+    title: 'Hot & Cool Fans',
+    description: 'Heating and cooling models, plus cooling-only fans.',
+    matches: (product: Product) => !isPurifyingFan(product),
+  },
+  {
+    title: 'Hot & Cool Fans with HEPA',
+    description: 'Heating, cooling and HEPA air purification in one bladeless fan.',
+    matches: isPurifyingFan,
+  },
+];
 
 const fanCategoryFeatures = [
   'Bladeless Airflow Technology',
@@ -113,7 +133,7 @@ export const SmartFans: React.FC = () => {
         { src: fanSlide3, alt: 'Smart fan bladeless design' },
         { src: fanSlide4, alt: 'Smart fan all-season comfort' },
       ]}
-      catalogLayout="horizontal"
+      catalogGroups={fanCatalogGroups}
       showComparisonSection={false}
       modelCardSkeletonClassName="h-[354px] sm:h-[374px]"
       features={[

@@ -331,32 +331,18 @@ const HOME_COLLECTION_CARDS = [
     image: homeCollectionBandImage,
     href: '/smart-bands',
     alt: 'Smart bands collection',
-    products: [
-      { name: 'The FutureX AI Smart Band TFX5', slug: 'tfx5-ai-smart-band' },
-      { name: 'The FutureX TFX Smart Band', slug: 'tfx-smart-band' },
-    ],
   },
   {
     title: 'Smart Rings',
     image: homeCollectionRingImage,
     href: '/smart-rings',
     alt: 'Smart rings collection',
-    products: [
-      { name: 'The FutureX TFX Ring Pro', slug: 'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
-      { name: 'The FutureX TFX Touch Smart Ring', slug: 'tfx-touch-smart-ring' },
-      { name: 'The FutureX TFX Display Pro Smart Ring', slug: 'tfx-display-pro-smart-ring' },
-    ],
   },
   {
     title: 'Smart Fans',
     image: homeCollectionFanImage,
     href: '/bladeless-fan',
     alt: 'Smart fans collection',
-    products: [
-      { name: 'The FutureX TFX AirWall Pro', slug: 'tfx-airwall-pro' },
-      { name: 'The FutureX TFX Hot and CoolAir Pro', slug: 'tfxhot-and-coolair-pro' },
-      { name: 'The FutureX TFX HEPA PureAir Pro', slug: 'tfx-hepa-pureair-pro' },
-    ],
   },
 ];
 
@@ -375,7 +361,7 @@ const ScrollLinkedBanners: React.FC = () => {
   const sectionRef = useRef<HTMLElement | null>(null);
   const sceneRef = useRef<HTMLDivElement | null>(null);
   const tabListRef = React.useRef<HTMLDivElement | null>(null);
-  const tabRefs = React.useRef<Array<HTMLButtonElement | null>>([]);
+  const tabRefs = React.useRef<Array<HTMLAnchorElement | null>>([]);
   const panelRefs = React.useRef<Array<HTMLElement | null>>([]);
   const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
 
@@ -409,7 +395,7 @@ const ScrollLinkedBanners: React.FC = () => {
   // so stopping midway through a scroll never leaves two artworks blended.
   useLayoutEffect(() => {
     // A pinned desktop scene creates a large pin-spacer on a short mobile
-    // banner. Phones use the tabs as a direct, space-efficient switcher.
+    // banner. Phones keep the category links and an unpinned banner.
     if (isMobileViewport) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
@@ -446,30 +432,18 @@ const ScrollLinkedBanners: React.FC = () => {
     };
   }, [isMobileViewport, viewportVersion]);
 
-  const selectBanner = (index: number) => {
-    setActiveIndex(index);
-    const trigger = scrollTriggerRef.current;
-    if (!trigger) return;
-    const progress = (index + 0.5) / HOME_SCROLL_BANNERS.length;
-    window.scrollTo({ top: trigger.start + ((trigger.end - trigger.start) * progress), behavior: 'smooth' });
-  };
-
   return (
     <section ref={sectionRef} className="home-scroll-banner-section bg-white px-0 py-0" aria-label="Featured product banners">
       <h2 className="sr-only">TheFutureX featured product banners</h2>
       <div ref={sceneRef} className="home-scroll-banner-scene mx-auto max-w-[1440px] px-3 sm:px-4">
-        <div className="home-scroll-banner-tabs sticky z-30 mx-auto max-w-6xl" role="tablist" aria-label="Featured product categories" ref={tabListRef}>
+        <div className="home-scroll-banner-tabs sticky z-30 mx-auto max-w-6xl" role="navigation" aria-label="Featured product categories" ref={tabListRef}>
           <span className="home-scroll-banner-pill" style={pillStyle} aria-hidden="true" />
           {HOME_SCROLL_BANNERS.map((banner, index) => (
-            <button
+            <Link
               key={banner.label}
               id={`home-scroll-tab-${index}`}
               ref={(node) => { tabRefs.current[index] = node; }}
-              type="button"
-              role="tab"
-              aria-selected={activeIndex === index}
-              aria-controls={`home-scroll-panel-${index}`}
-              onClick={() => selectBanner(index)}
+              to={banner.href}
               onPointerEnter={(event) => {
                 if (event.pointerType === 'mouse') {
                   setActiveIndex(index);
@@ -480,7 +454,7 @@ const ScrollLinkedBanners: React.FC = () => {
               className="home-scroll-banner-tab text-white"
             >
               {banner.label}
-            </button>
+            </Link>
           ))}
         </div>
         <div className="home-scroll-banner-stage mt-3 sm:mt-4">
@@ -490,7 +464,6 @@ const ScrollLinkedBanners: React.FC = () => {
               id={`home-scroll-panel-${index}`}
               ref={(node) => { panelRefs.current[index] = node; }}
               data-banner-index={index}
-              role="tabpanel"
               hidden={activeIndex !== index}
               aria-hidden={activeIndex !== index}
               aria-labelledby={`home-scroll-tab-${index}`}
@@ -1339,7 +1312,8 @@ export const Home: React.FC = () => {
           <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-5">
             {HOME_COLLECTION_CARDS.map((card, index) => (
               <RevealOnScroll key={card.title} delayMs={index * 90} variant="scale" className="h-full min-w-0">
-                <div
+                <Link
+                  to={card.href}
                   className="collection-card group flex h-full flex-col items-center overflow-hidden rounded-xl bg-white text-center shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(15,23,42,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
                 >
                   <div className="relative flex aspect-[2/1] w-full items-center justify-center overflow-hidden">
@@ -1350,22 +1324,11 @@ export const Home: React.FC = () => {
                       loading="lazy"
                       decoding="async"
                     />
-                    <div className="absolute inset-0 flex">
-                      {card.products.map((item) => (
-                        <Link
-                          key={item.slug}
-                          to={`/product/${item.slug}`}
-                          aria-label={`View ${item.name}`}
-                          title={item.name}
-                          className="h-full min-w-0 flex-1 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-sky-500"
-                        />
-                      ))}
-                    </div>
                   </div>
                   <h3 className="px-1 py-3 text-[clamp(10px,2.7vw,14px)] font-bold leading-tight text-[#14161a] sm:px-3 sm:py-4 sm:text-xl lg:py-5 lg:text-2xl">
-                    <Link to={card.href}>{card.title}</Link>
+                    {card.title}
                   </h3>
-                </div>
+                </Link>
               </RevealOnScroll>
             ))}
           </div>

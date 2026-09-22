@@ -240,7 +240,19 @@ export const SmartRings: React.FC = () => {
   };
 
   const catalogProducts = useMemo(() => {
+    const ringOrder = [
+      'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features',
+      'tfx-touch-smart-ring',
+      'tfx-display-pro-smart-ring',
+    ];
+    const getRingOrder = (product: Product) => {
+      const index = ringOrder.indexOf(getProductSlug(product));
+      return index === -1 ? ringOrder.length : index;
+    };
+
     return [...products].sort((a, b) => {
+      const modelOrder = getRingOrder(a) - getRingOrder(b);
+      if (modelOrder !== 0) return modelOrder;
       const aScore = Number(Boolean(a.isFeatured || a.isNewArrival)) + Number(Boolean(a.isBestSeller));
       const bScore = Number(Boolean(b.isFeatured || b.isNewArrival)) + Number(Boolean(b.isBestSeller));
       return bScore - aScore || a.name.localeCompare(b.name);
