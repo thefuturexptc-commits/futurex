@@ -21,7 +21,7 @@ export const publishedBlogPosts: PublishedBlogPost[] = [
       name: 'TFX5 AI Smart Band',
       href: '/product/tfx5-ai-smart-band',
       image: '/images/aura-band-x1.webp',
-      price: '₹9,999',
+      price: '₹9,999.00',
       description: 'A screenless everyday wearable with heart-rate, SpO2, sleep and stress tracking.',
     },
     content: `Good health tracking should not be gated behind a big upfront payment. EMI lets you split the cost of a [TFX smart band](/smart-bands) into fixed monthly payments, so you can get the product now and pay it off over the following months.

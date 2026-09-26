@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../utils/coupons';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import giftingCollectionBanner from '../assets/images/tfx-v5-gifting-collection-banner.webp';
@@ -185,7 +186,7 @@ const getMrp = (product: Product) => {
   return price > 0 ? price + 2000 : 0;
 };
 
-const formatPrice = (amount: number) => `₹${Number(amount || 0).toLocaleString('en-IN')}`;
+const formatPrice = formatInrAmount;
 const sideColorText = (side: GiftPairSide) => `${side.colorName || ''} ${side.imageTerms.join(' ')}`.toLowerCase();
 
 const buildPairSides = (product: Product, preferredTerms: string[], groupKey: PairGroupKey, audience: GiftPairSide['audience']): GiftPairSide[] => {
@@ -377,7 +378,7 @@ const GiftPairProductTile: React.FC<{ side: GiftPairSide }> = ({ side }) => (
 const GiftPairCard: React.FC<{ pair: GiftPair }> = ({ pair }) => {
   const { first, second, discountRate } = pair;
   const total = getPrice(first.product) + getPrice(second.product);
-  const offerTotal = Math.round(total * (1 - discountRate));
+  const offerTotal = Number((total * (1 - discountRate)).toFixed(2));
 
   return (
     <article className="overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]">

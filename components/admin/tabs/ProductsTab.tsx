@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../../../utils/coupons';
 import React, { useMemo, useState } from 'react';
 import { Product } from '../../../types';
 import { getProductSlug } from '../../../services/backend';
@@ -147,7 +148,7 @@ export const ProductsTab: React.FC<Props> = ({
                       </div>
                     </td>
                     <td className="px-4 py-3"><StatusBadge status={stockStatus} /></td>
-                    <td className="px-4 py-3 text-sm text-white">Rs {p.salePrice || p.price}</td>
+                    <td className="px-4 py-3 text-sm text-white">{formatInrAmount(p.salePrice || p.price)}</td>
                     <td className="px-4 py-3 text-sm text-slate-300">
                       <span className="font-semibold text-white">{available}</span>
                       <span className="mx-1">/</span>

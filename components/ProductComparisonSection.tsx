@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../utils/coupons';
 import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '../types';
@@ -99,7 +100,7 @@ const getSmartInsights = (product: Product): string => {
 
 const formatPrice = (product: Product): string => {
   const price = Number(product.salePrice || product.price || 0);
-  return price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Check price';
+  return price > 0 ? formatInrAmount(price) : 'Check price';
 };
 
 const comparisonRows = [

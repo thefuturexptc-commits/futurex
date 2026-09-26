@@ -108,7 +108,7 @@ export const setSeoMetadata = ({
 
 export const setProductSocialMetadata = (price: number, currency = 'INR') => {
   if (!Number.isFinite(price) || price <= 0) return;
-  setMetaProperty('product:price:amount', String(Math.round(price)));
+  setMetaProperty('product:price:amount', price.toFixed(2));
   setMetaProperty('product:price:currency', currency);
 };
 

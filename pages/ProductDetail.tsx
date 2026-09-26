@@ -1104,12 +1104,12 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
   );
 };
 
-const formatInr = (amount: number) => `₹${Math.max(0, Math.ceil(amount || 0)).toLocaleString('en-IN')}`;
+const formatInr = (amount: number) => formatInrAmount(Math.max(0, amount || 0));
 
 const RazorpayEmiStrip: React.FC<{ price: number; onOpen: () => void }> = ({ price, onOpen }) => {
-  const payNowAmount = Math.max(1, Math.ceil(price / 9));
-  const sixMonthAmount = Math.max(1, Math.ceil(price / 6));
-  const nineMonthAmount = Math.max(1, Math.ceil(price / 9));
+  const payNowAmount = price / 9;
+  const sixMonthAmount = price / 6;
+  const nineMonthAmount = price / 9;
 
   return (
     <button
@@ -1198,11 +1198,11 @@ const RazorpayEmiModal: React.FC<{
   onClose: () => void;
   onContinue: () => void;
 }> = ({ price, firstName, lastName, phone, onFirstNameChange, onLastNameChange, onPhoneChange, onClose, onContinue }) => {
-  const monthlyAmount = Math.max(1, Math.ceil(price / 9));
+  const monthlyAmount = price / 9;
   const installmentOptions = [
-    { amount: Math.max(1, Math.ceil(price / 3)), label: '3 Months' },
-    { amount: Math.max(1, Math.ceil(price / 6)), label: '6 Months' },
-    { amount: Math.max(1, Math.ceil(price / 9)), label: '9 Months' },
+    { amount: price / 3, label: '3 Months' },
+    { amount: price / 6, label: '6 Months' },
+    { amount: price / 9, label: '9 Months' },
   ];
 
   return (
@@ -3090,7 +3090,7 @@ export const ProductDetail: React.FC = () => {
                     </>
                   ) : mrp > salePrice && (
                     <>
-                      <span className="text-sm font-medium text-slate-400 line-through">&#8377;{mrp.toLocaleString('en-IN')}</span>
+                      <span className="text-sm font-medium text-slate-400 line-through">{formatInrAmount(mrp)}</span>
                       {!hidePercentageOffer && (
                         <span className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-2.5 py-1 text-xs font-semibold text-[#8a6a20]">{percent}% off</span>
                       )}

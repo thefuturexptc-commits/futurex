@@ -5,7 +5,7 @@ import type { Product } from '../types';
 import fanHero from '../assets/images/fan-family-hero.webp';
 import fanMobileHero from '../assets/images/fan-mobile-hero.webp';
 import fanHeroVideo from '../assets/images/bladeless-fan-hero-video.mp4';
-import fanMain from '../assets/images/mainfan.webp';
+import tp09ProOverview from '../assets/images/tp-09-pro-home.webp';
 import fanSlide1 from '../assets/images/fan-slide-1.webp';
 import fanSlide2 from '../assets/images/fan-slide-2.webp';
 import fanSlide3 from '../assets/images/fan-slide-3.webp';
@@ -125,7 +125,8 @@ export const SmartFans: React.FC = () => {
       heroVideo={fanHeroVideo}
       heroAsFullBanner
       heroHref="/product/tfx-advance"
-      overviewImage={fanMain}
+      overviewImage={tp09ProOverview}
+      overviewProductSlug="tfxhot-and-coolair-pro"
       accentColor="#0ea5e9"
       showcaseImages={[
         { src: fanSlide1, alt: 'Smart fan control features' },

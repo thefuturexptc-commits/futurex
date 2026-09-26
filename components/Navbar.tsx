@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../utils/coupons';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
@@ -345,26 +346,6 @@ const NavbarComponent: React.FC = () => {
           setBlogMenuOpen(false);
         }}
       >
-        <button
-          type="button"
-          onClick={() => navigate('/product/tfx5-ai-smart-band')}
-          className="tfx-current-offer-bar tfx-current-offer-bar-static"
-          aria-label="View current offers"
-        >
-          <span className="tfx-current-offer-track">
-            <span>Free shipping across India</span>
-            <span>10% off for Raksha Bandhan - applied automatically</span>
-            <span>10% off smart fans - applied automatically</span>
-            <span>5% off on the TFX5 AI Smart Band</span>
-            <span>Mega Price Drop on TFX5</span>
-            {/*
-            <span>10% off for Raksha Bandhan â€” applied automatically</span>
-            <span>10% off smart fans — applied automatically</span>
-            <span>5% off eligible bands &amp; rings — applied automatically</span>
-            */}
-            <span>COD available on eligible orders</span>
-          </span>
-        </button>
 
         <div className="mx-auto max-w-[1500px] px-3 sm:px-5 lg:px-6">
           <div className="flex h-16 items-center justify-between sm:h-16 xl:h-[72px]">
@@ -604,19 +585,6 @@ const NavbarComponent: React.FC = () => {
         </div>
 
         {/* ─── Search Overlay ──────────────────────────────────────── */}
-        <button
-          type="button"
-          onClick={() => navigate('/product/tfx5-ai-smart-band')}
-          className="hidden"
-          aria-label="Open TFX5 price drop offer"
-        >
-          <span className="tfx-current-offer-track">
-            <span>Free shipping across India</span>
-            <span>COD available on eligible orders</span>
-            <span>Brand warranty support</span>
-            <span>TFX5 AI Smart Band now at ₹9,999</span>
-          </span>
-        </button>
 
         {false && productsMegaOpen && (
           <div
@@ -792,7 +760,7 @@ const NavbarComponent: React.FC = () => {
                         />
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">{p.name}</p>
-                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">{p.category} - ₹{Number(p.salePrice || p.price || 0).toLocaleString()}</p>
+                          <p className="truncate text-xs text-gray-500 dark:text-gray-400">{p.category} - {formatInrAmount(Number(p.salePrice || p.price || 0))}</p>
                         </div>
                       </button>
                     ))

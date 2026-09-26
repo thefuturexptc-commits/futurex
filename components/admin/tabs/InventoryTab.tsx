@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../../../utils/coupons';
 import React, { useMemo, useState } from 'react';
 import { OfferLead, Product, ProductNotifyRequest } from '../../../types';
 import { Button } from '../../ui/Button';
@@ -292,7 +293,7 @@ export const InventoryTab: React.FC<Props> = ({
                     <td className="px-4 py-3 text-sm font-semibold text-white">{available}</td>
                     <td className="px-4 py-3 text-sm text-slate-300">{p.reservedStock || 0}</td>
                     <td className="px-4 py-3 text-sm text-slate-300">{sold}</td>
-                    <td className="px-4 py-3 text-sm text-slate-300">Rs {p.salePrice || p.price}</td>
+                    <td className="px-4 py-3 text-sm text-slate-300">{formatInrAmount(p.salePrice || p.price)}</td>
                     <td className="px-4 py-3 text-right">
                       <Button size="sm" variant="outline" onClick={() => onQuickStockUpdate(p, 10)}>+10</Button>
                     </td>

@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../utils/coupons';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
@@ -40,7 +41,7 @@ const toSlug = (value: string) =>
     .replace(/^-+|-+$/g, '');
 const sanitizeMessages = (items: SupportChatMessage[] = []) =>
   items.filter((message) => message.type !== 'loading_products');
-const formatCurrency = (amount: number) => `₹${Number(amount || 0).toLocaleString()}`;
+const formatCurrency = formatInrAmount;
 const formatOrderSummary = (order: Order) =>
   `${order.id}: ${order.status} | ${formatCurrency(order.total)} | ${new Date(order.date).toLocaleString()}`;
 const isPositiveReply = (text: string) => /^(yes|y|yeah|yep|sure|okay|ok)\b/i.test(text.trim());
@@ -813,7 +814,7 @@ export const SupportAssistant: React.FC = () => {
                       {msg.compareProducts.map((product) => (
                         <div key={`${msg.id}_${product.id}`} className="rounded-xl border border-gray-100 p-3">
                           <p className="font-semibold text-gray-900">{product.name}</p>
-                          <p className="text-primary-600 font-semibold mt-1">₹{product.price.toLocaleString()}</p>
+                          <p className="text-primary-600 font-semibold mt-1">{formatInrAmount(product.price)}</p>
                           <p className="text-gray-500 mt-1">{product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}</p>
                           <p className="text-gray-600 mt-1">Battery: {product.battery || 'Not listed'}</p>
                           <p className="text-gray-600">Warranty: {product.warranty || 'Not listed'}</p>
@@ -853,7 +854,7 @@ export const SupportAssistant: React.FC = () => {
                               </span>
                             )}
                           </div>
-                          <div className="mt-1 text-lg font-bold text-primary-600">₹{product.price.toLocaleString()}</div>
+                          <div className="mt-1 text-lg font-bold text-primary-600">{formatInrAmount(product.price)}</div>
                           <div className="text-xs text-gray-500 mt-1">
                             {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
                           </div>

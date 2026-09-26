@@ -21,7 +21,7 @@ export const TFX5_AI_BAND_PRICE = 9999;
 
 export const formatInrAmount = (amount: number) => `₹${Number(amount || 0).toLocaleString('en-IN', {
   maximumFractionDigits: 2,
-  minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+  minimumFractionDigits: 2,
 })}`;
 
 export const isTfxV5Band = (item: Pick<CartItem, 'category' | 'name'>) => {

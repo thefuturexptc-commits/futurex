@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../../../utils/coupons';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Order, Product, SiteAnalyticsEvent } from '../../../types';
 import { Button } from '../../ui/Button';
@@ -749,7 +750,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div className="bg-slate-900 p-6 rounded-xl border border-white/5 shadow-sm">
           <p className="text-sm text-slate-400 uppercase tracking-wide">Total Revenue</p>
-          <p className="text-3xl font-bold text-white mt-2">Rs {summary.totalRevenue.toLocaleString()}</p>
+          <p className="text-3xl font-bold text-white mt-2">{formatInrAmount(summary.totalRevenue)}</p>
         </div>
         <div className="bg-slate-900 p-6 rounded-xl border border-white/5 shadow-sm">
           <p className="text-sm text-slate-400 uppercase tracking-wide">Total Orders</p>
@@ -757,7 +758,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
         </div>
         <div className="bg-slate-900 p-6 rounded-xl border border-white/5 shadow-sm">
           <p className="text-sm text-slate-400 uppercase tracking-wide">Avg Order Value</p>
-          <p className="text-3xl font-bold text-white mt-2">Rs {summary.avgOrderValue.toFixed(0)}</p>
+          <p className="text-3xl font-bold text-white mt-2">{formatInrAmount(summary.avgOrderValue)}</p>
         </div>
         <div className="bg-slate-900 p-6 rounded-xl border border-white/5 shadow-sm">
           <p className="text-sm text-slate-400 uppercase tracking-wide">Active Customers</p>
@@ -998,7 +999,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
                       <p className="text-xs text-slate-400">events</p>
                     </div>
                     <div className="rounded-md bg-gray-50 p-2 bg-white/5">
-                      <p className="font-bold text-white">Rs {Math.round(item.value).toLocaleString()}</p>
+                      <p className="font-bold text-white">{formatInrAmount(item.value)}</p>
                       <p className="text-xs text-slate-400">value</p>
                     </div>
                   </div>
@@ -1058,7 +1059,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
                       {event.productName || '-'}
                     </td>
                     <td className="px-3 py-2 text-slate-300">{event.quantity || '-'}</td>
-                    <td className="px-3 py-2 text-slate-300">{event.value ? `Rs ${Math.round(event.value).toLocaleString()}` : '-'}</td>
+                    <td className="px-3 py-2 text-slate-300">{event.value ? formatInrAmount(event.value) : '-'}</td>
                     <td className="max-w-[180px] truncate px-3 py-2 text-slate-300" title={event.userAgent || '-'}>
                       {event.userAgent || '-'}
                     </td>
@@ -1131,7 +1132,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="text-sm font-bold text-white">{product.adds}</p>
-                  <p className="text-[11px] text-slate-400">Rs {Math.round(product.value).toLocaleString()}</p>
+                  <p className="text-[11px] text-slate-400">{formatInrAmount(product.value)}</p>
                 </div>
               </div>
             ))}
@@ -1259,10 +1260,10 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
                     <div
                       className={`w-full rounded-md transition-all ${m.revenue > 0 ? 'bg-primary-500' : 'bg-white/20 bg-white/20'}`}
                       style={{ height: `${m.revenue > 0 ? Math.max(10, (m.revenue / maxRevenue) * 100) : 4}%` }}
-                      title={`Rs ${m.revenue.toLocaleString()}`}
+                      title={formatInrAmount(m.revenue)}
                     />
                   </div>
-                  <span className="text-[10px] text-slate-400">Rs {Math.round(m.revenue).toLocaleString()}</span>
+                  <span className="text-[10px] text-slate-400">{formatInrAmount(m.revenue)}</span>
                   <span className="text-xs text-slate-400">{m.label}</span>
                 </div>
               ))}
@@ -1282,7 +1283,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
                   {cat}
                 </span>
                 <span className="font-semibold text-white">
-                  {Math.round((rev / totalCatRevenue) * 100)}% (Rs {rev.toLocaleString()})
+                  {Math.round((rev / totalCatRevenue) * 100)}% ({formatInrAmount(rev)})
                 </span>
               </div>
             ))}
@@ -1344,7 +1345,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
               {monthly.map((m, idx) => (
                 <tr key={`row-${m.label}`} className={idx % 2 === 0 ? 'bg-slate-900' : 'bg-white/5'}>
                   <td className="px-3 py-2 text-white">{m.label}</td>
-                  <td className="px-3 py-2 text-slate-300">Rs {m.revenue.toLocaleString()}</td>
+                  <td className="px-3 py-2 text-slate-300">{formatInrAmount(m.revenue)}</td>
                   <td className="px-3 py-2 text-slate-300">{m.orders}</td>
                 </tr>
               ))}

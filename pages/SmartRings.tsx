@@ -408,7 +408,7 @@ export const SmartRings: React.FC = () => {
                       <div className="mt-2 flex flex-wrap items-end gap-2">
                         {offerPricing.rate <= 0 && mrp > salePrice && (
                           <span className="text-xs font-bold leading-none text-slate-400 line-through">
-                            &#8377;{mrp.toLocaleString('en-IN')}
+                            {formatInrAmount(mrp)}
                           </span>
                         )}
                         {offerPricing.rate > 0 && (

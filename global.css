@@ -9882,77 +9882,20 @@ html.light .navbar-luxury .mobile-menu-link-active {
   .home-scroll-banner-pill { transition: none; }
 }
 
-/* Current offers stripe — keep this above the primary header at every breakpoint. */
+/* Header spacing without the offer strip. */
 :root {
-  --tfx-offer-strip-height: 32px;
+  --tfx-offer-strip-height: 0px;
   --tfx-navbar-row-height: 72px;
-  --tfx-sticky-header-height: calc(var(--tfx-offer-strip-height) + var(--tfx-navbar-row-height));
+  --tfx-sticky-header-height: var(--tfx-navbar-row-height);
   --tfx-page-top-offset: var(--tfx-sticky-header-height);
-}
-
-.site-navbar > .tfx-current-offer-bar-static,
-html.light .site-navbar > .tfx-current-offer-bar-static,
-html.dark .site-navbar > .tfx-current-offer-bar-static {
-  position: relative !important;
-  z-index: 1 !important;
-  display: flex !important;
-  order: -1 !important;
-  width: 100% !important;
-  min-height: var(--tfx-offer-strip-height) !important;
-  max-height: var(--tfx-offer-strip-height) !important;
-  align-items: center !important;
-  overflow: hidden !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  border-bottom: 1px solid rgba(245, 158, 11, 0.42) !important;
-  border-radius: 0 !important;
-  background: #07111e !important;
-  color: #fff !important;
-  cursor: pointer !important;
-}
-
-.site-navbar > .tfx-current-offer-bar-static .tfx-current-offer-track {
-  display: inline-flex !important;
-  width: max-content !important;
-  min-width: 100% !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: clamp(1.5rem, 4vw, 4rem) !important;
-  padding: 0 1.25rem !important;
-  color: #f8fafc !important;
-  font-size: 0.69rem !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.045em !important;
-  line-height: 1 !important;
-  text-transform: uppercase !important;
-  white-space: nowrap !important;
-}
-
-.site-navbar > .tfx-current-offer-bar-static .tfx-current-offer-track span::before {
-  content: '✦';
-  margin-right: 0.55rem;
-  color: #fbbf24;
 }
 
 @media (max-width: 639px) {
   :root {
-    --tfx-offer-strip-height: 28px;
     --tfx-navbar-row-height: 64px;
   }
-
-  .site-navbar > .tfx-current-offer-bar-static .tfx-current-offer-track {
-    justify-content: flex-start !important;
-    gap: 1.5rem !important;
-    font-size: 0.6rem !important;
-    animation: tfx-offer-ticker 24s linear infinite !important;
-  }
 }
 
-@keyframes tfx-offer-ticker {
-  from { transform: translateX(0); }
-  to { transform: translateX(-36%); }
-}
 /* Pinned product-story stage: all supplied banner graphics occupy one full
    viewport scene and GSAP swaps them according to scroll progress. */
 .home-scroll-banner-scene {

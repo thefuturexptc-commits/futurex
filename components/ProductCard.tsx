@@ -347,7 +347,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
         <div className="product-card-price-row mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
           {offerPricing.rate <= 0 && mrp > salePrice && (
             <span className="product-card-mrp text-[11px] font-bold leading-none line-through sm:text-xs">
-              &#8377;{mrp.toLocaleString('en-IN')}
+              {formatInrAmount(mrp)}
             </span>
           )}
           {offerPricing.rate > 0 && (

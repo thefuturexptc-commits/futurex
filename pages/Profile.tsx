@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../utils/coupons';
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -200,13 +201,13 @@ export const Profile: React.FC = () => {
                             {order.items.map((item, idx) => (
                                 <div key={idx} className="flex justify-between text-sm text-gray-600 dark:text-gray-300">
                                 <span>{item.quantity}x {item.name}</span>
-                                <span>₹{(item.price * item.quantity).toFixed(2)}</span>
+                                <span>{formatInrAmount(item.price * item.quantity)}</span>
                                 </div>
                             ))}
                             </div>
                             <div className="flex justify-between mt-4 font-bold text-gray-900 dark:text-white">
                             <span>Total</span>
-                            <span>₹{order.total.toFixed(2)}</span>
+                            <span>{formatInrAmount(order.total)}</span>
                             </div>
                             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-4 dark:border-white/10">
                               <p className="text-xs text-gray-500 dark:text-gray-400">

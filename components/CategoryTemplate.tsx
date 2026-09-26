@@ -36,6 +36,7 @@ interface CategoryTemplateProps {
   heroAsFullBanner?: boolean;
   heroHref?: string;
   overviewImage?: string;
+  overviewProductSlug?: string;
   accentColor: string;
   features: Feature[];
   showcaseImages?: ShowcaseImage[];
@@ -58,6 +59,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
   heroAsFullBanner = false,
   heroHref,
   overviewImage,
+  overviewProductSlug,
   features,
   showcaseImages = [],
   modelCardSkeletonClassName,
@@ -137,6 +139,11 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
 
   const getProductImage = (product: Product): string =>
     product.colors?.[0]?.images?.[0] || product.images?.[0] || overviewImage || heroImage;
+
+  const overviewProduct = overviewProductSlug
+    ? products.find((product) => getProductSlug(product) === overviewProductSlug)
+    : undefined;
+  const resolvedOverviewImage = overviewProduct ? getProductImage(overviewProduct) : overviewImage || heroImage;
 
   const getProductPreviewImages = (product: Product): string[] => {
     const colorImages = (product.colors || []).map((color) => color.images?.[0]).filter(Boolean);
@@ -492,7 +499,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                         <div className="mt-2 flex flex-wrap items-end gap-2">
                           {offerPricing.rate <= 0 && mrp > salePrice && (
                             <span className="text-xs font-bold leading-none text-slate-400 line-through">
-                              &#8377;{mrp.toLocaleString('en-IN')}
+                              {formatInrAmount(mrp)}
                             </span>
                           )}
                           {offerPricing.rate > 0 && (
@@ -558,7 +565,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
 
           <div className="mt-10 grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
             <div className="overflow-hidden rounded-[1.5rem] bg-[#eff8f8] sm:rounded-[2rem]">
-              <img src={overviewImage || heroImage} alt={`${category} overview`} className="h-full min-h-[260px] w-full object-contain p-6 sm:min-h-[380px] sm:p-8" loading="lazy" decoding="async" />
+              <img src={resolvedOverviewImage} alt={overviewProduct ? `${overviewProduct.name} overview` : `${category} overview`} className="h-full min-h-[260px] w-full object-contain p-6 sm:min-h-[380px] sm:p-8" loading="lazy" decoding="async" />
             </div>
             <div className="flex flex-col justify-center">
               <p className="text-xs font-bold uppercase tracking-[0.26em] text-[#1ca9a4]">Product Overview</p>

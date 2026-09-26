@@ -1,3 +1,4 @@
+import { formatInrAmount } from '../utils/coupons';
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
@@ -83,7 +84,7 @@ const smartBandBlogProducts = [
   },
   {
     name: 'TFX5 AI Smart Band',
-    price: '₹9,999',
+    price: '₹9,999.00',
     image: bandModelImage,
     href: '/product/tfx5-ai-smart-band',
   },
@@ -198,7 +199,7 @@ const sleepProductLinks = [
   },
 ];
 
-const formatInfoPrice = (amount: number) => `₹${Number(amount || 0).toLocaleString('en-IN')}`;
+const formatInfoPrice = formatInrAmount;
 
 const getListingProductImage = (product: Product) =>
   product.colors?.[0]?.images?.[0] || product.images?.[0] || '';
