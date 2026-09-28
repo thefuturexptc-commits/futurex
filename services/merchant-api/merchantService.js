@@ -2,7 +2,7 @@ import { getCustomerFacingPrice } from '../../utils/productSeoData.js';
 import { isCatalogProductPublished } from '../../utils/catalogVisibility.js';
 import { getCatalogOffer } from '../../utils/catalogPricing.js';
 import { getProductStock } from '../../utils/productAvailability.js';
-import { getMerchantProductId, buildDescription } from '../../utils/generateMerchantFeed.js';
+import { getMerchantProductId, getMerchantTitle, buildDescription } from '../../utils/generateMerchantFeed.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -148,7 +148,7 @@ const buildMerchantProduct = (product) => {
   const slug = getProductSlug(product);
   const merchantProduct = {
     offerId: getMerchantProductId(product),
-    title: product.name || product.id,
+    title: getMerchantTitle(product),
     description: buildDescription(product) || product.name || product.id,
     link: `${siteUrl}/product/${slug}`,
     imageLink,

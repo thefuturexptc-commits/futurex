@@ -20,7 +20,7 @@ test('feed and page preserve saved title, content, offer price and availability'
   assert.equal(seo.name, product.name);
   assert.equal(seo.price, getAutomaticOfferItemPricing(product).unitOfferPrice);
   assert.equal(seo.price, 13500);
-  assert.match(item, /<g:title>My saved title &amp; model<\/g:title>/);
+  assert.match(item, /<g:title>The FutureX My saved title &amp; model<\/g:title>/);
   assert.match(item, /My updated description/);
   assert.match(item, /My added feature/);
   assert.match(item, /Material: ABS/);
@@ -44,9 +44,19 @@ test('new products appear in both feeds; removed products do not return as fallb
   const xml = await generateMerchantFeedXML([added]);
   const csv = await generateMerchantFeedCSV([added]);
   assert.match(xml, /<g:id>new-product/);
-  assert.match(csv, /"new-product","New product"/);
+  assert.match(csv, /"new-product","The FutureX New product"/);
   assert.doesNotMatch(xml, /p-1772274359863/);
   assert.equal(mergeProductSeoRecords([added]).length, 1);
+});
+
+test('every Merchant title uses the The FutureX brand prefix once', async () => {
+  const xml = await generateMerchantFeedXML([
+    { ...product, name: 'TFX Fan' },
+    { ...product, id: 'already-branded', name: 'The FutureX TFX Ring' },
+  ]);
+  assert.match(xml, /<g:title>The FutureX TFX Fan<\/g:title>/);
+  assert.match(xml, /<g:title>The FutureX TFX Ring<\/g:title>/);
+  assert.doesNotMatch(xml, /The FutureX The FutureX/);
 });
 
 test('standard wearable discounts use the checkout calculation', () => {

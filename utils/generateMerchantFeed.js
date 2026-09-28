@@ -5,6 +5,7 @@ import { getCustomerFacingPrice } from './productSeoData.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
 import { getCatalogOffer } from './catalogPricing.js';
 import { mergeProductReviews } from './productSchema.js';
+import { formatProductName } from './productName.js';
 
 const SITE_URL = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.VITE_PUBLIC_SITE_URL || 'https://thefuturex.in').replace(/\/+$/, '');
 const BRAND = process.env.MERCHANT_FEED_BRAND || 'TheFutureX';
@@ -130,6 +131,8 @@ export const buildDescription = (product) => {
   return parts.join(' ').replace(/\s+/g, ' ').trim().slice(0, 5000);
 };
 
+export const getMerchantTitle = (product) => formatProductName(product.name || product.id);
+
 const withTimeout = (promise, timeoutMs) =>
   Promise.race([
     promise,
@@ -180,7 +183,7 @@ export const buildProductItem = (product) => {
   return [
     '  <item>',
     tag('g:id', getMerchantProductId(product)),
-    tag('g:title', product.name),
+    tag('g:title', getMerchantTitle(product)),
     tag('g:description', description),
     tag('g:link', `${SITE_URL}/product/${slug}`),
     tag('g:image_link', imageLink),
@@ -217,7 +220,7 @@ export async function generateMerchantFeedCSV(products = undefined) {
   const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'availability', 'price', 'sale_price', 'condition', 'brand', 'product_type'];
   const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const rows = products.filter((product) => buildProductItem(product)).map((product) => [
-    getMerchantProductId(product), product.name, buildDescription(product) || product.name,
+    getMerchantProductId(product), getMerchantTitle(product), buildDescription(product) || product.name,
     `${SITE_URL}/product/${getProductSlug(product)}`, collectImages(product)[0], collectImages(product).slice(1, 11).join(','),
     getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock',
     `${getCatalogOffer(product).regularPrice.toFixed(2)} INR`,
