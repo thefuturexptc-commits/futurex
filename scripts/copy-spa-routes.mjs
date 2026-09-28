@@ -416,6 +416,8 @@ const buildProductNoscriptHtml = (product) => {
       <p><strong>Price: ${htmlEscape(formatPrice(product.price))}</strong></p>
       ${product.regularPrice > product.price ? `<p>Regular price: <del>${htmlEscape(formatPrice(product.regularPrice))}</del> — Sale price: ${htmlEscape(formatPrice(product.price))}</p>` : ''}
       <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
+      <p><strong>Free delivery</strong> across India.</p>
+      <p><a href="/info/returns-refund"><strong>7-day exchange review</strong> for verified delivery-time defects.</a></p>
       ${details.length ? `<h2>Key specifications</h2><ul>${details.map((detail) => `<li>${htmlEscape(detail)}</li>`).join('')}</ul>` : ''}
       <p><a href="${htmlEscape(getProductUrl(product))}">View ${htmlEscape(product.name)}</a></p>
       ${buildProductReviewHtml(product)}

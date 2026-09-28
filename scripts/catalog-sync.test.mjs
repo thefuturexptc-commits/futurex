@@ -93,6 +93,8 @@ test('sale price, title and real reviews are visible and agree with structured d
   assert.match(html, /<del>INR 4000.00<\/del>/);
   assert.match(html, /Sale price: INR 3800.00/);
   assert.match(html, /Works well\./);
+  assert.match(html, /Free delivery/);
+  assert.match(html, /7-day exchange review/);
   const schema = JSON.parse(html.match(/<script id="product-json-ld" type="application\/ld\+json">(.*?)<\/script>/)[1]);
   assert.equal(schema.aggregateRating.reviewCount, 1);
   assert.equal(schema.aggregateRating.ratingValue, 5);

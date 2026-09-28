@@ -3100,6 +3100,22 @@ export const ProductDetail: React.FC = () => {
                 {offerLine}
                 {paymentOfferBlock}
 
+                <div className="mt-4 grid grid-cols-1 gap-2 border-t border-slate-100 pt-4 text-sm sm:grid-cols-2">
+                  <div className="flex items-center gap-2 text-slate-700">
+                    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-emerald-700" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                      <path d="M3 6h11v10H3zM14 9h3l4 4v3h-7z" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
+                    </svg>
+                    <span><strong className="font-semibold text-slate-950">Free delivery</strong> across India</span>
+                  </div>
+                  <a href="/info/returns-refund" className="flex items-center gap-2 text-slate-700 transition hover:text-slate-950">
+                    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-[#a9812f]" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                      <path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-1" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span><strong className="font-semibold text-slate-950">7-day exchange review</strong> for verified delivery defects</span>
+                  </a>
+                </div>
+
                 <div className="mt-4 flex items-center gap-2">
                   <span className="relative flex h-2 w-2">
                     {canAdd && (
