@@ -1,5 +1,6 @@
 import { getCustomerFacingPrice } from '../../utils/productSeoData.js';
 import { isCatalogProductPublished } from '../../utils/catalogVisibility.js';
+import { getCatalogOffer } from '../../utils/catalogPricing.js';
 import { getProductStock } from '../../utils/productAvailability.js';
 import { getMerchantProductId, buildDescription } from '../../utils/generateMerchantFeed.js';
 import fs from 'fs';
@@ -157,7 +158,7 @@ const buildMerchantProduct = (product) => {
     availability: getProductStock(product) > 0 && product.inStock !== false ? 'in stock' : 'out of stock',
     condition: 'new',
     price: {
-      value: getCustomerFacingPrice(product).toFixed(2),
+      value: getCatalogOffer(product).regularPrice.toFixed(2),
       currency: 'INR',
     },
     brand: product.brand || 'TheFutureX',
@@ -165,6 +166,10 @@ const buildMerchantProduct = (product) => {
 
   if (additionalImageLinks.length > 0) {
     merchantProduct.additionalImageLinks = additionalImageLinks;
+  }
+
+  if (getCatalogOffer(product).onSale) {
+    merchantProduct.salePrice = { value: getCustomerFacingPrice(product).toFixed(2), currency: 'INR' };
   }
 
   return merchantProduct;

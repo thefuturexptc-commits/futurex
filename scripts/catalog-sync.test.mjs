@@ -4,6 +4,7 @@ import { buildProductItem, generateMerchantFeedCSV, generateMerchantFeedXML } fr
 import { buildProductSeoRecord, mergeProductSeoRecords } from '../utils/productSeoData.js';
 import { getAutomaticOfferItemPricing } from '../utils/catalogPricing.js';
 import { renderProductPage } from '../api/product-page.js';
+import { mergeProductReviews } from '../utils/productSchema.js';
 
 const product = {
   id: 'p_1772274359863', slug: 'tfx-pureair-3-in-1',
@@ -51,7 +52,8 @@ test('new products appear in both feeds; removed products do not return as fallb
 test('standard wearable discounts use the checkout calculation', () => {
   const ring = { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000 };
   assert.equal(buildProductSeoRecord(ring).price, 3800);
-  assert.match(buildProductItem(ring), /<g:price>3800.00 INR/);
+  assert.match(buildProductItem(ring), /<g:price>4000.00 INR/);
+  assert.match(buildProductItem(ring), /<g:sale_price>3800.00 INR/);
 });
 
 test('live product pages render current details and safely replace stale metadata', () => {
@@ -72,4 +74,31 @@ test('the owner-excluded glasses listing stays out even if its price changes', a
   assert.equal(buildProductItem(excluded), '');
   assert.equal(buildProductSeoRecord(excluded), null);
   assert.doesNotMatch(await generateMerchantFeedCSV([excluded]), /p-1780575129873-6djio/);
+});
+
+test('Merchant XML contains only supported, namespaced product attributes', async () => {
+  const xml = await generateMerchantFeedXML([{ ...product, emiAvailable: true }]);
+  assert.doesNotMatch(xml, /emiAvailable|emi_available/);
+  const item = xml.match(/<item>([\s\S]*?)<\/item>/)[1];
+  assert.ok([...item.matchAll(/<([\w:]+)>/g)].every((match) => match[1].startsWith('g:')));
+});
+
+test('sale price, title and real reviews are visible and agree with structured data', async () => {
+  const review = { id: 'customer-1', name: 'Customer', comment: 'Works well.', rating: 4 };
+  const reviews = mergeProductReviews([review, { ...review, id: 'p_seed_review_1', rating: 5 }], [{ ...review, rating: 5 }]);
+  assert.equal(reviews.length, 1);
+  const ring = { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000, reviews };
+  const html = renderProductPage('<head></head><div id="root"></div>', ring);
+  assert.match(html, /<h1>My saved title &amp; model<\/h1>/);
+  assert.match(html, /<del>INR 4000.00<\/del>/);
+  assert.match(html, /Sale price: INR 3800.00/);
+  assert.match(html, /Works well\./);
+  const schema = JSON.parse(html.match(/<script id="product-json-ld" type="application\/ld\+json">(.*?)<\/script>/)[1]);
+  assert.equal(schema.aggregateRating.reviewCount, 1);
+  assert.equal(schema.aggregateRating.ratingValue, 5);
+  assert.equal(schema.offers.price, 3800);
+  assert.equal(schema.offers.priceSpecification.price, 4000);
+  const csv = await generateMerchantFeedCSV([ring]);
+  assert.match(csv, /price,sale_price/);
+  assert.match(csv, /"4000.00 INR","3800.00 INR"/);
 });

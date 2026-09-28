@@ -2,6 +2,7 @@ import { getProductStock as getStock } from './productAvailability.js';
 import { getAutomaticOfferItemPricing } from './catalogPricing.js';
 import { formatProductName } from './productName.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
+import { getCatalogOffer } from './catalogPricing.js';
 import { getSchemaReviews } from './productSchema.js';
 
 export const SITE_URL = 'https://thefuturex.in';
@@ -286,6 +287,7 @@ export const buildProductSeoRecord = (product = {}) => {
     images: images.length ? images : [resolveUrl(fallback?.image || '/images/tfx-google-logo.webp')],
     // Invalid prices are omitted from offers rather than replaced by stale prices.
     price: Number.isFinite(price) && price > 0 ? price : 0,
+    regularPrice: getCatalogOffer(product).regularPrice,
     availability: (product.inStock !== false && (!hasStockData || stock > 0)) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     brand: product.brand || fallback?.brand || 'The Future X',
     ratingValue: Number(product.rating || fallback?.ratingValue || 0),

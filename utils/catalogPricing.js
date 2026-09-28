@@ -65,3 +65,11 @@ export const getAutomaticOfferItemPricing = (item) => {
         lineTotal,
     };
 };
+
+// Use the saved selling price before discounts, never an invented comparison price.
+export const getCatalogOffer = (product) => {
+    const pricing = getAutomaticOfferItemPricing(product);
+    const currentPrice = pricing.unitOfferPrice;
+    const regularPrice = Math.max(Number(product.price || 0), pricing.unitPrice);
+    return { currentPrice, regularPrice, onSale: currentPrice > 0 && regularPrice > currentPrice };
+};

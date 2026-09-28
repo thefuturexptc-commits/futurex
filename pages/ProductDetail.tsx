@@ -14,7 +14,8 @@ import { getProductModelIdentifiers } from '../utils/productSearch';
 import { getFanFlipkartListing } from '../utils/fanListings';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
 import { buildProductSeoRecord } from '../utils/productSeoData.js';
-import { productOfferPolicies, buildReviewSchema } from '../utils/productSchema.js';
+import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification } from '../utils/productSchema.js';
+import { getCatalogOffer } from '../utils/catalogPricing.js';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringWellness from '../assets/images/ring-wellness.webp';
 import ringDailySync from '../assets/images/ring-daily-sync.webp';
@@ -1573,9 +1574,7 @@ export const ProductDetail: React.FC = () => {
   );
 
   const salePrice = Number(product?.salePrice || product?.price || 0);
-  const mrp = product && getProductSlug(product) === 'tfx-pureair-3-in-1'
-    ? Number(product.mrp)
-    : salePrice > 0 ? salePrice + 2000 : 0;
+  const mrp = product ? getCatalogOffer(product).regularPrice : 0;
   const savings = Math.max(0, mrp - salePrice);
   const percent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
   const hidePercentageOffer = product ? isTfxV5OfferExcluded(product) : false;
@@ -1795,6 +1794,7 @@ export const ProductDetail: React.FC = () => {
           name: 'The Future X',
         },
         ...productOfferPolicies,
+        ...buildSalePriceSpecification(getCatalogOffer(product).regularPrice, schemaPrice),
       },
     };
     Object.assign(productSchema, buildReviewSchema(product.reviews));

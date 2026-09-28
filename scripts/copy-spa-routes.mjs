@@ -7,7 +7,7 @@ import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/
 import { generateSitemapXML } from '../utils/generateSitemap.js';
 import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/generateMerchantFeed.js';
 import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
-import { productOfferPolicies, buildReviewSchema } from '../utils/productSchema.js';
+import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification } from '../utils/productSchema.js';
 import { tfx5BlogPosts } from '../utils/tfx5BlogPosts.js';
 
 const distDir = 'dist';
@@ -366,6 +366,7 @@ const buildProductStaticHtml = (product) => {
         <img src="${htmlEscape(image)}" alt="${htmlEscape(product.name)}" loading="eager" decoding="async" />
         <p>${htmlEscape(product.description)}</p>
         <p><strong>${htmlEscape(formatPrice(product.price))}</strong></p>
+        ${product.regularPrice > product.price ? `<p>Regular price: <del>${htmlEscape(formatPrice(product.regularPrice))}</del> — Sale price: ${htmlEscape(formatPrice(product.price))}</p>` : ''}
         <p>Brand: <span>${htmlEscape(product.brand || BRAND_NAME)}</span></p>
         <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
       </article>
@@ -413,6 +414,7 @@ const buildProductNoscriptHtml = (product) => {
       <h1>${htmlEscape(product.name)}</h1>
       <p>${htmlEscape(product.description)}</p>
       <p><strong>Price: ${htmlEscape(formatPrice(product.price))}</strong></p>
+      ${product.regularPrice > product.price ? `<p>Regular price: <del>${htmlEscape(formatPrice(product.regularPrice))}</del> — Sale price: ${htmlEscape(formatPrice(product.price))}</p>` : ''}
       <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
       ${details.length ? `<h2>Key specifications</h2><ul>${details.map((detail) => `<li>${htmlEscape(detail)}</li>`).join('')}</ul>` : ''}
       <p><a href="${htmlEscape(getProductUrl(product))}">View ${htmlEscape(product.name)}</a></p>
@@ -633,6 +635,7 @@ const buildJsonLd = (product) => {
         name: BRAND_NAME,
       },
       ...productOfferPolicies,
+      ...buildSalePriceSpecification(product.regularPrice, schemaPrice),
     },
   };
 

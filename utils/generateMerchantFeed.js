@@ -3,6 +3,8 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { getCustomerFacingPrice } from './productSeoData.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
+import { getCatalogOffer } from './catalogPricing.js';
+import { mergeProductReviews } from './productSchema.js';
 
 const SITE_URL = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.VITE_PUBLIC_SITE_URL || 'https://thefuturex.in').replace(/\/+$/, '');
 const BRAND = process.env.MERCHANT_FEED_BRAND || 'TheFutureX';
@@ -113,12 +115,6 @@ const getPrice = (product) => {
   return Number.isFinite(price) && price > 0 ? price.toFixed(2) : '';
 };
 
-const getEmiAvailable = (product) => {
-  if (typeof product.emiAvailable === 'boolean') return product.emiAvailable;
-  if (typeof product.emi_available === 'boolean') return product.emi_available;
-  return true;
-};
-
 export const buildDescription = (product) => {
   const parts = [stripHtml(product.description || '')];
 
@@ -142,15 +138,24 @@ const withTimeout = (promise, timeoutMs) =>
     }),
   ]);
 
-export const getRemoteProducts = async () => {
+export const getRemoteProducts = async ({ includeReviews = false } = {}) => {
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const snapshot = await withTimeout(getDocs(collection(db, 'products')), 6500);
 
-  return snapshot.docs
+  const products = snapshot.docs
     .map((doc) => ({ ...doc.data(), id: doc.id }))
     .filter(isCatalogProductPublished)
     .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
+  if (!includeReviews) return products;
+  try {
+    const reviews = await withTimeout(getDocs(collection(db, 'product_reviews')), 6500);
+    const rows = reviews.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+    return products.map((product) => ({ ...product, reviews: mergeProductReviews(product.reviews, rows.filter((review) => review.productId === product.id)) }));
+  } catch (error) {
+    console.warn('Public review fetch failed; using saved product reviews.');
+    return products;
+  }
 };
 
 const tag = (name, value) => {
@@ -170,6 +175,7 @@ export const buildProductItem = (product) => {
   const description = buildDescription(product) || product.name;
   const availability = getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock';
   const additionalImages = images.slice(1, 11).map((image) => tag('g:additional_image_link', image));
+  const offer = getCatalogOffer(product);
 
   return [
     '  <item>',
@@ -180,8 +186,8 @@ export const buildProductItem = (product) => {
     tag('g:image_link', imageLink),
     ...additionalImages,
     tag('g:availability', availability),
-    tag('emiAvailable', getEmiAvailable(product) ? 'true' : 'false'),
-    tag('g:price', `${price} INR`),
+    tag('g:price', `${(offer.onSale ? offer.regularPrice : offer.currentPrice).toFixed(2)} INR`),
+    offer.onSale ? tag('g:sale_price', `${price} INR`) : '',
     tag('g:condition', 'new'),
     tag('g:brand', product.brand || BRAND),
     tag('g:product_type', product.category || ''),
@@ -208,13 +214,14 @@ ${items}
 
 export async function generateMerchantFeedCSV(products = undefined) {
   products = products || await getRemoteProducts();
-  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'availability', 'price', 'condition', 'brand', 'product_type'];
+  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'availability', 'price', 'sale_price', 'condition', 'brand', 'product_type'];
   const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const rows = products.filter((product) => buildProductItem(product)).map((product) => [
     getMerchantProductId(product), product.name, buildDescription(product) || product.name,
     `${SITE_URL}/product/${getProductSlug(product)}`, collectImages(product)[0], collectImages(product).slice(1, 11).join(','),
     getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock',
-    `${getPrice(product)} INR`, 'new', product.brand || BRAND, product.category || '',
+    `${getCatalogOffer(product).regularPrice.toFixed(2)} INR`,
+    getCatalogOffer(product).onSale ? `${getPrice(product)} INR` : '', 'new', product.brand || BRAND, product.category || '',
   ].map(escape).join(','));
   return [headers.join(','), ...rows].join('\n') + '\n';
 }

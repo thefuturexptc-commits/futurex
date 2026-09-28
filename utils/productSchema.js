@@ -25,6 +25,17 @@ export const getSchemaReviews = (reviews = []) =>
     Number.isFinite(Number(review.rating)) && Number(review.rating) >= 1 && Number(review.rating) <= 5
   );
 
+export const mergeProductReviews = (embedded = [], publicReviews = []) => {
+  const reviews = new Map((Array.isArray(embedded) ? embedded : []).map((review, index) => [review.id || `embedded-${index}`, review]));
+  publicReviews.forEach((review) => reviews.set(review.id, review));
+  return getSchemaReviews([...reviews.values()]);
+};
+
+export const buildSalePriceSpecification = (regularPrice, currentPrice) =>
+  Number.isFinite(regularPrice) && regularPrice > currentPrice && currentPrice > 0
+    ? { priceSpecification: { '@type': 'UnitPriceSpecification', price: regularPrice, priceCurrency: 'INR', priceType: 'https://schema.org/StrikethroughPrice' } }
+    : {};
+
 export const buildReviewSchema = (reviews = []) => {
   const eligible = getSchemaReviews(reviews);
   if (!eligible.length) return {};
