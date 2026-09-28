@@ -30,9 +30,8 @@ import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 import { TFX5_AI_BAND_PRICE, isTfxV5Band, isPureAirThreeInOne, PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE } from '../utils/coupons';
 import { publishedBlogPosts } from '../utils/publishedBlogPosts';
-import { formatProductName } from '../utils/productName.js';
-import { correctRingModel, getProductModelNumbers, getProductTitleWithModel } from '../utils/productModel';
-import { getFanTitle } from '../utils/fanListings';
+import { correctRingModel, getProductModelNumbers } from '../utils/productModel';
+import { isCatalogProductPublished } from '../utils/catalogVisibility.js';
 
 const logDevWarning = (...args: unknown[]) => {
   if (import.meta.env.DEV) {
@@ -938,10 +937,10 @@ const normalizeProductColors = (product: Product): Product => {
 
   return ensureProductReviews({
     ...pricedProduct,
-    name: getFanTitle(pricedProduct) || getProductTitleWithModel({ ...pricedProduct, name: formatProductName(pricedProduct.name) }),
+    name: product.name.trim(),
     slug,
-    description: buildSeoProductDescription(pricedProduct),
-    features: buildSeoProductFeatures(pricedProduct),
+    description: product.description || '',
+    features: Array.isArray(product.features) ? product.features : [],
     variants: mappedVariants,
     defaultVariant,
     colors: mappedColors,
@@ -1162,15 +1161,15 @@ export const getProducts = async (): Promise<Product[]> => {
       querySnapshot.forEach((snapshotDoc) => {
         fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
       });
-      const normalized = fbProducts.map(normalizeProductColors).filter((product) => !isSmartGlassesProduct(product));
+      const normalized = fbProducts.filter(isCatalogProductPublished).map(normalizeProductColors);
       setMockData('products', normalized);
       productsCache = { data: normalized, ts: Date.now() };
       return normalized;
     } catch (error) {
       if (isAbortLikeError(error) || isPermissionDeniedError(error)) {
         const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS)
-          .map(normalizeProductColors)
-          .filter((product) => !isSmartGlassesProduct(product));
+          .filter(isCatalogProductPublished)
+          .map(normalizeProductColors);
         productsCache = { data: localProducts, ts: Date.now() };
         return localProducts;
       }
@@ -1203,7 +1202,7 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
       const docSnap = await withTimeout(getDoc(docRef), 4500);
       if (docSnap.exists()) {
         const remoteProduct = normalizeProductColors({ ...(docSnap.data() as Product), id: docSnap.id });
-        if (isSmartGlassesProduct(remoteProduct)) return undefined;
+        if (!isCatalogProductPublished(remoteProduct)) return undefined;
         const nextProducts = [remoteProduct, ...products.filter((p) => p.id !== id)];
         setMockData('products', nextProducts);
         refreshProductsCache(nextProducts);
@@ -1216,7 +1215,7 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
     products.find((p) => p.id === id) ||
     products.find((p) => getProductSlug(p) === id) ||
     products.find((p) => toProductSlug(p.name) === id);
-  return localFound && !isSmartGlassesProduct(localFound) ? normalizeProductColors(localFound) : knownFallback;
+  return localFound && isCatalogProductPublished(localFound) ? normalizeProductColors(localFound) : knownFallback;
 };
 
 export const getProductReviews = async (productId: string): Promise<ProductPublicReview[]> => {

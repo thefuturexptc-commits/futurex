@@ -10,75 +10,8 @@ export const normalizeCouponCode = (code: string) => code.trim().toUpperCase();
 type OfferItemIdentity = Pick<CartItem, 'category' | 'name'> & Partial<Pick<CartItem, 'slug'>>;
 type OfferPricedItem = OfferItemIdentity & Partial<Pick<CartItem, 'price' | 'salePrice' | 'quantity'>>;
 
-export const PUREAIR_3_IN_1_MRP = 15000;
-export const PUREAIR_3_IN_1_SALE_PRICE = 13500;
-export const isPureAirThreeInOne = (item: OfferItemIdentity) => {
-  if (item.slug) return item.slug === 'tfx-pureair-3-in-1';
-  return /\bpureair\s*3[\s-]*in[\s-]*1\b|\btfx[\s-]*tp02\s+3[\s-]*in[\s-]*1\b/i.test(item.name);
-};
-
-export const TFX5_AI_BAND_PRICE = 9999;
-
-export const formatInrAmount = (amount: number) => `₹${Number(amount || 0).toLocaleString('en-IN', {
-  maximumFractionDigits: 2,
-  minimumFractionDigits: 2,
-})}`;
-
-export const isTfxV5Band = (item: Pick<CartItem, 'category' | 'name'>) => {
-  const category = String(item.category || '').toLowerCase();
-  const name = String(item.name || '');
-  return category.includes('band') && /\btfx\s*v?5\b|\btfx5\b|\bai\s*v5\b|\bv5\b/i.test(name);
-};
-
-export const getOfferBaseUnitPrice = (item: OfferPricedItem) => {
-  if (isPureAirThreeInOne(item)) return PUREAIR_3_IN_1_SALE_PRICE;
-  if (isTfxV5Band(item)) return TFX5_AI_BAND_PRICE;
-  const salePrice = Number(item.salePrice || 0);
-  const regularPrice = Number(item.price || 0);
-  return salePrice > 0 ? salePrice : regularPrice;
-};
-
-export const isFanOfferItem = (item: Pick<CartItem, 'category' | 'name'>) => {
-  const text = `${item.category || ''} ${item.name || ''}`.toLowerCase();
-  return text.includes('fan');
-};
-
-export const isWearableOfferItem = (item: Pick<CartItem, 'category' | 'name'>) => {
-  const text = `${item.category || ''} ${item.name || ''}`.toLowerCase();
-  return text.includes('ring') || text.includes('band');
-};
-
-export const getAutomaticOfferRateForItem = (item: OfferItemIdentity) => {
-  if (isPureAirThreeInOne(item)) return 0;
-  if (isTfxV5Band(item)) return 0;
-  if (isFanOfferItem(item)) return 0.1;
-  if (isWearableOfferItem(item)) return 0.05;
-  return 0;
-};
-
-export const getAutomaticOfferRateLabel = (rate: number) => `${Math.round(rate * 100)}%`;
-
-export const getAutomaticOfferItemPricing = (item: OfferPricedItem) => {
-  const quantity = Number(item.quantity || 1);
-  const unitPrice = getOfferBaseUnitPrice(item);
-  const lineSubtotal = Number((unitPrice * quantity).toFixed(2));
-  const rate = getAutomaticOfferRateForItem(item);
-  const discount = Number((lineSubtotal * rate).toFixed(2));
-  const lineTotal = Number(Math.max(0, lineSubtotal - discount).toFixed(2));
-  const unitDiscount = Number((unitPrice * rate).toFixed(2));
-  const unitOfferPrice = Number(Math.max(0, unitPrice - unitDiscount).toFixed(2));
-
-  return {
-    rate,
-    rateLabel: getAutomaticOfferRateLabel(rate),
-    unitPrice,
-    unitDiscount,
-    unitOfferPrice,
-    discount,
-    lineSubtotal,
-    lineTotal,
-  };
-};
+import { PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE, isPureAirThreeInOne, TFX5_AI_BAND_PRICE, formatInrAmount, isTfxV5Band, getOfferBaseUnitPrice, isFanOfferItem, isWearableOfferItem, getAutomaticOfferRateForItem, getAutomaticOfferRateLabel, getAutomaticOfferItemPricing } from './catalogPricing.js';
+export { PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE, isPureAirThreeInOne, TFX5_AI_BAND_PRICE, formatInrAmount, isTfxV5Band, getOfferBaseUnitPrice, isFanOfferItem, isWearableOfferItem, getAutomaticOfferRateForItem, getAutomaticOfferRateLabel, getAutomaticOfferItemPricing } from './catalogPricing.js';
 
 export const calculateAutomaticOfferSummary = (items: OfferPricedItem[]) => {
   const subtotal = Number(items.reduce((sum, item) => {

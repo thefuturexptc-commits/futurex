@@ -449,7 +449,9 @@ export const AdminDashboard: React.FC = () => {
         if (typeof window !== 'undefined') {
           window.sessionStorage.setItem(ADMIN_MERCHANT_AUTO_SYNC_KEY, 'true');
         }
-        setMerchantSyncWarning(result.merchantId ? `Merchant auto-sync completed to account ${result.merchantId}.` : '');
+        setMerchantSyncWarning(result.pendingFetch
+          ? 'Google Merchant Center reads the saved catalog through the live product feed. Changes appear after Google fetches the feed.'
+          : result.merchantId ? `Merchant auto-sync completed to account ${result.merchantId}.` : '');
       })
       .catch((error) => {
         setMerchantSyncWarning(`Merchant auto-sync warning: ${error instanceof Error ? error.message : 'Merchant sync failed.'}`);
@@ -1033,6 +1035,9 @@ export const AdminDashboard: React.FC = () => {
 
       try {
         const merchantResult = await syncProductToMerchant(savedProduct);
+        if (merchantResult.pendingFetch && !backendSyncWarning) {
+          setMerchantSyncWarning('Product saved. Google Merchant Center will receive the changes on its next feed fetch.');
+        }
         if (!merchantResult.ok) {
           backendSyncWarning = backendSyncWarning
             ? `${backendSyncWarning} Merchant sync failed.`

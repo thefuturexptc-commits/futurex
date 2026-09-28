@@ -1,4 +1,9 @@
 {
+  "functions": {
+    "api/product-page.js": {
+      "includeFiles": "dist/product-shell.html"
+    }
+  },
   "headers": [
     {
       "source": "/assets/:path*",
@@ -158,6 +163,14 @@
   ],
   "rewrites": [
     {
+      "source": "/product-feed.xml",
+      "destination": "/api/merchant-feed"
+    },
+    {
+      "source": "/product-feed.csv",
+      "destination": "/api/merchant-feed?format=csv"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     },
@@ -175,7 +188,7 @@
     },
     {
       "source": "/product/:slug",
-      "destination": "/product/:slug/index.html"
+      "destination": "/api/product-page?slug=:slug"
     },
     {
       "source": "/smart-bands",

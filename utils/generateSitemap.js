@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { SITE_URL, sitemapRoutes } from './siteRoutes.js';
-import { staticProductSeoRecords } from './productSeoData.js';
+import { isCatalogProductPublished } from './catalogVisibility.js';
 
 const toSlug = (name = '') =>
   String(name)
@@ -57,7 +57,8 @@ const getRemoteProducts = async () => {
   const snapshot = await withTimeout(getDocs(collection(db, 'products')), 6500);
 
   const products = snapshot.docs
-    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .map((doc) => ({ ...doc.data(), id: doc.id }))
+    .filter(isCatalogProductPublished)
     .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
 
   console.log('TOTAL PRODUCTS:', products.length);
@@ -75,16 +76,6 @@ export async function generateSitemapXML() {
   }
 
   const productMap = new Map();
-  staticProductSeoRecords.forEach((product) => {
-    const slug = product.canonicalSlug || product.slug;
-    if (!slug) return;
-    productMap.set(slug, {
-      loc: `${SITE_URL}/product/${slug}`,
-      lastmod: nowIso,
-      changefreq: 'weekly',
-      priority: '0.8',
-    });
-  });
 
   remoteProducts.forEach((product) => {
     const slug = getProductSlug(product);

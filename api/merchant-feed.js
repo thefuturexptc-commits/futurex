@@ -1,4 +1,4 @@
-import { generateMerchantFeedXML } from '../utils/generateMerchantFeed.js';
+import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/generateMerchantFeed.js';
 import { setMerchantFeedAuthChallenge, verifyMerchantFeedAuth } from '../utils/merchantFeedAuth.js';
 
 export default async function handler(req, res) {
@@ -10,9 +10,10 @@ export default async function handler(req, res) {
       return;
     }
 
-    const feed = await generateMerchantFeedXML();
-    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=900, s-maxage=900');
+    const csv = req.query?.format === 'csv';
+    const feed = await (csv ? generateMerchantFeedCSV() : generateMerchantFeedXML());
+    res.setHeader('Content-Type', csv ? 'text/csv; charset=utf-8' : 'application/xml; charset=utf-8');
+    res.setHeader('Cache-Control', 'private, no-store');
     res.status(200).end(feed);
   } catch (error) {
     console.error('Error generating merchant-feed.xml', error);

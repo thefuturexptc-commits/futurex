@@ -1,3 +1,7 @@
+import { getCustomerFacingPrice } from '../../utils/productSeoData.js';
+import { isCatalogProductPublished } from '../../utils/catalogVisibility.js';
+import { getProductStock } from '../../utils/productAvailability.js';
+import { getMerchantProductId, buildDescription } from '../../utils/generateMerchantFeed.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -127,38 +131,8 @@ const collectProductImages = (product) => {
     });
 };
 
-const getProductPrice = (product) => {
-  const basePrice = Number(product.salePrice || product.price || product.mrp || 0);
-  if (!Number.isFinite(basePrice) || basePrice <= 0) {
-    throw new Error(`Invalid price for product ${product.id || product.name || 'unknown'}.`);
-  }
-
-  const name = String(product.name || '').toLowerCase();
-  const category = String(product.category || '').toLowerCase();
-  const isTfx5Band = category.includes('band') && /\btfx\s*v?5\b|\btfx5\b|\bai\s*v5\b|\bv5\b/i.test(name);
-  const offerRate = isTfx5Band
-    ? 0
-    : category.includes('fan')
-      ? 0.1
-      : category.includes('ring') || category.includes('band')
-        ? 0.05
-        : 0;
-  const price = Number((basePrice * (1 - offerRate)).toFixed(2));
-
-  return String(price).replace(/,/g, '');
-};
-
-const getProductStock = (product) => {
-  if (Array.isArray(product.variants) && product.variants.length > 0) {
-    return product.variants.reduce(
-      (sum, variant) => sum + (variant.sizes || []).reduce((sizeSum, sizeRow) => sizeSum + Number(sizeRow.stock || 0), 0),
-      0
-    );
-  }
-  return Number(product.stock || 0) - Number(product.reservedStock || 0);
-};
-
 const buildMerchantProduct = (product) => {
+  if (!isCatalogProductPublished(product)) throw new Error('This product is excluded from the published catalog.');
   if (!merchantId) throw new Error('Missing GOOGLE_MERCHANT_ID.');
   if (!product?.id) throw new Error('Product id is required for Merchant sync.');
 
@@ -172,9 +146,9 @@ const buildMerchantProduct = (product) => {
 
   const slug = getProductSlug(product);
   const merchantProduct = {
-    offerId: String(product.id),
+    offerId: getMerchantProductId(product),
     title: product.name || product.id,
-    description: product.description || product.name || product.id,
+    description: buildDescription(product) || product.name || product.id,
     link: `${siteUrl}/product/${slug}`,
     imageLink,
     contentLanguage: 'en',
@@ -183,10 +157,10 @@ const buildMerchantProduct = (product) => {
     availability: getProductStock(product) > 0 && product.inStock !== false ? 'in stock' : 'out of stock',
     condition: 'new',
     price: {
-      value: getProductPrice(product),
+      value: getCustomerFacingPrice(product).toFixed(2),
       currency: 'INR',
     },
-    brand: product.brand || 'FutureX',
+    brand: product.brand || 'TheFutureX',
   };
 
   if (additionalImageLinks.length > 0) {
@@ -249,7 +223,7 @@ export const deleteProductFromMerchant = async (productId) => {
   const content = await getClient();
   await content.products.delete({
     merchantId,
-    productId: `online:en:IN:${productId}`,
+    productId: `online:en:IN:${getMerchantProductId({ id: productId })}`,
   });
 
   return { productId };

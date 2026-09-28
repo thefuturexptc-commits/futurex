@@ -144,6 +144,7 @@ export const ProductsTab: React.FC<Props> = ({
                         <div>
                           <p className="font-semibold">{p.name}</p>
                           <p className="text-xs text-slate-400">{p.category}</p>
+                          <p className="text-xs text-slate-500">ID: {p.id}</p>
                         </div>
                       </div>
                     </td>

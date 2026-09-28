@@ -1655,9 +1655,7 @@ export const ProductDetail: React.FC = () => {
     // per-family policy (fans = 1 year, everything else = 6 months) — never read from
     // product.warranty, product.specs.Warranty, or any hardcoded per-product profile,
     // so a stray backend value or an old profile constant can never override it.
-    const baseMergedSpecs = isV5BandProduct || isRingProductForSpecs
-      ? { ...(product?.specs || {}), ...bandSpecs, ...ringSpecs }
-      : { ...bandSpecs, ...ringSpecs, ...fanSpecs, ...monitoringSpecs, ...(product?.specs || {}) };
+    const baseMergedSpecs: Record<string, string> = { ...bandSpecs, ...ringSpecs, ...fanSpecs, ...monitoringSpecs, ...(product?.specs || {}) };
     const warrantySpecs = product ? getWarrantySpecEntries(warrantyFamily) : {};
     const mergedSpecs = { ...baseMergedSpecs, ...warrantySpecs };
     const hasModelSpec = Object.keys(mergedSpecs).some((key) => /model|sku|serial|code|item\s*no|product\s*id|pid/i.test(key));
@@ -2454,7 +2452,7 @@ export const ProductDetail: React.FC = () => {
         ? TFX_TOUCH_RING_DESCRIPTION
         : TFX_RING_PRO_DESCRIPTION
     : '';
-  const featureList = isTfxV5Band
+  const featureList = product.features?.length ? product.features.map(cleanFeatureText).filter(Boolean) : isTfxV5Band
     ? TFX5_BAND_FEATURES
     : isPremiumSmartBand
       ? TFX_SMART_BAND_FEATURES
@@ -2544,7 +2542,7 @@ export const ProductDetail: React.FC = () => {
     ? [...displayedRegularSpecEntries, ...warrantySpecEntries]
     : productInformationSpecEntries;
   const specGroups = buildSpecGroups(displayedSpecEntries);
-  const whyBuyCopy = isSmartGlassesProduct
+  const whyBuyCopy = shortDescription || (isSmartGlassesProduct
     ? `${product.name} is designed for hands-free capture, Bluetooth calling, music, voice assistant support, and everyday smart eyewear convenience in one modern frame.`
     : isTfxV5Band
       ? TFX5_SMART_BAND_DESCRIPTION
@@ -2556,7 +2554,7 @@ export const ProductDetail: React.FC = () => {
         ? fanProfile.description
       : monitoringProfile
         ? monitoringProfile.description
-      : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`;
+      : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`);
   const ringOverviewSections = [
     {
       title: 'The FutureX TFX Ring Pro',
@@ -2754,8 +2752,8 @@ export const ProductDetail: React.FC = () => {
     { q: 'How do I claim warranty?', a: 'Register the product from the warranty registration page, then share feedback with your order ID, product name, issue description, and photo/video proof.' },
   ];
   const fanMarketplaceDescription =
-    fanProfile?.description ||
     shortDescription ||
+    fanProfile?.description ||
     `${product.name} is a modern tower fan designed for year-round comfort, smooth airflow, quiet indoor use, and convenient remote operation.`;
   const offerLine = (
     <RazorpayEmiStrip price={displayedPrice || salePrice} onOpen={() => setShowEmiModal(true)} />
@@ -3042,7 +3040,7 @@ export const ProductDetail: React.FC = () => {
             </span>
             <div className="relative mt-1.5 max-w-none">
               <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? 'line-clamp-3' : ''}`}>
-                {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
+                {shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
               </p>
               {!isHeroDescriptionExpanded && (
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent sm:h-5" />
@@ -3399,7 +3397,7 @@ export const ProductDetail: React.FC = () => {
               <p className={`px-3 py-3 text-sm leading-6 text-slate-700 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
                 {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
               </p>
-              {(isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || '')).length > 260 && (
+              {(shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260 && (
                 <button
                   type="button"
                   onClick={() => setIsDescriptionExpanded((prev) => !prev)}
@@ -3601,9 +3599,9 @@ export const ProductDetail: React.FC = () => {
               <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Product Description</h2>
               <div className="px-5 py-5">
                 <p className={`text-sm leading-7 text-slate-700 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
-                  {overviewSections[0].copy}
+                  {shortDescription || overviewSections[0].copy}
                 </p>
-                {!isRingOverview && shortDescription.length > 260 && (
+                {(shortDescription || overviewSections[0].copy).length > 260 && (
                   <button
                     type="button"
                     onClick={() => setIsDescriptionExpanded((prev) => !prev)}

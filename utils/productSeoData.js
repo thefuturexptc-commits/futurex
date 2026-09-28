@@ -1,4 +1,7 @@
+import { getProductStock as getStock } from './productAvailability.js';
+import { getAutomaticOfferItemPricing } from './catalogPricing.js';
 import { formatProductName } from './productName.js';
+import { isCatalogProductPublished } from './catalogVisibility.js';
 import { getSchemaReviews } from './productSchema.js';
 
 export const SITE_URL = 'https://thefuturex.in';
@@ -50,23 +53,7 @@ export const cleanSeoText = (value = '') =>
 
 // Keep SEO, feed, and on-page prices aligned with the automatic offers shown
 // to customers on product pages and at checkout.
-export const getCustomerFacingPrice = (product = {}) => {
-  const basePrice = Number(product.salePrice || product.price || product.mrp || 0);
-  if (!Number.isFinite(basePrice) || basePrice <= 0) return 1;
-
-  const name = String(product.name || '').toLowerCase();
-  const category = String(product.category || '').toLowerCase();
-  const isTfx5Band = category.includes('band') && /\btfx\s*v?5\b|\btfx5\b|\bai\s*v5\b|\bv5\b/i.test(name);
-  if (isTfx5Band) return 9999;
-
-  const offerRate = category.includes('fan')
-    ? 0.1
-    : category.includes('ring') || category.includes('band')
-      ? 0.05
-      : 0;
-
-  return Number((basePrice * (1 - offerRate)).toFixed(2));
-};
+export const getCustomerFacingPrice = (product = {}) => getAutomaticOfferItemPricing(product).unitOfferPrice;
 
 export const truncateText = (value = '', maxLength = 220) => {
   const text = cleanSeoText(value);
@@ -273,40 +260,17 @@ export const collectProductImages = (product = {}) => {
     });
 };
 
-const getStock = (product = {}) => {
-  if (Array.isArray(product.variants) && product.variants.length > 0) {
-    return product.variants.reduce((sum, variant) => {
-      if (Array.isArray(variant.sizes) && variant.sizes.length > 0) {
-        return sum + variant.sizes.reduce((sizeSum, sizeRow) => sizeSum + Number(sizeRow.stock || 0), 0);
-      }
-      return sum + Number(variant.stock || 0);
-    }, 0);
-  }
-
-  if (Array.isArray(product.colors) && product.colors.length > 0) {
-    return product.colors.reduce((sum, color) => sum + Math.max(0, Number(color.stock || 0) - Number(color.reservedStock || 0)), 0);
-  }
-
-  return Math.max(0, Number(product.stock || 0) - Number(product.reservedStock || 0));
-};
-
 export const buildProductSeoRecord = (product = {}) => {
+  if (!isCatalogProductPublished(product)) return null;
   const slug = getProductSlug(product);
   if (!slug || !product.name) return null;
 
-  const cleanImage = (url = '') => !new RegExp(removedSeoWord, 'i').test(url);
-  const images = collectProductImages(product).filter(cleanImage);
+  const images = collectProductImages(product);
   const fallback = staticProductSeoRecords.find((item) => item.slug === slug || item.canonicalSlug === slug);
   const description =
-    fallback?.description ||
-    cleanSeoText(product.description || '') ||
+    stripHtml(product.description || '') ||
     `Shop ${product.name} from TheFutureX with secure checkout, India shipping, and product support.`;
-  const requestedPrice = getCustomerFacingPrice({ ...fallback, ...product });
-  // A malformed live record previously let the glasses fall through as ₹1.
-  // Known catalog fallbacks are safer than publishing a token/placeholder price.
-  const price = requestedPrice <= 1 && Number(fallback?.price || 0) > 1
-    ? Number(fallback.price)
-    : requestedPrice;
+  const price = getCustomerFacingPrice(product);
   const stock = getStock(product);
   const hasStockData = product.stock != null || product.variants?.length > 0 || product.colors?.length > 0;
 
@@ -314,16 +278,15 @@ export const buildProductSeoRecord = (product = {}) => {
     id: product.id || slug,
     slug,
     canonicalSlug: slug,
-    name: formatProductName(cleanSeoText(product.name)),
-    seoTitle: formatProductName(cleanSeoText(product.name)),
+    name: product.name.trim(),
+    seoTitle: product.name.trim(),
     category: product.category || fallback?.category || 'Products',
     description: truncateText(description),
     image: images[0] || resolveUrl(fallback?.image || '/images/tfx-google-logo.webp'),
     images: images.length ? images : [resolveUrl(fallback?.image || '/images/tfx-google-logo.webp')],
-    // Never emit a token price such as ₹1 when a product record is incomplete.
-    // Prefer the known product fallback; otherwise omit the invalid record upstream.
-    price: Number.isFinite(price) && price > 0 ? price : Number(fallback?.price || 0),
-    availability: (hasStockData ? stock > 0 : product.inStock !== false) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+    // Invalid prices are omitted from offers rather than replaced by stale prices.
+    price: Number.isFinite(price) && price > 0 ? price : 0,
+    availability: (product.inStock !== false && (!hasStockData || stock > 0)) ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
     brand: product.brand || fallback?.brand || 'The Future X',
     ratingValue: Number(product.rating || fallback?.ratingValue || 0),
     reviews: getSchemaReviews(product.reviews),
@@ -331,20 +294,19 @@ export const buildProductSeoRecord = (product = {}) => {
     // Preserve customer-facing details for the build-time product pages. These
     // fields are rendered in the HTML snapshot as well as the interactive SPA.
     features: Array.isArray(product.features)
-      ? product.features.map((feature) => cleanSeoText(String(feature))).filter(Boolean).slice(0, 8)
+      ? product.features.map((feature) => String(feature).trim()).filter(Boolean)
       : [],
     specs: Object.fromEntries(
       Object.entries(product.specs || {})
         .filter(([name, value]) => String(name).trim() && String(value).trim())
-        .slice(0, 12)
-        .map(([name, value]) => [cleanSeoText(String(name)), cleanSeoText(String(value))])
+        .map(([name, value]) => [String(name).trim(), String(value).trim()])
     ),
   };
 };
 
 export const mergeProductSeoRecords = (remoteProducts = []) => {
   const records = new Map();
-  staticProductSeoRecords.forEach((product) => {
+  (remoteProducts.length ? [] : staticProductSeoRecords).forEach((product) => {
     records.set(product.slug, {
       ...product,
       image: resolveUrl(product.image),

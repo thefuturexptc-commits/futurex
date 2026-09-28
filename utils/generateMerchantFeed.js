@@ -1,5 +1,8 @@
+import { getProductStock } from './productAvailability.js';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { getCustomerFacingPrice } from './productSeoData.js';
+import { isCatalogProductPublished } from './catalogVisibility.js';
 
 const SITE_URL = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.VITE_PUBLIC_SITE_URL || 'https://thefuturex.in').replace(/\/+$/, '');
 const BRAND = process.env.MERCHANT_FEED_BRAND || 'TheFutureX';
@@ -38,7 +41,7 @@ const hashString = (value = '') => {
   return hash.toString(36);
 };
 
-const getMerchantProductId = (product) => {
+export const getMerchantProductId = (product) => {
   const source = String(product.id || product.slug || product.name || 'item');
   const normalized = slugify(source) || 'item';
   if (normalized.length <= 50) return normalized;
@@ -105,25 +108,8 @@ const collectImages = (product) => {
     });
 };
 
-const getProductStock = (product) => {
-  if (Array.isArray(product.variants) && product.variants.length > 0) {
-    return product.variants.reduce((sum, variant) => {
-      if (Array.isArray(variant.sizes) && variant.sizes.length > 0) {
-        return sum + variant.sizes.reduce((sizeSum, sizeRow) => sizeSum + Number(sizeRow.stock || 0), 0);
-      }
-      return sum + Number(variant.stock || 0);
-    }, 0);
-  }
-
-  if (Array.isArray(product.colors) && product.colors.length > 0) {
-    return product.colors.reduce((sum, color) => sum + Number(color.stock || 0) - Number(color.reservedStock || 0), 0);
-  }
-
-  return Number(product.stock || 0) - Number(product.reservedStock || 0);
-};
-
 const getPrice = (product) => {
-  const price = Number(product.salePrice || product.price || product.mrp || 0);
+  const price = getCustomerFacingPrice(product);
   return Number.isFinite(price) && price > 0 ? price.toFixed(2) : '';
 };
 
@@ -133,7 +119,7 @@ const getEmiAvailable = (product) => {
   return true;
 };
 
-const buildDescription = (product) => {
+export const buildDescription = (product) => {
   const parts = [stripHtml(product.description || '')];
 
   if (Array.isArray(product.features) && product.features.length > 0) {
@@ -156,13 +142,14 @@ const withTimeout = (promise, timeoutMs) =>
     }),
   ]);
 
-const getRemoteProducts = async () => {
+export const getRemoteProducts = async () => {
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const snapshot = await withTimeout(getDocs(collection(db, 'products')), 6500);
 
   return snapshot.docs
-    .map((doc) => ({ id: doc.id, ...doc.data() }))
+    .map((doc) => ({ ...doc.data(), id: doc.id }))
+    .filter(isCatalogProductPublished)
     .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
 };
 
@@ -171,7 +158,8 @@ const tag = (name, value) => {
   return text ? `    <${name}>${xmlEscape(text)}</${name}>` : '';
 };
 
-const buildProductItem = (product) => {
+export const buildProductItem = (product) => {
+  if (!isCatalogProductPublished(product)) return '';
   const images = collectImages(product);
   const imageLink = images[0];
   const price = getPrice(product);
@@ -197,15 +185,14 @@ const buildProductItem = (product) => {
     tag('g:condition', 'new'),
     tag('g:brand', product.brand || BRAND),
     tag('g:product_type', product.category || ''),
-    product.mrp && Number(product.mrp) > Number(price) ? tag('g:sale_price', `${price} INR`) : '',
     '  </item>',
   ]
     .filter(Boolean)
     .join('\n');
 };
 
-export async function generateMerchantFeedXML() {
-  const products = await getRemoteProducts();
+export async function generateMerchantFeedXML(products = undefined) {
+  products = products || await getRemoteProducts();
   const items = products.map(buildProductItem).filter(Boolean).join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -217,4 +204,17 @@ export async function generateMerchantFeedXML() {
 ${items}
 </channel>
 </rss>`;
+}
+
+export async function generateMerchantFeedCSV(products = undefined) {
+  products = products || await getRemoteProducts();
+  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'availability', 'price', 'condition', 'brand', 'product_type'];
+  const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
+  const rows = products.filter((product) => buildProductItem(product)).map((product) => [
+    getMerchantProductId(product), product.name, buildDescription(product) || product.name,
+    `${SITE_URL}/product/${getProductSlug(product)}`, collectImages(product)[0], collectImages(product).slice(1, 11).join(','),
+    getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock',
+    `${getPrice(product)} INR`, 'new', product.brand || BRAND, product.category || '',
+  ].map(escape).join(','));
+  return [headers.join(','), ...rows].join('\n') + '\n';
 }

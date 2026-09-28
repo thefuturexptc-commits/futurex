@@ -8,6 +8,7 @@ type MerchantSyncResponse = {
   results?: Array<{ ok: boolean; productId: string; error?: string }>;
   error?: string;
   feedUrl?: string;
+  pendingFetch?: boolean;
 };
 
 const MERCHANT_FEED_URL = '/merchant-feed.xml';
@@ -21,6 +22,7 @@ const callMerchantSync = async (body: unknown): Promise<MerchantSyncResponse> =>
     return {
       ok: true,
       feedUrl: MERCHANT_FEED_URL,
+      pendingFetch: true,
       synced: {
         mode: 'feed',
         action: payload.action || 'upsert',

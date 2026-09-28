@@ -5,6 +5,7 @@ import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { sitemapRoutes, spaFallbackRoutes } from '../utils/siteRoutes.js';
 import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/productSeoData.js';
 import { generateSitemapXML } from '../utils/generateSitemap.js';
+import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/generateMerchantFeed.js';
 import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
 import { productOfferPolicies, buildReviewSchema } from '../utils/productSchema.js';
 import { tfx5BlogPosts } from '../utils/tfx5BlogPosts.js';
@@ -733,6 +734,8 @@ const injectProductSeo = (html, product) => {
 };
 
 const baseHtml = readFileSync(indexFile, 'utf8');
+// Keep the compiled SPA shell for live product pages, including products added after a build.
+writeFileSync(join(distDir, 'product-shell.html'), baseHtml, 'utf8');
 const remoteProducts = await fetchRemoteProducts();
 // A production snapshot must represent the live catalog. Vercel exposes VERCEL=1
 // during builds; other CI systems can opt in with REQUIRE_LIVE_PRODUCT_DATA=true.
@@ -845,8 +848,8 @@ for (const route of routes) {
 }
 
 writeFileSync(join(distDir, 'sitemap.xml'), await generateSitemapXML(), 'utf8');
-writeFileSync(join(distDir, 'product-feed.xml'), buildMerchantXmlFeed(productRecords), 'utf8');
-writeFileSync(join(distDir, 'product-feed.csv'), buildMerchantCsvFeed(productRecords), 'utf8');
+writeFileSync(join(distDir, 'product-feed.xml'), await generateMerchantFeedXML(remoteProducts), 'utf8');
+writeFileSync(join(distDir, 'product-feed.csv'), await generateMerchantFeedCSV(remoteProducts), 'utf8');
 writeFileSync(
   join(distDir, 'robots.txt'),
   `${['*', 'GPTBot', 'Google-Extended', 'ClaudeBot', 'PerplexityBot', 'Applebot-Extended'].map(buildRobotsBlock).join('\n\n')}\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
