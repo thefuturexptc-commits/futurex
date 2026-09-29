@@ -1518,7 +1518,7 @@ export const AdminDashboard: React.FC = () => {
       </div>
       {showProductModal && (
         <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-          <div className="w-full max-w-3xl max-h-[92dvh] rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-white/10 p-4 sm:p-6 overflow-hidden flex flex-col">
+          <div className="admin-product-modal w-full max-w-3xl max-h-[92dvh] rounded-2xl bg-white dark:bg-dark-surface border border-gray-200 dark:border-white/10 p-4 sm:p-6 overflow-hidden flex flex-col">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4 shrink-0">{isEditing ? 'Edit Product' : 'Add Product'}</h2>
             <form onSubmit={handleSaveProduct} className="space-y-4 overflow-y-auto pr-2">
               <section className="rounded-xl border border-gray-200 dark:border-white/10 p-4 bg-gray-50 dark:bg-white/5 space-y-4">
@@ -1617,7 +1617,7 @@ export const AdminDashboard: React.FC = () => {
                       Each line becomes one point on the product page. Use - or * for dots, or 1. 2. 3. for a numbered list.
                     </p>
                     {featuresString.trim() && (
-                      <ul className={`mt-3 space-y-2 rounded-lg border border-white/10 bg-black/20 p-3 pl-7 text-sm text-gray-200 ${featuresString.split('\n').some((feature) => /^\s*\d+[.)]\s*/.test(feature)) ? 'list-decimal' : 'list-disc'}`}>
+                      <ul className={`admin-product-preview mt-3 space-y-2 rounded-lg border border-white/10 bg-black/20 p-3 pl-7 text-sm text-gray-200 ${featuresString.split('\n').some((feature) => /^\s*\d+[.)]\s*/.test(feature)) ? 'list-decimal' : 'list-disc'}`}>
                         {featuresString
                           .split('\n')
                           .map((feature) => feature.replace(/^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/, '').trim())
@@ -1640,7 +1640,7 @@ export const AdminDashboard: React.FC = () => {
                       Use Key: Value, Key = Value, or Key - Value. These exact rows appear in the user Specs tab.
                     </p>
                     {Object.keys(parsedSpecsPreview).length > 0 && (
-                      <div className="mt-3 rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-gray-200">
+                      <div className="admin-product-preview mt-3 rounded-lg border border-white/10 bg-black/20 p-3 text-sm text-gray-200">
                         {Object.entries(parsedSpecsPreview).map(([key, value]) => (
                           <div key={key} className="flex items-start justify-between gap-3 border-b border-white/10 py-2 last:border-b-0">
                             <span className="font-semibold text-white">{key}</span>

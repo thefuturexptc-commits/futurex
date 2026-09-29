@@ -10570,3 +10570,26 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
+.admin-product-modal input:not([type='checkbox']):not([type='radio']):not([type='color']):not([type='file']),
+.admin-product-modal textarea,
+.admin-product-modal select {
+  background-color: #fff !important;
+  border-color: #cbd5e1 !important;
+  color: #111827 !important;
+}
+
+.admin-product-modal input::placeholder,
+.admin-product-modal textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+.admin-product-modal .admin-product-preview {
+  background-color: #f3f4f6 !important;
+  border-color: #d1d5db !important;
+  color: #374151 !important;
+}
+
+.admin-product-modal .admin-product-preview strong,
+.admin-product-modal .admin-product-preview span {
+  color: #111827 !important;
+}
