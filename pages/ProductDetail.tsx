@@ -1736,11 +1736,11 @@ export const ProductDetail: React.FC = () => {
     const productPath = `/product/${getProductSlug(product)}`;
     const image = product.images?.[0] || product.colors?.[0]?.images?.[0] || '/images/fav.webp';
     const seoRecord = buildProductSeoRecord(product);
-    const baseDescription = seoRecord?.description ||
+    const baseDescription = product.seoDescription?.trim() || seoRecord?.description ||
       stripHtml(product.description).slice(0, 155) ||
       product.features?.slice(0, 3).join(', ') ||
       `Shop ${product.name} from TheFutureX.`;
-    const description = seoRecord?.description || (primaryProductModel && !baseDescription.toLowerCase().includes(primaryProductModel.toLowerCase())
+    const description = product.seoDescription?.trim() || seoRecord?.description || (primaryProductModel && !baseDescription.toLowerCase().includes(primaryProductModel.toLowerCase())
       ? `${baseDescription.replace(/[. ]*$/, '')}. Model number: ${primaryProductModel}.`
       : baseDescription);
     const price = Number(product.salePrice || product.price || product.mrp || 0);
@@ -1771,6 +1771,7 @@ export const ProductDetail: React.FC = () => {
       '@id': `${productUrl}#product`,
       name: product.name,
       description,
+      ...(product.searchKeywords?.length ? { keywords: product.searchKeywords.join(', ') } : {}),
       image: productImages.map((item) => absoluteUrl(item)),
       model: primaryProductModel || undefined,
       mpn: primaryProductModel || undefined,

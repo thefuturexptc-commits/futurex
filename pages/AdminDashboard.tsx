@@ -93,7 +93,7 @@ interface BulkStockUndoState {
 }
 
 const inputClass =
-  'w-full p-2 border border-white/15 bg-gray-900 text-white rounded dark:bg-gray-800 dark:text-white dark:border-gray-600 focus:ring-2 focus:ring-primary-500';
+  'w-full p-2 border border-gray-300 bg-white text-gray-900 rounded placeholder:text-gray-400 dark:bg-gray-800 dark:text-white dark:border-gray-600 dark:placeholder:text-gray-400 focus:ring-2 focus:ring-primary-500';
 const createProductId = () => `p_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
 const MAX_PRODUCT_VIDEO_BYTES = 50 * 1024 * 1024;
 const MAX_PRODUCT_VIDEO_SECONDS = 30;
@@ -1589,6 +1589,21 @@ export const AdminDashboard: React.FC = () => {
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Full Description</label>
                   <RichTextEditor value={productForm.description || ''} onChange={(html) => setProductForm((prev) => ({ ...prev, description: html }))} />
                 </div>
+                <section className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 dark:border-white/10 dark:bg-white/5">
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">SEO Details</h3>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">These details help search engines understand this product. Keywords are stored as metadata and are not shown as product text.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Description</label>
+                    <textarea className={`${inputClass} min-h-[90px]`} value={productForm.seoDescription || ''} onChange={(e) => setProductForm((prev) => ({ ...prev, seoDescription: e.target.value }))} placeholder="Short description for search results" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Keywords</label>
+                    <textarea className={`${inputClass} min-h-[72px]`} value={(productForm.searchKeywords || []).join(', ')} onChange={(e) => setProductForm((prev) => ({ ...prev, searchKeywords: e.target.value.split(/[\n,]+/).map((keyword) => keyword.trim()).filter(Boolean) }))} placeholder="smart band, fitness tracker, wearable" />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Separate keywords with commas or new lines.</p>
+                  </div>
+                </section>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Key Features</label>
