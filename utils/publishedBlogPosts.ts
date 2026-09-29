@@ -1,5 +1,6 @@
 import type { BlogPost } from '../types';
 import { tfx5BlogPosts } from './tfx5BlogPosts.js';
+import { aeoGeoBlogPosts } from './aeoGEOBlogPosts.js';
 
 export type PublishedBlogPost = BlogPost & {
   image?: string;
@@ -10,6 +11,7 @@ const publishedAt = '2026-08-17T00:00:00.000Z';
 
 export const publishedBlogPosts: PublishedBlogPost[] = [
   ...tfx5BlogPosts.map((post) => ({ ...post, status: 'published' as const })),
+  ...aeoGeoBlogPosts,
   {
     id: 'tfx-smart-band-emi-guide', slug: 'tfx-smart-band-emi-guide', status: 'published', updatedAt: '2026-08-24T00:00:00.000Z',
     title: 'How to Buy a TFX Smart Band on EMI: A Step-by-Step Guide',
