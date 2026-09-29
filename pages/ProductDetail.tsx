@@ -1743,6 +1743,10 @@ export const ProductDetail: React.FC = () => {
     const description = product.seoDescription?.trim() || seoRecord?.description || (primaryProductModel && !baseDescription.toLowerCase().includes(primaryProductModel.toLowerCase())
       ? `${baseDescription.replace(/[. ]*$/, '')}. Model number: ${primaryProductModel}.`
       : baseDescription);
+    const seoKeywords = (product.searchKeywords || []).map((keyword) => keyword.trim()).filter(Boolean);
+    const metaDescription = seoKeywords.length
+      ? `${description.replace(/[.\s]+$/, '')}. Keywords: ${seoKeywords.join(', ')}.`
+      : description;
     const price = Number(product.salePrice || product.price || product.mrp || 0);
     const customerFacingPrice = getAutomaticOfferItemPricing(product).unitOfferPrice || price;
     // Schema.org expects Offer.price to be a number, not a currency-formatted string.
@@ -1753,7 +1757,7 @@ export const ProductDetail: React.FC = () => {
     const productUrl = absoluteUrl(productPath);
     setSeoMetadata({
       title: seoRecord?.seoTitle || `${product.name} - TheFutureX`,
-      description,
+      description: metaDescription,
       path: productPath,
       image,
       type: 'product',
@@ -1770,7 +1774,7 @@ export const ProductDetail: React.FC = () => {
       '@type': 'Product',
       '@id': `${productUrl}#product`,
       name: product.name,
-      description,
+      description: metaDescription,
       ...(product.searchKeywords?.length ? { keywords: product.searchKeywords.join(', ') } : {}),
       image: productImages.map((item) => absoluteUrl(item)),
       model: primaryProductModel || undefined,
