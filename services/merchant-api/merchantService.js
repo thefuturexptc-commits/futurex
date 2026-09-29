@@ -132,6 +132,17 @@ const collectProductImages = (product) => {
     });
 };
 
+const getSpec = (product, names) => {
+  const specs = product.specs || {};
+  const key = Object.keys(specs).find((candidate) => names.includes(candidate.toLowerCase()));
+  return key ? String(specs[key] || '').trim() : '';
+};
+
+const getColors = (product) => [...new Set([
+  ...(Array.isArray(product.colors) ? product.colors.map((color) => typeof color === 'string' ? color : color?.name) : []),
+  ...(Array.isArray(product.variants) ? product.variants.map((variant) => variant?.color || variant?.colorName) : []),
+].map((color) => String(color || '').trim()).filter(Boolean))];
+
 const buildMerchantProduct = (product) => {
   if (!isCatalogProductPublished(product)) throw new Error('This product is excluded from the published catalog.');
   if (!merchantId) throw new Error('Missing GOOGLE_MERCHANT_ID.');
@@ -157,6 +168,7 @@ const buildMerchantProduct = (product) => {
     channel: 'online',
     availability: getProductStock(product) > 0 && product.inStock !== false ? 'in stock' : 'out of stock',
     condition: 'new',
+    ...(product.googleProductCategory || product.google_product_category ? { googleProductCategory: product.googleProductCategory || product.google_product_category } : {}),
     price: {
       value: getCatalogOffer(product).regularPrice.toFixed(2),
       currency: 'INR',
@@ -167,6 +179,18 @@ const buildMerchantProduct = (product) => {
   if (additionalImageLinks.length > 0) {
     merchantProduct.additionalImageLinks = additionalImageLinks;
   }
+
+  const colors = getColors(product);
+  if (colors.length) merchantProduct.color = colors.join(' / ');
+  const material = getSpec(product, ['material']);
+  const size = getSpec(product, ['size']);
+  if (material) merchantProduct.material = material;
+  if (size) merchantProduct.sizes = [size];
+  const gtin = product.gtin || product.barcode;
+  const mpn = product.mpn || product.manufacturerPartNumber;
+  if (gtin) merchantProduct.gtin = String(gtin);
+  if (mpn) merchantProduct.mpn = String(mpn);
+  if (!gtin && !mpn) merchantProduct.identifierExists = false;
 
   if (getCatalogOffer(product).onSale) {
     merchantProduct.salePrice = { value: getCustomerFacingPrice(product).toFixed(2), currency: 'INR' };

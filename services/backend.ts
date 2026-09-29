@@ -790,7 +790,9 @@ const normalizeProductColors = (product: Product): Product => {
   const pricedProduct = isTfxV5Band(displayProduct)
     ? {
         ...displayProduct,
-        mrp: Math.max(Number(displayProduct.mrp || 0), TFX5_AI_BAND_PRICE + 2000),
+        // Preserve only a real saved MRP. Inventing a comparison price creates
+        // a sale claim that cannot be verified against the product page.
+        mrp: Number(displayProduct.mrp || 0),
         salePrice: TFX5_AI_BAND_PRICE,
         price: TFX5_AI_BAND_PRICE,
       }

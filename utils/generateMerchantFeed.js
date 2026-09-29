@@ -131,6 +131,20 @@ export const buildDescription = (product) => {
   return parts.join(' ').replace(/\s+/g, ' ').trim().slice(0, 5000);
 };
 
+const getSpec = (product, names) => {
+  const specs = product.specs || {};
+  const key = Object.keys(specs).find((candidate) => names.some((name) => candidate.toLowerCase() === name));
+  return key ? String(specs[key] || '').trim() : '';
+};
+
+const getColors = (product) => {
+  const colors = [
+    ...(Array.isArray(product.colors) ? product.colors.map((color) => typeof color === 'string' ? color : color?.name) : []),
+    ...(Array.isArray(product.variants) ? product.variants.map((variant) => variant?.color || variant?.colorName) : []),
+  ];
+  return [...new Set(colors.map((color) => String(color || '').trim()).filter(Boolean))];
+};
+
 export const getMerchantTitle = (product) => formatProductName(product.name || product.id);
 
 const withTimeout = (promise, timeoutMs) =>
@@ -194,6 +208,15 @@ export const buildProductItem = (product) => {
     tag('g:condition', 'new'),
     tag('g:brand', product.brand || BRAND),
     tag('g:product_type', product.category || ''),
+    tag('g:google_product_category', product.googleProductCategory || product.google_product_category || ''),
+    ...getColors(product).map((color) => tag('g:color', color)),
+    tag('g:material', getSpec(product, ['material'])),
+    tag('g:size', getSpec(product, ['size'])),
+    tag('g:gender', getSpec(product, ['gender'])),
+    tag('g:age_group', getSpec(product, ['age group', 'age_group'])),
+    tag('g:gtin', product.gtin || product.barcode || ''),
+    tag('g:mpn', product.mpn || product.manufacturerPartNumber || ''),
+    tag('g:identifier_exists', product.gtin || product.barcode || product.mpn || product.manufacturerPartNumber ? 'yes' : 'no'),
     '  </item>',
   ]
     .filter(Boolean)
@@ -217,7 +240,7 @@ ${items}
 
 export async function generateMerchantFeedCSV(products = undefined) {
   products = products || await getRemoteProducts();
-  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'availability', 'price', 'sale_price', 'condition', 'brand', 'product_type'];
+  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'availability', 'price', 'sale_price', 'condition', 'brand', 'product_type', 'google_product_category', 'color', 'material', 'size', 'gender', 'age_group', 'gtin', 'mpn', 'identifier_exists'];
   const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const rows = products.filter((product) => buildProductItem(product)).map((product) => [
     getMerchantProductId(product), getMerchantTitle(product), buildDescription(product) || product.name,
@@ -225,6 +248,10 @@ export async function generateMerchantFeedCSV(products = undefined) {
     getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock',
     `${getCatalogOffer(product).regularPrice.toFixed(2)} INR`,
     getCatalogOffer(product).onSale ? `${getPrice(product)} INR` : '', 'new', product.brand || BRAND, product.category || '',
+    product.googleProductCategory || product.google_product_category || '', getColors(product).join(', '),
+    getSpec(product, ['material']), getSpec(product, ['size']), getSpec(product, ['gender']), getSpec(product, ['age group', 'age_group']),
+    product.gtin || product.barcode || '', product.mpn || product.manufacturerPartNumber || '',
+    product.gtin || product.barcode || product.mpn || product.manufacturerPartNumber ? 'yes' : 'no',
   ].map(escape).join(','));
   return [headers.join(','), ...rows].join('\n') + '\n';
 }

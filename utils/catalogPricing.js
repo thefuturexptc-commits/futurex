@@ -70,6 +70,11 @@ export const getAutomaticOfferItemPricing = (item) => {
 export const getCatalogOffer = (product) => {
     const pricing = getAutomaticOfferItemPricing(product);
     const currentPrice = pricing.unitOfferPrice;
+    // TFX5's live product and checkout price is fixed at ₹9,999. Its catalog
+    // normalizer also replaces the comparison price, so a feed must not infer
+    // a sale from an older price left in the raw product document.
+    if (isTfxV5Band(product))
+        return { currentPrice, regularPrice: currentPrice, onSale: false };
     const regularPrice = Math.max(Number(product.price || 0), pricing.unitPrice);
     return { currentPrice, regularPrice, onSale: currentPrice > 0 && regularPrice > currentPrice };
 };
