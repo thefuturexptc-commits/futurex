@@ -112,6 +112,25 @@ const collectImages = (product) => {
     });
 };
 
+const collectVideos = (product) => {
+  const values = [
+    product.videoUrl,
+    product.videoByColor,
+    ...(Array.isArray(product.variants) ? product.variants.map((variant) => variant?.videoUrl) : []),
+  ];
+  const seen = new Set();
+  return flattenValues(values)
+    .map(resolveUrl)
+    .filter((url) => /^https?:\/\//i.test(url))
+    .filter((url) => /(?:youtube\.com|youtu\.be)/i.test(url) || /\.(?:mpg|mp4|wmv|avi|mov|flv|mpeg|mpegps)(?:[?#]|$)/i.test(url))
+    .filter((url) => {
+      if (seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    })
+    .slice(0, 10);
+};
+
 const getPrice = (product) => {
   const price = getCustomerFacingPrice(product);
   return Number.isFinite(price) && price > 0 ? price.toFixed(2) : '';
@@ -217,6 +236,7 @@ export const buildProductItem = (product) => {
     tag('g:link', `${SITE_URL}/product/${slug}`),
     tag('g:image_link', imageLink),
     ...additionalImages,
+    ...collectVideos(product).map((video) => tag('g:video_link', video)),
     tag('g:availability', availability),
     tag('g:price', `${(offer.onSale ? offer.regularPrice : offer.currentPrice).toFixed(2)} INR`),
     offer.onSale ? tag('g:sale_price', `${price} INR`) : '',
@@ -255,11 +275,12 @@ ${items}
 
 export async function generateMerchantFeedCSV(products = undefined) {
   products = products || await getRemoteProducts();
-  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'availability', 'price', 'sale_price', 'condition', 'brand', 'product_type', 'google_product_category', 'color', 'material', 'size', 'gender', 'age_group', 'gtin', 'mpn', 'identifier_exists'];
+  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'video_link', 'availability', 'price', 'sale_price', 'condition', 'brand', 'product_type', 'google_product_category', 'color', 'material', 'size', 'gender', 'age_group', 'gtin', 'mpn', 'identifier_exists'];
   const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const rows = products.filter((product) => buildProductItem(product)).map((product) => [
     getMerchantProductId(product), getMerchantTitle(product), buildDescription(product) || product.name,
     `${SITE_URL}/product/${getProductSlug(product)}`, collectImages(product)[0], collectImages(product).slice(1, 11).join(','),
+    collectVideos(product).join(','),
     getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock',
     `${getCatalogOffer(product).regularPrice.toFixed(2)} INR`,
     getCatalogOffer(product).onSale ? `${getPrice(product)} INR` : '', 'new', product.brand || BRAND, product.category || '',
