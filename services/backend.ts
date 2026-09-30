@@ -28,9 +28,10 @@ import { db, auth, storage, app as mainApp } from './firebaseConfig';
 import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, OfferLead, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails, SiteAnalyticsEvent, BlogPost } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
-import { TFX5_AI_BAND_PRICE, isTfxV5Band, isPureAirThreeInOne, PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE } from '../utils/coupons';
+import { TFX5_AI_BAND_PRICE, TFX5_AI_BAND_MRP, isTfxV5Band, isPureAirThreeInOne, PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE } from '../utils/coupons';
 import { publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { correctRingModel, getProductModelNumbers } from '../utils/productModel';
+import { getFanTitle } from '../utils/fanListings';
 import { isCatalogProductPublished } from '../utils/catalogVisibility.js';
 
 const logDevWarning = (...args: unknown[]) => {
@@ -790,9 +791,8 @@ const normalizeProductColors = (product: Product): Product => {
   const pricedProduct = isTfxV5Band(displayProduct)
     ? {
         ...displayProduct,
-        // Preserve only a real saved MRP. Inventing a comparison price creates
-        // a sale claim that cannot be verified against the product page.
-        mrp: Number(displayProduct.mrp || 0),
+        // These are the regular and selling prices displayed on the TFX5 page.
+        mrp: TFX5_AI_BAND_MRP,
         salePrice: TFX5_AI_BAND_PRICE,
         price: TFX5_AI_BAND_PRICE,
       }
@@ -937,9 +937,12 @@ const normalizeProductColors = (product: Product): Product => {
     return acc;
   }, { ...(product.videoByColor || {}) });
 
+  const sourceName = product.name.trim();
+  const storefrontName = getFanTitle(displayProduct) || sourceName;
+
   return ensureProductReviews({
     ...pricedProduct,
-    name: product.name.trim(),
+    name: storefrontName,
     slug,
     description: product.description || '',
     features: Array.isArray(product.features) ? product.features : [],

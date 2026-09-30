@@ -165,7 +165,7 @@ const productFallbacks = [
   },
   {
     slug: 'tfx-smart-10x-air',
-    name: 'TFX Smart 10X Air Bladeless Hot & Cool Fan',
+    name: 'The Futurex QG830 Bladeless Tower Fan with Hot & Cool Modes & 10 Cooling Speeds | PTC Ceramic Heating',
     category: 'Smart Fans',
     description: 'Buy TFX Smart 10X Air, a bladeless hot and cool fan with 10 speed settings, smooth airflow, remote control, and all-season room comfort.',
     image: '/images/aura-breeze-pro.webp',
@@ -198,7 +198,7 @@ const productFallbacks = [
   },
   {
     slug: 'tfxhot-and-coolair-pro',
-    name: 'TFXHot and CoolAir Pro Bladeless Hot & Cool Fan',
+    name: 'The Futurex TP09 PRO Bladeless Tower Fan with Hot & Cool Modes & Remote Control | PTC Ceramic Heating | ABS Body',
     category: 'Smart Fans',
     description: 'Shop The FutureX TP09 PLUS Bladeless Hot & Cool Tower Fan with BLDC motor, PTC ceramic heating, 10 speeds, 180-degree oscillation, remote control, and 1-year warranty.',
     image: '/images/aura-breeze-pro.webp',

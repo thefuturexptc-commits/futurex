@@ -7,6 +7,10 @@ export const isPureAirThreeInOne = (item) => {
     return /\bpureair\s*3[\s-]*in[\s-]*1\b|\btfx[\s-]*tp02\s+3[\s-]*in[\s-]*1\b/i.test(item.name);
 };
 export const TFX5_AI_BAND_PRICE = 9999;
+// The TFX5 storefront displays ₹11,999 as its regular price and ₹9,999 as its
+// current selling price. Keep this explicit so product pages and Merchant feeds
+// submit the same verifiable offer instead of deriving an MRP from a formula.
+export const TFX5_AI_BAND_MRP = 11999;
 export const formatInrAmount = (amount) => `₹${Number(amount || 0).toLocaleString('en-IN', {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
@@ -70,11 +74,10 @@ export const getAutomaticOfferItemPricing = (item) => {
 export const getCatalogOffer = (product) => {
     const pricing = getAutomaticOfferItemPricing(product);
     const currentPrice = pricing.unitOfferPrice;
-    // TFX5's live product and checkout price is fixed at ₹9,999. Its catalog
-    // normalizer also replaces the comparison price, so a feed must not infer
-    // a sale from an older price left in the raw product document.
+    // Keep the TFX5's displayed regular and selling prices aligned with the
+    // storefront offer and Merchant Center sale_price attributes.
     if (isTfxV5Band(product))
-        return { currentPrice, regularPrice: currentPrice, onSale: false };
+        return { currentPrice, regularPrice: TFX5_AI_BAND_MRP, onSale: true };
     const regularPrice = Math.max(Number(product.price || 0), pricing.unitPrice);
     return { currentPrice, regularPrice, onSale: currentPrice > 0 && regularPrice > currentPrice };
 };

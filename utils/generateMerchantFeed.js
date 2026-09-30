@@ -3,9 +3,10 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { getCustomerFacingPrice } from './productSeoData.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
-import { getCatalogOffer } from './catalogPricing.js';
+import { getCatalogOffer, isTfxV5Band } from './catalogPricing.js';
 import { mergeProductReviews } from './productSchema.js';
 import { formatProductName } from './productName.js';
+import { getFanTitle } from './fanListings.ts';
 
 const SITE_URL = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.VITE_PUBLIC_SITE_URL || 'https://thefuturex.in').replace(/\/+$/, '');
 const BRAND = process.env.MERCHANT_FEED_BRAND || 'TheFutureX';
@@ -145,7 +146,21 @@ const getColors = (product) => {
   return [...new Set(colors.map((color) => String(color || '').trim()).filter(Boolean))];
 };
 
-export const getMerchantTitle = (product) => formatProductName(product.name || product.id);
+export const getMerchantTitle = (product) => {
+  if (isTfxV5Band(product)) {
+    return 'The FutureX AI Smart Band TFX5 - Heart Rate, SPO2 & Fitness Tracker';
+  }
+
+  const fanTitle = getFanTitle(product);
+  if (fanTitle) return fanTitle;
+
+  const title = formatProductName(product.name || product.id);
+  const isHotAndCoolFan = /hot\s*(?:and|&)\s*cool|smart\s*10x\s*air/i.test(`${product.name || ''} ${product.description || ''}`);
+  const model = getSpec(product, ['model', 'model number']);
+  return isHotAndCoolFan && model && !title.toLowerCase().includes(model.toLowerCase())
+    ? `${title} - Model ${model}`
+    : title;
+};
 
 const withTimeout = (promise, timeoutMs) =>
   Promise.race([

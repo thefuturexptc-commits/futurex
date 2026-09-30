@@ -10,8 +10,8 @@ export const normalizeCouponCode = (code: string) => code.trim().toUpperCase();
 type OfferItemIdentity = Pick<CartItem, 'category' | 'name'> & Partial<Pick<CartItem, 'slug'>>;
 type OfferPricedItem = OfferItemIdentity & Partial<Pick<CartItem, 'price' | 'salePrice' | 'quantity'>>;
 
-import { PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE, isPureAirThreeInOne, TFX5_AI_BAND_PRICE, formatInrAmount, isTfxV5Band, getOfferBaseUnitPrice, isFanOfferItem, isWearableOfferItem, getAutomaticOfferRateForItem, getAutomaticOfferRateLabel, getAutomaticOfferItemPricing } from './catalogPricing.js';
-export { PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE, isPureAirThreeInOne, TFX5_AI_BAND_PRICE, formatInrAmount, isTfxV5Band, getOfferBaseUnitPrice, isFanOfferItem, isWearableOfferItem, getAutomaticOfferRateForItem, getAutomaticOfferRateLabel, getAutomaticOfferItemPricing } from './catalogPricing.js';
+import { PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE, isPureAirThreeInOne, TFX5_AI_BAND_PRICE, TFX5_AI_BAND_MRP, formatInrAmount, isTfxV5Band, getOfferBaseUnitPrice, isFanOfferItem, isWearableOfferItem, getAutomaticOfferRateForItem, getAutomaticOfferRateLabel, getAutomaticOfferItemPricing } from './catalogPricing.js';
+export { PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE, isPureAirThreeInOne, TFX5_AI_BAND_PRICE, TFX5_AI_BAND_MRP, formatInrAmount, isTfxV5Band, getOfferBaseUnitPrice, isFanOfferItem, isWearableOfferItem, getAutomaticOfferRateForItem, getAutomaticOfferRateLabel, getAutomaticOfferItemPricing } from './catalogPricing.js';
 
 export const calculateAutomaticOfferSummary = (items: OfferPricedItem[]) => {
   const subtotal = Number(items.reduce((sum, item) => {
