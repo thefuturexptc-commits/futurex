@@ -903,20 +903,13 @@ const getProductFaqSchema = (productName: string) => ({
   ],
 });
 
-const TRUST_TILE_ICONS: Record<'shipping' | 'cod' | 'warranty' | 'secure', React.ReactNode> = {
+const TRUST_TILE_ICONS: Record<'shipping' | 'warranty' | 'secure' | 'exchange', React.ReactNode> = {
   shipping: (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 7h11v9H3z" />
       <path d="M14 10h4l3 3v3h-7z" />
       <circle cx="7.5" cy="18" r="1.6" />
       <circle cx="17.5" cy="18" r="1.6" />
-    </svg>
-  ),
-  cod: (
-    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M9.6 9.8c0-1.1 1-1.9 2.4-1.9s2.4.8 2.4 1.7c0 1.2-1.1 1.7-2.4 2.2-1.4.5-2.4 1.1-2.4 2.3 0 1 1 1.8 2.4 1.8s2.4-.8 2.4-1.9" />
-      <path d="M12 6.8v1.1M12 16.1v1.1" />
     </svg>
   ),
   warranty: (
@@ -931,13 +924,18 @@ const TRUST_TILE_ICONS: Record<'shipping' | 'cod' | 'warranty' | 'secure', React
       <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
     </svg>
   ),
+  exchange: (
+    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-1" />
+    </svg>
+  ),
 };
 
 const productCheckoutTrustSignals: Array<{ title: string; mobileTitle: string; text: string; icon: keyof typeof TRUST_TILE_ICONS }> = [
   { title: 'Free shipping across India', mobileTitle: 'Free shipping', text: '', icon: 'shipping' },
-  { title: 'COD available on eligible orders', mobileTitle: 'Cash on delivery', text: '', icon: 'cod' },
   { title: 'Brand warranty support', mobileTitle: 'Brand warranty', text: 'Need help? thefuturex.ptc@gmail.com | 8530340676', icon: 'warranty' },
   { title: 'Secure checkout', mobileTitle: 'Secure checkout', text: 'UPI, cards, wallet', icon: 'secure' },
+  { title: '7-day exchange review', mobileTitle: '7-day exchange', text: 'For verified delivery defects', icon: 'exchange' },
 ];
 
 const getWarrantyDisplayText = (productFamily: string) => {
@@ -971,11 +969,11 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
     ? 'inline-flex items-center rounded-md bg-sky-400/20 px-2 py-0.5 text-[10px] font-semibold leading-4 text-sky-100 transition hover:bg-sky-400/30 hover:text-white'
     : 'inline-flex items-center rounded-md bg-sky-200 px-2 py-0.5 text-[10px] font-semibold leading-4 text-sky-900 transition hover:bg-sky-300 hover:text-sky-950';
   const tileBaseClass = dark
-    ? 'tfx-trust-tile min-w-0 border-r border-white/10 px-1 py-3 text-center last:border-r-0 sm:rounded-xl sm:border sm:border-white/10 sm:bg-white/5 sm:px-3.5 sm:py-3.5 sm:text-left sm:shadow-[0_10px_24px_rgba(0,0,0,0.12)]'
-    : 'tfx-trust-tile min-w-0 border-r border-slate-200 px-1 py-3 text-center last:border-r-0 sm:rounded-xl sm:border sm:border-slate-200 sm:bg-[#fbfaf7] sm:px-3.5 sm:py-3.5 sm:text-left sm:shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
+    ? 'tfx-trust-tile min-h-[5.5rem] min-w-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.12)]'
+    : 'tfx-trust-tile min-h-[5.5rem] min-w-0 rounded-xl border border-slate-200 bg-[#fbfaf7] px-3 py-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
   const iconChipClass = dark
-    ? 'tfx-trust-tile-icon mx-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-500/15 text-primary-300 sm:mx-0'
-    : 'tfx-trust-tile-icon mx-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#a9812f]/10 text-[#8a6a20] sm:mx-0';
+    ? 'tfx-trust-tile-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-500/15 text-primary-300'
+    : 'tfx-trust-tile-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#a9812f]/10 text-[#8a6a20]';
   return (
     <div className="relative mt-4">
       <style>{`
@@ -1028,34 +1026,24 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
           74% { transform: scale(1.06); }
           82% { transform: scale(1); }
         }
-        .tfx-trust-tile--cod .tfx-trust-tile-icon svg {
-          animation: tfx-trust-coin-flip 2.6s ease-in-out infinite;
-        }
-        @keyframes tfx-trust-coin-flip {
-          0%, 40%, 100% { transform: rotateY(0deg); }
-          20% { transform: rotateY(180deg); }
-        }
         @media (prefers-reduced-motion: reduce) {
           .tfx-trust-tile { opacity: 1; transform: none; animation: none; }
           .tfx-trust-tile--shipping .tfx-trust-tile-icon svg,
           .tfx-trust-tile--secure .tfx-trust-tile-icon svg,
           .tfx-trust-tile--warranty .tfx-trust-tile-icon svg,
-          .tfx-trust-tile--cod .tfx-trust-tile-icon svg {
-            animation: none;
-          }
         }
       `}</style>
-      <div className={`grid grid-cols-4 rounded-2xl border ${dark ? 'border-white/10 bg-white/5' : 'border-slate-200 bg-[#fbfaf7]'} sm:grid-cols-2 sm:gap-3 sm:border-0 sm:bg-transparent`}>
+      <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2 sm:gap-3">
         {productCheckoutTrustSignals.map((signal, index) => {
           const { title, mobileTitle, text, icon } = signal;
           const isWarrantyTile = title === 'Brand warranty support';
-          const tileClass = `${tileBaseClass} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'col-span-4 sm:col-span-2' : ''}`;
+          const tileClass = `${tileBaseClass} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'sm:col-span-2' : ''}`;
           const tileStyle = { animationDelay: `${index * 90}ms` };
 
           if (isWarrantyTile && product) {
             return (
               <div key={title} className={tileClass} style={tileStyle}>
-                <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start">
+                <div className="flex items-start gap-3">
                   <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
                   <div className="min-w-0">
                     <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
@@ -1090,7 +1078,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
 
           return (
             <div key={title} className={tileClass} style={tileStyle}>
-              <div className="flex flex-col items-center gap-2 sm:flex-row sm:items-start">
+              <div className="flex items-start gap-3">
                 <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
                 <div className="min-w-0">
                   <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
@@ -3105,33 +3093,6 @@ export const ProductDetail: React.FC = () => {
                 {offerLine}
                 {paymentOfferBlock}
 
-                <div className="mt-4 grid grid-cols-1 gap-2 border-t border-slate-100 pt-4 text-sm sm:grid-cols-2">
-                  <div className="flex items-center gap-2 text-slate-700">
-                    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-emerald-700" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                      <path d="M3 6h11v10H3zM14 9h3l4 4v3h-7z" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM18 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" />
-                    </svg>
-                    <span><strong className="font-semibold text-slate-950">Free delivery</strong> across India</span>
-                  </div>
-                  <a href="/info/returns-refund" className="flex items-center gap-2 text-slate-700 transition hover:text-slate-950">
-                    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5 shrink-0 text-[#a9812f]" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
-                      <path d="M9 14 4 9l5-5M4 9h10a6 6 0 0 1 0 12h-1" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span><strong className="font-semibold text-slate-950">7-day exchange review</strong> for verified delivery defects</span>
-                  </a>
-                </div>
-
-                <div className="mt-4 flex items-center gap-2">
-                  <span className="relative flex h-2 w-2">
-                    {canAdd && (
-                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                    )}
-                    <span className={`relative inline-flex h-2 w-2 rounded-full ${canAdd ? 'bg-emerald-600' : 'bg-red-500'}`} />
-                  </span>
-                  <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${canAdd ? 'text-emerald-700' : 'text-red-600'}`}>
-                    {canAdd ? 'In stock' : 'Out of stock'}
-                  </p>
-                </div>
               </div>
 
               {product.colors && product.colors.length > 0 && (
@@ -3226,6 +3187,20 @@ export const ProductDetail: React.FC = () => {
                 </div>
               )}
 
+              <div className="mt-5 flex items-center gap-2">
+                <span className="relative flex h-2 w-2">
+                  {canAdd && (
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+                  )}
+                  <span className={`relative inline-flex h-2 w-2 rounded-full ${canAdd ? 'bg-emerald-600' : 'bg-red-500'}`} />
+                </span>
+                <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${canAdd ? 'text-emerald-700' : 'text-red-600'}`}>
+                  {canAdd ? 'In stock' : 'Out of stock'}
+                </p>
+              </div>
+
+              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />
+
               <div ref={mobileCtaAnchorRef} className="mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2">
                 <button
                   type="button"
@@ -3276,8 +3251,6 @@ export const ProductDetail: React.FC = () => {
                   View Cart
                 </button>
               )}
-
-              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />
 
               {flipkartListing && (
                 <a
