@@ -2985,6 +2985,13 @@ export const ProductDetail: React.FC = () => {
         .product-offer-badge {
           animation: productBadgePulse 2.6s ease-in-out infinite;
         }
+        .product-offer-badge--mega {
+          animation: productMegaPriceDropPulse 1.6s ease-in-out infinite;
+        }
+        @keyframes productMegaPriceDropPulse {
+          0%, 100% { box-shadow: 0 4px 14px rgba(220,38,38,0.2), 0 0 0 0 rgba(220,38,38,0.18); }
+          50% { box-shadow: 0 6px 22px rgba(220,38,38,0.34), 0 0 0 5px rgba(220,38,38,0.08); }
+        }
         .product-banner-media {
           transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
         }
@@ -3204,8 +3211,8 @@ export const ProductDetail: React.FC = () => {
               )}
             </div>
             {(isFeaturedBandProduct || isMegaPriceDropBand) && (
-              <div className="product-offer-badge mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-[#a9812f]/30 bg-[#fbf6ea] px-3.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#8a6a20] shadow-[0_1px_6px_rgba(169,129,47,0.18)] sm:px-4 sm:text-xs">
-                <span className="h-1 w-1 rounded-full bg-[#a9812f]" />
+              <div className={`product-offer-badge ${isMegaPriceDropBand ? 'product-offer-badge--mega border-red-700 bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-lg' : 'border-[#a9812f]/30 bg-[#fbf6ea] text-[#8a6a20] shadow-[0_1px_6px_rgba(169,129,47,0.18)]'} mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.2em] sm:px-4 sm:py-2 sm:text-xs`}>
+                {isMegaPriceDropBand ? <span aria-hidden="true">⚡</span> : <span className="h-1 w-1 rounded-full bg-[#a9812f]" />}
                 {isMegaPriceDropBand ? 'Mega Price Drop' : 'Limited Time Offer'}
               </div>
             )}
