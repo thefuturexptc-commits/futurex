@@ -137,6 +137,9 @@ const getPrice = (product) => {
 };
 
 export const buildDescription = (product) => {
+  const shortDescription = stripHtml(product.shortDescription || '');
+  if (shortDescription) return shortDescription.slice(0, 5000);
+
   const parts = [stripHtml(product.description || '')];
 
   if (Array.isArray(product.features) && product.features.length > 0) {

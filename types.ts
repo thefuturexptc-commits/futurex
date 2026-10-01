@@ -112,6 +112,7 @@ export interface Product {
   slug?: string;
   category: string;
   description: string;
+  shortDescription?: string;
   seoDescription?: string;
   mrp: number;
   salePrice: number;

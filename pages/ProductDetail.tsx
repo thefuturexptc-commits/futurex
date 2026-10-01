@@ -42,6 +42,7 @@ import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
 import tfx5FitnessTrackingBanner from '../assets/images/tfx5-overview-fitness-tracking.webp';
 import tfx5PrecisionSensorsBanner from '../assets/images/tfx5-overview-precision-sensors.webp';
+import tfx5OverviewCollage from '../assets/images/tfx5-overview-collage.webp';
 import premiumBandModelBanner from '../assets/images/premium-band-model-banner.webp';
 import premiumBandLifestyleHiking from '../assets/images/premium-band-lifestyle-hiking.webp';
 import premiumBandWaterproofPool from '../assets/images/premium-band-waterproof-pool.webp';
@@ -969,8 +970,8 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
     ? 'inline-flex items-center rounded-md bg-sky-400/20 px-2 py-0.5 text-[10px] font-semibold leading-4 text-sky-100 transition hover:bg-sky-400/30 hover:text-white'
     : 'inline-flex items-center rounded-md bg-sky-200 px-2 py-0.5 text-[10px] font-semibold leading-4 text-sky-900 transition hover:bg-sky-300 hover:text-sky-950';
   const tileBaseClass = dark
-    ? 'tfx-trust-tile min-h-[5.5rem] min-w-0 rounded-xl border border-white/10 bg-white/5 px-3 py-3 text-left shadow-[0_10px_24px_rgba(0,0,0,0.12)]'
-    : 'tfx-trust-tile min-h-[5.5rem] min-w-0 rounded-xl border border-slate-200 bg-[#fbfaf7] px-3 py-3 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)]';
+    ? 'tfx-trust-tile min-h-[4rem] min-w-0 rounded-xl border border-white/10 bg-white/5 px-2.5 py-2.5 text-left shadow-[0_10px_24px_rgba(0,0,0,0.12)] sm:min-h-[4.5rem] sm:px-3 sm:py-3'
+    : 'tfx-trust-tile min-h-[4rem] min-w-0 rounded-xl border border-slate-200 bg-[#fbfaf7] px-2.5 py-2.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[4.5rem] sm:px-3 sm:py-3';
   const iconChipClass = dark
     ? 'tfx-trust-tile-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-500/15 text-primary-300'
     : 'tfx-trust-tile-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#a9812f]/10 text-[#8a6a20]';
@@ -1033,11 +1034,11 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
           .tfx-trust-tile--warranty .tfx-trust-tile-icon svg,
         }
       `}</style>
-      <div className="grid grid-cols-1 items-stretch gap-2 sm:grid-cols-2 sm:gap-3">
+      <div className="grid grid-cols-2 items-stretch gap-2 sm:gap-3">
         {productCheckoutTrustSignals.map((signal, index) => {
           const { title, mobileTitle, text, icon } = signal;
           const isWarrantyTile = title === 'Brand warranty support';
-          const tileClass = `${tileBaseClass} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'sm:col-span-2' : ''}`;
+          const tileClass = `${tileBaseClass} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'col-span-2' : ''}`;
           const tileStyle = { animationDelay: `${index * 90}ms` };
 
           if (isWarrantyTile && product) {
@@ -1125,33 +1126,33 @@ const ProductPaymentOfferOptions: React.FC<{ product: Product; price: number; da
   const prepaidDiscount = getPrepaidDiscountForItems([product], price);
   const onlinePrice = Number(Math.max(0, price - prepaidDiscount).toFixed(2));
   const panelClass = dark
-    ? 'mt-4 w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-white/[0.04] text-white sm:max-w-none'
-    : 'mt-4 w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-[0_10px_24px_rgba(15,23,42,0.08)] sm:max-w-none';
+    ? 'mt-3 w-full max-w-sm overflow-hidden rounded-xl border border-white/10 bg-white/[0.04] text-white sm:max-w-none'
+    : 'mt-3 w-full max-w-sm overflow-hidden rounded-xl border border-slate-200 bg-white text-slate-950 shadow-[0_6px_16px_rgba(15,23,42,0.07)] sm:max-w-none';
   const mutedClass = dark ? 'text-slate-300' : 'text-slate-500';
   const codPriceClass = dark ? 'text-white' : 'text-slate-950';
   const selectedRowClass = dark ? 'is-selected bg-emerald-400/10' : 'is-selected bg-emerald-50/90';
   return (
     <div className={`${panelClass} product-payment-offers ${dark ? 'product-payment-offers-dark' : ''}`}>
-      <h3 className={`px-4 pt-4 text-sm font-black ${dark ? 'text-white' : 'text-slate-950'}`}>Payment offers</h3>
-      <div className="mt-3 grid gap-2 px-3 pb-3" role="group" aria-label="Choose payment offer">
+      <h3 className={`px-3 pt-3 text-[13px] font-black sm:text-sm ${dark ? 'text-white' : 'text-slate-950'}`}>Payment offers</h3>
+      <div className="mt-2 grid gap-1.5 px-2.5 pb-2.5" role="group" aria-label="Choose payment offer">
         <button
           type="button"
           onClick={() => setSelectedPayment('online')}
           aria-pressed={selectedPayment === 'online'}
-          className={`product-payment-offer-option grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-xl px-4 py-3 text-left transition ${selectedPayment === 'online' ? selectedRowClass : ''}`}
+          className={`product-payment-offer-option grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-lg px-3 py-2.5 text-left transition ${selectedPayment === 'online' ? selectedRowClass : ''}`}
         >
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-base font-black">Pay Online</p>
+              <p className="text-sm font-black sm:text-[15px]">Pay Online</p>
               {prepaidDiscount > 0 && (
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[11px] font-black text-emerald-700">
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-black text-emerald-700">
                   Flat {formatInrAmount(prepaidDiscount)} off
                 </span>
               )}
             </div>
-            <p className={`mt-0.5 text-xs font-semibold ${mutedClass}`}>UPI, Card, Wallets</p>
+            <p className={`mt-0.5 text-[11px] font-semibold ${mutedClass}`}>UPI, Card, Wallets</p>
           </div>
-          <p className="text-lg font-black text-emerald-600">{formatInrAmount(onlinePrice)}</p>
+          <p className="text-base font-black text-emerald-600 sm:text-[17px]">{formatInrAmount(onlinePrice)}</p>
           <span className={`product-payment-radio ${selectedPayment === 'online' ? 'is-selected' : ''}`} aria-hidden="true">
             <span className="product-payment-radio-dot" />
           </span>
@@ -1160,13 +1161,13 @@ const ProductPaymentOfferOptions: React.FC<{ product: Product; price: number; da
           type="button"
           onClick={() => setSelectedPayment('cod')}
           aria-pressed={selectedPayment === 'cod'}
-          className={`product-payment-offer-option grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 rounded-xl px-4 py-3 text-left transition ${selectedPayment === 'cod' ? selectedRowClass : ''}`}
+          className={`product-payment-offer-option grid w-full grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2 rounded-lg px-3 py-2.5 text-left transition ${selectedPayment === 'cod' ? selectedRowClass : ''}`}
         >
           <div className="min-w-0">
-            <p className="text-base font-black">Cash on Delivery</p>
-            <p className={`mt-0.5 text-xs font-semibold ${mutedClass}`}>Pay when your order arrives</p>
+            <p className="text-sm font-black sm:text-[15px]">Cash on Delivery</p>
+            <p className={`mt-0.5 text-[11px] font-semibold ${mutedClass}`}>Pay when your order arrives</p>
           </div>
-          <p className={`text-lg font-black ${codPriceClass}`}>{formatInrAmount(price)}</p>
+          <p className={`text-base font-black sm:text-[17px] ${codPriceClass}`}>{formatInrAmount(price)}</p>
           <span className={`product-payment-radio ${selectedPayment === 'cod' ? 'is-selected' : ''}`} aria-hidden="true">
             <span className="product-payment-radio-dot" />
           </span>
@@ -1395,6 +1396,8 @@ export const ProductDetail: React.FC = () => {
 
   const [activeDetailTab, setActiveDetailTab] = useState<ProductDetailTabKey>('description');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [activeTfx5DescriptionTab, setActiveTfx5DescriptionTab] = useState<'description' | 'additional' | 'warranty'>('description');
+  const [isTfx5DescriptionExpanded, setIsTfx5DescriptionExpanded] = useState(false);
   const [isHeroDescriptionExpanded, setIsHeroDescriptionExpanded] = useState(false);
   const [showAllMobileOverview, setShowAllMobileOverview] = useState(false);
   const [showAllSpecs, setShowAllSpecs] = useState(false);
@@ -1855,6 +1858,29 @@ export const ProductDetail: React.FC = () => {
   }, [product]);
 
   useEffect(() => {
+    const page = document.querySelector('.product-detail-page');
+    if (!page) return;
+
+    const sections = Array.from(page.querySelectorAll<HTMLElement>('.product-scroll-section'));
+    if (!sections.length) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      sections.forEach((section) => section.classList.add('product-scroll-section-visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add('product-scroll-section-visible');
+        observer.unobserve(entry.target);
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+
+    sections.forEach((section) => observer.observe(section));
+    return () => observer.disconnect();
+  }, [product]);
+
+  useEffect(() => {
     if (!requiresRingSize) {
       setSelectedSize('');
       setSizeError('');
@@ -2159,6 +2185,7 @@ export const ProductDetail: React.FC = () => {
   const productVideoIndex = displayedImages.length;
   const displayedMediaCount = displayedImages.length + (productVideoUrl ? 1 : 0);
   const shortDescription = stripHtml(product.description);
+  const productSubtitle = stripHtml(product.shortDescription || '');
   const productFamilyText = `${normalizedCategory} ${product.name}`.toLowerCase();
   const productFamily = /\b(band|bracelet)\b/.test(productFamilyText)
     ? 'band'
@@ -2703,6 +2730,9 @@ export const ProductDetail: React.FC = () => {
     ...overviewSections.slice(1),
   ];
   const mobileProductBannerSections = overviewMediaSections.filter((section) => section.image || section.video);
+  const tfx5SecondOverviewImageTitle = isTfxV5Band
+    ? overviewMediaSections.filter((section) => section.image)[1]?.title
+    : undefined;
   const familyProductFaqs: Record<string, Array<{ q: string; a: string }>> = {
     band: [
       { q: `What does ${product.name} track?`, a: `${product.name} supports fitness and wellness tracking such as activity, sleep, heart rate and connected app insights depending on the model.` },
@@ -2771,6 +2801,140 @@ export const ProductDetail: React.FC = () => {
       window.scrollTo({ top, behavior: 'smooth' });
     }, 0);
   };
+  const tfx5Showcase = (
+    <img
+      src={tfx5OverviewCollage}
+      alt="The FutureX TFX5 AI Smart Band: everyday wear, tech specifications, included items, colour options, and key tracking features"
+      className="mx-auto block h-auto w-full max-w-7xl rounded-xl"
+      loading="lazy"
+      decoding="async"
+    />
+  );
+  const tfx5DescriptionSections = [
+    {
+      title: 'Fitness and activity tracking',
+      copy: 'Track supported heart rate, blood oxygen (SpO₂), sleep, stress and mood, recovery, steps, calories, distance, and workout activity. The TFX Vital App brings synced information together so you can review daily routines and recorded trends.',
+    },
+    {
+      title: 'AI-powered TFX Vital guidance',
+      copy: 'The app can organize available profile and synced activity information into simple wellness summaries and general guidance for exercise, walking, recovery, sleep, and everyday fitness. Details that have not been recorded or synced may appear as unavailable.',
+    },
+    {
+      title: 'Metabolism and nutrition management',
+      copy: 'Use the connected app to organize your daily calorie goal, calories consumed and burned, remaining calories, protein, fat, carbohydrates, and fiber in one place.',
+    },
+    {
+      title: 'Meal photo calorie estimates',
+      copy: 'Capture or upload a food photo for an estimated calorie value and manage saved meals in the app. Estimates can vary with portion size, ingredients, preparation, and image quality.',
+    },
+    {
+      title: 'Women’s wellness tracking',
+      copy: 'Supported women’s wellness features are available alongside the band’s regular fitness and activity functions.',
+    },
+    {
+      title: 'Screenless, lightweight design',
+      copy: 'A distraction-free screenless design and lightweight fit support regular day and night wear, including workouts, everyday activities, and sleep tracking.',
+    },
+    {
+      title: 'IP68 water and dust resistance',
+      copy: 'The IP68-rated design is made for everyday activities, workouts, sweat, and light rain. Water resistance can vary with usage conditions and normal wear.',
+    },
+    {
+      title: 'Battery and charging',
+      copy: 'Enjoy approximately 7–10 days of battery life, depending on usage, enabled features, syncing frequency, and operating conditions. Recharge using the included charging dock.',
+    },
+  ];
+  const tfx5ArrangedDescription = (
+    <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+      <div role="tablist" aria-label="TFX5 product information" className="grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
+        {([
+          ['description', 'Description'],
+          ['additional', 'Additional Detail'],
+          ['warranty', 'Warranty Terms'],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            id={`tfx5-description-tab-${key}`}
+            type="button"
+            role="tab"
+            aria-selected={activeTfx5DescriptionTab === key}
+            onClick={() => setActiveTfx5DescriptionTab(key)}
+            className={`min-h-14 border-b-[3px] px-2 py-3 text-[10px] font-bold uppercase tracking-wide transition sm:min-h-16 sm:px-4 sm:text-sm ${activeTfx5DescriptionTab === key ? 'border-[#8f2428] text-[#8f2428]' : 'border-transparent text-slate-700 hover:text-[#8f2428]'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" aria-labelledby={`tfx5-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-8">
+        {activeTfx5DescriptionTab === 'description' && (
+          <div>
+            <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-2'}`}>
+              The FutureX AI Smart Band V5 is a smart fitness band, AI fitness tracker, and screenless wearable for everyday activity tracking with simple AI-powered guidance. It brings activity, sleep, recovery, calorie, and wellness information together through the connected TFX Vital App. Its lightweight, distraction-free design is made for comfortable day and night wear.
+            </p>
+            {isTfx5DescriptionExpanded && (
+              <div className="mt-5 space-y-5">
+                {tfx5DescriptionSections.map((section) => (
+                  <section key={section.title}>
+                    <h3 className="text-sm font-bold text-slate-900 sm:text-base">{section.title}</h3>
+                    <p className="mt-1.5 text-sm leading-6 text-slate-700 sm:text-base sm:leading-8">{section.copy}</p>
+                  </section>
+                ))}
+                <section>
+                  <h3 className="text-sm font-bold text-slate-900 sm:text-base">A smarter screenless fitness experience</h3>
+                  <p className="mt-1.5 text-sm leading-6 text-slate-700 sm:text-base sm:leading-8">Combine fitness and activity tracking with TFX Vital AI guidance, nutrition management, and meal calorie estimation in one connected experience. Review recorded information, understand daily patterns, and access general AI-powered fitness guidance in the app.</p>
+                </section>
+                <p className="rounded-lg bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-600">
+                  The band and TFX Vital App are intended for general fitness and wellness purposes. Measurements, AI-generated guidance, nutritional information, and calorie estimates are informational only and are not intended for medical diagnosis or treatment. Feature availability may vary depending on recorded data, app version, device settings, syncing, and usage conditions.
+                </p>
+              </div>
+            )}
+            <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-4 text-sm font-bold text-[#8f2428]">
+              {isTfx5DescriptionExpanded ? 'Read Less ▲' : 'Read More ▼'}
+            </button>
+          </div>
+        )}
+        {activeTfx5DescriptionTab === 'additional' && (
+          <div className="space-y-6">
+            <section>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Product specifications</h3>
+              <div className="overflow-hidden rounded-xl border border-slate-200">
+                {productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).map(([key, value], index) => (
+                  <div key={key} className={`grid grid-cols-[0.38fr_0.62fr] gap-3 px-3 py-3 text-xs sm:px-4 sm:text-sm ${index % 2 ? 'bg-slate-50' : 'bg-white'}`}>
+                    <span className="font-medium text-slate-500">{formatSpecLabel(key)}</span>
+                    <span className="leading-5 text-slate-800">{String(value ?? '')}</span>
+                  </div>
+                ))}
+              </div>
+            </section>
+            <section>
+              <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Connected app features</h3>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {tfx5DescriptionSections.slice(1, 5).map((section) => (
+                  <article key={section.title} className="rounded-xl border border-slate-200 bg-[#fbfaf7] p-4">
+                    <h4 className="text-sm font-bold text-slate-900">{section.title}</h4>
+                    <p className="mt-1.5 text-xs leading-6 text-slate-600 sm:text-sm">{section.copy}</p>
+                  </article>
+                ))}
+              </div>
+            </section>
+            <p className="rounded-lg bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-600">
+              Calorie and nutrition values are estimates. App information depends on synced data, settings, feature availability, and usage conditions.
+            </p>
+          </div>
+        )}
+        {activeTfx5DescriptionTab === 'warranty' && (
+          <div className="divide-y divide-slate-100">
+            {warrantySpecEntries.length > 0 ? warrantySpecEntries.map(([key, value]) => (
+              <div key={key} className="py-3 first:pt-0 last:pb-0 sm:py-4">
+                <h3 className="text-sm font-bold text-slate-900 sm:text-base">{formatSpecLabel(key)}</h3>
+                <p className="mt-1.5 whitespace-pre-line text-xs leading-6 text-slate-600 sm:text-sm sm:leading-7">{String(value ?? '')}</p>
+              </div>
+            )) : <p className="text-sm leading-6 text-slate-600">Please refer to the warranty information supplied with your order or contact TheFutureX support for assistance.</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <div className="product-detail-page min-h-screen bg-white text-slate-950">
@@ -2827,9 +2991,28 @@ export const ProductDetail: React.FC = () => {
         .product-banner-group:hover .product-banner-media {
           transform: scale(1.045);
         }
+        .product-scroll-section {
+          opacity: 0;
+          transform: translate3d(0, 42px, 0) scale(0.99);
+          transition: opacity 750ms cubic-bezier(0.22, 1, 0.36, 1), transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+          will-change: opacity, transform;
+        }
+        .product-scroll-section-visible {
+          opacity: 1;
+          transform: translate3d(0, 0, 0) scale(1);
+        }
+        .product-scroll-section .product-banner-media {
+          transform: scale(1.035);
+          transition: transform 1100ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .product-scroll-section-visible .product-banner-media {
+          transform: scale(1);
+        }
         @media (prefers-reduced-motion: reduce) {
           .product-panel-in,
           .product-reveal,
+          .product-scroll-section,
+          .product-scroll-section .product-banner-media,
           .product-cta-shine::after,
           .product-offer-badge,
           .product-banner-media {
@@ -2838,6 +3021,7 @@ export const ProductDetail: React.FC = () => {
             transform: none !important;
           }
           .product-reveal { opacity: 1; }
+          .product-scroll-section { opacity: 1; }
         }
       `}</style>
       {showEmiModal && (
@@ -2886,7 +3070,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      <section className="overflow-hidden bg-transparent px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-14">
+      <section className="product-scroll-section overflow-hidden bg-transparent px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-14">
         <div
           className={`mx-auto grid w-full max-w-[calc(100vw-1.5rem)] min-w-0 gap-7 sm:max-w-2xl lg:max-w-7xl lg:items-start ${
             useMarketplaceArrangement
@@ -3033,7 +3217,7 @@ export const ProductDetail: React.FC = () => {
             </span>
             <div className="relative mt-1.5 max-w-none">
               <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? 'line-clamp-3' : ''}`}>
-                {shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
+                {productSubtitle || shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
               </p>
               {!isHeroDescriptionExpanded && (
                 <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent sm:h-5" />
@@ -3322,7 +3506,8 @@ export const ProductDetail: React.FC = () => {
         <section className="bg-white px-4 py-4 sm:hidden">
           <div className="space-y-3">
             {(showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section, index) => (
-              <RevealOnScroll key={section.title} className="product-banner-group mx-auto w-full max-w-[1200px] overflow-hidden rounded-xl bg-[#f8fbfb] shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
+              <React.Fragment key={section.title}>
+              <RevealOnScroll className="product-banner-group mx-auto w-full max-w-[1200px] overflow-hidden rounded-xl bg-[#f8fbfb] shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
                 {section.video ? (
                   <div className="aspect-[4/3] w-full overflow-hidden bg-slate-950">
                     <ProductOverviewVideo
@@ -3365,6 +3550,8 @@ export const ProductDetail: React.FC = () => {
                   </div>
                 )}
               </RevealOnScroll>
+              {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-2">{tfx5Showcase}</div>}
+              </React.Fragment>
             ))}
           </div>
           {mobileProductBannerSections.length > 3 && (
@@ -3381,17 +3568,17 @@ export const ProductDetail: React.FC = () => {
         </section>
       )}
 
-      <section className="bg-white px-4 py-5 sm:hidden">
+      <section className="product-scroll-section bg-white px-4 py-5 sm:hidden">
         {activeDetailTab === 'description' && (
           <div className="space-y-4">
-            <div className="rounded border border-slate-200">
-              <p className="border-b border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-900">
+            <div className={isTfxV5Band ? '' : 'rounded border border-slate-200'}>
+              {!isTfxV5Band && <p className="border-b border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-900">
                 {isFanMarketplacePage ? 'Description' : 'Product Description'}
-              </p>
-              <p className={`px-3 py-3 text-sm leading-6 text-slate-700 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
+              </p>}
+              {!isTfxV5Band && <p className={`px-3 py-3 text-sm leading-6 text-slate-700 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
                 {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
-              </p>
-              {(shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260 && (
+              </p>}
+              {!isTfxV5Band && (shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260 && (
                 <button
                   type="button"
                   onClick={() => setIsDescriptionExpanded((prev) => !prev)}
@@ -3403,6 +3590,7 @@ export const ProductDetail: React.FC = () => {
                   </svg>
                 </button>
               )}
+              {isTfxV5Band && tfx5ArrangedDescription}
             </div>
             {showProductOverview && mobileProductBannerSections.length === 0 && (
               <div className="space-y-3">
@@ -3445,8 +3633,8 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'features' && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">What Should I Buy?</p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{whyBuyCopy}</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">{isTfxV5Band ? 'Key Features' : 'What Should I Buy?'}</p>
+            {!isTfxV5Band && <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{whyBuyCopy}</p>}
             {featureList.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {featureList.slice(0, 10).map((feature) => (
@@ -3456,6 +3644,7 @@ export const ProductDetail: React.FC = () => {
                 ))}
               </div>
             )}
+            {isTfxV5Band && <div className="mt-6">{tfx5ArrangedDescription}</div>}
           </div>
         )}
 
@@ -3541,17 +3730,17 @@ export const ProductDetail: React.FC = () => {
         )}
       </section>
 
-      <section id="features" className="hidden scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-8">
+      <section id="features" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-8">
         <div className="mx-auto max-w-6xl">
           <div className="mb-4 flex items-center justify-center">
             <h2 className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6a20] sm:text-xs">
-              What Should I Buy?
+              {isTfxV5Band ? 'Key Features' : 'What Should I Buy?'}
             </h2>
           </div>
 
-          <p className="mx-auto max-w-4xl text-center text-sm font-medium leading-7 text-slate-700 sm:text-base sm:leading-8">
+          {!isTfxV5Band && <p className="mx-auto max-w-4xl text-center text-sm font-medium leading-7 text-slate-700 sm:text-base sm:leading-8">
             {whyBuyCopy}
-          </p>
+          </p>}
           {featureList.length > 0 && (
             <div className="mx-auto mt-5 grid max-w-4xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {featureList.slice(0, 8).map((feature) => (
@@ -3565,7 +3754,7 @@ export const ProductDetail: React.FC = () => {
       </section>
 
       {isFanMarketplacePage && (
-        <section id="description" className="hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
+        <section id="description" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
           <div className="mx-auto max-w-5xl rounded border border-slate-200">
             <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Description</h2>
             <div className="px-5 py-5">
@@ -3588,14 +3777,14 @@ export const ProductDetail: React.FC = () => {
 
       {showProductOverview && (
         <>
-          <section id="description" className="hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
-            <div className="mx-auto max-w-5xl rounded border border-slate-200">
-              <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Product Description</h2>
-              <div className="px-5 py-5">
-                <p className={`text-sm leading-7 text-slate-700 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
+          <section id="description" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
+            <div className={`mx-auto ${isTfxV5Band ? 'max-w-7xl' : 'max-w-5xl rounded border border-slate-200'}`}>
+              {!isTfxV5Band && <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Product Description</h2>}
+              <div className={isTfxV5Band ? '' : 'px-5 py-5'}>
+                {!isTfxV5Band && <p className={`text-sm leading-7 text-slate-700 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
                   {shortDescription || overviewSections[0].copy}
-                </p>
-                {(shortDescription || overviewSections[0].copy).length > 260 && (
+                </p>}
+                {!isTfxV5Band && (shortDescription || overviewSections[0].copy).length > 260 && (
                   <button
                     type="button"
                     onClick={() => setIsDescriptionExpanded((prev) => !prev)}
@@ -3604,14 +3793,16 @@ export const ProductDetail: React.FC = () => {
                     {isDescriptionExpanded ? 'Read Less' : 'Read More'}
                   </button>
                 )}
+                {isTfxV5Band && tfx5ArrangedDescription}
               </div>
             </div>
           </section>
 
-          <section id="more-information" className="hidden scroll-mt-32 bg-white px-0 pb-10 sm:block sm:scroll-mt-36 lg:pb-14">
+          <section id="more-information" className="product-scroll-section hidden scroll-mt-32 bg-white px-0 pb-10 sm:block sm:scroll-mt-36 lg:pb-14">
             <div className="mx-auto w-full max-w-[1200px] space-y-4 px-4 sm:px-6 lg:px-0">
               {overviewMediaSections.map((section, index) => (
-                <RevealOnScroll key={section.title} className="product-banner-group overflow-hidden bg-transparent shadow-none">
+                <React.Fragment key={section.title}>
+                <RevealOnScroll className="product-banner-group overflow-hidden bg-transparent shadow-none">
                   {section.video ? (
                     <div className="aspect-[12/5] overflow-hidden bg-slate-950">
                       <ProductOverviewVideo
@@ -3654,13 +3845,15 @@ export const ProductDetail: React.FC = () => {
                     </div>
                   )}
                 </RevealOnScroll>
+                {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-3">{tfx5Showcase}</div>}
+                </React.Fragment>
               ))}
             </div>
           </section>
         </>
       )}
 
-      <section id="specs" className="hidden scroll-mt-32 bg-white px-4 py-12 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16">
+      <section id="specs" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-12 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Specifications</h2>
           {productInformationSpecEntries.length > 0 ? (
@@ -3695,7 +3888,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      <section id="faq" className="hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
+      <section id="faq" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-5xl">
           <h2 className="font-display text-xl font-black text-slate-950 sm:text-3xl lg:text-4xl">FAQs</h2>
           <div className="mt-6 space-y-3">
@@ -3709,7 +3902,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      <section id="reviews" className="scroll-mt-32 bg-[#f8fbfb] px-4 py-10 sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
+      <section id="reviews" className="product-scroll-section scroll-mt-32 bg-[#f8fbfb] px-4 py-10 sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-5xl">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>

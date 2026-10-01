@@ -222,6 +222,7 @@ export const AdminDashboard: React.FC = () => {
     slug: '',
     category: 'Smart Bands',
     description: '',
+    shortDescription: '',
     mrp: 0,
     salePrice: 0,
     price: 0,
@@ -1584,6 +1585,17 @@ export const AdminDashboard: React.FC = () => {
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Band Type (Optional)</label>
                   <input className={inputClass} value={productForm.bandType || ''} onChange={(e) => setProductForm({ ...productForm, bandType: e.target.value })} placeholder="e.g. Sport Loop" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Short Description</label>
+                  <textarea
+                    className={`${inputClass} min-h-[72px]`}
+                    value={productForm.shortDescription || ''}
+                    onChange={(e) => setProductForm((prev) => ({ ...prev, shortDescription: e.target.value }))}
+                    placeholder="Brief product summary shown below the product title and sent to Google Merchant Center"
+                    maxLength={5000}
+                  />
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Used below the product title on the website and as the Merchant Center product description.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">Full Description</label>
