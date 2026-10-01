@@ -2935,6 +2935,79 @@ export const ProductDetail: React.FC = () => {
       </div>
     </div>
   );
+  const generalArrangedDescription = (
+    <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+      <div role="tablist" aria-label={`${product.name} product information`} className="grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
+        {([
+          ['description', 'Description'],
+          ['additional', 'Additional Detail'],
+          ['warranty', 'Warranty Terms'],
+        ] as const).map(([key, label]) => (
+          <button
+            key={key}
+            id={`product-description-tab-${key}`}
+            type="button"
+            role="tab"
+            aria-selected={activeTfx5DescriptionTab === key}
+            onClick={() => setActiveTfx5DescriptionTab(key)}
+            className={`min-h-14 border-b-[3px] px-2 py-3 text-[10px] font-bold tracking-wide transition sm:min-h-16 sm:px-4 sm:text-sm ${activeTfx5DescriptionTab === key ? 'border-[#8f2428] text-[#8f2428]' : 'border-transparent text-slate-700 hover:text-[#8f2428]'}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div role="tabpanel" aria-labelledby={`product-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-8">
+        {activeTfx5DescriptionTab === 'description' && (
+          <div>
+            <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
+              {shortDescription || overviewSections[0]?.copy || whyBuyCopy}
+            </p>
+            {(shortDescription || overviewSections[0]?.copy || whyBuyCopy).length > 240 && (
+              <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-3 text-sm font-bold text-[#8f2428]">
+                {isTfx5DescriptionExpanded ? 'Read Less' : 'Read More'}
+              </button>
+            )}
+          </div>
+        )}
+        {activeTfx5DescriptionTab === 'additional' && (
+          <div className="space-y-5">
+            {productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).length > 0 && (
+              <section>
+                <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Product specifications</h3>
+                <div className="overflow-hidden rounded-xl border border-slate-200">
+                  {productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).map(([key, value], index) => (
+                    <div key={key} className={`grid grid-cols-[0.38fr_0.62fr] gap-3 px-3 py-3 text-xs sm:px-4 sm:text-sm ${index % 2 ? 'bg-slate-50' : 'bg-white'}`}>
+                      <span className="font-medium text-slate-500">{formatSpecLabel(key)}</span>
+                      <span className="leading-5 text-slate-800">{String(value ?? '')}</span>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+            {featureList.length > 0 && (
+              <section>
+                <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Features</h3>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {featureList.map((feature) => <p key={feature} className="rounded-lg bg-[#fbfaf7] px-3 py-2 text-xs leading-5 text-slate-700 sm:text-sm">{cleanFeatureText(feature)}</p>)}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+        {activeTfx5DescriptionTab === 'warranty' && (
+          <div className="divide-y divide-slate-100">
+            {warrantySpecEntries.length > 0 ? warrantySpecEntries.map(([key, value]) => (
+              <div key={key} className="py-3 first:pt-0 last:pb-0 sm:py-4">
+                <h3 className="text-sm font-bold text-slate-900 sm:text-base">{formatSpecLabel(key)}</h3>
+                <p className="mt-1.5 whitespace-pre-line text-xs leading-6 text-slate-600 sm:text-sm sm:leading-7">{String(value ?? '')}</p>
+              </div>
+            )) : <p className="text-sm leading-6 text-slate-600">{product.warranty || getWarrantyDisplayText(productFamily)}. Contact TheFutureX support for warranty assistance.</p>}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+  const arrangedProductInformation = isTfxV5Band ? tfx5ArrangedDescription : generalArrangedDescription;
 
   return (
     <div className="product-detail-page min-h-screen bg-white text-slate-950">
@@ -3640,8 +3713,7 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'features' && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">{isTfxV5Band ? 'Key Features' : 'What Should I Buy?'}</p>
-            {!isTfxV5Band && <p className="mt-2 text-sm font-semibold leading-6 text-slate-700">{whyBuyCopy}</p>}
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">Key Features</p>
             {featureList.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {featureList.slice(0, 10).map((feature) => (
@@ -3651,7 +3723,7 @@ export const ProductDetail: React.FC = () => {
                 ))}
               </div>
             )}
-            {isTfxV5Band && <div className="mt-6">{tfx5ArrangedDescription}</div>}
+            <div className="mt-6">{arrangedProductInformation}</div>
           </div>
         )}
 
@@ -3741,13 +3813,10 @@ export const ProductDetail: React.FC = () => {
         <div className="mx-auto max-w-6xl">
           <div className="mb-4 flex items-center justify-center">
             <h2 className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6a20] sm:text-xs">
-              {isTfxV5Band ? 'Key Features' : 'What Should I Buy?'}
+              Key Features
             </h2>
           </div>
 
-          {!isTfxV5Band && <p className="mx-auto max-w-4xl text-center text-sm font-medium leading-7 text-slate-700 sm:text-base sm:leading-8">
-            {whyBuyCopy}
-          </p>}
           {featureList.length > 0 && (
             <div className="mx-auto mt-5 grid max-w-4xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {featureList.slice(0, 8).map((feature) => (
@@ -3763,21 +3832,7 @@ export const ProductDetail: React.FC = () => {
       {isFanMarketplacePage && (
         <section id="description" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
           <div className="mx-auto max-w-5xl rounded border border-slate-200">
-            <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Description</h2>
-            <div className="px-5 py-5">
-              <p className={`text-sm leading-7 text-slate-700 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
-                {fanMarketplaceDescription}
-              </p>
-              {fanMarketplaceDescription.length > 260 && (
-                <button
-                  type="button"
-                  onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                  className="mt-4 text-sm font-bold text-[#2874f0]"
-                >
-                  {isDescriptionExpanded ? 'Read Less' : 'Read More'}
-                </button>
-              )}
-            </div>
+            <div className="p-3 sm:p-4">{arrangedProductInformation}</div>
           </div>
         </section>
       )}
@@ -3785,23 +3840,8 @@ export const ProductDetail: React.FC = () => {
       {showProductOverview && (
         <>
           <section id="description" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
-            <div className={`mx-auto ${isTfxV5Band ? 'max-w-7xl' : 'max-w-5xl rounded border border-slate-200'}`}>
-              {!isTfxV5Band && <h2 className="border-b border-slate-200 px-5 py-3.5 text-lg font-bold text-slate-900 sm:text-xl">Product Description</h2>}
-              <div className={isTfxV5Band ? '' : 'px-5 py-5'}>
-                {!isTfxV5Band && <p className={`text-sm leading-7 text-slate-700 sm:text-base sm:leading-8 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
-                  {shortDescription || overviewSections[0].copy}
-                </p>}
-                {!isTfxV5Band && (shortDescription || overviewSections[0].copy).length > 260 && (
-                  <button
-                    type="button"
-                    onClick={() => setIsDescriptionExpanded((prev) => !prev)}
-                    className="mt-4 text-sm font-bold text-[#2874f0]"
-                  >
-                    {isDescriptionExpanded ? 'Read Less' : 'Read More'}
-                  </button>
-                )}
-                {isTfxV5Band && tfx5ArrangedDescription}
-              </div>
+            <div className={`mx-auto max-w-7xl ${isTfxV5Band ? '' : 'rounded border border-slate-200 p-3 sm:p-4'}`}>
+              {arrangedProductInformation}
             </div>
           </section>
 

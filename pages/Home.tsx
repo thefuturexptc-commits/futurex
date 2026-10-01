@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { addOfferLead, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
+import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 import bandCutout from '../assets/images/band-hero-cutout.webp';
 import homeCollectionBandImage from '../assets/images/home-collection-bands-banner.webp';
 import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
@@ -494,10 +495,7 @@ const toCategorySlug = (name: string): string =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-const isMegaPriceDropBand = (product: Product): boolean => {
-  const slug = toCategorySlug(product.slug || product.name || product.id || '');
-  return slug === 'tfx5-ai-smart-band' || slug === 'ai-v5-smart-band-heart-rate-spo2-fitness-tracker';
-};
+const isMegaPriceDropBand = isMegaPriceDropProduct;
 
 const getHomeCatalogHref = (product: Product): string => {
   return `/product/${getProductSlug(product)}`;
@@ -1410,7 +1408,7 @@ export const Home: React.FC = () => {
 
                 // Top-left tag: an offer callout takes priority, then "Just Launched" for new arrivals.
                 const topLeftTag = showMegaPriceDrop
-                  ? { label: 'Mega Price Drop', className: 'tfx-badge-pulse bg-emerald-600' }
+                  ? { label: '⚡ Mega Price Drop', className: 'tfx-badge-pulse bg-gradient-to-r from-red-600 to-rose-700 shadow-[0_4px_14px_rgba(220,38,38,0.3)]' }
                   : hasDiscount && discountLabel
                     ? { label: `Extra ${discountLabel} Off`, className: 'bg-emerald-600' }
                     : product.isNewArrival

@@ -6,6 +6,7 @@ import { isSameCollection } from '../utils/productCollections';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
+import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 import bandCutout from '../assets/images/band-hero-cutout.webp';
 import bandHeroLifestyle from '../assets/images/band-men-women-lifestyle.webp';
 import bandHeroVideo from '../assets/images/band-hero-video.mp4';
@@ -60,17 +61,7 @@ const getProductPreviewImages = (product: Product): string[] => {
   return Array.from(new Set(images));
 };
 
-const getProductSlugKey = (product: Product): string =>
-  String(product.slug || product.name || product.id || '')
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-const isMegaPriceDropBand = (product: Product): boolean => {
-  const slug = getProductSlugKey(product);
-  return slug === 'tfx5-ai-smart-band' || slug === 'ai-v5-smart-band-heart-rate-spo2-fitness-tracker';
-};
+const isMegaPriceDropBand = isMegaPriceDropProduct;
 
 const getCatalogBullets = (product: Product): string[] => {
   const features = product.features?.filter(Boolean) || [];
@@ -293,7 +284,7 @@ export const SmartBands: React.FC = () => {
                   >
                     {showMegaPriceDrop && (
                       <div className="absolute left-2.5 top-2.5 z-10 rounded-r-full bg-[#df0b16] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_8px_18px_rgba(223,11,22,0.18)]">
-                        Mega Price Drop
+                        ⚡ Mega Price Drop
                       </div>
                     )}
                     {(product.isNewArrival || product.isBestSeller || product.isFeatured) && (

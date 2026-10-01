@@ -7,6 +7,12 @@ export const isPureAirThreeInOne = (item) => {
     return /\bpureair\s*3[\s-]*in[\s-]*1\b|\btfx[\s-]*tp02\s+3[\s-]*in[\s-]*1\b/i.test(item.name);
 };
 export const TFX5_AI_BAND_PRICE = 9999;
+const MEGA_PRICE_DROP_SLUGS = new Set([
+    'tfx5-ai-smart-band',
+    'ai-v5-smart-band-heart-rate-spo2-fitness-tracker',
+]);
+export const isMegaPriceDropProduct = (product = {}) => [product.id, product.slug, product.name]
+    .some((value) => MEGA_PRICE_DROP_SLUGS.has(String(value || '').trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')));
 // The TFX5 storefront displays ₹11,999 as its regular price and ₹9,999 as its
 // current selling price. Keep this explicit so product pages and Merchant feeds
 // submit the same verifiable offer instead of deriving an MRP from a formula.

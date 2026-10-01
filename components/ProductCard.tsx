@@ -7,6 +7,7 @@ import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
 import { addProductNotifyRequest, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
+import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 
 interface ProductCardProps {
   product: Product;
@@ -291,6 +292,11 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
       {product.isNewArrival && (
         <div className="product-new-arrival-badge absolute right-3 top-3 z-20 rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] shadow-[0_10px_22px_-14px_rgba(14,165,233,0.9)]">
           New Arrival
+        </div>
+      )}
+      {isMegaPriceDropProduct(product) && (
+        <div className="absolute left-3 top-3 z-20 rounded-full border border-red-700 bg-gradient-to-r from-red-600 to-rose-700 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-white shadow-[0_4px_14px_rgba(220,38,38,0.3)] sm:px-3 sm:text-[10px]">
+          <span aria-hidden="true">⚡ </span>Mega Price Drop
         </div>
       )}
       <Link to={`/product/${getProductSlug(product)}`} className={`product-card-media relative flex items-center justify-center overflow-hidden bg-transparent ${compact ? 'min-h-[190px] sm:min-h-[230px]' : ''} ${imageAspectClassName || (compact ? 'aspect-[4/3]' : 'aspect-[4/5]')}`}>

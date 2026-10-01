@@ -5,6 +5,7 @@ import giftingCollectionBanner from '../assets/images/tfx-v5-gifting-collection-
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
 import { getProductSlug, getProducts } from '../services/backend';
 import type { Product } from '../types';
+import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 
 type GiftMode = 'her' | 'him' | 'pairs' | 'solo';
 type PairGroupKey = 'jcv5-band' | 'display-ring' | 'normal-ring' | 'normal-band';
@@ -313,9 +314,9 @@ const buildPairGroups = (items: Product[]): GiftPair[] => {
 const GiftProductCard: React.FC<{ product: Product; badge?: string; imageTerms?: string[] }> = ({ product, badge, imageTerms = [] }) => (
   <article className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]">
     <Link to={getProductPath(product, imageTerms)} className="relative flex aspect-[4/3] items-center justify-center bg-[#f8fafc] p-4">
-      {badge && (
-        <span className="absolute left-3 top-3 rounded-full bg-[#b20c16] px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white">
-          {badge}
+      {(isMegaPriceDropProduct(product) || badge) && (
+        <span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white ${isMegaPriceDropProduct(product) ? 'bg-gradient-to-r from-red-600 to-rose-700 shadow-[0_4px_14px_rgba(220,38,38,0.3)]' : 'bg-[#b20c16]'}`}>
+          {isMegaPriceDropProduct(product) ? '⚡ Mega Price Drop' : badge}
         </span>
       )}
       <img src={getProductImage(product, imageTerms)} alt={product.name} className="h-full w-full object-contain transition group-hover:scale-[1.04]" loading="lazy" decoding="async" />
