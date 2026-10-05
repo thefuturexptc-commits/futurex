@@ -163,6 +163,14 @@
   ],
   "rewrites": [
     {
+      "source": "/products/:id",
+      "destination": "/api/legacy-product?id=:id"
+    },
+    {
+      "source": "/item/:id",
+      "destination": "/api/legacy-product?id=:id"
+    },
+    {
       "source": "/product-feed.xml",
       "destination": "/api/merchant-feed"
     },

@@ -57,6 +57,12 @@ export default async function handler(req, res) {
       getRemoteProducts({ includeReviews: true }), readFile(join(process.cwd(), 'dist/product-shell.html'), 'utf8'),
     ]);
     const product = products.find((item) => getProductSlug(item) === slug || item.id === slug);
+    if (product) {
+      const canonicalSlug = getProductSlug(product);
+      if (canonicalSlug !== slug) {
+        return res.redirect(301, `${SITE_URL}/product/${encodeURIComponent(canonicalSlug)}`);
+      }
+    }
     res.setHeader('Cache-Control', 'private, no-store');
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     if (!product) return res.status(404).send('Product not found.');

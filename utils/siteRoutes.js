@@ -376,11 +376,20 @@ const publishedBlogRoutes = [
 // sitemap included hundreds of planned/generated blog URLs with substantially
 // the same content; that creates crawl waste and thin-page signals. Blog posts
 // are added to the sitemap only when they are published as full pages.
-export const sitemapRoutes = [
-  ...coreRoutes,
+export const sitemapRoutes = dedupeRoutes([
+  ...coreRoutes.filter((route) =>
+    !route.path.startsWith('/blog/') &&
+    !['/track-order', '/raise-complaint', '/register-warranty'].includes(route.path)
+  ),
   { path: '/blog', label: 'TheFutureX Blog', changefreq: 'weekly', priority: '0.7' },
+  ...tfx5BlogPosts.concat(aeoGeoBlogPosts).map((post) => ({
+    path: `/blog/${post.slug}`,
+    label: post.title,
+    changefreq: 'monthly',
+    priority: '0.7',
+  })),
   ...publishedBlogRoutes,
-];
+]);
 
 // Do not generate fallback files for retired/blog-plan URLs. Unknown legacy
 // URLs must be allowed to return a genuine 404 at the host, rather than a

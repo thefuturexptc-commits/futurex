@@ -2,6 +2,7 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { SITE_URL, sitemapRoutes } from './siteRoutes.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
+import { staticProductSeoRecords } from './productSeoData.js';
 
 const toSlug = (name = '') =>
   String(name)
@@ -61,8 +62,9 @@ const getRemoteProducts = async () => {
     .filter(isCatalogProductPublished)
     .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
 
-  console.log('TOTAL PRODUCTS:', products.length);
-  return products;
+  const sitemapProducts = products.length ? products : staticProductSeoRecords;
+  console.log('TOTAL PRODUCTS:', sitemapProducts.length);
+  return sitemapProducts;
 };
 
 export async function generateSitemapXML() {
@@ -72,7 +74,7 @@ export async function generateSitemapXML() {
     remoteProducts = await getRemoteProducts();
   } catch (error) {
     console.warn('Skipping product URLs in sitemap because product fetch failed:', error instanceof Error ? error.message : error);
-    remoteProducts = [];
+    remoteProducts = staticProductSeoRecords;
   }
 
   const productMap = new Map();
