@@ -67,15 +67,36 @@ const getRemoteProducts = async () => {
   return sitemapProducts;
 };
 
+export async function getRemotePublishedBlogPosts() {
+  try {
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const snapshot = await withTimeout(getDocs(collection(db, 'blog_posts')), 6500);
+    return snapshot.docs
+      .map((doc) => ({ ...doc.data(), id: doc.id }))
+      .filter((post) => post.status === 'published' && typeof post.slug === 'string' && post.slug.trim() && typeof post.title === 'string' && post.title.trim())
+      .map((post) => ({
+        path: `/blog/${post.slug.trim()}`,
+        label: post.title.trim(),
+        changefreq: 'monthly',
+        priority: '0.7',
+        lastmod: post.updatedAt,
+      }));
+  } catch (error) {
+    console.warn('Skipping remote blog URLs in sitemap because the blog fetch failed:', error instanceof Error ? error.message : error);
+    return [];
+  }
+}
+
 export async function generateSitemapXML() {
   const nowIso = new Date().toISOString();
-  let remoteProducts = [];
-  try {
-    remoteProducts = await getRemoteProducts();
-  } catch (error) {
-    console.warn('Skipping product URLs in sitemap because product fetch failed:', error instanceof Error ? error.message : error);
-    remoteProducts = staticProductSeoRecords;
-  }
+  const [remoteProducts, remoteBlogRoutes] = await Promise.all([
+    getRemoteProducts().catch((error) => {
+      console.warn('Using product fallbacks in sitemap because product fetch failed:', error instanceof Error ? error.message : error);
+      return staticProductSeoRecords;
+    }),
+    getRemotePublishedBlogPosts(),
+  ]);
 
   const productMap = new Map();
 
@@ -90,7 +111,13 @@ export async function generateSitemapXML() {
     });
   });
 
-  const urls = [...baseRoutes.map((entry) => ({ ...entry, lastmod: nowIso })), ...productMap.values()]
+  const baseRouteMap = new Map(baseRoutes.map((entry) => [entry.loc, { ...entry, lastmod: nowIso }]));
+  remoteBlogRoutes.forEach((route) => {
+    const loc = `${SITE_URL}${route.path}`;
+    baseRouteMap.set(loc, { loc, changefreq: route.changefreq, priority: route.priority, lastmod: route.lastmod || nowIso });
+  });
+
+  const urls = [...baseRouteMap.values(), ...productMap.values()]
     .map(buildUrlEntry)
     .join('');
 

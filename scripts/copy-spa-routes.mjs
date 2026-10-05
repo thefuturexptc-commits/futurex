@@ -2,9 +2,9 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { dirname, join } from 'node:path';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
-import { sitemapRoutes, spaFallbackRoutes } from '../utils/siteRoutes.js';
+import { infoRoutes, sitemapRoutes, spaFallbackRoutes } from '../utils/siteRoutes.js';
 import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/productSeoData.js';
-import { generateSitemapXML } from '../utils/generateSitemap.js';
+import { generateSitemapXML, getRemotePublishedBlogPosts } from '../utils/generateSitemap.js';
 import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/generateMerchantFeed.js';
 import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
 import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification } from '../utils/productSchema.js';
@@ -141,8 +141,17 @@ const blogSeoOverrides = {
   },
 };
 
+const remotePublishedBlogPosts = await getRemotePublishedBlogPosts();
+const remoteBlogRoutes = remotePublishedBlogPosts.map((post) => ({
+  path: post.path,
+  label: post.label,
+  changefreq: post.changefreq,
+  priority: post.priority,
+  post,
+}));
+
 const blogPages = Object.fromEntries(
-  sitemapRoutes
+  [...sitemapRoutes, ...remoteBlogRoutes]
     .filter((route) => route.path === '/blog' || route.path.startsWith('/blog/'))
     .map((route) => {
       const cleanRoute = route.path.replace(/^\//, '');
@@ -158,6 +167,15 @@ const blogPages = Object.fromEntries(
         },
       ];
     })
+);
+
+const infoPages = Object.fromEntries(
+  infoRoutes
+    .filter((route) => route.path.startsWith('/info/'))
+    .map((route) => [route.path.replace(/^\//, ''), route])
+);
+const publicPages = Object.fromEntries(
+  sitemapRoutes.map((route) => [route.path.replace(/^\//, '') || '', route])
 );
 
 const productFaqsByFamily = {
@@ -766,7 +784,7 @@ const productRoutes = [...productRouteMap.keys()]
   .filter(Boolean)
   .map((slug) => `product/${slug}`);
 
-const publishedRoutes = sitemapRoutes.map((route) => route.path.replace(/^\//, ''));
+const publishedRoutes = [...sitemapRoutes, ...remoteBlogRoutes].map((route) => route.path.replace(/^\//, ''));
 const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...productRoutes]);
 
 const getRouteHtml = (route, product) => {
@@ -819,6 +837,28 @@ const getRouteHtml = (route, product) => {
       }).replace(/</g, '\\u003c')}</script>` : '',
     });
     return injectStaticRoot(html, route === 'blog' ? buildBlogIndexStaticHtml() : buildBlogPostStaticHtml(blogPage));
+  }
+
+  const infoPage = infoPages[route];
+  if (infoPage) {
+    const html = injectPageSeo(baseHtml, {
+      title: `${infoPage.label} | TheFutureX`,
+      description: `${infoPage.label} information and guidance from TheFutureX.`,
+      url: `${SITE_URL}/${route}`,
+      image: DEFAULT_IMAGE,
+    });
+    return injectStaticRoot(html, `${buildStaticStyles()}<main><h1>${htmlEscape(infoPage.label)}</h1><p>${htmlEscape(infoPage.label)} information and guidance from TheFutureX.</p></main>`);
+  }
+
+  const publicPage = publicPages[route];
+  if (publicPage) {
+    const html = injectPageSeo(baseHtml, {
+      title: `${publicPage.label} | TheFutureX`,
+      description: `${publicPage.label} from TheFutureX.`,
+      url: `${SITE_URL}/${route}`,
+      image: DEFAULT_IMAGE,
+    });
+    return injectStaticRoot(html, `${buildStaticStyles()}<main><h1>${htmlEscape(publicPage.label)}</h1><p>${htmlEscape(publicPage.label)} from TheFutureX.</p></main>`);
   }
 
   return baseHtml;

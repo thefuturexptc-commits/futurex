@@ -6,7 +6,7 @@ import { isCatalogProductPublished } from './catalogVisibility.js';
 import { getCatalogOffer, isTfxV5Band } from './catalogPricing.js';
 import { mergeProductReviews } from './productSchema.js';
 import { formatProductName } from './productName.js';
-import { getFanTitle } from './fanListings.ts';
+import { getFanTitle } from './fanListings.js';
 
 const SITE_URL = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.VITE_PUBLIC_SITE_URL || 'https://thefuturex.in').replace(/\/+$/, '');
 const BRAND = process.env.MERCHANT_FEED_BRAND || 'TheFutureX';

@@ -381,6 +381,7 @@ export const sitemapRoutes = dedupeRoutes([
     !route.path.startsWith('/blog/') &&
     !['/track-order', '/raise-complaint', '/register-warranty'].includes(route.path)
   ),
+  ...infoRoutes.filter((route) => route.path.startsWith('/info/')),
   { path: '/blog', label: 'TheFutureX Blog', changefreq: 'weekly', priority: '0.7' },
   ...tfx5BlogPosts.concat(aeoGeoBlogPosts).map((post) => ({
     path: `/blog/${post.slug}`,

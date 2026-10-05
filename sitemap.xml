@@ -2,253 +2,313 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://thefuturex.in/</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/shop/all</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/smart-bands</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/smart-rings</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/bladeless-fan</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/smart-monitoring</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/smart-glasses</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/gifting-store</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/new-arrivals</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/best-sellers</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://thefuturex.in/info/about-us</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/contact</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/shipping</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/register-policy</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/warranty-policy</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/returns-refund</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/privacy</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/terms</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/technology-behind-the-future-x</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://thefuturex.in/info/why-choose-the-future-x</loc>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://thefuturex.in/blog</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/best-fitness-band-india-2026</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/ai-smart-band-how-it-works</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/what-is-an-ai-smart-band</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/ai-meal-photo-calorie-estimation-explained</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/screenless-smart-band-vs-smartwatch-2026</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/how-accurate-is-spo2-tracking-smart-bands</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/tfx-v5-specs-quick-answers</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/tfx-vital-ai-coach-explained</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/live-gps-workout-tracking-tfx-v5</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/tfx-smart-band-emi-guide</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/activity-tracker-band-guide</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/best-smart-bands-under-10000-india</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/what-is-spo2-monitoring</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/smart-band-vs-smartwatch</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/blog/best-bladeless-fans-india-2026</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-advance</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-ai-smart-glasses</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-airwall-pro</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-breeze-pro</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-display-pro-smart-ring</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-hepa-pureair-pro</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-luxair-pro</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-pureair-3-in-1</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-smart-10x-air</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-smart-band</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx-touch-smart-ring</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfx5-ai-smart-band</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/tfxhot-and-coolair-pro</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/the-future-x-bluetooth-heart-rate-monitor-chest-belt-wireless-fitness-tracker-strap-for-running</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://thefuturex.in/product/thefuturex-smart-sleep-tracking-monitoring-system</loc>
-    <lastmod>2026-10-05T06:29:54.831Z</lastmod>
+    <lastmod>2026-10-05T07:57:54.191Z</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
