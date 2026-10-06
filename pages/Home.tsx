@@ -1393,8 +1393,8 @@ export const Home: React.FC = () => {
           )}
 
           {loading ? (
-            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {Array.from({ length: 3 }).map((_, item) => (
+            <div className="mx-auto grid max-w-xl grid-cols-1 gap-5">
+              {Array.from({ length: 1 }).map((_, item) => (
                 <div key={item} className="flex min-h-[460px] flex-col overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.07)]">
                   <div className="tfx-shimmer aspect-[4/3] w-full rounded-xl" />
                   <div className="flex flex-1 flex-col gap-2 px-1 pb-1 pt-4">
@@ -1407,7 +1407,7 @@ export const Home: React.FC = () => {
             </div>
           ) : catalogProducts.length > 0 ? (
             <>
-            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            <div className={`mx-auto grid gap-5 ${paginatedCatalogProducts.length === 1 ? 'max-w-xl grid-cols-1' : 'max-w-7xl grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
               {paginatedCatalogProducts.map((product, index) => {
                 const catalogHref = getHomeCatalogHref(product);
                 const salePrice = Number(product.salePrice || product.price || 0);
