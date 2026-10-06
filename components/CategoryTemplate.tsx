@@ -8,6 +8,7 @@ import { isSameCollection } from '../utils/productCollections';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
+import { getProductFallbackImage } from '../utils/productImages';
 
 interface Feature {
   title: string;
@@ -462,6 +463,12 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                           }`}
                           loading={index < 4 ? 'eager' : 'lazy'}
                           decoding="async"
+                          onError={(event) => {
+                            const image = event.currentTarget;
+                            if (image.dataset.fallbackApplied) return;
+                            image.dataset.fallbackApplied = 'true';
+                            image.src = getProductFallbackImage(product);
+                          }}
                         />
                       </Link>
                       <div className="flex flex-1 flex-col px-1 pb-1 pt-3">
@@ -474,7 +481,12 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                                 className="grid h-11 w-11 place-items-center rounded-md border border-[#0ea5e9] bg-white p-1 shadow-sm"
                                 aria-label={`View ${product.name} preview ${previewIndex + 1}`}
                               >
-                                <img src={image} alt="" className="h-full w-full object-contain" loading="lazy" decoding="async" aria-hidden="true" />
+                                <img src={image} alt="" className="h-full w-full object-contain" loading="lazy" decoding="async" aria-hidden="true" onError={(event) => {
+                                  const preview = event.currentTarget;
+                                  if (preview.dataset.fallbackApplied) return;
+                                  preview.dataset.fallbackApplied = 'true';
+                                  preview.src = getProductFallbackImage(product);
+                                }} />
                               </Link>
                             ))}
                             {extraPreviewCount > 0 && (

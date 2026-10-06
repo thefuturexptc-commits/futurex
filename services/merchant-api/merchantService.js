@@ -3,6 +3,7 @@ import { isCatalogProductPublished } from '../../utils/catalogVisibility.js';
 import { getCatalogOffer } from '../../utils/catalogPricing.js';
 import { getProductStock } from '../../utils/productAvailability.js';
 import { getMerchantProductId, getMerchantTitle, buildDescription } from '../../utils/generateMerchantFeed.js';
+import { getFallbackProductImageUrl } from '../../utils/productImageFallback.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -82,16 +83,11 @@ const getClient = async () => {
 };
 
 const getPrimaryImage = (product) =>
-  product.image ||
-  product.imageLink ||
-  product.images?.[0] ||
-  product.colors?.find((color) => color.images?.length)?.images?.[0] ||
-  product.variants?.find((variant) => variant.images?.length)?.images?.[0] ||
-  '';
+  collectProductImages(product)[0] || getFallbackProductImageUrl(product);
 
 const toAbsoluteUrl = (value = '') => {
   const url = String(value).trim();
-  if (!url) return '';
+  if (!url || url.startsWith('data:') || url.startsWith('blob:')) return '';
   if (/^https?:\/\//i.test(url)) return url;
   if (url.startsWith('//')) return `https:${url}`;
   if (url.startsWith('/')) return `${siteUrl}${url}`;

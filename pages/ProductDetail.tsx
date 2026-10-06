@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById, getProductReviews, getProductSlug, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
+import { getProductFallbackImage } from '../utils/productImages';
 import { ProductCard } from '../components/ProductCard';
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
 import { absoluteUrl, removeJsonLd, setJsonLd, setProductSocialMetadata, setSeoMetadata, stripHtml } from '../services/seo';
@@ -2165,7 +2166,7 @@ export const ProductDetail: React.FC = () => {
   }
 
   const baseDisplayedImages = activeImages.length > 0 ? activeImages : [];
-  const displayedImages = baseDisplayedImages.length > 0 ? baseDisplayedImages : ['https://picsum.photos/600'];
+  const displayedImages = baseDisplayedImages.length > 0 ? baseDisplayedImages : [getProductFallbackImage(product)];
   const selectedColorKeyForVideo = normalizeOptionKey(selectedColor?.name);
   const selectedVariantVideoUrl = selectedVariant?.videoUrl || '';
   const selectedColorVideoUrl =
@@ -3138,7 +3139,7 @@ export const ProductDetail: React.FC = () => {
           </div>
         </>
       )}
-      <section className="border-b border-slate-200 bg-[#f5fbfb]">
+      <section className="border-b border-[#e9e5dd] bg-[#faf9f6]">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6 lg:px-8">
           <nav className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 sm:text-sm">
             <Link to="/" className="hover:text-slate-950">Home</Link>
@@ -3150,7 +3151,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      <section className="product-scroll-section overflow-hidden bg-transparent px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-14">
+      <section className="product-scroll-section overflow-hidden bg-[#faf9f6] px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-12">
         <div
           className={`mx-auto grid w-full max-w-[calc(100vw-1.5rem)] min-w-0 gap-7 sm:max-w-2xl lg:max-w-7xl lg:items-start ${
             useMarketplaceArrangement
@@ -3158,9 +3159,10 @@ export const ProductDetail: React.FC = () => {
               : 'lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)] lg:gap-14'
           }`}
         >
-          <div ref={productGalleryRef} className="order-1 min-w-0 max-w-full scroll-mt-28 space-y-4 overflow-hidden sm:space-y-6 lg:order-none lg:row-span-2 lg:overflow-visible">
+          <div ref={productGalleryRef} className="order-1 min-w-0 max-w-full scroll-mt-28 space-y-4 overflow-hidden sm:space-y-6 lg:sticky lg:top-24 lg:order-none lg:row-span-2 lg:overflow-visible">
             <ProductImageCarousel
               images={displayedImages}
+              fallbackImage={getProductFallbackImage(product)}
               videoUrl={productVideoUrl}
               alt={product.name}
               selectedIndex={selectedImageIndex}
@@ -3169,26 +3171,31 @@ export const ProductDetail: React.FC = () => {
               videoFit={productGalleryVideoFit}
             />
             {displayedMediaCount > 1 && (
-              <div className="mx-auto flex w-full max-w-full items-center gap-2 bg-transparent py-2">
+              <div className="mx-auto flex w-full max-w-full items-center gap-2 rounded-2xl border border-[#e8e4dc] bg-white/80 px-3 py-2.5 shadow-[0_8px_24px_rgba(28,32,38,0.04)] backdrop-blur">
                 <div ref={productThumbnailStripRef} className="flex min-w-0 flex-1 snap-x justify-start gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] sm:justify-center sm:gap-3 [&::-webkit-scrollbar]:hidden">
                   {displayedImages.map((imgUrl, imgIdx) => (
                   <button
                     key={imgUrl + imgIdx}
                     type="button"
                     onClick={() => setSelectedImageIndex(imgIdx)}
-                    className={`h-14 w-14 shrink-0 snap-start overflow-hidden bg-transparent p-1.5 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
-                      selectedImageIndex === imgIdx ? 'opacity-100 ring-2 ring-slate-950/60' : 'opacity-55 hover:opacity-90'
+                    className={`h-14 w-14 shrink-0 snap-start overflow-hidden rounded-xl border bg-white p-1.5 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
+                      selectedImageIndex === imgIdx ? 'border-[#b89452] opacity-100 ring-2 ring-[#b89452]/35' : 'border-slate-200 opacity-65 hover:border-slate-400 hover:opacity-100'
                     }`}
                   >
-                    <img src={imgUrl} alt={`${product.name} ${imgIdx + 1}`} className="h-full w-full object-contain object-center transition duration-200 hover:scale-105" loading="lazy" decoding="async" />
+                    <img src={imgUrl} alt={`${product.name} ${imgIdx + 1}`} className="h-full w-full object-contain object-center transition duration-200 hover:scale-105" loading="lazy" decoding="async" onError={(event) => {
+                      const image = event.currentTarget;
+                      if (image.dataset.fallbackApplied) return;
+                      image.dataset.fallbackApplied = 'true';
+                      image.src = getProductFallbackImage(product);
+                    }} />
                   </button>
                 ))}
                   {productVideoUrl && (
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(productVideoIndex)}
-                    className={`relative h-14 w-14 shrink-0 snap-start overflow-hidden bg-white p-0 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
-                      selectedImageIndex === productVideoIndex ? 'opacity-100 ring-2 ring-slate-950/60' : 'opacity-75 hover:opacity-100'
+                    className={`relative h-14 w-14 shrink-0 snap-start overflow-hidden rounded-xl border border-slate-200 bg-white p-0 transition duration-200 min-[360px]:h-16 min-[360px]:w-16 sm:h-20 sm:w-20 ${
+                      selectedImageIndex === productVideoIndex ? 'border-[#b89452] opacity-100 ring-2 ring-[#b89452]/35' : 'opacity-75 hover:opacity-100'
                     }`}
                     aria-label={`Play ${product.name} video`}
                   >
@@ -3221,7 +3228,7 @@ export const ProductDetail: React.FC = () => {
             )}
           </div>
 
-          <div className="product-panel-in order-2 min-w-0 text-center lg:order-none lg:text-left">
+          <div className="product-panel-in order-2 min-w-0 rounded-[1.5rem] border border-[#ebe7df] bg-white p-5 text-center shadow-[0_16px_44px_rgba(28,32,38,0.055)] sm:p-7 lg:order-none lg:p-8 lg:text-left">
             <div className="hidden">
               {product.colors && product.colors.length > 0 && (
                 <div className="rounded-xl bg-[#f5fbfb] p-3 text-left sm:p-4">
@@ -3292,7 +3299,7 @@ export const ProductDetail: React.FC = () => {
             <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
               {product.name}
             </h1>
-            <span className="mt-2.5 inline-flex w-fit items-center rounded-md bg-[#fbf6ea] px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.18em] text-[#8a6a20]">
+            <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]">
               Overview
             </span>
             <div className="relative mt-1.5 max-w-none">

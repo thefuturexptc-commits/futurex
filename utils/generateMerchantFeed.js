@@ -7,6 +7,7 @@ import { getCatalogOffer, isTfxV5Band } from './catalogPricing.js';
 import { mergeProductReviews } from './productSchema.js';
 import { formatProductName } from './productName.js';
 import { getFanTitle } from './fanListings.js';
+import { getFallbackProductImageUrl } from './productImageFallback.js';
 
 const SITE_URL = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.env.VITE_PUBLIC_SITE_URL || 'https://thefuturex.in').replace(/\/+$/, '');
 const BRAND = process.env.MERCHANT_FEED_BRAND || 'TheFutureX';
@@ -102,7 +103,7 @@ const collectImages = (product) => {
   ];
 
   const seen = new Set();
-  return flattenValues(values)
+  const images = flattenValues(values)
     .map(resolveUrl)
     .filter((url) => /^https?:\/\//i.test(url))
     .filter((url) => {
@@ -110,6 +111,7 @@ const collectImages = (product) => {
       seen.add(url);
       return true;
     });
+  return images.length ? images : [resolveUrl(getFallbackProductImageUrl(product))];
 };
 
 const collectVideos = (product) => {
@@ -152,6 +154,20 @@ export const buildDescription = (product) => {
   }
 
   return parts.join(' ').replace(/\s+/g, ' ').trim().slice(0, 5000);
+};
+
+const getMerchantAvailability = (product) => {
+  const rawAvailability = String(product.availability || product.availabilityStatus || '').trim().toLowerCase();
+  const normalized = rawAvailability.split('/').pop()?.replace(/[^a-z]/g, '') || '';
+  if (['instock', 'outofstock', 'preorder', 'backorder'].includes(normalized)) {
+    return normalized === 'instock' ? 'in_stock' : normalized === 'outofstock' ? 'out_of_stock' : normalized;
+  }
+  return getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock';
+};
+
+const getAvailabilityDate = (product) => {
+  const date = String(product.availabilityDate || product.availability_date || '').trim();
+  return /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?$/.test(date) ? date : '';
 };
 
 const getSpec = (product, names) => {
@@ -227,7 +243,8 @@ export const buildProductItem = (product) => {
   if (!product.id || !product.name || !slug || !imageLink || !price) return '';
 
   const description = buildDescription(product) || product.name;
-  const availability = getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock';
+  const availability = getMerchantAvailability(product);
+  const availabilityDate = getAvailabilityDate(product);
   const additionalImages = images.slice(1, 11).map((image) => tag('g:additional_image_link', image));
   const offer = getCatalogOffer(product);
 
@@ -241,6 +258,7 @@ export const buildProductItem = (product) => {
     ...additionalImages,
     ...collectVideos(product).map((video) => tag('g:video_link', video)),
     tag('g:availability', availability),
+    availability === 'preorder' && availabilityDate ? tag('g:availability_date', availabilityDate) : '',
     tag('g:price', `${(offer.onSale ? offer.regularPrice : offer.currentPrice).toFixed(2)} INR`),
     offer.onSale ? tag('g:sale_price', `${price} INR`) : '',
     tag('g:condition', 'new'),
@@ -278,13 +296,13 @@ ${items}
 
 export async function generateMerchantFeedCSV(products = undefined) {
   products = products || await getRemoteProducts();
-  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'video_link', 'availability', 'price', 'sale_price', 'condition', 'brand', 'product_type', 'google_product_category', 'color', 'material', 'size', 'gender', 'age_group', 'gtin', 'mpn', 'identifier_exists'];
+  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'video_link', 'availability', 'availability_date', 'price', 'sale_price', 'condition', 'brand', 'product_type', 'google_product_category', 'color', 'material', 'size', 'gender', 'age_group', 'gtin', 'mpn', 'identifier_exists'];
   const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
   const rows = products.filter((product) => buildProductItem(product)).map((product) => [
     getMerchantProductId(product), getMerchantTitle(product), buildDescription(product) || product.name,
     `${SITE_URL}/product/${getProductSlug(product)}`, collectImages(product)[0], collectImages(product).slice(1, 11).join(','),
     collectVideos(product).join(','),
-    getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock',
+    getMerchantAvailability(product), getMerchantAvailability(product) === 'preorder' ? getAvailabilityDate(product) : '',
     `${getCatalogOffer(product).regularPrice.toFixed(2)} INR`,
     getCatalogOffer(product).onSale ? `${getPrice(product)} INR` : '', 'new', product.brand || BRAND, product.category || '',
     product.googleProductCategory || product.google_product_category || '', getColors(product).join(', '),

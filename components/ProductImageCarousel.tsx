@@ -10,6 +10,7 @@ interface ProductImageCarouselProps {
   onSelectIndex?: (index: number) => void;
   bannerMode?: boolean;
   videoFit?: 'contain' | 'cover';
+  fallbackImage?: string;
 }
 
 const shouldRemoveStudioBackground = (src: string) => /V5-Pink-750\.webp/i.test(src);
@@ -73,7 +74,7 @@ const getYouTubeEmbedUrl = (url: string): string | null => {
 };
 
 export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.memo(
-  ({ images, videoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain' }) => {
+  ({ images, videoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain', fallbackImage }) => {
     const fade = useMemo(() => Fade(), []);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [processedImages, setProcessedImages] = useState<Record<string, string>>({});
@@ -256,7 +257,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
 
     return (
       <div className="relative w-full min-w-0 max-w-full">
-        <div className="product-gallery-surface group relative max-w-full overflow-hidden bg-transparent" ref={emblaRef}>
+        <div className="product-gallery-surface group relative max-w-full overflow-hidden rounded-[1.5rem] border border-[#e8e4dc] bg-[radial-gradient(ellipse_at_50%_38%,#ffffff_0%,#faf9f6_58%,#f1efe9_100%)] shadow-[0_18px_48px_rgba(28,32,38,0.08)] sm:rounded-[2rem]" ref={emblaRef}>
           <div className="flex min-w-0 touch-pan-y">
             {mediaItems.map((item, idx) => (
               <div
@@ -315,6 +316,12 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                     loading={idx === 0 ? 'eager' : 'lazy'}
                     decoding={idx === 0 ? 'sync' : 'async'}
                     fetchPriority={idx === 0 ? 'high' : 'auto'}
+                    onError={(event) => {
+                      const image = event.currentTarget;
+                      if (!fallbackImage || image.dataset.fallbackApplied) return;
+                      image.dataset.fallbackApplied = 'true';
+                      image.src = fallbackImage;
+                    }}
                     width={900}
                     height={900}
                   />

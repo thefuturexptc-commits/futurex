@@ -10,7 +10,7 @@ import { useCart } from '../context/CartContext';
 import { addOfferLead, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
-import bandCutout from '../assets/images/band-hero-cutout.webp';
+import { getProductFallbackImage } from '../utils/productImages';
 import homeCollectionBandImage from '../assets/images/home-collection-bands-banner.webp';
 import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
 import homeCollectionFanImage from '../assets/images/home-collection-fans-banner.webp';
@@ -502,7 +502,7 @@ const getHomeCatalogHref = (product: Product): string => {
 };
 
 const getProductImage = (product: Product): string =>
-  product.colors?.[0]?.images?.[0] || product.images?.[0] || bandCutout;
+  product.colors?.[0]?.images?.[0] || product.images?.[0] || getProductFallbackImage(product);
 
 const getCatalogBullets = (product: Product): string[] => {
   const features = product.features?.filter(Boolean) || [];
@@ -533,6 +533,29 @@ const getColorSwatches = (product: Product): { image: string; label: string }[] 
  * (orange). Picks the most relevant keyword out of the product's own
  * features/category text so it works without a dedicated backend field.
  */
+const HomeCatalogProductImage: React.FC<{ product: Product; loading: 'eager' | 'lazy' }> = ({ product, loading }) => {
+  const [hovering, setHovering] = useState(false);
+  const [variantIndex, setVariantIndex] = useState(0);
+  const isBand = /smart\s*bands?/i.test(product.category || '');
+  const variantImages = isBand ? (product.colors || []).map((color) => color.images?.[0]).filter((image): image is string => Boolean(image)) : [];
+
+  useEffect(() => {
+    if (!hovering || variantImages.length < 2) return;
+    const timer = window.setInterval(() => setVariantIndex((index) => (index + 1) % variantImages.length), 900);
+    return () => window.clearInterval(timer);
+  }, [hovering, variantImages.length]);
+
+  return (
+    <Link to={getHomeCatalogHref(product)} className="mx-auto block w-[85%] max-w-[620px]" onMouseEnter={() => setHovering(true)} onMouseLeave={() => { setHovering(false); setVariantIndex(0); }}>
+      <img src={variantImages.length > 1 ? variantImages[variantIndex] : getProductImage(product)} alt={product.name} className="block h-auto w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]" loading={loading} decoding="async" onError={(event) => {
+        const image = event.currentTarget;
+        if (image.dataset.fallbackApplied) return;
+        image.dataset.fallbackApplied = 'true';
+        image.src = getProductFallbackImage(product);
+      }} />
+    </Link>
+  );
+};
 const getFeatureStrip = (product: Product): { label: string; className: string } | null => {
   const haystack = `${product.category || ''} ${(product.features || []).join(' ')} ${product.name || ''}`.toLowerCase();
 
@@ -1370,11 +1393,11 @@ export const Home: React.FC = () => {
           )}
 
           {loading ? (
-            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-5">
-              {Array.from({ length: 1 }).map((_, item) => (
-                <div key={item} className="flex min-h-[436px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)]">
-                  <div className="tfx-shimmer h-48 w-full rounded-md sm:h-64" />
-                  <div className="flex flex-1 flex-col gap-2 px-1 pb-1 pt-3">
+            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, item) => (
+                <div key={item} className="flex min-h-[460px] flex-col overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.07)]">
+                  <div className="tfx-shimmer aspect-[4/3] w-full rounded-xl" />
+                  <div className="flex flex-1 flex-col gap-2 px-1 pb-1 pt-4">
                     <div className="tfx-shimmer h-4 w-3/4 rounded" />
                     <div className="tfx-shimmer h-3 w-1/2 rounded" />
                     <div className="tfx-shimmer mt-auto h-8 w-full rounded-md" />
@@ -1384,7 +1407,7 @@ export const Home: React.FC = () => {
             </div>
           ) : catalogProducts.length > 0 ? (
             <>
-            <div className="mx-auto grid max-w-2xl grid-cols-1 gap-5">
+            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {paginatedCatalogProducts.map((product, index) => {
                 const catalogHref = getHomeCatalogHref(product);
                 const salePrice = Number(product.salePrice || product.price || 0);
@@ -1406,9 +1429,9 @@ export const Home: React.FC = () => {
                       ? `${Math.round(((mrp - salePrice) / mrp) * 100)}%`
                       : '';
 
-                // Top-left tag: an offer callout takes priority, then "Just Launched" for new arrivals.
+                // Give the strongest promotion priority over launch and featured tags.
                 const topLeftTag = showMegaPriceDrop
-                  ? { label: '⚡ Mega Price Drop', className: 'tfx-badge-pulse bg-gradient-to-r from-red-600 to-rose-700 shadow-[0_4px_14px_rgba(220,38,38,0.3)]' }
+                  ? { label: 'MEGA PRICE DROP', className: 'tfx-badge-pulse bg-gradient-to-r from-red-600 to-rose-700 shadow-[0_4px_14px_rgba(220,38,38,0.3)]' }
                   : hasDiscount && discountLabel
                     ? { label: `Extra ${discountLabel} Off`, className: 'bg-emerald-600' }
                     : product.isNewArrival
@@ -1419,88 +1442,52 @@ export const Home: React.FC = () => {
 
                 return (
                   <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70} variant="up" className="h-full">
-                  <article
-                    className="tfx-shine tfx-glow-card group relative flex h-full min-h-[436px] flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-3 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition-all duration-300 ease-out hover:-translate-y-1.5 sm:p-4"
-                  >
-                    {/* Top-left: offer / launch status tag */}
-                    {topLeftTag && (
-                      <div className={`absolute left-2.5 top-2.5 z-10 rounded-r-full px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-white shadow-[0_8px_18px_rgba(15,23,42,0.18)] sm:px-3 sm:text-[10px] ${topLeftTag.className}`}>
-                        {topLeftTag.label}
-                      </div>
-                    )}
-                    <Link to={catalogHref} className="flex h-64 items-center justify-center overflow-hidden rounded-md bg-white sm:h-80">
-                      <img
-                        src={getProductImage(product)}
-                        alt={product.name}
-                        className="h-full w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.08]"
-                        loading={catalogPage === 1 && index < 4 ? 'eager' : 'lazy'}
-                        decoding="async"
-                      />
-                    </Link>
-                    <div className="flex flex-1 flex-col px-1 pb-1 pt-3">
-                      <Link to={catalogHref} className="mt-1.5 min-w-0">
-                        <h3 className="product-catalog-title truncate text-slate-950 transition hover:text-[#1ca9a4]">
-                          {product.name}
-                        </h3>
-                      </Link>
-                      {/* Price stack: sale price first, then strikethrough MRP, then % off */}
-                      <div className="mt-1.5 flex flex-wrap items-center gap-2">
-                        <span className="text-base font-black leading-none text-slate-950">
-                          {formatInrAmount(offerPricing.unitOfferPrice)}
-                        </span>
-                        {strikeThroughPrice > offerPricing.unitOfferPrice && (
-                          <span className="text-xs font-bold leading-none text-slate-400 line-through">
-                            {formatInrAmount(strikeThroughPrice)}
+                    <article className="group relative flex h-full flex-col overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.07)] transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_20px_44px_rgba(15,63,70,0.13)]">
+                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-white to-[#f1f5f7]">
+                        {topLeftTag && (
+                          <span className={`absolute left-3 top-3 z-10 inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white ${topLeftTag.className}`}>
+                            {topLeftTag.label}
                           </span>
                         )}
-                        {discountLabel && (
-                          <span className="text-xs font-black leading-none text-emerald-600">{discountLabel} off</span>
-                        )}
+                        <HomeCatalogProductImage product={product} loading={catalogPage === 1 && index < 4 ? 'eager' : 'lazy'} />
                       </div>
-                      <p className="mt-1.5 truncate text-xs font-medium leading-5 text-slate-600">{detailLine}</p>
-                      {/* Round color-swatch dots */}
-                      {swatches.length > 0 && (
-                        <div className="mt-2 flex items-center gap-1.5">
-                          {swatches.map((swatch, swatchIndex) => (
-                            <span
-                              key={`${swatch.label}-${swatchIndex}`}
-                              className="h-4 w-4 overflow-hidden rounded-full border border-slate-200 bg-slate-100 shadow-sm"
-                              title={swatch.label}
-                            >
-                              <img src={swatch.image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" aria-hidden="true" />
-                            </span>
-                          ))}
-                          {extraSwatchCount > 0 && (
-                            <span className="text-[10px] font-bold text-slate-500">+{extraSwatchCount}</span>
+                      <div className="flex flex-1 flex-col px-2 pb-2 pt-4">
+                        <Link to={catalogHref} className="line-clamp-2 min-h-12 text-base font-bold leading-6 text-slate-950 transition hover:text-[#1ca9a4]">
+                          {product.name}
+                        </Link>
+                        <p className="mt-1.5 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{detailLine}</p>
+                        <div className="mt-3 flex flex-wrap items-center gap-2">
+                          <span className="text-xl font-black leading-none tracking-tight text-slate-950">{formatInrAmount(offerPricing.unitOfferPrice)}</span>
+                          {strikeThroughPrice > offerPricing.unitOfferPrice && (
+                            <span className="text-sm font-semibold leading-none text-slate-400 line-through">{formatInrAmount(strikeThroughPrice)}</span>
                           )}
+                          {discountLabel && <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-extrabold text-emerald-700">{discountLabel} off</span>}
                         </div>
-                      )}
-                      {/* Colored feature strip, sits right above the CTA */}
-                      <div className="relative z-20 mt-auto pt-3">
-                        {featureStrip && (
-                          <div className={`mb-2 rounded-md py-1.5 text-center text-[11px] font-black uppercase tracking-wide ${featureStrip.className}`}>
-                            {featureStrip.label}
+                        {swatches.length > 0 && (
+                          <div className="mt-3 flex items-center gap-1.5">
+                            {swatches.map((swatch, swatchIndex) => (
+                              <span key={`${swatch.label}-${swatchIndex}`} className="h-5 w-5 overflow-hidden rounded-full border border-slate-200 bg-white" title={swatch.label}>
+                                <img src={swatch.image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                              </span>
+                            ))}
+                            {extraSwatchCount > 0 && <span className="text-[10px] font-bold text-slate-500">+{extraSwatchCount}</span>}
                           </div>
                         )}
-                        <div className="grid shrink-0 grid-cols-2 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleHomeAddToCart(product)}
-                            className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#0a0e17] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#161b28] hover:shadow-[0_10px_22px_rgba(10,14,23,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-slate-900/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
-                          >
+                        {featureStrip && (
+                          <p className={`mt-3 rounded-lg py-2 text-center text-[10px] font-black uppercase tracking-wide ${featureStrip.className}`}>
+                            {featureStrip.label}
+                          </p>
+                        )}
+                        <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
+                          <button type="button" onClick={() => handleHomeAddToCart(product)} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-900 bg-white px-2 text-xs font-extrabold text-slate-900 transition hover:bg-slate-100 sm:text-sm">
                             Add to Cart
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => handleHomeBuyNow(product)}
-                            className="relative z-20 inline-flex h-11 w-full cursor-pointer items-center justify-center rounded-xl !bg-[#4a0000] px-2 text-xs font-black !text-white shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:!bg-[#630000] hover:shadow-[0_10px_22px_rgba(74,0,0,0.35)] active:translate-y-0 active:scale-[0.96] focus:outline-none focus:ring-2 focus:ring-[#4a0000]/30 focus:ring-offset-2 focus:ring-offset-white sm:text-sm"
-                          >
+                          <button type="button" onClick={() => handleHomeBuyNow(product)} className="inline-flex h-11 items-center justify-center rounded-xl bg-gradient-to-r from-[#a9812f] to-[#c29b52] px-2 text-xs font-extrabold text-white shadow-sm transition hover:brightness-105 sm:text-sm">
                             Buy Now
                           </button>
                         </div>
                       </div>
-                    </div>
-                  </article>
+                    </article>
                   </RevealOnScroll>
                 );
               })}

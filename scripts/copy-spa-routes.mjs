@@ -533,8 +533,19 @@ const getMerchantProductId = (product) => {
   return `${prefix}-${suffix}`;
 };
 
-const getMerchantAvailability = (product) =>
-  String(product.availability || '').toLowerCase().includes('outofstock') ? 'out_of_stock' : 'in_stock';
+const getMerchantAvailability = (product) => {
+  const rawAvailability = String(product.availability || product.availabilityStatus || '').trim().toLowerCase();
+  const normalized = rawAvailability.split('/').pop()?.replace(/[^a-z]/g, '') || '';
+  if (['instock', 'outofstock', 'preorder', 'backorder'].includes(normalized)) {
+    return normalized === 'instock' ? 'in_stock' : normalized === 'outofstock' ? 'out_of_stock' : normalized;
+  }
+  return 'in_stock';
+};
+
+const getAvailabilityDate = (product) => {
+  const date = String(product.availabilityDate || product.availability_date || '').trim();
+  return /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?$/.test(date) ? date : '';
+};
 
 const buildMerchantDescription = (product) =>
   cleanFeedText(product.description || `Shop ${product.name} from TheFutureX.`).slice(0, 5000);
@@ -559,6 +570,8 @@ const buildMerchantXmlFeed = (products = []) => {
         .slice(1, 11)
         .map((image) => `    <g:additional_image_link>${xmlEscape(image)}</g:additional_image_link>`)
         .join('\n');
+      const availability = getMerchantAvailability(product);
+      const availabilityDate = getAvailabilityDate(product);
 
       return `  <item>
     <g:id>${xmlEscape(getMerchantProductId(product))}</g:id>
@@ -566,7 +579,8 @@ const buildMerchantXmlFeed = (products = []) => {
     <g:description>${xmlEscape(buildMerchantDescription(product))}</g:description>
     <g:link>${xmlEscape(getProductUrl(product))}</g:link>
     <g:image_link>${xmlEscape(resolveUrl(product.image))}</g:image_link>
-${additionalImages ? `${additionalImages}\n` : ''}    <g:availability>${getMerchantAvailability(product)}</g:availability>
+${additionalImages ? `${additionalImages}\n` : ''}    <g:availability>${availability}</g:availability>
+${availability === 'preorder' && availabilityDate ? `    <g:availability_date>${xmlEscape(availabilityDate)}</g:availability_date>\n` : ''}
     <g:price>${xmlEscape(formatMerchantPrice(product.price))}</g:price>
     <g:condition>new</g:condition>
     <g:brand>${xmlEscape(product.brand || BRAND_NAME)}</g:brand>
@@ -595,6 +609,7 @@ const buildMerchantCsvFeed = (products = []) => {
     'link',
     'image_link',
     'availability',
+    'availability_date',
     'price',
     'condition',
     'brand',
@@ -608,6 +623,7 @@ const buildMerchantCsvFeed = (products = []) => {
     link: getProductUrl(product),
     image_link: resolveUrl(product.image),
     availability: getMerchantAvailability(product),
+    availability_date: getMerchantAvailability(product) === 'preorder' ? getAvailabilityDate(product) : '',
     price: formatMerchantPrice(product.price),
     condition: 'new',
     brand: product.brand || BRAND_NAME,
