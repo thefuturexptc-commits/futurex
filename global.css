@@ -10593,3 +10593,33 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
 .admin-product-modal .admin-product-preview span {
   color: #111827 !important;
 }
+
+/* Keep legal terms readable in both site themes. */
+.info-page-terms {
+  background: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.info-page-terms > div {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+.info-page-terms h1 {
+  color: #0f172a !important;
+}
+
+.info-page-terms .text-gray-300 {
+  color: #334155 !important;
+}
+
+.info-page-terms button {
+  background: #0f172a !important;
+  border-color: #0f172a !important;
+  color: #ffffff !important;
+}
+
+.info-page-terms button:hover {
+  background: #334155 !important;
+}
+
