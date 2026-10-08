@@ -6,7 +6,7 @@ export type MerchantSyncResponse = {
   merchantId?: string;
   synced?: number | unknown;
   failed?: number;
-  results?: Array<{ ok: boolean; productId: string; error?: string }>;
+  results?: Array<{ ok: boolean; productId: string; error?: string; status?: number }>;
   error?: string;
   config?: {
     merchantId?: string;
@@ -15,6 +15,8 @@ export type MerchantSyncResponse = {
     hasCredentialsPath?: boolean;
   };
   registration?: { name?: string; gcpIds?: string[] };
+  registrationState?: { registeredNow?: boolean };
+  pendingRegistration?: boolean;
 };
 
 const callMerchantSync = async (body: unknown): Promise<MerchantSyncResponse> => {
@@ -32,19 +34,16 @@ const callMerchantSync = async (body: unknown): Promise<MerchantSyncResponse> =>
   });
 
   const data = await response.json().catch(() => ({})) as MerchantSyncResponse;
-  if (!response.ok && response.status !== 207) {
+  if (!response.ok && response.status !== 207 && response.status !== 202) {
     throw new Error(data.error || `Merchant API request failed with status ${response.status}.`);
   }
-  if (data.ok === false && response.status !== 207) {
+  if (data.ok === false && response.status !== 207 && response.status !== 202) {
     throw new Error(data.error || 'Merchant API sync failed.');
   }
   return data;
 };
 
 export const initializeMerchantApi = () => callMerchantSync({ action: 'initialize' });
-
-export const registerMerchantApiProject = (developerEmail: string) =>
-  callMerchantSync({ action: 'register', developerEmail });
 
 export const syncProductToMerchant = (product: Product) => callMerchantSync({ action: 'upsert', product });
 

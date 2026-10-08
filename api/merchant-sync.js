@@ -6,8 +6,8 @@ import { getFirestore } from 'firebase-admin/firestore';
 import {
   deleteProductFromMerchant,
   ensureMerchantDataSource,
+  ensureMerchantApiRegistration,
   getMerchantSyncConfig,
-  registerMerchantApiProject,
   syncAllProducts,
   upsertProduct,
 } from '../services/merchant-api/merchantService.js';
@@ -40,19 +40,19 @@ const getFirebaseAdminApp = () => {
 const requireAdmin = async (req) => {
   const authorization = req.headers?.authorization || '';
   const token = authorization.match(/^Bearer\s+(.+)$/i)?.[1];
-  if (!token) return false;
+  if (!token) return null;
 
   try {
     const app = getFirebaseAdminApp();
     const decoded = await getAuth(app).verifyIdToken(token);
-    if (decoded.admin === true || decoded.role === 'admin' || decoded.role === 'superadmin') return true;
-    if (String(decoded.email || '').toLowerCase() === SUPERADMIN_EMAIL) return true;
+    if (decoded.admin === true || decoded.role === 'admin' || decoded.role === 'superadmin') return decoded;
+    if (String(decoded.email || '').toLowerCase() === SUPERADMIN_EMAIL) return decoded;
     const user = await getFirestore(app).collection('users').doc(decoded.uid).get();
     const role = user.data()?.role;
-    return role === 'admin' || role === 'superadmin';
+    return role === 'admin' || role === 'superadmin' ? decoded : null;
   } catch (error) {
     console.warn('Merchant API request authentication failed.');
-    return false;
+    return null;
   }
 };
 
@@ -63,30 +63,28 @@ export default async function handler(req, res) {
     return;
   }
 
-  if (!(await requireAdmin(req))) {
+  const adminIdentity = await requireAdmin(req);
+  if (!adminIdentity) {
     send(res, 401, { ok: false, error: 'Sign in with an admin account to manage Merchant API listings.' });
     return;
   }
 
+  let registrationState = { registeredNow: false };
   try {
     const { action, product, products } = req.body || {};
 
+    registrationState = await ensureMerchantApiRegistration(adminIdentity.email);
+
     if (action === 'status' || action === 'initialize') {
       const dataSource = await ensureMerchantDataSource();
-      send(res, 200, { ok: true, config: { ...getMerchantSyncConfig(), dataSource } });
-      return;
-    }
-
-    if (action === 'register') {
-      const registration = await registerMerchantApiProject(req.body?.developerEmail);
-      send(res, 200, { ok: true, registration });
+      send(res, 200, { ok: true, config: { ...getMerchantSyncConfig(), dataSource }, registrationState });
       return;
     }
 
     if (action === 'delete') {
       const productId = req.body?.productId || product?.id;
       const deleted = await deleteProductFromMerchant(productId);
-      send(res, 200, { ok: true, deleted, merchantId: getMerchantSyncConfig().merchantId });
+      send(res, 200, { ok: true, deleted, merchantId: getMerchantSyncConfig().merchantId, registrationState });
       return;
     }
 
@@ -98,12 +96,15 @@ export default async function handler(req, res) {
 
       const results = await syncAllProducts(products);
       const failed = results.filter((result) => !result.ok);
-      send(res, failed.length ? 207 : 200, {
-        ok: failed.length === 0,
+      const pendingRegistration = Boolean(registrationState.registeredNow && failed.length && failed.every((result) => result.status === 401 || result.status === 403));
+      send(res, pendingRegistration ? 202 : failed.length ? 207 : 200, {
+        ok: failed.length === 0 || pendingRegistration,
+        pendingRegistration,
         merchantId: getMerchantSyncConfig().merchantId,
         synced: results.length - failed.length,
         failed: failed.length,
         results,
+        registrationState,
       });
       return;
     }
@@ -114,9 +115,18 @@ export default async function handler(req, res) {
     }
 
     const synced = await upsertProduct(product);
-    send(res, 200, { ok: true, merchantId: getMerchantSyncConfig().merchantId, synced });
+    send(res, 200, { ok: true, merchantId: getMerchantSyncConfig().merchantId, synced, registrationState });
   } catch (error) {
     console.error('Merchant API sync failed', error);
+    const status = error?.response?.status || error?.status;
+    if (registrationState.registeredNow && (status === 401 || status === 403)) {
+      send(res, 202, {
+        ok: true,
+        pendingRegistration: true,
+        error: 'The Cloud project was registered. Google says Merchant API access can take about five minutes to activate.',
+      });
+      return;
+    }
     send(res, 500, {
       ok: false,
       error: error instanceof Error ? error.message : 'Merchant API sync failed.',

@@ -28,6 +28,7 @@ const siteUrl = (process.env.SITE_URL || process.env.PUBLIC_SITE_URL || process.
 const configuredDataSource = process.env.GOOGLE_MERCHANT_DATA_SOURCE || '';
 let cachedDataSource = configuredDataSource;
 let dataSourceInitialization = null;
+let merchantApiRegistered = false;
 
 const getAuthConfig = () => {
   const credentialsJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
@@ -116,7 +117,7 @@ const ensureProductDataSource = async () => {
 
 export const ensureMerchantDataSource = async () => ensureProductDataSource();
 
-export const registerMerchantApiProject = async (developerEmail) => {
+const registerMerchantApiProject = async (developerEmail) => {
   const email = String(developerEmail || '').trim().toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     throw new Error('A valid developer contact email is required for Merchant API registration.');
@@ -127,6 +128,21 @@ export const registerMerchantApiProject = async (developerEmail) => {
     method: 'POST',
     data: { developerEmail: email },
   });
+};
+
+export const ensureMerchantApiRegistration = async (developerEmail) => {
+  if (merchantApiRegistered) return { registeredNow: false };
+  const registrationName = `${accountName()}/developerRegistration`;
+  try {
+    await apiRequest({ version: 'accounts/v1', path: registrationName });
+    merchantApiRegistered = true;
+    return { registeredNow: false };
+  } catch (error) {
+    if (error?.response?.status !== 404) throw error;
+  }
+  await registerMerchantApiProject(developerEmail);
+  merchantApiRegistered = true;
+  return { registeredNow: true };
 };
 
 const slugify = (value = '') => String(value).trim().toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -278,6 +294,7 @@ export const syncAllProducts = async (products = []) => {
           ok: false,
           productId: product?.id || '',
           error: error instanceof Error ? error.message : 'Merchant API sync failed.',
+          status: error?.response?.status,
         };
       }
     }

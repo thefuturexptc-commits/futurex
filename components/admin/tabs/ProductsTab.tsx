@@ -19,9 +19,6 @@ interface Props {
   onSyncMerchantCatalog: () => void;
   merchantSyncing: boolean;
   merchantSyncMessage: string;
-  onRegisterMerchantApi: (developerEmail: string) => void;
-  registeringMerchantApi: boolean;
-  adminEmail: string;
 }
 
 export const ProductsTab: React.FC<Props> = ({
@@ -34,12 +31,8 @@ export const ProductsTab: React.FC<Props> = ({
   onSyncMerchantCatalog,
   merchantSyncing,
   merchantSyncMessage,
-  onRegisterMerchantApi,
-  registeringMerchantApi,
-  adminEmail,
 }) => {
   const [query, setQuery] = useState('');
-  const [developerEmail, setDeveloperEmail] = useState(adminEmail);
   const [category, setCategory] = useState('all');
   const [sortBy, setSortBy] = useState<'newest' | 'price' | 'stock' | 'bestSeller'>('newest');
   const [page, setPage] = useState(1);
@@ -94,7 +87,7 @@ export const ProductsTab: React.FC<Props> = ({
         </span>
         <h3 className="text-lg font-semibold">Add products using API</h3>
         <p className="mt-3 max-w-md text-sm leading-6 text-gray-600 dark:text-slate-300">
-          Send products directly to Google Merchant Center. New products, edits, and inventory changes in this admin panel are synced automatically.
+          Send products directly to Google Merchant Center. The first save handles project registration and data source setup; new products, edits, and inventory changes then sync automatically.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-800 dark:text-slate-100">
@@ -105,22 +98,6 @@ export const ProductsTab: React.FC<Props> = ({
             {merchantSyncing ? 'Syncing catalog…' : 'Sync catalog now'}
           </Button>
         </div>
-        <div className="mt-4 flex flex-col gap-2 border-t border-gray-200 pt-4 dark:border-white/10 sm:flex-row sm:items-end">
-          <label className="min-w-0 flex-1 text-xs font-medium text-gray-600 dark:text-slate-300">
-            Merchant API developer contact (Google account)
-            <input
-              type="email"
-              value={developerEmail}
-              onChange={(event) => setDeveloperEmail(event.target.value)}
-              className="mt-1 h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:border-white/15 dark:bg-slate-800 dark:text-white"
-              placeholder="name@example.com"
-            />
-          </label>
-          <Button type="button" size="sm" variant="outline" onClick={() => onRegisterMerchantApi(developerEmail)} isLoading={registeringMerchantApi} disabled={registeringMerchantApi || !developerEmail.trim()}>
-            {registeringMerchantApi ? 'Registering…' : 'Register project'}
-          </Button>
-        </div>
-        <p className="mt-2 text-xs text-gray-500 dark:text-slate-400">One-time setup. This links the Google Cloud project to Merchant Center and assigns the contact the API developer role.</p>
         {merchantSyncMessage && <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-300" role="status">{merchantSyncMessage}</p>}
       </section>
 
