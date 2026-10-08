@@ -25,3 +25,4 @@ dist-ssr
 .vercel
 .env*.local
 services/merchant-api/service-account.json
+.env.local

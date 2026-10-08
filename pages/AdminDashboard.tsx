@@ -32,7 +32,7 @@ import {
   updateWebsiteSettings,
   uploadFile,
 } from '../services/backend';
-import { deleteProductFromMerchant, syncAllProductsToMerchant, syncProductToMerchant } from '../services/merchantSync';
+import { deleteProductFromMerchant, registerMerchantApiProject, syncAllProductsToMerchant, syncProductToMerchant } from '../services/merchantSync';
 import { OfferLead, Order, Product, ProductNotifyRequest, SiteAnalyticsEvent, User, UserPermissions } from '../types';
 import { Button } from '../components/ui/Button';
 import { useTheme } from '../context/ThemeContext';
@@ -164,7 +164,6 @@ const parseSpecsText = (value: string): Record<string, string> => {
 const createVariantSizeRow = () => ({ id: `sz_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`, size: '', stock: 0 });
 const ADMIN_ACTIVE_TAB_KEY = 'aura_admin_active_tab';
 const ADMIN_LAST_BULK_STOCK_UNDO_KEY = 'aura_admin_last_bulk_stock_undo';
-const ADMIN_MERCHANT_AUTO_SYNC_KEY = 'aura_admin_merchant_auto_sync_v2_images_done';
 
 export const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -209,6 +208,9 @@ export const AdminDashboard: React.FC = () => {
   const [analyticsRefreshError, setAnalyticsRefreshError] = useState('');
   const [lastAnalyticsRefreshAt, setLastAnalyticsRefreshAt] = useState('');
   const [merchantSyncWarning, setMerchantSyncWarning] = useState('');
+  const [merchantSyncMessage, setMerchantSyncMessage] = useState('');
+  const [isMerchantCatalogSyncing, setIsMerchantCatalogSyncing] = useState(false);
+  const [isRegisteringMerchantApi, setIsRegisteringMerchantApi] = useState(false);
   const [auditError, setAuditError] = useState('');
   const [analyticsRange, setAnalyticsRange] = useState<AnalyticsRange>('30d');
 
@@ -276,7 +278,6 @@ export const AdminDashboard: React.FC = () => {
   const [settingsAutoSaveState, setSettingsAutoSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const settingsAutoSaveTimerRef = useRef<number | null>(null);
   const settingsBootstrappedRef = useRef(false);
-  const merchantAutoSyncStartedRef = useRef(false);
 
   const pushAudit = useCallback(
     async (action: string, details?: string) => {
@@ -431,34 +432,6 @@ export const AdminDashboard: React.FC = () => {
 
     return unsubscribe;
   }, [activeTab, user]);
-
-  useEffect(() => {
-    if (!user || products.length === 0 || merchantAutoSyncStartedRef.current) return;
-    if (!(user.role === 'admin' || user.role === 'superadmin')) return;
-    if (typeof window !== 'undefined' && window.sessionStorage.getItem(ADMIN_MERCHANT_AUTO_SYNC_KEY) === 'true') return;
-
-    merchantAutoSyncStartedRef.current = true;
-    void syncAllProductsToMerchant(products)
-      .then((result) => {
-        const failed = Number(result.failed || 0);
-        if (failed > 0) {
-          const firstError = result.results?.find((item) => !item.ok)?.error || 'Some products failed to sync.';
-          setMerchantSyncWarning(`Merchant auto-sync warning: ${firstError}`);
-          merchantAutoSyncStartedRef.current = false;
-          return;
-        }
-        if (typeof window !== 'undefined') {
-          window.sessionStorage.setItem(ADMIN_MERCHANT_AUTO_SYNC_KEY, 'true');
-        }
-        setMerchantSyncWarning(result.pendingFetch
-          ? 'Google Merchant Center reads the saved catalog through the live product feed. Changes appear after Google fetches the feed.'
-          : result.merchantId ? `Merchant auto-sync completed to account ${result.merchantId}.` : '');
-      })
-      .catch((error) => {
-        setMerchantSyncWarning(`Merchant auto-sync warning: ${error instanceof Error ? error.message : 'Merchant sync failed.'}`);
-        merchantAutoSyncStartedRef.current = false;
-      });
-  }, [products, user]);
 
   useEffect(() => {
     const loadLogs = async () => {
@@ -858,6 +831,53 @@ export const AdminDashboard: React.FC = () => {
   );
   const productPermalink = `https://thefuturex.in/product/${normalizedFormSlug || 'url-slug'}`;
 
+  const handleMerchantApiRegistration = async (developerEmail: string) => {
+    if (isRegisteringMerchantApi) return;
+    setIsRegisteringMerchantApi(true);
+    setMerchantSyncWarning('');
+    setMerchantSyncMessage('');
+    try {
+      await registerMerchantApiProject(developerEmail);
+      setMerchantSyncMessage(`Merchant API project registered. Contact ${developerEmail} now has the API developer role; wait about five minutes before syncing.`);
+    } catch (error) {
+      setMerchantSyncWarning(error instanceof Error ? error.message : 'Merchant API project registration failed.');
+    } finally {
+      setIsRegisteringMerchantApi(false);
+    }
+  };
+
+  const handleMerchantCatalogSync = async () => {
+    if (!products.length || isMerchantCatalogSyncing) return;
+    setIsMerchantCatalogSyncing(true);
+    setMerchantSyncWarning('');
+    setMerchantSyncMessage('');
+    try {
+      const result = await syncAllProductsToMerchant(products);
+      const failed = Number(result.failed || 0);
+      const synced = Number(result.synced || 0);
+      if (failed > 0) {
+        const firstError = result.results?.find((item) => !item.ok)?.error || 'Some products could not be synced.';
+        setMerchantSyncWarning(`Merchant API synced ${synced} of ${products.length} products. ${firstError}`);
+      } else {
+        setMerchantSyncMessage(`Merchant API catalog sync complete: ${synced} products sent to account ${result.merchantId || 'configured Merchant Center'}.`);
+      }
+    } catch (error) {
+      setMerchantSyncWarning(error instanceof Error ? error.message : 'Merchant API catalog sync failed.');
+    } finally {
+      setIsMerchantCatalogSyncing(false);
+    }
+  };
+
+  const syncInventoryProduct = async (product: Product) => {
+    try {
+      await syncProductToMerchant(product);
+      setMerchantSyncWarning('');
+      setMerchantSyncMessage(`${product.name} inventory sent to Merchant API.`);
+    } catch (error) {
+      setMerchantSyncWarning(`${product.name} was saved, but Merchant API sync failed: ${error instanceof Error ? error.message : 'Unknown error.'}`);
+    }
+  };
+
   const handleSaveProduct = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalSlug = productForm.slug ? toProductSlug(productForm.slug) : generateProductSlug(productForm.name || '');
@@ -1036,13 +1056,13 @@ export const AdminDashboard: React.FC = () => {
 
       try {
         const merchantResult = await syncProductToMerchant(savedProduct);
-        if (merchantResult.pendingFetch && !backendSyncWarning) {
-          setMerchantSyncWarning('Product saved. Google Merchant Center will receive the changes on its next feed fetch.');
-        }
         if (!merchantResult.ok) {
           backendSyncWarning = backendSyncWarning
             ? `${backendSyncWarning} Merchant sync failed.`
             : 'Merchant sync failed.';
+        } else {
+          setMerchantSyncWarning('');
+          setMerchantSyncMessage(`${savedProduct.name} sent to Merchant API.`);
         }
       } catch (syncError) {
         const merchantWarning = syncError instanceof Error ? syncError.message : 'Merchant sync failed.';
@@ -1072,8 +1092,10 @@ export const AdminDashboard: React.FC = () => {
         await deleteProduct(product.id);
         try {
           await deleteProductFromMerchant(product.id);
+          setMerchantSyncWarning('');
+          setMerchantSyncMessage(`${product.name} removed from Merchant API.`);
         } catch (error) {
-          alert(error instanceof Error ? `Product deleted, but Merchant delete failed: ${error.message}` : 'Product deleted, but Merchant delete failed.');
+          setMerchantSyncWarning(`Product deleted, but Merchant API delete failed: ${error instanceof Error ? error.message : 'Unknown error.'}`);
         }
         pushAudit('Product Deleted', `${product.name} (${product.id})`);
         await refreshData();
@@ -1164,7 +1186,9 @@ export const AdminDashboard: React.FC = () => {
   const handleQuickStockUpdate = async (product: Product, amount: number) => {
     const newStock = Math.max(0, product.stock + amount);
     const availableAfterUpdate = newStock - (product.reservedStock || 0);
-    await updateProduct({ ...product, stock: newStock, inStock: availableAfterUpdate > 0 });
+    const updatedProduct = { ...product, stock: newStock, inStock: availableAfterUpdate > 0 };
+    await updateProduct(updatedProduct);
+    await syncInventoryProduct(updatedProduct);
     pushAudit('Stock Updated', `${product.name}: +${amount}`);
     await refreshData();
   };
@@ -1186,14 +1210,20 @@ export const AdminDashboard: React.FC = () => {
       })),
     };
 
-    await Promise.all(
-      affectedProducts
-        .map((p) => {
-          const newStock = Math.max(0, p.stock + amount);
-          const available = newStock - (p.reservedStock || 0);
-          return updateProduct({ ...p, stock: newStock, inStock: available > 0 });
-        })
-    );
+    const updatedProducts = affectedProducts.map((p) => {
+      const newStock = Math.max(0, p.stock + amount);
+      const available = newStock - (p.reservedStock || 0);
+      return { ...p, stock: newStock, inStock: available > 0 };
+    });
+    await Promise.all(updatedProducts.map(updateProduct));
+    const merchantResult = await syncAllProductsToMerchant(updatedProducts);
+    if (Number(merchantResult.failed || 0)) {
+      const firstError = merchantResult.results?.find((item) => !item.ok)?.error || 'Unknown Merchant API error.';
+      setMerchantSyncWarning(`Stock was updated, but Merchant API sync failed for ${merchantResult.failed} product(s): ${firstError}`);
+    } else {
+      setMerchantSyncWarning('');
+      setMerchantSyncMessage(`Inventory updates for ${updatedProducts.length} products sent to Merchant API.`);
+    }
     setLastBulkStockUpdate(undoState);
     pushAudit('Bulk Stock Updated', `${productIds.length} products, amount ${amount}`);
     await refreshData();
@@ -1208,15 +1238,22 @@ export const AdminDashboard: React.FC = () => {
     const affectedIds = new Set(lastBulkStockUpdate.products.map((item) => item.id));
     const previousById = new Map(lastBulkStockUpdate.products.map((item) => [item.id, item.previousStock]));
 
-    await Promise.all(
-      products
-        .filter((p) => affectedIds.has(p.id))
-        .map((p) => {
-          const restoredStock = previousById.get(p.id) ?? p.stock;
-          const available = restoredStock - (p.reservedStock || 0);
-          return updateProduct({ ...p, stock: restoredStock, inStock: available > 0 });
-        })
-    );
+    const restoredProducts = products
+      .filter((p) => affectedIds.has(p.id))
+      .map((p) => {
+        const restoredStock = previousById.get(p.id) ?? p.stock;
+        const available = restoredStock - (p.reservedStock || 0);
+        return { ...p, stock: restoredStock, inStock: available > 0 };
+      });
+    await Promise.all(restoredProducts.map(updateProduct));
+    const merchantResult = await syncAllProductsToMerchant(restoredProducts);
+    if (Number(merchantResult.failed || 0)) {
+      const firstError = merchantResult.results?.find((item) => !item.ok)?.error || 'Unknown Merchant API error.';
+      setMerchantSyncWarning(`Stock was restored, but Merchant API sync failed for ${merchantResult.failed} product(s): ${firstError}`);
+    } else {
+      setMerchantSyncWarning('');
+      setMerchantSyncMessage(`Restored inventory for ${restoredProducts.length} products sent to Merchant API.`);
+    }
 
     pushAudit(
       'Bulk Stock Update Undone',
@@ -1441,6 +1478,12 @@ export const AdminDashboard: React.FC = () => {
           onAdd={handleOpenAddProduct}
           onEdit={handleEditProduct}
           onDelete={handleDeleteProduct}
+          onSyncMerchantCatalog={handleMerchantCatalogSync}
+          merchantSyncing={isMerchantCatalogSyncing}
+          merchantSyncMessage={merchantSyncMessage}
+          onRegisterMerchantApi={handleMerchantApiRegistration}
+          registeringMerchantApi={isRegisteringMerchantApi}
+          adminEmail={user?.email || ''}
         />
       )}
       {activeTab === 'orders' && (
