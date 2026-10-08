@@ -8,6 +8,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { google } from 'googleapis';
+import { Impersonated } from 'google-auth-library';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,12 +47,29 @@ const getAuthConfig = () => {
   throw new Error('Missing Google service account credentials. Set GOOGLE_APPLICATION_CREDENTIALS or GOOGLE_SERVICE_ACCOUNT_JSON.');
 };
 
+const merchantApiScope = 'https://www.googleapis.com/auth/content';
+const impersonationSourceScope = 'https://www.googleapis.com/auth/cloud-platform';
+const impersonatedServiceAccount = String(process.env.GOOGLE_IMPERSONATE_SERVICE_ACCOUNT || '').trim();
+
 const auth = new google.auth.GoogleAuth({
   ...getAuthConfig(),
-  scopes: ['https://www.googleapis.com/auth/content'],
+  scopes: [impersonatedServiceAccount ? impersonationSourceScope : merchantApiScope],
 });
 
-const getAuthClient = () => auth.getClient();
+let impersonatedAuthClient;
+const getAuthClient = async () => {
+  if (!impersonatedServiceAccount) return auth.getClient();
+  if (!impersonatedAuthClient) {
+    const sourceClient = await auth.getClient();
+    impersonatedAuthClient = new Impersonated({
+      sourceClient,
+      targetPrincipal: impersonatedServiceAccount,
+      targetScopes: [merchantApiScope],
+      lifetime: 3600,
+    });
+  }
+  return impersonatedAuthClient;
+};
 const accountName = () => {
   if (!merchantId) throw new Error('Missing GOOGLE_MERCHANT_ID.');
   return `accounts/${merchantId}`;
@@ -133,10 +151,18 @@ const registerMerchantApiProject = async (developerEmail) => {
 export const ensureMerchantApiRegistration = async (developerEmail) => {
   if (merchantApiRegistered) return { registeredNow: false };
   const registrationName = `${accountName()}/developerRegistration`;
+  const configuredProjectNumber = String(process.env.GOOGLE_CLOUD_PROJECT_NUMBER || '').trim();
+  const configuredProjectId = String(process.env.GOOGLE_CLOUD_PROJECT_ID || process.env.VITE_FIREBASE_PROJECT_ID || '').trim();
   try {
-    await apiRequest({ version: 'accounts/v1', path: registrationName });
-    merchantApiRegistered = true;
-    return { registeredNow: false };
+    const registration = await apiRequest({ version: 'accounts/v1', path: registrationName });
+    const registeredGcpIds = (registration.gcpIds || []).map(String);
+    const registeredForThisProject = [configuredProjectNumber, configuredProjectId]
+      .filter(Boolean)
+      .some((projectId) => registeredGcpIds.includes(projectId));
+    if (registeredForThisProject) {
+      merchantApiRegistered = true;
+      return { registeredNow: false };
+    }
   } catch (error) {
     if (error?.response?.status !== 404) throw error;
   }
@@ -307,6 +333,9 @@ export const getMerchantSyncConfig = () => ({
   merchantId,
   siteUrl,
   dataSource: cachedDataSource || null,
+  authMode: impersonatedServiceAccount ? 'service-account-impersonation' : 'service-account',
+  merchantApiScope,
+  impersonatedServiceAccount: impersonatedServiceAccount || null,
   hasServiceAccountJson: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON),
   hasCredentialsPath: Boolean(process.env.GOOGLE_APPLICATION_CREDENTIALS),
   hasLocalKeyFile: fs.existsSync(path.join(__dirname, 'service-account.json')),
