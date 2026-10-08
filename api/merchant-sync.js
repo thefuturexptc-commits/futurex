@@ -1,8 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
-import { cert, getApps, initializeApp } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { createSign, createVerify } from 'node:crypto';
 import {
   deleteProductFromMerchant,
   ensureMerchantDataSource,
@@ -14,27 +12,106 @@ import {
 
 const send = (res, status, body) => res.status(status).json(body);
 const SUPERADMIN_EMAIL = 'thefuturex.ptc@gmail.com';
+let firebaseSigningCerts = null;
+let firebaseSigningCertsExpireAt = 0;
+let serviceAccountAccessToken = null;
+let serviceAccountAccessTokenExpireAt = 0;
 
-const getFirebaseAdminApp = () => {
-  const existing = getApps().find((app) => app.name === 'merchant-api-auth');
-  if (existing) return existing;
-
+const getServiceAccountCredentials = () => {
   const rawCredentials = process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON;
-  let credentials;
-  if (rawCredentials) {
-    credentials = JSON.parse(rawCredentials);
-  } else {
-    const credentialPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-    if (!credentialPath) throw new Error('Firebase admin auth needs the service account credentials configured on the server.');
-    const keyPath = path.isAbsolute(credentialPath) ? credentialPath : path.resolve(process.cwd(), credentialPath);
-    if (!fs.existsSync(keyPath)) throw new Error('Firebase admin auth could not find the configured service account key.');
-    credentials = JSON.parse(fs.readFileSync(keyPath, 'utf8'));
-  }
+  if (rawCredentials) return JSON.parse(rawCredentials);
 
-  return initializeApp({
-    credential: cert(credentials),
-    projectId: process.env.VITE_FIREBASE_PROJECT_ID || credentials.project_id,
-  }, 'merchant-api-auth');
+  const credentialPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+  if (!credentialPath) throw new Error('Server service account credentials are not configured.');
+  const keyPath = path.isAbsolute(credentialPath) ? credentialPath : path.resolve(process.cwd(), credentialPath);
+  if (!fs.existsSync(keyPath)) throw new Error('Server could not find the configured service account key.');
+  return JSON.parse(fs.readFileSync(keyPath, 'utf8'));
+};
+
+const getProjectId = (credentials) => process.env.VITE_FIREBASE_PROJECT_ID || credentials.project_id;
+
+const getFirebaseSigningCerts = async () => {
+  if (firebaseSigningCerts && Date.now() < firebaseSigningCertsExpireAt) return firebaseSigningCerts;
+  const response = await fetch('https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com');
+  if (!response.ok) throw new Error(`Could not load Firebase token verification certificates (${response.status}).`);
+  firebaseSigningCerts = await response.json();
+  const maxAge = Number(response.headers.get('cache-control')?.match(/max-age=(\d+)/i)?.[1] || 3600);
+  firebaseSigningCertsExpireAt = Date.now() + maxAge * 1000;
+  return firebaseSigningCerts;
+};
+
+const verifyFirebaseIdToken = async (token) => {
+  const parts = token.split('.');
+  if (parts.length !== 3) return null;
+  try {
+    const header = JSON.parse(Buffer.from(parts[0], 'base64url').toString('utf8'));
+    const claims = JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8'));
+    if (header.alg !== 'RS256' || !header.kid) return null;
+
+    const certificates = await getFirebaseSigningCerts();
+    const certificate = certificates[header.kid];
+    if (!certificate) return null;
+    const verifier = createVerify('RSA-SHA256');
+    verifier.update(`${parts[0]}.${parts[1]}`);
+    verifier.end();
+    if (!verifier.verify(certificate, Buffer.from(parts[2], 'base64url'))) return null;
+
+    const credentials = getServiceAccountCredentials();
+    const projectId = getProjectId(credentials);
+    const now = Math.floor(Date.now() / 1000);
+    if (!projectId || claims.aud !== projectId || claims.iss !== `https://securetoken.google.com/${projectId}` ||
+        !claims.sub || claims.sub.length > 128 || !claims.exp || claims.exp <= now ||
+        !claims.iat || claims.iat > now + 300) return null;
+    return { ...claims, uid: claims.sub };
+  } catch {
+    return null;
+  }
+};
+
+const signServiceAccountAssertion = (credentials, scope) => {
+  const issuedAt = Math.floor(Date.now() / 1000);
+  const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+  const unsigned = `${encode({ alg: 'RS256', typ: 'JWT' })}.${encode({
+    iss: credentials.client_email,
+    scope,
+    aud: credentials.token_uri || 'https://oauth2.googleapis.com/token',
+    iat: issuedAt,
+    exp: issuedAt + 3600,
+  })}`;
+  const signer = createSign('RSA-SHA256');
+  signer.update(unsigned);
+  signer.end();
+  return `${unsigned}.${signer.sign(credentials.private_key, 'base64url')}`;
+};
+
+const getServiceAccountAccessToken = async (credentials) => {
+  if (serviceAccountAccessToken && Date.now() < serviceAccountAccessTokenExpireAt) return serviceAccountAccessToken;
+  const tokenUri = credentials.token_uri || 'https://oauth2.googleapis.com/token';
+  const body = new URLSearchParams({
+    grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+    assertion: signServiceAccountAssertion(credentials, 'https://www.googleapis.com/auth/datastore'),
+  });
+  const response = await fetch(tokenUri, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body,
+  });
+  const result = await response.json();
+  if (!response.ok || !result.access_token) throw new Error(`Could not authorize Firestore role lookup (${response.status}).`);
+  serviceAccountAccessToken = result.access_token;
+  serviceAccountAccessTokenExpireAt = Date.now() + Math.max(60, Number(result.expires_in || 3600) - 60) * 1000;
+  return serviceAccountAccessToken;
+};
+
+const getFirestoreUserRole = async (claims, credentials) => {
+  const projectId = getProjectId(credentials);
+  const token = await getServiceAccountAccessToken(credentials);
+  const documentPath = `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(projectId)}/databases/(default)/documents/users/${encodeURIComponent(claims.uid)}`;
+  const response = await fetch(documentPath, { headers: { Authorization: `Bearer ${token}` } });
+  if (response.status === 404) return null;
+  if (!response.ok) throw new Error(`Could not read the admin role from Firestore (${response.status}).`);
+  const document = await response.json();
+  return document.fields?.role?.stringValue || null;
 };
 
 const requireAdmin = async (req) => {
@@ -43,15 +120,14 @@ const requireAdmin = async (req) => {
   if (!token) return null;
 
   try {
-    const app = getFirebaseAdminApp();
-    const decoded = await getAuth(app).verifyIdToken(token);
-    if (decoded.admin === true || decoded.role === 'admin' || decoded.role === 'superadmin') return decoded;
-    if (String(decoded.email || '').toLowerCase() === SUPERADMIN_EMAIL) return decoded;
-    const user = await getFirestore(app).collection('users').doc(decoded.uid).get();
-    const role = user.data()?.role;
-    return role === 'admin' || role === 'superadmin' ? decoded : null;
+    const claims = await verifyFirebaseIdToken(token);
+    if (!claims) return null;
+    if (claims.admin === true || claims.role === 'admin' || claims.role === 'superadmin') return claims;
+    if (String(claims.email || '').toLowerCase() === SUPERADMIN_EMAIL) return claims;
+    const role = await getFirestoreUserRole(claims, getServiceAccountCredentials());
+    return role === 'admin' || role === 'superadmin' ? claims : null;
   } catch (error) {
-    console.warn('Merchant API request authentication failed.');
+    console.warn('Merchant API request authentication failed:', error?.message || 'unknown error');
     return null;
   }
 };
