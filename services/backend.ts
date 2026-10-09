@@ -29,7 +29,7 @@ import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, Offer
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 import { TFX5_AI_BAND_PRICE, TFX5_AI_BAND_MRP, isTfxV5Band, isPureAirThreeInOne, PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE } from '../utils/coupons';
-import { publishedBlogPosts } from '../utils/publishedBlogPosts';
+import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { correctRingModel, getProductModelNumbers } from '../utils/productModel';
 import { getFanTitle } from '../utils/fanListings';
 import { isCatalogProductPublished } from '../utils/catalogVisibility.js';
@@ -3483,11 +3483,11 @@ export const getBlogPosts = async (): Promise<BlogPost[]> => {
   try {
     const snapshot = await getDocs(collection(db, 'blog_posts'));
     const remotePosts = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() } as BlogPost));
-    const posts = new Map(publishedBlogPosts.map((post) => [post.slug, post]));
-    remotePosts.forEach((post) => posts.set(post.slug, post));
+    const posts = new Map(publishedBlogPosts.filter(isBlogPostPublic).map((post) => [post.slug, post]));
+    remotePosts.filter(isBlogPostPublic).forEach((post) => posts.set(post.slug, post));
     return [...posts.values()].sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
   } catch {
-    return publishedBlogPosts;
+    return publishedBlogPosts.filter(isBlogPostPublic);
   }
 };
 

@@ -254,6 +254,10 @@
     {
       "source": "/blog/:slug",
       "destination": "/index.html"
+    },
+    {
+      "source": "/blogs/:slug",
+      "destination": "/index.html"
     }
   ]
 }

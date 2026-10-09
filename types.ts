@@ -307,14 +307,19 @@ export interface BlogPost {
   id: string;
   title: string;
   slug: string;
+  canonicalPath?: string;
   excerpt: string;
   content: string;
   status: 'draft' | 'published';
   updatedAt: string;
+  publishedAt?: string;
+  author?: string;
   image?: string;
+  imageAlt?: string;
   faqs?: Array<{ question: string; answer: string }>;
   metaTitle?: string;
   metaDescription?: string;
+  keywords?: string[];
   featuredProduct?: {
     name: string;
     href: string;

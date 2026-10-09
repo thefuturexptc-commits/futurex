@@ -6,7 +6,7 @@ import { Button } from '../components/ui/Button';
 import { getProductSlug, getProducts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
 import type { Product } from '../types';
-import { publishedBlogPosts } from '../utils/publishedBlogPosts';
+import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
 import ringHeroImage from '../assets/images/ring-overview-colors.jpg';
 import ringSleepImage from '../assets/images/ring-sleep-hero.webp';
 import ringProImage from '../assets/images/mainring.webp';
@@ -6429,7 +6429,7 @@ const BlogLandingPage: React.FC = () => {
           <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0ad7bd]">Latest guides</p>
           <h2 className="mt-2 text-2xl font-black text-white">New from TheFutureX Journal</h2>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {publishedBlogPosts.map((post) => (
+            {publishedBlogPosts.filter(isBlogPostPublic).map((post) => (
               <Link
                 key={post.slug}
                 to={`/blog/${post.slug}`}

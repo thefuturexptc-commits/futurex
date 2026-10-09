@@ -1,10 +1,14 @@
 import { staticProductSeoRecords } from './productSeoData.js';
 import { tfx5BlogPosts } from './tfx5BlogPosts.js';
 import { aeoGeoBlogPosts } from './aeoGEOBlogPosts.js';
+import { bladelessFanBlogPosts } from './bladelessFanBlogPosts.js';
 
 export const SITE_URL = 'https://thefuturex.in';
 
 export const coreRoutes = [
+  ...bladelessFanBlogPosts
+    .filter((post) => post.status === 'published' && (!post.publishedAt || Date.parse(post.publishedAt) <= Date.now()))
+    .map((post) => ({ path: post.canonicalPath, label: post.title, changefreq: 'monthly', priority: '0.7' })),
   ...tfx5BlogPosts.concat(aeoGeoBlogPosts).map((post) => ({ path: `/blog/${post.slug}`, label: post.title, changefreq: 'monthly', priority: '0.7' })),
   { path: '/', label: 'Home', changefreq: 'daily', priority: '1.0' },
   { path: '/shop/all', label: 'Shop', changefreq: 'daily', priority: '0.9' },

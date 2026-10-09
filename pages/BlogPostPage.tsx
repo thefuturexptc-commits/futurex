@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { getBlogPosts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata } from '../services/seo';
 import type { BlogPost } from '../types';
-import { publishedBlogPosts } from '../utils/publishedBlogPosts';
+import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { InfoPage } from './InfoPage';
 
 const formatDate = (value?: string) => {
@@ -40,6 +40,20 @@ const renderArticleContent = (content: string) => {
   while (index < lines.length) {
     const line = lines[index].trim();
     if (!line) { index += 1; continue; }
+    if (line.startsWith('> ')) {
+      const quoteLines: string[] = [];
+      while (index < lines.length && lines[index].trim().startsWith('> ')) {
+        quoteLines.push(lines[index++].trim().slice(2));
+      }
+      const quote = quoteLines.join(' ');
+      const quickAnswer = quote.match(/^Quick answer:\s*(.*)$/i);
+      blocks.push(
+        <aside key={`quote-${index}`} className="my-8 rounded-xl border-l-4 border-[#ad8a4c] bg-[#f5efe3] px-5 py-4 text-[16px] leading-7 text-[#352b1e]" role="note">
+          {quickAnswer ? <><strong className="font-semibold">Quick answer: </strong>{renderInline(quickAnswer[1], `quick-answer-${index}`)}</> : renderInline(quote, `quote-${index}`)}
+        </aside>
+      );
+      continue;
+    }
     if (line.startsWith('### ')) {
       blocks.push(<h3 key={`subheading-${index}`} className="mt-8 text-xl font-semibold">{renderInline(line.slice(4), `subheading-${index}`)}</h3>);
       index += 1;
@@ -87,29 +101,29 @@ export const BlogPostPage: React.FC = () => {
     getBlogPosts()
       .then((posts) =>
         setPost(
-          posts.find((item) => item.slug === slug && item.status === 'published') ||
-            publishedBlogPosts.find((item) => item.slug === slug) ||
+            posts.find((item) => item.slug === slug && isBlogPostPublic(item)) ||
+            publishedBlogPosts.find((item) => item.slug === slug && isBlogPostPublic(item)) ||
             null
         )
       )
-      .catch(() => setPost(publishedBlogPosts.find((item) => item.slug === slug) || null));
+      .catch(() => setPost(publishedBlogPosts.find((item) => item.slug === slug && isBlogPostPublic(item)) || null));
   }, [slug]);
 
   useEffect(() => {
     if (!post) return;
-    const path = `/blog/${post.slug}`;
+    const path = post.canonicalPath || `/blog/${post.slug}`;
     const url = `https://thefuturex.in${path}`;
-    setSeoMetadata({ title: post.metaTitle || `${post.title} | TheFutureX Blog`, description: post.metaDescription || post.excerpt, path, type: 'article', ...(post.image ? { image: post.image } : {}) });
+    setSeoMetadata({ title: post.metaTitle || `${post.title} | TheFutureX Blog`, exactTitle: Boolean(post.metaTitle), description: post.metaDescription || post.excerpt, path, type: 'article', keywords: post.keywords || [], ...(post.image ? { image: post.image } : {}) });
     setJsonLd('blog-article-json-ld', {
       '@context': 'https://schema.org', '@type': 'Article', headline: post.title,
       description: post.excerpt, mainEntityOfPage: { '@type': 'WebPage', '@id': url },
-      url, datePublished: post.updatedAt, dateModified: post.updatedAt,
+      url, datePublished: post.publishedAt || post.updatedAt, dateModified: post.updatedAt,
       ...(post.image ? { image: `https://thefuturex.in${post.image}` } : {}),
-      author: { '@type': 'Organization', name: 'TheFutureX' },
+      author: { '@type': 'Organization', name: post.author || 'TheFutureX' },
       publisher: { '@type': 'Organization', name: 'TheFutureX', logo: { '@type': 'ImageObject', url: 'https://thefuturex.in/images/tfx-google-logo.webp' } },
     });
     if (post.faqs?.length) {
-      setJsonLd('blog-faq-json-ld', { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: post.faqs.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer } })) });
+      setJsonLd('blog-faq-json-ld', { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: post.faqs.map((faq) => ({ '@type': 'Question', name: faq.question, acceptedAnswer: { '@type': 'Answer', text: faq.answer.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1') } })) });
     }
     return () => { removeJsonLd('blog-article-json-ld'); removeJsonLd('blog-faq-json-ld'); };
   }, [post]);
@@ -133,7 +147,7 @@ export const BlogPostPage: React.FC = () => {
   // (and Google) to the journal landing page.
   if (!post) return <InfoPage />;
 
-  const publishedLabel = formatDate(post.updatedAt);
+  const publishedLabel = formatDate(post.publishedAt || post.updatedAt);
   const readingTime = estimateReadingTime(post.content);
 
   return (
@@ -165,6 +179,8 @@ export const BlogPostPage: React.FC = () => {
           <div className="mt-8 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#766a5a]">
             {publishedLabel && <span>{publishedLabel}</span>}
             {publishedLabel && <span className="text-[#ad8a4c]">·</span>}
+            <span>{post.author || 'TheFutureX'}</span>
+            <span className="text-[#ad8a4c]">·</span>
             <span>{readingTime} min read</span>
           </div>
         </div>
@@ -175,7 +191,7 @@ export const BlogPostPage: React.FC = () => {
           <div className="overflow-hidden rounded-2xl border border-[#17130f0f] shadow-[0_30px_60px_rgba(23,19,15,0.12)]">
             <img
               src={post.image}
-              alt={post.title}
+              alt={post.imageAlt || post.title}
               loading="eager"
               decoding="async"
               className="h-auto w-full object-cover"
@@ -241,7 +257,7 @@ export const BlogPostPage: React.FC = () => {
                     </button>
                     {isOpen && (
                       <div className="px-5 pb-5 text-[15px] leading-7 text-[#4a4238]">
-                        {faq.answer}
+                        {renderInline(faq.answer, `faq-${index}`)}
                       </div>
                     )}
                   </div>

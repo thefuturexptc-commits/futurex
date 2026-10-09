@@ -9,9 +9,11 @@ const DEFAULT_IMAGE = `${SITE_URL}/images/tfx-google-logo.webp`;
 
 interface SeoMetadata {
   title: string;
+  exactTitle?: boolean;
   description?: string;
   path?: string;
   image?: string;
+  keywords?: string[];
   type?: 'website' | 'product' | 'article';
   robots?: string;
 }
@@ -79,19 +81,23 @@ export const absoluteUrl = (path = '/'): string => {
 
 export const setSeoMetadata = ({
   title,
+  exactTitle = false,
   description = DEFAULT_DESCRIPTION,
   path = '/',
   image = DEFAULT_IMAGE,
+  keywords = [],
   type = 'website',
   robots = 'index, follow',
 }: SeoMetadata) => {
   const titleHasBrand = title.includes(SITE_NAME) || /The Future X/i.test(title);
-  const fullTitle = titleHasBrand ? title : `${title} | ${SITE_NAME}`;
+  const fullTitle = exactTitle || titleHasBrand ? title : `${title} | ${SITE_NAME}`;
   const canonicalUrl = absoluteUrl(path);
   const imageUrl = absoluteUrl(image);
 
   document.title = fullTitle;
   setMetaName('description', description);
+  if (keywords.length) setMetaName('keywords', keywords.join(', '));
+  else document.head.querySelector('meta[name="keywords"]')?.remove();
   setMetaName('robots', robots);
   setMetaName('twitter:card', 'summary_large_image');
   setMetaName('twitter:title', fullTitle);

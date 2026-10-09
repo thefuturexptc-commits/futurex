@@ -546,6 +546,7 @@ const App: React.FC = () => {
                       <Route path="/about-us" element={<Navigate to="/info/about-us" replace />} />
                       <Route path="/about" element={<Navigate to="/info/about-us" replace />} />
                       <Route path="/blog/:slug" element={<BlogPostPage />} />
+                      <Route path="/blogs/:slug" element={<BlogPostPage />} />
                       <Route path="/info/:slug" element={<InfoPage />} />
                       <Route path="/offers/:slug" element={<OfferPage />} />
                       <Route path="/profile" element={<RequireAuth><Profile /></RequireAuth>} />

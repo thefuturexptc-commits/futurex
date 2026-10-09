@@ -1,16 +1,21 @@
 import type { BlogPost } from '../types';
 import { tfx5BlogPosts } from './tfx5BlogPosts.js';
 import { aeoGeoBlogPosts } from './aeoGEOBlogPosts.js';
+import { bladelessFanBlogPosts } from './bladelessFanBlogPosts.js';
 
 export type PublishedBlogPost = BlogPost & {
   image?: string;
   faqs?: Array<{ question: string; answer: string }>;
 };
 
+export const isBlogPostPublic = (post: BlogPost, now = Date.now()) =>
+  post.status === 'published' && (!post.publishedAt || Date.parse(post.publishedAt) <= now);
+
 const publishedAt = '2026-08-17T00:00:00.000Z';
 
 export const publishedBlogPosts: PublishedBlogPost[] = [
   ...tfx5BlogPosts.map((post) => ({ ...post, status: 'published' as const })),
+  ...bladelessFanBlogPosts,
   ...aeoGeoBlogPosts,
   {
     id: 'tfx-smart-band-emi-guide', slug: 'tfx-smart-band-emi-guide', status: 'published', updatedAt: '2026-08-24T00:00:00.000Z',
