@@ -23,11 +23,20 @@ import ringDailySync from '../assets/images/ring-daily-sync.webp';
 import ringAiWellness from '../assets/images/ring-ai-wellness.webp';
 import ringSleepHero from '../assets/images/ring-sleep-hero.webp';
 import ringProCharging from '../assets/images/tfx-ring-pro-charging.webp';
+import ringProSportsBanner from '../assets/images/tfx-ring-pro-sports-banner.webp';
+import ringProLoversBanner from '../assets/images/tfx-ring-pro-lovers-banner.webp';
+import ringProSizeGuideBanner from '../assets/images/tfx-ring-pro-size-guide-banner.webp';
+import ringProPremiumBuildBanner from '../assets/images/tfx-ring-pro-premium-build-banner.webp';
+import ringProWellnessBanner from '../assets/images/tfx-ring-pro-wellness-banner.webp';
 import ringTouchProOverviewVideo from '../assets/images/ring-touch-pro-overview.mp4';
 import ringOverviewWaterproof from '../assets/images/ring-overview-waterproof.jpg';
 import ringOverviewColors from '../assets/images/ring-overview-colors.jpg';
 import displayRingOverviewHand from '../assets/images/display-ring-overview-hand.webp';
 import displayRingOverviewGoldBanner from '../assets/images/display-ring-overview-gold-banner.webp';
+import displayProSportsBanner from '../assets/images/tfx-display-pro-sports-banner.webp';
+import displayProHealthBanner from '../assets/images/tfx-display-pro-health-banner.webp';
+import displayProWaterResistanceBanner from '../assets/images/tfx-display-pro-water-resistance-banner.webp';
+import displayProScreenBanner from '../assets/images/tfx-display-pro-screen-banner.webp';
 import tfxRingBannerWaterResistant from '../assets/images/tfx-ring-banner-22.webp';
 import tfxRingBannerStyleIntelligence from '../assets/images/tfx-ring-banner-23.webp';
 import tfxRingBannerLastingPower from '../assets/images/tfx-ring-banner-21.webp';
@@ -1357,7 +1366,8 @@ const RevealOnScroll: React.FC<{
           }
         });
       },
-      { threshold: 0.15, rootMargin: '0px 0px -8% 0px' }
+      // Tall banners must reveal as soon as they enter the viewport.
+      { threshold: 0, rootMargin: '0px 0px -8% 0px' }
     );
     observer.observe(node);
     return () => observer.disconnect();
@@ -1875,7 +1885,8 @@ export const ProductDetail: React.FC = () => {
         entry.target.classList.add('product-scroll-section-visible');
         observer.unobserve(entry.target);
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+    // A banner section can be many viewports tall, so a percentage may never be visible.
+    }, { threshold: 0, rootMargin: '0px 0px -6% 0px' });
 
     sections.forEach((section) => observer.observe(section));
     return () => observer.disconnect();
@@ -2306,8 +2317,11 @@ export const ProductDetail: React.FC = () => {
     ? Array.from({ length: 8 }, (_, index) => uniqueProductImages[index % uniqueProductImages.length])
     : familyProfile.images;
   const isDisplayProduct = /\bdisplay\b/i.test(product.name);
-  const isRingProProduct = productFamily === 'ring' && /\bring\s*pro\b/i.test(product.name);
+  const isRingProProduct = productFamily === 'ring' && (
+    product.slug === 'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' || /\bring\s*pro\b/i.test(product.name)
+  );
   const isTouchRingProduct = productFamily === 'ring' && !isDisplayProduct && !isRingProProduct && /\b(touch|ip68)\b/i.test(product.name);
+  const showAllProductBannersOnMobile = isRingProProduct || (productFamily === 'ring' && isDisplayProduct);
   const fanProfile = productFamily === 'fan' ? FAN_PROFILES[getFanProfileKey(product.slug?.replace(/-/g, ' ') || product.name)] : null;
   const monitoringProfile = productFamily === 'monitoring' ? MONITORING_PROFILES[getMonitoringProfileKey(product.name)] : null;
   const isTfxV5Band = productFamily === 'band' && /\btfx\s*5\b|\btfx5\b|\bv5\b|\bai\s*v5\b/i.test(product.name);
@@ -2602,7 +2616,81 @@ export const ProductDetail: React.FC = () => {
       image: ringProCharging,
     },
   ];
+  const ringProBannerSections = [
+    {
+      title: 'TFX Ring Pro multiple sports tracking and real-time activity recording',
+      copy: '',
+      image: ringProSportsBanner,
+      imageWidth: 3334,
+      imageHeight: 7675,
+      cleanBanner: true,
+    },
+    {
+      title: 'TFX Ring Pro lovers rings in gold and silver',
+      copy: '',
+      image: ringProLoversBanner,
+      imageWidth: 3334,
+      imageHeight: 6309,
+      cleanBanner: true,
+    },
+    {
+      title: 'TFX Ring Pro premium design, ring size chart and how to measure your ring size',
+      copy: '',
+      image: ringProSizeGuideBanner,
+      imageWidth: 4267,
+      imageHeight: 6400,
+      cleanBanner: true,
+    },
+    {
+      title: 'TFX Ring Pro premium build and curved metal design',
+      copy: '',
+      image: ringProPremiumBuildBanner,
+      imageWidth: 3617,
+      imageHeight: 7550,
+      cleanBanner: true,
+    },
+    {
+      title: 'TFX Ring Pro heart rate, activity, wellness tracking and reminders',
+      copy: '',
+      image: ringProWellnessBanner,
+      imageWidth: 3334,
+      imageHeight: 5021,
+      cleanBanner: true,
+    },
+  ];
   const displayRingOverviewSections = [
+    {
+      title: 'TFX Display Pro screen showing time, steps, heart rate and battery level',
+      copy: '',
+      image: displayProScreenBanner,
+      imageWidth: 1044,
+      imageHeight: 1507,
+      cleanBanner: true,
+    },
+    {
+      title: 'TFX Display Pro app-connected heart rate, blood oxygen and sleep tracking',
+      copy: '',
+      image: displayProHealthBanner,
+      imageWidth: 941,
+      imageHeight: 1672,
+      cleanBanner: true,
+    },
+    {
+      title: 'TFX Display Pro multiple sports modes and real-time activity tracking',
+      copy: '',
+      image: displayProSportsBanner,
+      imageWidth: 1024,
+      imageHeight: 1536,
+      cleanBanner: true,
+    },
+    {
+      title: 'TFX Display Pro 5ATM water resistance',
+      copy: '',
+      image: displayProWaterResistanceBanner,
+      imageWidth: 941,
+      imageHeight: 1672,
+      cleanBanner: true,
+    },
     {
       title: 'The FutureX TFX Display Pro Smart Ring',
       copy:
@@ -2697,7 +2785,7 @@ export const ProductDetail: React.FC = () => {
       image: premiumBandLifestyleHiking,
     },
   ];
-  const overviewSections: Array<{ title: string; copy: string; image?: string; video?: string; cleanBanner?: boolean; overlayText?: string }> = [
+  const overviewSections: Array<{ title: string; copy: string; image?: string; imageWidth?: number; imageHeight?: number; video?: string; cleanBanner?: boolean; overlayText?: string }> = [
     {
       title: 'Product Overview',
       copy:
@@ -2717,7 +2805,9 @@ export const ProductDetail: React.FC = () => {
           ? displayRingOverviewSections
           : isTouchRingProduct
             ? touchRingOverviewSections
-          : ringOverviewSections
+          : isRingProProduct
+            ? [...ringProBannerSections, ...ringOverviewSections]
+            : ringOverviewSections
         : familyProfile.sections.map(([title, copy], index) => ({
             title,
             copy,
@@ -3088,6 +3178,45 @@ export const ProductDetail: React.FC = () => {
         }
         .product-scroll-section-visible .product-banner-media {
           transform: scale(1);
+        }
+        @media (max-width: 639px) {
+          .product-mobile-banners {
+            width: 100%;
+            min-width: 0;
+            padding-inline: 8px;
+            box-sizing: border-box;
+          }
+          .product-mobile-banners .product-banner-group {
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+          }
+          .product-mobile-banners img.product-banner-media {
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+          }
+          .product-mobile-banners .product-banner-media {
+            transform: none !important;
+            transition: none;
+          }
+          .product-mobile-banners--display > div {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+          }
+          .product-mobile-banners--display > div > * {
+            margin-top: 0;
+          }
+          .product-mobile-banners--display .product-banner-group {
+            border-radius: 12px;
+            box-shadow: none;
+            opacity: 1;
+            transform: none;
+            transition: none;
+          }
         }
         @media (prefers-reduced-motion: reduce) {
           .product-panel-in,
@@ -3590,13 +3719,13 @@ export const ProductDetail: React.FC = () => {
       </nav>
 
       {activeDetailTab === 'description' && mobileProductBannerSections.length > 0 && (
-        <section className="bg-white px-4 py-4 sm:hidden">
+        <section className={`product-mobile-banners ${productFamily === 'ring' && isDisplayProduct ? 'product-mobile-banners--display' : ''} bg-white px-4 py-4 sm:hidden`}>
           <div className="space-y-3">
-            {(showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section, index) => (
+            {(showAllProductBannersOnMobile || showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section, index) => (
               <React.Fragment key={section.title}>
               <RevealOnScroll className="product-banner-group mx-auto w-full max-w-[1200px] overflow-hidden rounded-xl bg-[#f8fbfb] shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
                 {section.video ? (
-                  <div className="aspect-[4/3] w-full overflow-hidden bg-slate-950">
+                  <div className="aspect-video w-full overflow-hidden bg-slate-950">
                     <ProductOverviewVideo
                       src={section.video}
                       title={section.title}
@@ -3608,6 +3737,8 @@ export const ProductDetail: React.FC = () => {
                     <img
                       src={section.image}
                       alt={section.title}
+                      width={section.imageWidth}
+                      height={section.imageHeight}
                       className="product-banner-media block h-auto w-full object-contain object-center"
                       loading="lazy"
                       fetchPriority="low"
@@ -3641,7 +3772,7 @@ export const ProductDetail: React.FC = () => {
               </React.Fragment>
             ))}
           </div>
-          {mobileProductBannerSections.length > 3 && (
+          {!showAllProductBannersOnMobile && mobileProductBannerSections.length > 3 && (
             <div className="px-4 pt-3">
               <button
                 type="button"
@@ -3870,6 +4001,8 @@ export const ProductDetail: React.FC = () => {
                       <img
                         src={section.image}
                         alt={section.title}
+                        width={section.imageWidth}
+                        height={section.imageHeight}
                         className="product-banner-media h-auto w-full object-contain object-center"
                         loading="lazy"
                         fetchPriority="low"

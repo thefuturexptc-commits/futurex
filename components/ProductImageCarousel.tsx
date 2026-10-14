@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import useEmblaCarousel from 'embla-carousel-react';
 import Fade from 'embla-carousel-fade';
 
@@ -191,6 +192,9 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
     useEffect(() => {
       if (!isPreviewOpen) return;
 
+      const previousOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+
       const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === 'Escape') {
           closePreview();
@@ -198,7 +202,10 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
       };
 
       document.addEventListener('keydown', handleKeyDown);
-      return () => document.removeEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = previousOverflow;
+        document.removeEventListener('keydown', handleKeyDown);
+      };
     }, [isPreviewOpen]);
 
     // Sync with external index (thumbnail click)
@@ -332,9 +339,10 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
           </div>
         )}
 
-        {isPreviewOpen && (
+        {/* Escape transformed and sticky gallery ancestors so the preview covers the viewport. */}
+        {isPreviewOpen && createPortal(
           <div
-            className="fixed inset-0 z-[80] flex items-center justify-center bg-black/90 px-4 py-6"
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 px-4 py-6"
             role="dialog"
             aria-modal="true"
             aria-label={`${alt} image preview`}
@@ -455,7 +463,8 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                 )}
               </div>
             )}
-          </div>
+          </div>,
+          document.body
         )}
       </div>
     );
