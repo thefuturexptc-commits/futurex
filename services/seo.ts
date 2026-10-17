@@ -4,7 +4,7 @@ export { homepageFaqs } from '../utils/homepageFaqs.js';
 const SITE_NAME = 'TheFutureX';
 const SITE_URL = 'https://thefuturex.in';
 const DEFAULT_DESCRIPTION =
- 'Shop smart bands, smart rings, smart fans and monitoring wearables from TheFutureX.';
+  'Buy smart bands, fitness trackers, smart rings & bladeless fans online in India. Heart rate, sleep & health tracking with the TheFutureX SmartWear app.';
 const DEFAULT_IMAGE = `${SITE_URL}/images/tfx-google-logo.webp`;
 
 interface SeoMetadata {
@@ -185,7 +185,11 @@ export const setHomepageJsonLd = () => {
         logo: `${SITE_URL}/images/tfx-google-logo.webp`,
         image: `${SITE_URL}/images/tfx-google-logo.webp`,
         description: DEFAULT_DESCRIPTION,
-        sameAs: ['https://www.instagram.com/thefuturex.in/'],
+        sameAs: [
+          'https://www.instagram.com/thefuturex.in/',
+          'https://www.linkedin.com/in/thefuture-x-088216419/',
+          'https://x.com/x_the19117',
+        ],
       },
       {
         '@type': 'WebSite',

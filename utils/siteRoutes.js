@@ -16,7 +16,6 @@ export const coreRoutes = [
   { path: '/smart-rings', label: 'Smart Rings', changefreq: 'weekly', priority: '0.8' },
   { path: '/bladeless-fan', label: 'Bladeless Fan', changefreq: 'weekly', priority: '0.8' },
   { path: '/smart-monitoring', label: 'Smart Monitoring', changefreq: 'weekly', priority: '0.8' },
-  { path: '/smart-glasses', label: 'Smart Glasses', changefreq: 'weekly', priority: '0.8' },
   { path: '/gifting-store', label: 'Gifts', changefreq: 'weekly', priority: '0.7' },
   { path: '/new-arrivals', label: 'New Arrivals', changefreq: 'daily', priority: '0.8' },
   { path: '/best-sellers', label: 'Best Sellers', changefreq: 'daily', priority: '0.8' },

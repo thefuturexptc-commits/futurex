@@ -1,1 +1,16 @@
 @import './global.css';
+.seo-noscript-main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 32px 20px;
+  color: #0f172a;
+  background: #fff;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+.seo-noscript-main h1 {
+  margin: 0 0 16px;
+  font-size: 42px;
+  line-height: 1.08;
+}

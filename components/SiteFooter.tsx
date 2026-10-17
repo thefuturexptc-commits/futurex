@@ -85,6 +85,8 @@ const CONTACT_PHONE = '8530340676';
 const SALES_EMAIL = 'thefuturex.ptc@gmail.com';
 const INSTAGRAM_URL = 'https://www.instagram.com/thefuturex.in/';
 const FACEBOOK_URL = 'https://www.facebook.com/people/The-Future-X-India/61585558692279/';
+const LINKEDIN_URL = 'https://www.linkedin.com/in/thefuture-x-088216419/';
+const X_URL = 'https://x.com/x_the19117';
 const YOUTUBE_URL = 'https://www.youtube.com/@TheFutureXdotin';
 const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.futurex.smartwear';
 const CONTACT_ADDRESS = [
@@ -170,6 +172,24 @@ const socialLinks = [
       <svg className="tfx-footer__social-icon tfx-footer__social-icon--facebook" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
         <circle cx="12" cy="12" r="10" fill="#1877f2" />
         <path fill="#ffffff" d="M14.8 12.6h-2v7.2H9.9v-7.2H8.4v-2.5h1.5V8.5c0-1.2.6-3.2 3.2-3.2h2.4v2.6h-1.7c-.3 0-1 .2-1 .9v1.3h2.6l-.6 2.5Z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'LinkedIn',
+    href: LINKEDIN_URL,
+    icon: (
+      <svg className="tfx-footer__social-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="#0a66c2" d="M20.45 2H3.55C2.69 2 2 2.68 2 3.52v16.96c0 .84.69 1.52 1.55 1.52h16.9c.86 0 1.55-.68 1.55-1.52V3.52c0-.84-.69-1.52-1.55-1.52ZM7.94 18.5H4.96V9h2.98v9.5ZM6.45 7.7a1.73 1.73 0 1 1 0-3.46 1.73 1.73 0 0 1 0 3.46ZM19.05 18.5h-2.97v-4.62c0-1.1-.02-2.52-1.54-2.52-1.54 0-1.78 1.2-1.78 2.44v4.7H9.8V9h2.84v1.3h.04c.4-.75 1.36-1.54 2.8-1.54 3 0 3.57 1.97 3.57 4.53v5.21Z" />
+      </svg>
+    ),
+  },
+  {
+    label: 'X',
+    href: X_URL,
+    icon: (
+      <svg className="tfx-footer__social-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path fill="currentColor" d="M18.9 2H22l-6.78 7.75L23.2 22h-6.25l-4.9-7.42L5.56 22H2.43l7.25-8.29L1.8 2h6.4l4.43 6.77L18.9 2Zm-1.1 17.85h1.73L7.28 4.04H5.42L17.8 19.85Z" />
       </svg>
     ),
   },

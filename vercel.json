@@ -87,6 +87,42 @@
   ],
   "redirects": [
     {
+      "source": "/terms-and-conditions/",
+      "destination": "https://thefuturex.in/info/terms",
+      "statusCode": 301
+    },
+    {
+      "source": "/refund_returns/",
+      "destination": "https://thefuturex.in/info/returns-refund",
+      "statusCode": 301
+    },
+    {
+      "source": "/privacy-policy/",
+      "destination": "https://thefuturex.in/info/privacy",
+      "statusCode": 301
+    },
+    {
+      "source": "/index.php/2023/01/14/hello-world/",
+      "destination": "https://thefuturex.in/blog",
+      "statusCode": 301
+    },
+    {
+      "source": "/smart-glasses",
+      "destination": "https://thefuturex.in/shop/all",
+      "statusCode": 301
+    },
+    {
+      "source": "/product/tfx-ai-smart-glasses",
+      "destination": "https://thefuturex.in/shop/all",
+      "statusCode": 301
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "query", "key": "page_id", "value": "5" }],
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/",
       "has": [{ "type": "host", "value": "www.thefuturex.in" }],
       "destination": "https://thefuturex.in/",
@@ -226,10 +262,6 @@
     {
       "source": "/smart-monitoring",
       "destination": "/smart-monitoring/index.html"
-    },
-    {
-      "source": "/smart-glasses",
-      "destination": "/smart-glasses/index.html"
     },
     {
       "source": "/shop/all",

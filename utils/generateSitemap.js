@@ -30,7 +30,9 @@ const firebaseConfig = {
   measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID || 'G-JD32TH0PJS',
 };
 
-const baseRoutes = sitemapRoutes.map(({ path, changefreq, priority }) => ({
+const isGlassesMention = (value = '') => /glass/i.test(String(value));
+
+const baseRoutes = sitemapRoutes.filter((route) => !isGlassesMention(route.path) && !isGlassesMention(route.label)).map(({ path, changefreq, priority }) => ({
   loc: `${SITE_URL}${path === '/' ? '/' : path}`,
   changefreq,
   priority,
@@ -60,6 +62,7 @@ const getRemoteProducts = async () => {
   const products = snapshot.docs
     .map((doc) => ({ ...doc.data(), id: doc.id }))
     .filter(isCatalogProductPublished)
+    .filter((product) => !isGlassesMention(`${product.name || ''} ${product.category || ''} ${product.slug || ''}`))
     .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
 
   const sitemapProducts = products.length ? products : staticProductSeoRecords;
@@ -75,6 +78,7 @@ export async function getRemotePublishedBlogPosts() {
     return snapshot.docs
       .map((doc) => ({ ...doc.data(), id: doc.id }))
       .filter((post) => post.status === 'published' && typeof post.slug === 'string' && post.slug.trim() && typeof post.title === 'string' && post.title.trim())
+      .filter((post) => !isGlassesMention(post.slug) && !isGlassesMention(post.title))
       .map((post) => ({
         path: `/blog/${post.slug.trim()}`,
         label: post.title.trim(),
@@ -102,7 +106,7 @@ export async function generateSitemapXML() {
 
   remoteProducts.forEach((product) => {
     const slug = getProductSlug(product);
-    if (!slug) return;
+    if (!slug || isGlassesMention(`${product.name || ''} ${product.category || ''} ${slug}`)) return;
     productMap.set(slug, {
       loc: `${SITE_URL}/product/${slug}`,
       lastmod: nowIso,

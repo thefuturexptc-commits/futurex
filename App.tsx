@@ -91,8 +91,8 @@ const getRouteSeo = (pathname: string) => {
 
   const routeSeo: Record<string, { title: string; description: string; robots?: string }> = {
     '/': {
-      title: 'TheFutureX | Future of Wearables',
- description: 'Shop smart bands, smart rings, smart fans and monitoring wearables from TheFutureX.',
+      title: 'Smart Bands & Fitness Trackers Online India | TheFutureX',
+      description: 'Buy smart bands, fitness trackers, smart rings & bladeless fans online in India. Heart rate, sleep & health tracking with the TheFutureX SmartWear app.',
     },
     '/smart-bands': {
       title: 'Smart Bands',
@@ -246,10 +246,6 @@ const collectionSchemaByPath: Record<string, { name: string; description: string
   '/smart-monitoring': {
     name: 'Smart Monitoring',
  description: 'Discover TheFutureX smart monitoring devices for wellness and daily care.',
-  },
-  '/smart-glasses': {
-    name: 'AI Glasses',
-    description: 'Explore premium TheFutureX AI Glasses for hands-free connected living, everyday style, and intelligent utility.',
   },
 };
 

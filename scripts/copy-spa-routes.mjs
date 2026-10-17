@@ -125,12 +125,6 @@ const categoryPages = {
     description: 'Discover TheFutureX smart monitoring devices for fitness performance, sleep tracking, heart rate monitoring, recovery trends, and app-based reports.',
     category: 'Smart Monitoring',
   },
-  'smart-glasses': {
-    name: 'AI Smart Glasses',
-    title: 'AI Smart Glasses | TheFutureX',
-    description: 'Explore TheFutureX AI smart glasses for hands-free calling, music, voice assistant support, smart capture, and lightweight everyday eyewear.',
-    category: 'Smart Glasses',
-  },
 };
 
 const blogSeoOverrides = {
@@ -198,11 +192,6 @@ const productFaqsByFamily = {
     ['What is a smart monitoring device?', 'Smart monitoring devices help track activity, sleep, training, or recovery metrics through sensors and compatible apps.'],
     ['Can it connect to a phone?', 'Compatible monitoring products connect to supported smartphones or apps to show fitness and wellness data.'],
     ['Who should use smart monitoring products?', 'They are useful for people who want focused fitness, sleep, recovery, or performance tracking.'],
-  ],
-  glasses: [
-    ['What can smart glasses be used for?', 'Smart glasses can support hands-free calling, music, voice assistant access, and selected capture features depending on the model.'],
-    ['Do smart glasses connect to a phone?', 'Compatible smart glasses connect with supported smartphones through Bluetooth for calling, media, and smart controls.'],
-    ['Are smart glasses suitable for everyday use?', 'TheFutureX smart glasses are designed as modern connected eyewear for daily convenience, travel, and hands-free use.'],
   ],
   product: [
     ['What is this product used for?', 'This TheFutureX product is designed for everyday connected convenience, practical performance, and modern lifestyle use.'],
@@ -300,7 +289,7 @@ const buildHomeStaticHtml = (products = []) => {
   return `${buildStaticStyles()}
     <main>
       <h1>TheFutureX Smart Wearables and Connected Lifestyle Products</h1>
-      <p>Shop smart bands, smart rings, smart fans, AI smart glasses, and monitoring wearables from TheFutureX. Compare everyday tracking, sleep insights, app connectivity, airflow comfort, and practical connected technology for modern living.</p>
+      <p>Shop smart bands, smart rings, smart fans, and monitoring wearables from TheFutureX. Compare everyday tracking, sleep insights, app connectivity, airflow comfort, and practical connected technology for modern living.</p>
       <section>
         <h2>Featured TheFutureX Products</h2>
         <div class="seo-prerendered-grid">${buildProductCards(featured)}</div>
@@ -312,7 +301,6 @@ const buildHomeStaticHtml = (products = []) => {
           <li><a href="/smart-rings">Smart Rings</a></li>
           <li><a href="/bladeless-fan">Bladeless Fans</a></li>
           <li><a href="/smart-monitoring">Smart Monitoring</a></li>
-          <li><a href="/smart-glasses">AI Smart Glasses</a></li>
           <li><a href="/blog">Blog</a></li>
         </ul>
       </section>
@@ -485,7 +473,11 @@ const buildHomepageJsonLd = () => `    <script id="homepage-json-ld" type="appli
       alternateName: ['TFX', 'TheFutureX'],
       url: `${SITE_URL}/`,
       logo: `${SITE_URL}/images/tfx-google-logo.webp`,
-      sameAs: ['https://www.instagram.com/thefuturex.in/'],
+      sameAs: [
+        'https://www.instagram.com/thefuturex.in/',
+        'https://www.linkedin.com/in/thefuture-x-088216419/',
+        'https://x.com/x_the19117',
+      ],
     },
     {
       '@type': 'WebSite',
@@ -503,7 +495,6 @@ const getCategoryUrl = (category = '') => {
   if (normalized === 'smart rings') return `${SITE_URL}/smart-rings`;
   if (normalized === 'smart fans') return `${SITE_URL}/bladeless-fan`;
   if (normalized === 'smart monitoring') return `${SITE_URL}/smart-monitoring`;
-  if (normalized === 'smart glasses') return `${SITE_URL}/smart-glasses`;
   return `${SITE_URL}/shop/all`;
 };
 
@@ -784,7 +775,9 @@ const requireLiveProductData = process.env.VERCEL === '1' || process.env.REQUIRE
 if (requireLiveProductData && remoteProducts.length === 0) {
   throw new Error('Live Firestore product data was unavailable. Refusing to publish SEO snapshots from static fallbacks.');
 }
-const productRecords = mergeProductSeoRecords(remoteProducts);
+const productRecords = mergeProductSeoRecords(remoteProducts).filter((product) =>
+  !/glass/i.test(`${product.name || ''} ${product.category || ''} ${product.slug || ''}`)
+);
 const productRouteMap = new Map();
 
 productRecords.forEach((product) => {
@@ -812,8 +805,8 @@ const getRouteHtml = (route, product) => {
   }
 
   if (route === '') {
-    const title = 'TheFutureX | Future of Wearables';
-    const description = 'Shop smart bands, smart rings, smart fans and monitoring wearables from TheFutureX.';
+    const title = 'Smart Bands & Fitness Trackers Online India | TheFutureX';
+    const description = 'Buy smart bands, fitness trackers, smart rings & bladeless fans online in India. Heart rate, sleep & health tracking with the TheFutureX SmartWear app.';
     const html = injectPageSeo(baseHtml, {
       title,
       description,

@@ -274,7 +274,7 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
                 aria-hidden={!reducedMotion && index !== activeIndex}
                 className={`tfx-featured-banner-panel ${reducedMotion || index === 0 ? 'tfx-featured-banner-panel--static' : ''}`}
               >
-                <img src={slide.image} alt={slide.alt} className="tfx-featured-banner-image" loading={index === 0 ? 'eager' : 'lazy'} decoding="async" />
+                <img src={slide.image} alt={slide.alt} width={1600} height={900} className="tfx-featured-banner-image" loading={index === 0 ? 'eager' : 'lazy'} fetchPriority={index === 0 ? 'high' : 'auto'} decoding="async" />
                 <div className="tfx-featured-banner-shade" aria-hidden="true" />
                 <div className="tfx-featured-banner-copy">
                   <p className="tfx-featured-banner-eyebrow">{slide.eyebrow}</p>
@@ -474,9 +474,11 @@ const ScrollLinkedBanners: React.FC = () => {
                 <img
                   src={banner.image}
                   alt={banner.alt}
+                  width={1600}
+                  height={700}
                   className="block h-auto w-full"
-                  loading="eager"
-                  fetchPriority="low"
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                  fetchPriority={index === 0 ? 'high' : 'auto'}
                   decoding="async"
                 />
               </Link>
@@ -547,7 +549,7 @@ const HomeCatalogProductImage: React.FC<{ product: Product; loading: 'eager' | '
 
   return (
     <Link to={getHomeCatalogHref(product)} className="mx-auto block w-[85%] max-w-[620px]" onMouseEnter={() => setHovering(true)} onMouseLeave={() => { setHovering(false); setVariantIndex(0); }}>
-      <img src={variantImages.length > 1 ? variantImages[variantIndex] : getProductImage(product)} alt={product.name} className="block h-auto w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]" loading={loading} decoding="async" onError={(event) => {
+      <img src={variantImages.length > 1 ? variantImages[variantIndex] : getProductImage(product)} alt={product.name} width={800} height={800} className="block h-auto w-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.03]" loading={loading} decoding="async" onError={(event) => {
         const image = event.currentTarget;
         if (image.dataset.fallbackApplied) return;
         image.dataset.fallbackApplied = 'true';
@@ -1080,7 +1082,7 @@ export const Home: React.FC = () => {
               {'\u00d7'}
             </button>
 
-            <img src="/images/tfx-offer-logo.png" alt="TheFutureX" className="mx-auto h-20 w-auto max-w-[70%] object-contain sm:h-32 sm:max-w-[78%]" />
+            <img src="/images/tfx-offer-logo.png" alt="TheFutureX" width={512} height={256} className="mx-auto h-20 w-auto max-w-[70%] object-contain sm:h-32 sm:max-w-[78%]" />
 
             {offerUnlocked ? (
               <div className="mt-3">
@@ -1256,6 +1258,8 @@ export const Home: React.FC = () => {
                   <img
                     src={banner.image}
                     alt={banner.alt}
+                    width={1200}
+                    height={900}
                     className="relative z-10 h-full w-full object-contain object-center"
                     style={{ transform: banner.scale ? `scale(${banner.scale})` : undefined }}
                     loading={index === 0 ? 'eager' : 'lazy'}
@@ -1341,6 +1345,8 @@ export const Home: React.FC = () => {
                     <img
                       src={card.image}
                       alt={card.alt}
+                      width={800}
+                      height={400}
                       className="h-full w-full object-contain"
                       loading="lazy"
                       decoding="async"
@@ -1467,7 +1473,7 @@ export const Home: React.FC = () => {
                           <div className="mt-3 flex items-center gap-1.5">
                             {swatches.map((swatch, swatchIndex) => (
                               <span key={`${swatch.label}-${swatchIndex}`} className="h-5 w-5 overflow-hidden rounded-full border border-slate-200 bg-white" title={swatch.label}>
-                                <img src={swatch.image} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
+                                <img src={swatch.image} alt={swatch.label} width={40} height={40} className="h-full w-full object-cover" loading="lazy" decoding="async" />
                               </span>
                             ))}
                             {extraSwatchCount > 0 && <span className="text-[10px] font-bold text-slate-500">+{extraSwatchCount}</span>}

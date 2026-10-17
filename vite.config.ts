@@ -1,7 +1,42 @@
 import path from 'path';
+import fs from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
+import sharp from 'sharp';
 import { generateSitemapXML } from './utils/generateSitemap.js';
+
+const optimizeImportedImages = () => ({
+  name: 'optimize-imported-images',
+  enforce: 'pre' as const,
+  apply: 'build' as const,
+  async load(id: string) {
+    const filePath = id.split('?')[0];
+    const normalizedPath = filePath.replace(/\\/g, '/');
+    if (!normalizedPath.includes('/assets/images/') || !/\.(png|jpe?g|webp|avif)$/i.test(filePath)) {
+      return null;
+    }
+
+    const input = await fs.readFile(filePath);
+    const metadata = await sharp(input).metadata();
+    const width = metadata.width ? Math.min(metadata.width, 1600) : 1600;
+    const optimized = await sharp(input)
+      .rotate()
+      .resize({ width, withoutEnlargement: true })
+      .webp({ quality: 82, effort: 5 })
+      .toBuffer();
+    const outputName = `${path.parse(filePath).name}-${createHash('sha1').update(optimized).digest('hex').slice(0, 8)}.webp`;
+    this.emitFile({
+      type: 'asset',
+      fileName: `assets/${outputName}`,
+      source: optimized,
+    });
+
+    // Return the final emitted URL as an explicit root-relative path. This
+    // keeps optimized images addressable from nested SPA routes as well.
+    return `export default ${JSON.stringify(`/assets/${outputName}`)};`;
+  },
+});
 
 const readRequestBody = (req: import('http').IncomingMessage): Promise<unknown> =>
   new Promise((resolve, reject) => {
@@ -38,6 +73,7 @@ export default defineConfig(({ mode }) => {
         host: 'localhost',
       },
       plugins: [
+        optimizeImportedImages(),
         react(),
         {
           name: 'local-sitemap-route',
