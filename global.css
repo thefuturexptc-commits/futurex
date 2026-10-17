@@ -152,6 +152,14 @@ html.dark ::selection,
   font-style: italic;
 }
 
+.tiptap mark,
+.product-rich-description mark {
+  border-radius: 0.2em;
+  background: #fef08a;
+  padding: 0 0.12em;
+  color: #1f2937;
+}
+
 /* ================= */
 /* HORIZONTAL RULE */
 /* ================= */
@@ -160,6 +168,43 @@ html.dark ::selection,
   border: none;
   border-top: 2px solid #ddd;
   margin: 1rem 0;
+}
+
+.product-rich-description p + p,
+.product-rich-description ul + p,
+.product-rich-description ol + p,
+.product-rich-description p + ul,
+.product-rich-description p + ol,
+.product-rich-description blockquote + p {
+  margin-top: 0.75rem;
+}
+
+.product-rich-description h1,
+.product-rich-description h2,
+.product-rich-description h3 {
+  margin: 0.9rem 0 0.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.product-rich-description h1 { font-size: 1.35em; }
+.product-rich-description h2 { font-size: 1.2em; }
+.product-rich-description h3 { font-size: 1.08em; }
+
+.product-rich-description ul,
+.product-rich-description ol {
+  margin: 0.65rem 0;
+  padding-left: 1.5rem;
+}
+
+.product-rich-description ul { list-style: disc; }
+.product-rich-description ol { list-style: decimal; }
+.product-rich-description li + li { margin-top: 0.25rem; }
+.product-rich-description blockquote {
+  margin: 0.75rem 0;
+  border-left: 3px solid #b89452;
+  padding-left: 0.9rem;
+  color: #475569;
 }
 
 /* ================= */

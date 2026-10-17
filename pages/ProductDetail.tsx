@@ -67,6 +67,53 @@ import monitoringPhonePhoto from '../assets/images/monitoring-phone-photo.webp';
 
 const featureMarkerPattern = /^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/;
 const cleanFeatureText = (feature: string) => feature.replace(featureMarkerPattern, '').trim();
+const PRODUCT_DESCRIPTION_TAGS = new Set(['p', 'br', 'h1', 'h2', 'h3', 'strong', 'b', 'em', 'i', 'u', 's', 'del', 'mark', 'ul', 'ol', 'li', 'blockquote', 'a']);
+const PRODUCT_DESCRIPTION_BLOCKED_TAGS = new Set(['script', 'style', 'iframe', 'object', 'embed', 'svg', 'math', 'template']);
+
+const sanitizeProductDescriptionHtml = (html: string): string => {
+  const parsed = new DOMParser().parseFromString(html, 'text/html');
+  const cleanNode = (node: Node): Node | null => {
+    if (node.nodeType === Node.TEXT_NODE) return document.createTextNode(node.textContent || '');
+    if (!(node instanceof Element)) return null;
+
+    const tag = node.tagName.toLowerCase();
+    if (PRODUCT_DESCRIPTION_BLOCKED_TAGS.has(tag)) return null;
+    if (!PRODUCT_DESCRIPTION_TAGS.has(tag)) {
+      const fragment = document.createDocumentFragment();
+      node.childNodes.forEach((child) => {
+        const cleaned = cleanNode(child);
+        if (cleaned) fragment.appendChild(cleaned);
+      });
+      return fragment;
+    }
+
+    const cleanedElement = document.createElement(tag);
+    if (tag === 'a') {
+      const href = node.getAttribute('href') || '';
+      try {
+        const safeUrl = new URL(href, window.location.origin);
+        if (['http:', 'https:', 'mailto:', 'tel:'].includes(safeUrl.protocol)) {
+          cleanedElement.setAttribute('href', href);
+          cleanedElement.setAttribute('rel', 'noopener noreferrer');
+        }
+      } catch {
+        // Drop invalid links and keep their text.
+      }
+    }
+    node.childNodes.forEach((child) => {
+      const cleaned = cleanNode(child);
+      if (cleaned) cleanedElement.appendChild(cleaned);
+    });
+    return cleanedElement;
+  };
+
+  const output = document.createElement('div');
+  parsed.body.childNodes.forEach((child) => {
+    const cleaned = cleanNode(child);
+    if (cleaned) output.appendChild(cleaned);
+  });
+  return output.innerHTML;
+};
 
 const getYouTubeEmbedUrl = (url: string) => {
   try {
@@ -2590,6 +2637,9 @@ export const ProductDetail: React.FC = () => {
       : monitoringProfile
         ? monitoringProfile.description
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`);
+  const productDescriptionHtml = product.description?.trim()
+    ? sanitizeProductDescriptionHtml(product.description)
+    : '';
   const ringOverviewSections = [
     {
       title: 'The FutureX TFX Ring Pro',
@@ -3050,9 +3100,16 @@ export const ProductDetail: React.FC = () => {
       <div role="tabpanel" aria-labelledby={`product-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-8">
         {activeTfx5DescriptionTab === 'description' && (
           <div>
-            <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
-              {shortDescription || overviewSections[0]?.copy || whyBuyCopy}
-            </p>
+            {productDescriptionHtml ? (
+              <div
+                className={`product-rich-description text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}
+                dangerouslySetInnerHTML={{ __html: productDescriptionHtml }}
+              />
+            ) : (
+              <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
+                {overviewSections[0]?.copy || whyBuyCopy}
+              </p>
+            )}
             {(shortDescription || overviewSections[0]?.copy || whyBuyCopy).length > 240 && (
               <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-3 text-sm font-bold text-[#8f2428]">
                 {isTfx5DescriptionExpanded ? 'Read Less' : 'Read More'}
@@ -3793,9 +3850,16 @@ export const ProductDetail: React.FC = () => {
               {!isTfxV5Band && <p className="border-b border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-900">
                 {isFanMarketplacePage ? 'Description' : 'Product Description'}
               </p>}
-              {!isTfxV5Band && <p className={`px-3 py-3 text-sm leading-6 text-slate-700 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
-                {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
-              </p>}
+              {!isTfxV5Band && (productDescriptionHtml ? (
+                <div
+                  className={`product-rich-description px-3 py-3 text-sm leading-6 text-slate-700 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}
+                  dangerouslySetInnerHTML={{ __html: productDescriptionHtml }}
+                />
+              ) : (
+                <p className={`px-3 py-3 text-sm leading-6 text-slate-700 ${!isDescriptionExpanded ? 'line-clamp-6' : ''}`}>
+                  {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
+                </p>
+              ))}
               {!isTfxV5Band && (shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260 && (
                 <button
                   type="button"

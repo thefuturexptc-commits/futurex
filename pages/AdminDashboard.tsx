@@ -1072,6 +1072,8 @@ export const AdminDashboard: React.FC = () => {
         try {
           await updateProductContentFields(savedProduct.id, {
             description: savedProduct.description || '',
+            seoDescription: savedProduct.seoDescription || '',
+            shortDescription: savedProduct.shortDescription || '',
             features: cleanFeatures,
             specs: cleanSpecs,
           });

@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
+import { Mark, mergeAttributes } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+
+const TextHighlight = Mark.create({
+  name: 'textHighlight',
+  parseHTML() {
+    return [{ tag: 'mark' }]
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ['mark', mergeAttributes(HTMLAttributes), 0]
+  },
+})
 
 interface Props {
   value: string
@@ -17,6 +28,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange }) => {
         heading: { levels: [1, 2, 3] },
       }),
       Underline,
+      TextHighlight,
     ],
     content: value || '<p></p>',
     editorProps: {
@@ -99,6 +111,7 @@ export const RichTextEditor: React.FC<Props> = ({ value, onChange }) => {
         <button type="button" onClick={() => editor.chain().focus().toggleItalic().run()} className={btn(editor.isActive('italic'))}>Italic</button>
         <button type="button" onClick={() => editor.chain().focus().toggleUnderline().run()} className={btn(editor.isActive('underline'))}>Underline</button>
         <button type="button" onClick={() => editor.chain().focus().toggleStrike().run()} className={btn(editor.isActive('strike'))}>Strike</button>
+        <button type="button" onClick={() => editor.chain().focus().toggleMark('textHighlight').run()} className={btn(editor.isActive('textHighlight'))}>Highlight</button>
 
         <button type="button" onClick={() => editor.chain().focus().toggleBulletList().run()} className={btn(editor.isActive('bulletList'))}>• List</button>
         <button type="button" onClick={() => editor.chain().focus().toggleOrderedList().run()} className={btn(editor.isActive('orderedList'))}>1. List</button>

@@ -1514,14 +1514,14 @@ await withTimeout(setDoc(docRef, { ...cloudProduct }, { merge: true }), 4500);
   } catch (e: any) {
       logDevWarning("Firebase update failed:", e);
       if (e.code === 'resource-exhausted' || e.message?.includes('exceeds the maximum allowed size')) {
-           alert("Database Error: Product data size is too large. Product updated locally only.");
+           throw new Error('Product data is too large for Firestore. The changes are only saved in this browser.');
       }
       if (isPermissionDeniedError(e)) {
         throw new Error('Saved locally, but backend sync failed. Log in again with an admin account and retry.');
       }
       if (isAbortLikeError(e) || isTimeoutLikeError(e)) {
         logDevWarning('Product updated locally; backend sync is still slow or timed out:', e);
-        return;
+        throw new Error('Product changes are saved in this browser, but cloud sync timed out. Please retry and confirm the success message.');
       }
       throw e instanceof Error ? e : new Error('Product updated locally, but backend sync failed.');
   }
@@ -1529,12 +1529,14 @@ await withTimeout(setDoc(docRef, { ...cloudProduct }, { merge: true }), 4500);
 
 export const updateProductContentFields = async (
   productId: string,
-  fields: Pick<Product, 'features' | 'specs'> & Partial<Pick<Product, 'description'>>
+  fields: Pick<Product, 'features' | 'specs'> & Partial<Pick<Product, 'description' | 'seoDescription' | 'shortDescription'>>
 ): Promise<void> => {
   const cleanFields = deepSanitize({
     features: Array.isArray(fields.features) ? fields.features : [],
     specs: fields.specs && typeof fields.specs === 'object' ? fields.specs : {},
     ...(fields.description !== undefined ? { description: fields.description } : {}),
+    ...(fields.seoDescription !== undefined ? { seoDescription: fields.seoDescription } : {}),
+    ...(fields.shortDescription !== undefined ? { shortDescription: fields.shortDescription } : {}),
   }) as Partial<Product>;
 
   const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
