@@ -1718,8 +1718,9 @@ export const AdminDashboard: React.FC = () => {
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">These details help search engines understand this product. Keywords are stored as metadata and are not shown as product text.</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Description</label>
-                    <textarea className={`${inputClass} min-h-[90px]`} value={productForm.seoDescription || ''} onChange={(e) => setProductForm((prev) => ({ ...prev, seoDescription: e.target.value }))} placeholder="Short description for search results" />
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Description / Short Description</label>
+                    <textarea className={`${inputClass} min-h-[90px]`} value={productForm.seoDescription || ''} onChange={(e) => setProductForm((prev) => ({ ...prev, seoDescription: e.target.value }))} placeholder="Brief product summary shown below the title and in search results" maxLength={320} />
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shown below the product title and used as the search result description. Keep it concise.</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Keywords</label>

@@ -2197,7 +2197,7 @@ export const ProductDetail: React.FC = () => {
   const productVideoIndex = displayedImages.length;
   const displayedMediaCount = displayedImages.length + (productVideoUrl ? 1 : 0);
   const shortDescription = stripHtml(product.description);
-  const productSubtitle = stripHtml(product.shortDescription || '');
+  const productSubtitle = stripHtml(product.seoDescription || product.shortDescription || '');
   const productFamilyText = `${normalizedCategory} ${product.name}`.toLowerCase();
   const productFamily = /\b(band|bracelet)\b/.test(productFamilyText)
     ? 'band'
