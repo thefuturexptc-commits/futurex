@@ -200,6 +200,31 @@ export const getMerchantTitle = (product) => {
     : title;
 };
 
+const getColorVariants = (product) => {
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const names = [...new Set([
+    ...colors.map((color) => typeof color === 'string' ? color : color?.name),
+    ...variants.map((variant) => variant?.colorName || variant?.color),
+  ].map((name) => String(name || '').trim()).filter(Boolean))];
+  return names.map((name) => {
+    const key = slugify(name);
+    const color = colors.find((item) => slugify(typeof item === 'string' ? item : item?.name) === key);
+    const variant = variants.find((item) => slugify(item?.colorName || item?.color) === key);
+    const sizeStock = (variant?.sizes || []).reduce((sum, row) => sum + Number(row.stock || 0), 0);
+    const colorStock = color ? Number(color.stock || 0) - Number(color.reservedStock || 0) : 0;
+    const stock = Math.max(0, colorStock > 0 ? colorStock : sizeStock > 0 ? sizeStock : Number(variant?.stock || 0));
+    const images = flattenValues(color?.images?.length ? color.images : variant?.images);
+    const price = Number(variant?.price || product.prices?.[name] || product.price || product.salePrice || 0);
+    return { name, slug: key, stock, images, price };
+  });
+};
+
+const getVariantProductId = (product, variant) => getMerchantProductId({
+  ...product,
+  id: `${product.id || product.slug || product.name}-${variant.slug}`,
+});
+
 const withTimeout = (promise, timeoutMs) =>
   Promise.race([
     promise,
@@ -233,9 +258,9 @@ const tag = (name, value) => {
   return text ? `    <${name}>${xmlEscape(text)}</${name}>` : '';
 };
 
-export const buildProductItem = (product) => {
+const buildSingleProductItem = (product, variant = null) => {
   if (!isCatalogProductPublished(product)) return '';
-  const images = collectImages(product);
+  const images = variant?.images?.length ? variant.images.map(resolveUrl).filter(Boolean) : collectImages(product);
   const imageLink = images[0];
   const price = getPrice(product);
   const slug = getProductSlug(product);
@@ -243,29 +268,30 @@ export const buildProductItem = (product) => {
   if (!product.id || !product.name || !slug || !imageLink || !price) return '';
 
   const description = buildDescription(product) || product.name;
-  const availability = getMerchantAvailability(product);
+  const availability = variant ? (variant.stock > 0 ? 'in_stock' : 'out_of_stock') : getMerchantAvailability(product);
   const availabilityDate = getAvailabilityDate(product);
   const additionalImages = images.slice(1, 11).map((image) => tag('g:additional_image_link', image));
   const offer = getCatalogOffer(product);
 
   return [
     '  <item>',
-    tag('g:id', getMerchantProductId(product)),
-    tag('g:title', getMerchantTitle(product)),
+    tag('g:id', variant ? getVariantProductId(product, variant) : getMerchantProductId(product)),
+    variant ? tag('g:item_group_id', getMerchantProductId(product)) : '',
+    tag('g:title', variant ? `${getMerchantTitle(product)} - ${variant.name}` : getMerchantTitle(product)),
     tag('g:description', description),
-    tag('g:link', `${SITE_URL}/product/${slug}`),
+    tag('g:link', variant ? `${SITE_URL}/product/${slug}/${variant.slug}` : `${SITE_URL}/product/${slug}`),
     tag('g:image_link', imageLink),
     ...additionalImages,
     ...collectVideos(product).map((video) => tag('g:video_link', video)),
     tag('g:availability', availability),
     availability === 'preorder' && availabilityDate ? tag('g:availability_date', availabilityDate) : '',
     tag('g:price', `${(offer.onSale ? offer.regularPrice : offer.currentPrice).toFixed(2)} INR`),
-    offer.onSale ? tag('g:sale_price', `${price} INR`) : '',
+    !variant && offer.onSale ? tag('g:sale_price', `${price} INR`) : '',
     tag('g:condition', 'new'),
     tag('g:brand', product.brand || BRAND),
     tag('g:product_type', product.category || ''),
     tag('g:google_product_category', product.googleProductCategory || product.google_product_category || ''),
-    ...getColors(product).map((color) => tag('g:color', color)),
+    ...(variant ? [tag('g:color', variant.name)] : getColors(product).map((color) => tag('g:color', color))),
     tag('g:material', getSpec(product, ['material'])),
     tag('g:size', getSpec(product, ['size'])),
     tag('g:gender', getSpec(product, ['gender'])),
@@ -279,9 +305,19 @@ export const buildProductItem = (product) => {
     .join('\n');
 };
 
+export const buildProductItems = (product) => {
+  if (!isCatalogProductPublished(product)) return [];
+  const variants = getColorVariants(product);
+  return variants.length
+    ? variants.map((variant) => buildSingleProductItem(product, variant)).filter(Boolean)
+    : [buildSingleProductItem(product)].filter(Boolean);
+};
+
+export const buildProductItem = (product) => buildProductItems(product).join('\n');
+
 export async function generateMerchantFeedXML(products = undefined) {
   products = products || await getRemoteProducts();
-  const items = products.map(buildProductItem).filter(Boolean).join('\n');
+  const items = products.flatMap(buildProductItems).join('\n');
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
@@ -296,19 +332,29 @@ ${items}
 
 export async function generateMerchantFeedCSV(products = undefined) {
   products = products || await getRemoteProducts();
-  const headers = ['id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'video_link', 'availability', 'availability_date', 'price', 'sale_price', 'condition', 'brand', 'product_type', 'google_product_category', 'color', 'material', 'size', 'gender', 'age_group', 'gtin', 'mpn', 'identifier_exists'];
+  const headers = ['id', 'item_group_id', 'title', 'description', 'link', 'image_link', 'additional_image_link', 'video_link', 'availability', 'availability_date', 'price', 'sale_price', 'condition', 'brand', 'product_type', 'google_product_category', 'color', 'material', 'size', 'gender', 'age_group', 'gtin', 'mpn', 'identifier_exists'];
   const escape = (value) => `"${String(value ?? '').replace(/"/g, '""')}"`;
-  const rows = products.filter((product) => buildProductItem(product)).map((product) => [
-    getMerchantProductId(product), getMerchantTitle(product), buildDescription(product) || product.name,
-    `${SITE_URL}/product/${getProductSlug(product)}`, collectImages(product)[0], collectImages(product).slice(1, 11).join(','),
+  const rows = products.flatMap((product) => {
+    if (!buildProductItems(product).length) return [];
+    const variants = getColorVariants(product);
+    const items = variants.length ? variants : [null];
+    return items.map((variant) => {
+      const images = variant?.images?.length ? variant.images.map(resolveUrl).filter(Boolean) : collectImages(product);
+      const offer = getCatalogOffer(product);
+      const availability = variant ? (variant.stock > 0 ? 'in_stock' : 'out_of_stock') : getMerchantAvailability(product);
+      return [
+    variant ? getVariantProductId(product, variant) : getMerchantProductId(product), variant ? getMerchantProductId(product) : '', variant ? `${getMerchantTitle(product)} - ${variant.name}` : getMerchantTitle(product), buildDescription(product) || product.name,
+    variant ? `${SITE_URL}/product/${getProductSlug(product)}/${variant.slug}` : `${SITE_URL}/product/${getProductSlug(product)}`, images[0], images.slice(1, 11).join(','),
     collectVideos(product).join(','),
-    getMerchantAvailability(product), getMerchantAvailability(product) === 'preorder' ? getAvailabilityDate(product) : '',
-    `${getCatalogOffer(product).regularPrice.toFixed(2)} INR`,
-    getCatalogOffer(product).onSale ? `${getPrice(product)} INR` : '', 'new', product.brand || BRAND, product.category || '',
-    product.googleProductCategory || product.google_product_category || '', getColors(product).join(', '),
+    availability, availability === 'preorder' ? getAvailabilityDate(product) : '',
+    `${(offer.onSale ? offer.regularPrice : offer.currentPrice).toFixed(2)} INR`,
+    !variant && offer.onSale ? `${getPrice(product)} INR` : '', 'new', product.brand || BRAND, product.category || '',
+    product.googleProductCategory || product.google_product_category || '', variant?.name || getColors(product).join(', '),
     getSpec(product, ['material']), getSpec(product, ['size']), getSpec(product, ['gender']), getSpec(product, ['age group', 'age_group']),
     product.gtin || product.barcode || '', product.mpn || product.manufacturerPartNumber || '',
     product.gtin || product.barcode || product.mpn || product.manufacturerPartNumber ? 'yes' : 'no',
-  ].map(escape).join(','));
+  ].map(escape).join(',');
+    });
+  });
   return [headers.join(','), ...rows].join('\n') + '\n';
 }

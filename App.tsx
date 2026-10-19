@@ -525,6 +525,7 @@ const App: React.FC = () => {
                       <Route path="/shop/:category" element={<Shop />} />
 
                       <Route path="/product/:id" element={<ProductDetail />} />
+                      <Route path="/product/:id/:color" element={<ProductDetail />} />
                       <Route path="/cart" element={<Cart />} />
                       <Route path="/checkout" element={<Checkout />} />
                       <Route path="/verify-phone" element={<VerifyPhone />} />

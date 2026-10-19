@@ -1433,7 +1433,7 @@ const RevealOnScroll: React.FC<{
 };
 
 export const ProductDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, color: colorSlug } = useParams<{ id: string; color?: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { addToCart } = useCart();
@@ -1608,18 +1608,25 @@ export const ProductDetail: React.FC = () => {
       setSelectedSize('');
       setSizeError('');
       setSelectedImageIndex(0);
-      setSearchParams((current) => {
-        const next = new URLSearchParams(current);
-        next.set('color', normalizeOptionKey(color.name));
-        return next;
-      }, { replace: true });
+      if (product) {
+        const next = new URLSearchParams(searchParams);
+        next.delete('color');
+        const query = next.toString();
+        navigate(`/product/${getProductSlug(product)}/${normalizeOptionKey(color.name)}${query ? `?${query}` : ''}`, { replace: true });
+      } else {
+        setSearchParams((current) => {
+          const next = new URLSearchParams(current);
+          next.set('color', normalizeOptionKey(color.name));
+          return next;
+        }, { replace: true });
+      }
       if (window.matchMedia('(max-width: 1023px)').matches) {
         window.setTimeout(() => {
           productGalleryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 60);
       }
     },
-    [getColorAvailableStock, setSearchParams]
+    [getColorAvailableStock, navigate, product, searchParams, setSearchParams]
   );
 
   const salePrice = Number(product?.salePrice || product?.price || 0);
@@ -1722,13 +1729,13 @@ export const ProductDetail: React.FC = () => {
 
   useEffect(() => {
     if (!product?.colors?.length) return;
-    const queryColor = normalizeOptionKey(searchParams.get('color') || '');
+    const queryColor = normalizeOptionKey(colorSlug || searchParams.get('color') || '');
     if (!queryColor) return;
     const matchingColor = product.colors.find((color) => normalizeOptionKey(color.name) === queryColor);
     if (!matchingColor || selectedColor?.name === matchingColor.name) return;
     setSelectedColor(matchingColor);
     setSelectedImageIndex(0);
-  }, [product?.colors, searchParams, selectedColor?.name]);
+  }, [product?.colors, colorSlug, searchParams, selectedColor?.name]);
 
   const selectedVariant = useMemo(() => {
     if (!product?.variants?.length) return null;
