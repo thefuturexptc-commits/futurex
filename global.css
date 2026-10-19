@@ -10668,3 +10668,12 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
   background: #334155 !important;
 }
 
+/* Product information tabs are intentionally light cards, including in dark mode. */
+.product-detail-page .product-information-card :is(p, li, span, strong, h1, h2, h3, h4, dt, dd, .product-rich-description) {
+  color: #334155 !important;
+}
+
+.product-detail-page .product-information-card :is(h1, h2, h3, h4) {
+  color: #0f172a !important;
+}
+

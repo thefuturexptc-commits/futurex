@@ -2993,7 +2993,7 @@ export const ProductDetail: React.FC = () => {
     },
   ];
   const tfx5ArrangedDescription = (
-    <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+    <div className="product-information-card overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
       <div role="tablist" aria-label="TFX5 product information" className="grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
         {([
           ['description', 'Description'],
@@ -3084,7 +3084,7 @@ export const ProductDetail: React.FC = () => {
     </div>
   );
   const generalArrangedDescription = (
-    <div className="overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
+    <div className="product-information-card overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
       <div role="tablist" aria-label={`${product.name} product information`} className="grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
         {([
           ['description', 'Description'],
