@@ -244,6 +244,10 @@
       "destination": "/privacy-policy.html"
     },
     {
+      "source": "/product/:slug/:color",
+      "destination": "/api/product-page?slug=:slug&color=:color"
+    },
+    {
       "source": "/product/:slug",
       "destination": "/api/product-page?slug=:slug"
     },

@@ -113,6 +113,21 @@ export async function generateSitemapXML() {
       changefreq: 'weekly',
       priority: '0.9',
     });
+    const colors = [
+      ...(Array.isArray(product.colors) ? product.colors.map((color) => typeof color === 'string' ? color : color?.name) : []),
+      ...(Array.isArray(product.variants) ? product.variants.map((variant) => variant?.colorName || variant?.color) : []),
+    ];
+    [...new Set(colors.map((color) => String(color || '').trim()).filter(Boolean))].forEach((color) => {
+      const colorSlug = toSlug(color);
+      if (!colorSlug) return;
+      const loc = `${SITE_URL}/product/${slug}/${colorSlug}`;
+      productMap.set(`${slug}/${colorSlug}`, {
+        loc,
+        lastmod: nowIso,
+        changefreq: 'weekly',
+        priority: '0.8',
+      });
+    });
   });
 
   const baseRouteMap = new Map(baseRoutes.map((entry) => [entry.loc, { ...entry, lastmod: nowIso }]));
