@@ -226,19 +226,39 @@ const toMerchantPrice = (amount) => ({
   currencyCode: 'INR',
 });
 
-const buildProductInput = (product) => {
+const getColorVariants = (product) => {
+  const colors = Array.isArray(product.colors) ? product.colors : [];
+  const variants = Array.isArray(product.variants) ? product.variants : [];
+  const names = [...new Set([
+    ...colors.map((color) => typeof color === 'string' ? color : color?.name),
+    ...variants.map((variant) => variant?.colorName || variant?.color),
+  ].map((name) => String(name || '').trim()).filter(Boolean))];
+  return names.map((name) => {
+    const key = slugify(name);
+    const color = colors.find((item) => slugify(typeof item === 'string' ? item : item?.name) === key);
+    const variant = variants.find((item) => slugify(item?.colorName || item?.color) === key);
+    const sizesStock = (variant?.sizes || []).reduce((sum, row) => sum + Number(row.stock || 0), 0);
+    const colorStock = color ? Number(color.stock || 0) - Number(color.reservedStock || 0) : 0;
+    const stock = Math.max(0, colorStock > 0 ? colorStock : sizesStock > 0 ? sizesStock : Number(variant?.stock || 0));
+    const images = flattenImageValues(color?.images?.length ? color.images : variant?.images).map(toAbsoluteUrl).filter(Boolean);
+    return { name, slug: key, stock, images };
+  });
+};
+
+const buildProductInput = (product, variant = null) => {
   if (!isCatalogProductPublished(product)) throw new Error('This product is excluded from the published catalog.');
   if (!product?.id) throw new Error('Product id is required for Merchant sync.');
-  const images = collectProductImages(product);
+  const variantImages = variant?.images || [];
+  const images = variantImages.length ? variantImages : collectProductImages(product);
   const imageLink = images[0] || toAbsoluteUrl(getFallbackProductImageUrl(product));
   if (!imageLink) throw new Error(`Product ${product.id} needs a public image URL.`);
 
   const offer = getCatalogOffer(product);
-  const stock = getProductStock(product);
+  const stock = variant ? variant.stock : getProductStock(product);
   const productAttributes = {
-    title: getMerchantTitle(product),
+    title: variant ? `${getMerchantTitle(product)} - ${variant.name}` : getMerchantTitle(product),
     description: buildDescription(product) || product.name || product.id,
-    link: `${siteUrl}/product/${getProductSlug(product)}`,
+    link: variant ? `${siteUrl}/product/${getProductSlug(product)}/${variant.slug}` : `${siteUrl}/product/${getProductSlug(product)}`,
     imageLink,
     availability: stock > 0 && product.inStock !== false ? 'IN_STOCK' : 'OUT_OF_STOCK',
     sellOnGoogleQuantity: String(Math.max(0, stock)),
@@ -247,12 +267,17 @@ const buildProductInput = (product) => {
     brand: product.brand || 'TheFutureX',
   };
 
+  if (variant) {
+    productAttributes.color = variant.name;
+    productAttributes.itemGroupId = getMerchantProductId(product);
+  }
+
   const additionalImageLinks = images.filter((image) => image !== imageLink).slice(0, 10);
   if (additionalImageLinks.length) productAttributes.additionalImageLinks = additionalImageLinks;
   const category = product.googleProductCategory || product.google_product_category;
   if (category) productAttributes.googleProductCategory = category;
   const colors = getColors(product);
-  if (colors.length) productAttributes.color = colors.join(' / ');
+  if (!variant && colors.length) productAttributes.color = colors.join(' / ');
   const material = getSpec(product, ['material']);
   const size = getSpec(product, ['size']);
   if (material) productAttributes.material = material;
@@ -265,7 +290,9 @@ const buildProductInput = (product) => {
   if (offer.onSale) productAttributes.salePrice = toMerchantPrice(getCustomerFacingPrice(product));
 
   return {
-    offerId: getMerchantProductId(product),
+    offerId: variant
+      ? getMerchantProductId({ ...product, id: `${product.id}-${variant.slug}` })
+      : getMerchantProductId(product),
     contentLanguage: 'en',
     feedLabel: 'IN',
     productAttributes,
@@ -278,23 +305,27 @@ export const upsertProduct = async (product) => {
     return { merchantId, removed: true, offerId: getMerchantProductId(product) };
   }
   const dataSource = await ensureProductDataSource();
-  const requestBody = buildProductInput(product);
-  const inserted = await apiRequest({
-    version: 'products/v1',
-    path: `${accountName()}/productInputs:insert`,
-    method: 'POST',
-    params: { dataSource },
-    data: requestBody,
-  });
-  return {
-    merchantId,
-    dataSource,
-    id: inserted.name,
-    offerId: inserted.offerId || requestBody.offerId,
-    title: requestBody.productAttributes.title,
-    imageLink: requestBody.productAttributes.imageLink,
-    imageCount: 1 + Number(requestBody.productAttributes.additionalImageLinks?.length || 0),
-  };
+  const variants = getColorVariants(product);
+  const inputs = variants.length ? variants.map((variant) => ({ variant, input: buildProductInput(product, variant) })) : [{ variant: null, input: buildProductInput(product) }];
+  const synced = [];
+  for (const { variant, input } of inputs) {
+    const inserted = await apiRequest({
+      version: 'products/v1',
+      path: `${accountName()}/productInputs:insert`,
+      method: 'POST',
+      params: { dataSource },
+      data: input,
+    });
+    synced.push({
+      id: inserted.name,
+      offerId: inserted.offerId || input.offerId,
+      title: input.productAttributes.title,
+      imageLink: input.productAttributes.imageLink,
+      imageCount: 1 + Number(input.productAttributes.additionalImageLinks?.length || 0),
+    });
+  }
+  if (variants.length) await deleteProductFromMerchant(product.id);
+  return { merchantId, dataSource, variantsSynced: synced.length, products: synced };
 };
 
 export const syncAllProducts = async (products = []) => {
