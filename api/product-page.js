@@ -77,9 +77,9 @@ export const renderProductPage = (shell, product, variant = null) => {
 };
 
 export default async function handler(req, res) {
+  const slug = String(req.query?.slug || '');
+  const colorSlug = String(req.query?.color || '').toLowerCase();
   try {
-    const slug = String(req.query?.slug || '');
-    const colorSlug = String(req.query?.color || '').toLowerCase();
     const [products, shell] = await Promise.all([
       getRemoteProducts({ includeReviews: true }), readFile(join(process.cwd(), 'dist/product-shell.html'), 'utf8'),
     ]);
@@ -98,6 +98,19 @@ export default async function handler(req, res) {
     return res.status(200).send(renderProductPage(shell, product, variant));
   } catch (error) {
     console.error('Live product page failed', error);
+    // Product routes are also emitted as static HTML during the build. Serve
+    // that snapshot if Firestore or the dynamic renderer is temporarily down,
+    // so Merchant Center and shoppers still get a usable product page.
+    if (/^[a-z0-9-]+$/.test(slug)) {
+      try {
+        const staticPage = await readFile(join(process.cwd(), 'dist', 'product', slug, 'index.html'), 'utf8');
+        res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        return res.status(200).send(staticPage);
+      } catch (fallbackError) {
+        console.error('Static product page fallback failed', fallbackError);
+      }
+    }
     return res.status(503).send('Product information is temporarily unavailable. Please try again.');
   }
 }

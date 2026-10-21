@@ -2,7 +2,7 @@
   "trailingSlash": false,
   "functions": {
     "api/product-page.js": {
-      "includeFiles": "dist/product-shell.html"
+      "includeFiles": "dist/**"
     }
   },
   "headers": [
