@@ -7,7 +7,7 @@ import { useAuthModal } from '../context/AuthModalContext';
 import { Button } from './ui/Button';
 import { addProductNotifyRequest, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
-import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
+import { getCatalogOffer, isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 import { getProductFallbackImage } from '../utils/productImages';
 
 interface ProductCardProps {
@@ -170,11 +170,10 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   );
   const enableHoverEffects = !disableHoverEffects && supportsHover;
 
-  const salePrice = Number(product.salePrice || product.price || 0);
-  const mrp = getProductSlug(product) === 'tfx-pureair-3-in-1'
-    ? Number(product.mrp)
-    : salePrice > 0 ? salePrice + 2000 : 0;
+  const mrp = getCatalogOffer(product).regularPrice;
   const offerPricing = getAutomaticOfferItemPricing(product);
+  const savings = Math.max(0, mrp - offerPricing.unitOfferPrice);
+  const savingsPercent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
 
   const selectedColorStock = useMemo(() => {
     const firstColor = product.colors?.[0];
@@ -363,23 +362,18 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
 
 
         <div className="product-card-price-row mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
-          {offerPricing.rate <= 0 && mrp > salePrice && (
+          {mrp > offerPricing.unitOfferPrice && (
             <span className="product-card-mrp text-[11px] font-bold leading-none line-through sm:text-xs">
               {formatInrAmount(mrp)}
-            </span>
-          )}
-          {offerPricing.rate > 0 && (
-            <span className="product-card-mrp text-[11px] font-bold leading-none line-through sm:text-xs">
-              {formatInrAmount(salePrice)}
             </span>
           )}
           <span className={`product-card-price text-sm font-black leading-none sm:text-base ${offerPricing.rate > 0 ? 'text-emerald-600' : ''}`}>
             {formatInrAmount(offerPricing.unitOfferPrice)}
           </span>
         </div>
-        {offerPricing.rate > 0 && (
+        {savings > 0 && (
           <p className="mt-1 text-[11px] font-bold leading-tight text-emerald-600 sm:text-xs">
-            Save {formatInrAmount(offerPricing.unitDiscount)} ({offerPricing.rateLabel} off)
+            Save {formatInrAmount(savings)} ({savingsPercent}% off)
           </p>
         )}
 
