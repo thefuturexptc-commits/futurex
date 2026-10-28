@@ -432,45 +432,107 @@ const MEGA_PRICE_DROP_BAND_SLUGS = ['tfx5-ai-smart-band', FEATURED_BAND_PRODUCT_
 const DISPLAY_PRO_PRODUCT_SLUG = 'tfx-display-pro-smart-ring';
 const DISPLAY_PRO_YOUTUBE_URL = 'https://www.youtube.com/watch?v=3hO1-gjdWhg';
 const TFX5_BAND_FEATURES = [
-  '24/7 heart rate monitoring',
-  'Blood oxygen SpO2 tracking',
-  'Blood pressure wellness trends',
-  'VO2 max tracking',
-  'Vital age assessment',
-  'AI-powered health insights',
-  'Recovery insights from stress and lifestyle patterns',
-  'Sleep quality tracking',
-  'Stress and mood tracking',
-  "Women's health tracking",
   'GPS tracking',
-  'Workout modes for gym, running, yoga, cycling, walking, and sports',
-  'Step counting',
-  'Calories burned, distance, and activity duration tracking',
+  '100 sports modes',
+  'AI guidance in the TFX Vital App',
+  'Screenless, lightweight design',
+  'Heart rate and SpO2 tracking',
+  'HRV, stress, and sleep insights',
+  'Recovery and metabolism insights',
+  'Steps, calories, and daily energy tracking',
+  'Meal photo calorie estimates',
+  'Women’s wellness tracking',
   'IP68 water and dust resistance',
-  'Bluetooth 5.0 app sync for Android and iOS',
-  'Screenless design with LED status indicator',
-  'Wireless charging dock included',
-  '7-10 day rechargeable battery',
-  'Stainless steel build with free-size unisex fit',
+  'Approximately 7–10 day battery life',
+  'Charging dock included',
+  'Five color options: Black, Silver, Pink, Blue, and White',
 ];
 
 const TFX_SMART_BAND_DESCRIPTION =
-  'The FutureX Smart Band - Modern Fitness Tracking Band is designed for users who want a simple and convenient way to monitor daily activity and wellness metrics. Featuring a lightweight and comfortable design, this smart band can be worn throughout the day while tracking essential fitness and lifestyle data. The band helps users stay informed about their activity levels, movement patterns, and daily routines through companion app connectivity. Its minimalist design makes it suitable for both professional and active lifestyles.';
+  'Meet the FutureX TFX Smart Band, a light and slim fitness band for simple everyday activity, sleep, and wellness tracking. Sync it with your phone to review your day in one place. Its minimalist design fits work, workouts, travel, and home.';
+
+const TFX_SMART_BAND_PRODUCT_DESCRIPTION_HTML = `
+  <p>Meet the FutureX TFX Smart Band, a light, slim fitness band made for simple, reliable everyday tracking. It follows your activity, sleep, and wellness trends and syncs with your phone, so your day is easy to review in one place. Its minimalist design looks at home at work, at the gym, while travelling, or relaxing at home.</p>
+  <h3>What You Can Track</h3>
+  <ul>
+    <li><strong>Heart rate:</strong> See your heart rate trends through the day.</li>
+    <li><strong>SpO2:</strong> Check your blood oxygen readings.</li>
+    <li><strong>HRV and stress:</strong> Review insights into how your body responds to your day.</li>
+    <li><strong>Sleep:</strong> Check your sleep patterns each morning.</li>
+    <li><strong>Daily activity:</strong> Follow steps, walking, calories, and daily energy trends.</li>
+  </ul>
+  <h3>How to Use</h3>
+  <ol>
+    <li>Fully charge the band before first use.</li>
+    <li>Download the companion app and turn on Bluetooth on your phone.</li>
+    <li>Pair the band with the app and allow the requested permissions.</li>
+    <li>Wear it snugly, just above your wrist bone, for better readings.</li>
+    <li>Wear it during your day; supported activity and heart rate tracking runs automatically.</li>
+    <li>Open the app to review activity, sleep, and wellness trends.</li>
+  </ol>
+  <h3>Lightweight for Everyday Wear</h3>
+  <p>Light and comfortable enough for all-day and overnight wear, with a modern, minimal look for students, professionals, and active routines.</p>
+  <h3>IP68 Water and Dust Protection</h3>
+  <p>Designed to handle sweat, workouts, splashes, and light rain. It is not rated for swimming or diving. Keep the band away from hot water, saunas, soap, and chemicals.</p>
+  <p><strong>Available colors:</strong> Black and Silver.</p>
+  <h3>Warranty and Support</h3>
+  <p>Includes a 6-month limited warranty from the delivery date. For help, email <a href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a> or call <a href="tel:8530340676">8530340676</a>.</p>
+`;
 
 const TFX5_SMART_BAND_DESCRIPTION =
- 'The FutureX AI Smart Band TFX5 is a screenless fitness and wellness tracker built for daily wear without wrist distractions. It tracks heart rate, blood oxygen SpO2, blood pressure wellness trends, VO2, vital age, sleep quality, stress, mood, recovery, steps, calories burned, distance, activity duration, GPS activity, and workout routines, then turns the data into simple AI-powered app insights. The IP68 water and dust resistant design, Bluetooth 5.0 Android and iOS sync, wireless charging dock, 7-10 day rechargeable battery, free-size unisex fit, and women\'s health tracking make it practical for workouts, outdoor use, sleep tracking, and everyday health management.';
+  'Train smarter and recover better with the FutureX AI Smart Band TFX5. This screenless fitness tracker follows your workouts, routes, sleep, recovery, and daily energy, then brings your information together in the TFX Vital App with simple AI guidance.';
+
+const TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML = `
+  <p><strong>Train smarter. Recover better.</strong> The FutureX AI Smart Band TFX5 is a screenless fitness tracker for people who want detailed tracking without screen distractions. It follows workouts, routes, sleep, recovery, and daily energy, then brings everything together in the TFX Vital App with simple AI guidance.</p>
+  <p>GPS tracking and 100 sports modes help it keep up with your run, ride, gym session, or weekend game. Between workouts, review heart rate, SpO2, HRV, stress, sleep, and metabolism trends in the app.</p>
+  <h3>GPS Tracking</h3>
+  <p>Track outdoor runs, walks, and rides with route, distance, and pace information in the app.</p>
+  <h3>100 Sports Modes</h3>
+  <p>Choose from running, walking, cycling, gym, yoga, badminton, cricket, and many more activities. Select the mode that matches your workout for relevant tracking.</p>
+  <h3>Complete Wellness Tracking</h3>
+  <ul>
+    <li><strong>Heart rate:</strong> Follow heart rate trends through the day.</li>
+    <li><strong>SpO2:</strong> Check blood oxygen readings.</li>
+    <li><strong>HRV and stress:</strong> Review how your body responds to daily activity.</li>
+    <li><strong>Sleep analysis:</strong> Explore sleep patterns and recovery.</li>
+    <li><strong>Metabolism insights:</strong> Review daily energy and calorie trends.</li>
+    <li><strong>Steps and calories:</strong> Track daily movement and energy.</li>
+  </ul>
+  <h3>AI Insights in the TFX Vital App</h3>
+  <p>Sync your band with the TFX Vital App over Bluetooth to see your progress and access simple AI-powered guidance. The app also offers meal calorie estimates to help you keep track of what you eat.</p>
+  <h3>Screenless and Distraction-Free</h3>
+  <p>With no screen or notifications to pull your attention away, this slim, lightweight band tracks quietly at the gym, at work, or while you sleep.</p>
+  <h3>7–10 Day Battery</h3>
+  <p>Charge less and spend more time tracking. Battery life is approximately 7–10 days and varies with use and settings. A charging dock is included.</p>
+  <h3>IP68 Water and Dust Resistant</h3>
+  <p>Designed to handle sweat, workouts, rain, and splashes. It is not intended for swimming or diving. Keep it away from hot water, saunas, soap, and chemicals.</p>
+  <h3>Choose Your Style</h3>
+  <p>Choose Black (Metal), Silver (Metal), Pink (Rubber), Blue (Rubber), or White (Rubber). Select a product image below to open that color variant.</p>
+  <h3>How to Use</h3>
+  <ol>
+    <li>Fully charge the band before first use.</li>
+    <li>Download the TFX Vital App and turn on Bluetooth on your phone.</li>
+    <li>Pair the band with the app and allow requested permissions, including location access for GPS features.</li>
+    <li>Wear it snugly on your wrist, just above the wrist bone.</li>
+    <li>Select your sports mode in the app before starting a workout.</li>
+    <li>Open the app to review workout, sleep, stress, metabolism, and AI insights.</li>
+  </ol>
+  <h3>Warranty and Support</h3>
+  <p>Includes a 6-month limited warranty from the delivery date. For help, email <a href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a> or call <a href="tel:8530340676">8530340676</a>.</p>
+  <p>The band and TFX Vital App are intended for general fitness and wellness purposes. Measurements, AI guidance, nutrition information, and calorie estimates are informational only and are not intended for medical diagnosis or treatment. Features may vary based on recorded data, app version, device settings, syncing, and usage conditions.</p>
+`;
 
 const TFX_SMART_BAND_FEATURES = [
-  'Activity tracking',
-  'Sleep monitoring',
-  'Heart rate monitoring',
-  'Lightweight design',
-  'Bluetooth connectivity',
-  'Long battery performance',
-  'Everyday wearability',
-  'Companion mobile app support',
-  'Modern minimalist appearance',
-  'Comfortable daily use',
+  'Heart rate tracking',
+  'SpO2 readings',
+  'HRV and stress insights',
+  'Sleep tracking',
+  'Daily activity tracking',
+  'IP68 water and dust protection',
+  'Bluetooth app sync',
+  'Slim, lightweight design',
+  'Black and Silver colors',
+  '6-month limited warranty',
 ];
 
 const TFX_SMART_BAND_SPECS: Record<string, string> = {
@@ -2541,11 +2603,13 @@ export const ProductDetail: React.FC = () => {
         ? TFX_TOUCH_RING_DESCRIPTION
         : TFX_RING_PRO_DESCRIPTION
     : '';
-  const featureList = product.features?.length ? product.features.map(cleanFeatureText).filter(Boolean) : isTfxV5Band
-    ? TFX5_BAND_FEATURES
-    : isPremiumSmartBand
-      ? TFX_SMART_BAND_FEATURES
-      : ringDescription
+  const featureList = product.features?.length
+    ? product.features.map(cleanFeatureText).filter(Boolean)
+    : isTfxV5Band
+      ? TFX5_BAND_FEATURES
+      : isPremiumSmartBand
+        ? TFX_SMART_BAND_FEATURES
+        : ringDescription
         ? isDisplayProduct
           ? TFX_DISPLAY_PRO_RING_FEATURES
           : isTouchRingProduct
@@ -2646,7 +2710,11 @@ export const ProductDetail: React.FC = () => {
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`);
   const productDescriptionHtml = product.description?.trim()
     ? sanitizeProductDescriptionHtml(product.description)
-    : '';
+    : isTfxV5Band
+      ? sanitizeProductDescriptionHtml(TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
+      : isPremiumSmartBand
+        ? sanitizeProductDescriptionHtml(TFX_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
+        : '';
   const ringOverviewSections = [
     {
       title: 'The FutureX TFX Ring Pro',
@@ -2958,40 +3026,6 @@ export const ProductDetail: React.FC = () => {
       decoding="async"
     />
   );
-  const tfx5DescriptionSections = [
-    {
-      title: 'Fitness and activity tracking',
-      copy: 'Track supported heart rate, blood oxygen (SpO₂), sleep, stress and mood, recovery, steps, calories, distance, and workout activity. The TFX Vital App brings synced information together so you can review daily routines and recorded trends.',
-    },
-    {
-      title: 'AI-powered TFX Vital guidance',
-      copy: 'The app can organize available profile and synced activity information into simple wellness summaries and general guidance for exercise, walking, recovery, sleep, and everyday fitness. Details that have not been recorded or synced may appear as unavailable.',
-    },
-    {
-      title: 'Metabolism and nutrition management',
-      copy: 'Use the connected app to organize your daily calorie goal, calories consumed and burned, remaining calories, protein, fat, carbohydrates, and fiber in one place.',
-    },
-    {
-      title: 'Meal photo calorie estimates',
-      copy: 'Capture or upload a food photo for an estimated calorie value and manage saved meals in the app. Estimates can vary with portion size, ingredients, preparation, and image quality.',
-    },
-    {
-      title: 'Women’s wellness tracking',
-      copy: 'Supported women’s wellness features are available alongside the band’s regular fitness and activity functions.',
-    },
-    {
-      title: 'Screenless, lightweight design',
-      copy: 'A distraction-free screenless design and lightweight fit support regular day and night wear, including workouts, everyday activities, and sleep tracking.',
-    },
-    {
-      title: 'IP68 water and dust resistance',
-      copy: 'The IP68-rated design is made for everyday activities, workouts, sweat, and light rain. Water resistance can vary with usage conditions and normal wear.',
-    },
-    {
-      title: 'Battery and charging',
-      copy: 'Enjoy approximately 7–10 days of battery life, depending on usage, enabled features, syncing frequency, and operating conditions. Recharge using the included charging dock.',
-    },
-  ];
   const tfx5ArrangedDescription = (
     <div className="product-information-card overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
       <div role="tablist" aria-label="TFX5 product information" className="grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
@@ -3016,27 +3050,17 @@ export const ProductDetail: React.FC = () => {
       <div role="tabpanel" aria-labelledby={`tfx5-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-8">
         {activeTfx5DescriptionTab === 'description' && (
           <div>
-            <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-2'}`}>
-              The FutureX AI Smart Band V5 is a smart fitness band, AI fitness tracker, and screenless wearable for everyday activity tracking with simple AI-powered guidance. It brings activity, sleep, recovery, calorie, and wellness information together through the connected TFX Vital App. Its lightweight, distraction-free design is made for comfortable day and night wear.
-            </p>
-            {isTfx5DescriptionExpanded && (
-              <div className="mt-5 space-y-5">
-                {tfx5DescriptionSections.map((section) => (
-                  <section key={section.title}>
-                    <h3 className="text-sm font-bold text-slate-900 sm:text-base">{section.title}</h3>
-                    <p className="mt-1.5 text-sm leading-6 text-slate-700 sm:text-base sm:leading-8">{section.copy}</p>
-                  </section>
-                ))}
-                <section>
-                  <h3 className="text-sm font-bold text-slate-900 sm:text-base">A smarter screenless fitness experience</h3>
-                  <p className="mt-1.5 text-sm leading-6 text-slate-700 sm:text-base sm:leading-8">Combine fitness and activity tracking with TFX Vital AI guidance, nutrition management, and meal calorie estimation in one connected experience. Review recorded information, understand daily patterns, and access general AI-powered fitness guidance in the app.</p>
-                </section>
-                <p className="rounded-lg bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-600">
-                  The band and TFX Vital App are intended for general fitness and wellness purposes. Measurements, AI-generated guidance, nutritional information, and calorie estimates are informational only and are not intended for medical diagnosis or treatment. Feature availability may vary depending on recorded data, app version, device settings, syncing, and usage conditions.
-                </p>
-              </div>
+            {productDescriptionHtml ? (
+              <div
+                className={`product-rich-description text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}
+                dangerouslySetInnerHTML={{ __html: productDescriptionHtml }}
+              />
+            ) : (
+              <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
+                {TFX5_SMART_BAND_DESCRIPTION}
+              </p>
             )}
-            <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-4 text-sm font-bold text-[#8f2428]">
+            <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-4 text-sm font-bold text-[#8f2428] transition hover:text-slate-950">
               {isTfx5DescriptionExpanded ? 'Read Less ▲' : 'Read More ▼'}
             </button>
           </div>
@@ -3057,10 +3081,9 @@ export const ProductDetail: React.FC = () => {
             <section>
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Connected app features</h3>
               <div className="grid gap-3 sm:grid-cols-2">
-                {tfx5DescriptionSections.slice(1, 5).map((section) => (
-                  <article key={section.title} className="rounded-xl border border-slate-200 bg-[#fbfaf7] p-4">
-                    <h4 className="text-sm font-bold text-slate-900">{section.title}</h4>
-                    <p className="mt-1.5 text-xs leading-6 text-slate-600 sm:text-sm">{section.copy}</p>
+                {featureList.slice(0, 6).map((feature) => (
+                  <article key={feature} className="rounded-xl border border-slate-200 bg-[#fbfaf7] p-4">
+                    <p className="text-sm font-bold text-slate-900">{cleanFeatureText(feature)}</p>
                   </article>
                 ))}
               </div>
@@ -3572,14 +3595,17 @@ export const ProductDetail: React.FC = () => {
                     {product.colors.map((color) => {
                       const isSelected = normalizeOptionKey(selectedColor?.name) === normalizeOptionKey(color.name);
                       const colorStock = getColorAvailableStock(color);
-                      const colorImage = color.images?.[0] || displayedImages[0] || '';
+                      const matchingVariantImage = product.variants?.find(
+                        (variant) => normalizeOptionKey(variant.colorName || variant.color) === normalizeOptionKey(color.name)
+                      )?.images?.[0];
+                      const colorImage = color.images?.[0] || matchingVariantImage || displayedImages[0] || '';
                       return (
                         <button
                           key={color.name}
                           type="button"
                           onClick={() => handleSelectColor(color)}
                           disabled={colorStock <= 0}
-                          className={`group relative h-[4.5rem] w-[4.5rem] shrink-0 snap-start overflow-hidden rounded-2xl border-2 bg-gradient-to-b from-white to-slate-50 p-1.5 transition-all duration-300 ease-out sm:h-[5.5rem] sm:w-[5.5rem] ${
+                          className={`group relative flex h-[6.25rem] w-[5.5rem] shrink-0 snap-start flex-col items-center gap-1 overflow-hidden rounded-2xl border-2 bg-gradient-to-b from-white to-slate-50 p-1.5 transition-all duration-300 ease-out ${
                             isSelected
                               ? 'scale-[1.04] border-[#a9812f] shadow-[0_8px_20px_rgba(169,129,47,0.28)] ring-4 ring-[#a9812f]/15'
                               : 'border-slate-200 hover:-translate-y-1 hover:border-slate-400 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]'
@@ -3590,15 +3616,16 @@ export const ProductDetail: React.FC = () => {
                             <img
                               src={colorImage}
                               alt={color.name}
-                              className="h-full w-full object-contain object-center transition-transform duration-300 ease-out group-hover:scale-110"
+                              className="h-[4rem] w-full object-contain object-center transition-transform duration-300 ease-out group-hover:scale-110"
                               loading="lazy"
                               decoding="async"
                             />
                           ) : (
-                            <span className="grid h-full w-full place-items-center">
+                            <span className="grid h-[4rem] w-full place-items-center">
                               <span className="h-8 w-8 rounded-full ring-1 ring-slate-300" style={{ backgroundColor: color.hex }} />
                             </span>
                           )}
+                          <span className="max-w-full truncate text-[9px] font-bold leading-none text-slate-700">{color.name}</span>
                           {isSelected && (
                             <span className="product-detail-color-selected-check absolute -right-1.5 -top-1.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-[#a9812f] text-white shadow-[0_2px_6px_rgba(169,129,47,0.5)]">
                               <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="3.5">

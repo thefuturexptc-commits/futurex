@@ -183,7 +183,11 @@ const fetchAndStoreVisitorGeo = async ({ forceRefresh = false }: { forceRefresh?
 export const getApproxVisitorGeo = (): Promise<VisitorGeo> => fetchAndStoreVisitorGeo();
 
 export const preloadVisitorGeo = () => {
-  void fetchAndStoreVisitorGeo();
+  void fetchAndStoreVisitorGeo({ forceRefresh: true }).then((ipGeo) => {
+    if (hasGeoValue(ipGeo)) {
+      pushDataLayerEvent('location_update', { locationSource: ipGeo.locationSource || 'lookup' });
+    }
+  });
 };
 
 const getStoredActiveUser = () => {
@@ -303,7 +307,7 @@ const toSiteAnalyticsEvent = (event: SiteAnalyticsEventName, payload: DataLayerE
 const recordSiteAnalyticsEvent = async (event: string, payload: DataLayerEvent) => {
   if (typeof window === 'undefined' || !TRACKED_SITE_EVENTS.has(event as SiteAnalyticsEventName)) return;
   try {
-    await fetchAndStoreVisitorGeo({ forceRefresh: true });
+    await fetchAndStoreVisitorGeo();
     const analyticsEvent = toSiteAnalyticsEvent(event as SiteAnalyticsEventName, payload);
     writeLocalAnalyticsEvent(analyticsEvent);
     addDoc(collection(db, 'site_analytics'), analyticsEvent).catch(() => {

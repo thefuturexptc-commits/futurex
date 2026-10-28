@@ -171,6 +171,7 @@ const isPermissionDeniedError = (error: unknown): boolean => {
 const PRODUCTS_CACHE_TTL_MS = 15000;
 let productsCache: { data: Product[]; ts: number } | null = null;
 let productsInFlight: Promise<Product[]> | null = null;
+let productsCacheRevision = 0;
 
 export const toProductSlug = (name: string): string =>
   name
@@ -279,6 +280,7 @@ export const isProductSlugUnique = (products: Product[], slug: string, currentPr
 };
 
 const refreshProductsCache = (products?: Product[]) => {
+  productsCacheRevision += 1;
   productsCache = products ? { data: products.map(normalizeProductColors), ts: Date.now() } : null;
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('products-updated'));
@@ -1159,6 +1161,7 @@ export const getProducts = async (): Promise<Product[]> => {
   }
 
   productsInFlight = (async () => {
+    const requestRevision = productsCacheRevision;
     try {
       await ensureFirebaseConnection();
       const querySnapshot = await withTimeout(getDocs(collection(db, 'products')), 6000);
@@ -1167,10 +1170,12 @@ export const getProducts = async (): Promise<Product[]> => {
         fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
       });
       const normalized = fbProducts.filter(isCatalogProductPublished).map(normalizeProductColors);
+      if (requestRevision !== productsCacheRevision && productsCache) return [...productsCache.data];
       setMockData('products', normalized);
       productsCache = { data: normalized, ts: Date.now() };
       return normalized;
     } catch (error) {
+      if (requestRevision !== productsCacheRevision && productsCache) return [...productsCache.data];
       if (isAbortLikeError(error) || isPermissionDeniedError(error)) {
         const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS)
           .filter(isCatalogProductPublished)
@@ -1494,11 +1499,11 @@ export const updateProduct = async (product: Product): Promise<void> => {
   if (!isProductSlugUnique(products.map(normalizeProductColors), cleanProduct.slug, cleanProduct.id)) {
     throw new Error(`The URL slug "${cleanProduct.slug}" is already used by another product.`);
   }
-  if (idx !== -1) {
-      products[idx] = cleanProduct;
-      setMockData('products', products);
-      refreshProductsCache(products);
-  }
+  const nextProducts = idx === -1
+    ? [...products, cleanProduct]
+    : products.map((item) => item.id === cleanProduct.id ? cleanProduct : item);
+  setMockData('products', nextProducts);
+  refreshProductsCache(nextProducts);
 
   // Firebase
   try {

@@ -582,6 +582,7 @@ const getFeatureStrip = (product: Product): { label: string; className: string }
 
 export const Home: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [showSmartBandReel, setShowSmartBandReel] = useState(true);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [seeding, setSeeding] = useState(false);
@@ -601,6 +602,20 @@ export const Home: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    if (!showSmartBandReel) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setShowSmartBandReel(false);
+    };
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [showSmartBandReel]);
 
   const loadProducts = useCallback(async () => {
     setLoading(true);
@@ -754,6 +769,49 @@ export const Home: React.FC = () => {
 
   return (
     <div className="smart-bands-page relative min-h-screen overflow-x-hidden bg-white text-slate-950">
+      {showSmartBandReel && createPortal(
+        <div
+          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-label="FutureX Smart Band video"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setShowSmartBandReel(false);
+          }}
+        >
+          <div className="relative w-full max-w-[440px] overflow-hidden rounded-2xl bg-black shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
+            <button
+              type="button"
+              onClick={() => setShowSmartBandReel(false)}
+              aria-label="Close video"
+              className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/65 text-2xl leading-none text-white ring-1 ring-white/30 transition hover:bg-black"
+            >
+              ×
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate('/smart-bands')}
+              aria-label="Shop smart bands"
+              className="group relative block w-full cursor-pointer text-left"
+            >
+              <video
+                className="block max-h-[88vh] w-full object-contain"
+                src="/videos/smart-band-insta-reel.mp4"
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="metadata"
+                aria-hidden="true"
+              />
+              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-5 pb-5 pt-12 text-center text-sm font-bold text-white opacity-90 transition group-hover:opacity-100">
+                Tap to shop smart bands <span aria-hidden="true">→</span>
+              </span>
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
       <style>{`
         @keyframes tfx-marquee {
           from { transform: translateX(0); }
