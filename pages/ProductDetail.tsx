@@ -3538,18 +3538,21 @@ export const ProductDetail: React.FC = () => {
             <aside className="product-panel-in order-3 w-full min-w-0 max-w-full overflow-hidden bg-white text-left lg:col-start-2 lg:row-start-2 lg:order-none">
               <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-[#f8fbfb] to-white p-4 shadow-[0_2px_14px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_6px_22px_rgba(15,23,42,0.08)] sm:p-5">
                 <div className="flex flex-wrap items-end gap-2.5">
+                  {mrp > salePrice && (
+                    <span className="text-sm font-medium text-slate-400">
+                      <span className="mr-1 text-xs text-slate-500">MRP</span>
+                      <span className="line-through">{formatInrAmount(mrp)}</span>
+                    </span>
+                  )}
                   {couponRate > 0 ? (
                     <>
                       <span className="text-sm font-medium text-slate-400 line-through">{formatInrAmount(salePrice)}</span>
                       <span className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-2.5 py-1 text-xs font-semibold text-[#8a6a20]">{couponRateLabel} off</span>
                     </>
                   ) : mrp > salePrice && (
-                    <>
-                      <span className="text-sm font-medium text-slate-400 line-through">{formatInrAmount(mrp)}</span>
-                      {!hidePercentageOffer && (
-                        <span className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-2.5 py-1 text-xs font-semibold text-[#8a6a20]">{percent}% off</span>
-                      )}
-                    </>
+                    <span className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-2.5 py-1 text-xs font-semibold text-[#8a6a20]">
+                      Save {formatInrAmount(savings)}{!hidePercentageOffer ? ` (${percent}% off)` : ''}
+                    </span>
                   )}
                   <span className={`font-display text-2xl font-semibold tracking-tight sm:text-3xl ${couponRate > 0 ? 'text-emerald-700' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
                 </div>

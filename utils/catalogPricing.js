@@ -84,6 +84,6 @@ export const getCatalogOffer = (product) => {
     // storefront offer and Merchant Center sale_price attributes.
     if (isTfxV5Band(product))
         return { currentPrice, regularPrice: TFX5_AI_BAND_MRP, onSale: true };
-    const regularPrice = Math.max(Number(product.price || 0), pricing.unitPrice);
+    const regularPrice = Math.max(Number(product.mrp || 0), Number(product.price || 0), pricing.unitPrice);
     return { currentPrice, regularPrice, onSale: currentPrice > 0 && regularPrice > currentPrice };
 };
