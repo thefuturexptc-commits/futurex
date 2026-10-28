@@ -9,6 +9,8 @@ import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/gener
 import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
 import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification } from '../utils/productSchema.js';
 import { tfx5BlogPosts } from '../utils/tfx5BlogPosts.js';
+import { getBlogProductImage } from '../utils/blogProductImage.ts';
+import { publishedBlogPosts, isBlogPostPublic } from '../utils/publishedBlogPosts.ts';
 
 const distDir = 'dist';
 const indexFile = join(distDir, 'index.html');
@@ -136,6 +138,15 @@ const blogSeoOverrides = {
 };
 
 const remotePublishedBlogPosts = await getRemotePublishedBlogPosts();
+const staticPublishedBlogPosts = publishedBlogPosts
+  .filter((post) => isBlogPostPublic(post))
+  .map((post) => ({
+    path: post.canonicalPath || `/blog/${post.slug}`,
+    label: post.title,
+    changefreq: 'monthly',
+    priority: '0.7',
+    post,
+  }));
 const remoteBlogRoutes = remotePublishedBlogPosts.map((post) => ({
   path: post.path,
   label: post.label,
@@ -145,7 +156,7 @@ const remoteBlogRoutes = remotePublishedBlogPosts.map((post) => ({
 }));
 
 const blogPages = Object.fromEntries(
-  [...sitemapRoutes, ...remoteBlogRoutes]
+  [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes]
     .filter((route) => route.path === '/blog' || route.path.startsWith('/blog/'))
     .map((route) => {
       const cleanRoute = route.path.replace(/^\//, '');
@@ -778,6 +789,9 @@ if (requireLiveProductData && remoteProducts.length === 0) {
 const productRecords = mergeProductSeoRecords(remoteProducts).filter((product) =>
   !/glass/i.test(`${product.name || ''} ${product.category || ''} ${product.slug || ''}`)
 );
+Object.values(blogPages).forEach((page) => {
+  if (page.post) page.post.image = getBlogProductImage(page.post, productRecords) || page.post.image;
+});
 const productRouteMap = new Map();
 
 productRecords.forEach((product) => {
@@ -793,7 +807,7 @@ const productRoutes = [...productRouteMap.keys()]
   .filter(Boolean)
   .map((slug) => `product/${slug}`);
 
-const publishedRoutes = [...sitemapRoutes, ...remoteBlogRoutes].map((route) => route.path.replace(/^\//, ''));
+const publishedRoutes = [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes].map((route) => route.path.replace(/^\//, ''));
 const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...productRoutes]);
 
 const getRouteHtml = (route, product) => {

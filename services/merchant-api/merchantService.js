@@ -219,6 +219,7 @@ const getSpec = (product, names) => {
 const getColors = (product) => [...new Set([
   ...(Array.isArray(product.colors) ? product.colors.map((color) => typeof color === 'string' ? color : color?.name) : []),
   ...(Array.isArray(product.variants) ? product.variants.map((variant) => variant?.color || variant?.colorName) : []),
+  ...(Array.isArray(product.variations) ? product.variations.map((variation) => variation?.color) : []),
 ].map((color) => String(color || '').trim()).filter(Boolean))];
 
 const toMerchantPrice = (amount) => ({
@@ -229,18 +230,24 @@ const toMerchantPrice = (amount) => ({
 const getColorVariants = (product) => {
   const colors = Array.isArray(product.colors) ? product.colors : [];
   const variants = Array.isArray(product.variants) ? product.variants : [];
+  const variations = Array.isArray(product.variations) ? product.variations : [];
   const names = [...new Set([
     ...colors.map((color) => typeof color === 'string' ? color : color?.name),
     ...variants.map((variant) => variant?.colorName || variant?.color),
+    ...variations.map((variation) => variation?.color),
   ].map((name) => String(name || '').trim()).filter(Boolean))];
   return names.map((name) => {
     const key = slugify(name);
     const color = colors.find((item) => slugify(typeof item === 'string' ? item : item?.name) === key);
     const variant = variants.find((item) => slugify(item?.colorName || item?.color) === key);
+    const legacyVariations = variations.filter((item) => slugify(item?.color) === key);
     const sizesStock = (variant?.sizes || []).reduce((sum, row) => sum + Number(row.stock || 0), 0);
+    const legacyStock = legacyVariations.reduce((sum, item) => sum + Number(item.stock || 0), 0);
     const colorStock = color ? Number(color.stock || 0) - Number(color.reservedStock || 0) : 0;
-    const stock = Math.max(0, colorStock > 0 ? colorStock : sizesStock > 0 ? sizesStock : Number(variant?.stock || 0));
-    const images = flattenImageValues(color?.images?.length ? color.images : variant?.images).map(toAbsoluteUrl).filter(Boolean);
+    const stock = Math.max(0, colorStock > 0 ? colorStock : sizesStock > 0 ? sizesStock : legacyStock > 0 ? legacyStock : Number(variant?.stock || 0));
+    const images = flattenImageValues(
+      color?.images?.length ? color.images : variant?.images?.length ? variant.images : legacyVariations.map((item) => item.images || [])
+    ).map(toAbsoluteUrl).filter(Boolean);
     return { name, slug: key, stock, images };
   });
 };

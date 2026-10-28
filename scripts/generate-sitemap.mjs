@@ -1,6 +1,6 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { generateSitemapXML } from '../utils/generateSitemap.js';
+import { generateSitemapXML, getRemotePublishedBlogPosts } from '../utils/generateSitemap.js';
 import { SITE_URL, coreRoutes, infoRoutes, sitemapRoutes } from '../utils/siteRoutes.js';
 
 const htmlEscape = (value = '') =>
@@ -17,7 +17,11 @@ const writeFileEnsured = (filePath, content) => {
 
 const routeUrl = (route) => `${SITE_URL}${route.path === '/' ? '/' : route.path}`;
 
-const blogRoutes = sitemapRoutes.filter((route) => route.path === '/blog' || route.path.startsWith('/blog/'));
+const sitemapBlogRoutes = sitemapRoutes.filter((route) => route.path === '/blog' || route.path.startsWith('/blog/'));
+const remoteBlogRoutes = await getRemotePublishedBlogPosts();
+const blogRoutes = [...new Map(
+  [...sitemapBlogRoutes, ...remoteBlogRoutes].map((route) => [route.path, route])
+).values()];
 const infoPageRoutes = infoRoutes.filter((route) => !route.path.startsWith('/blog'));
 const shopRoutes = coreRoutes.filter((route) => route.path !== '/');
 

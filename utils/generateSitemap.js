@@ -3,6 +3,7 @@ import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { SITE_URL, sitemapRoutes } from './siteRoutes.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
 import { staticProductSeoRecords } from './productSeoData.js';
+import { publishedBlogPosts, isBlogPostPublic } from './publishedBlogPosts.ts';
 
 const toSlug = (name = '') =>
   String(name)
@@ -71,11 +72,21 @@ const getRemoteProducts = async () => {
 };
 
 export async function getRemotePublishedBlogPosts() {
+  const localRoutes = publishedBlogPosts
+    .filter((post) => isBlogPostPublic(post) && typeof post.slug === 'string' && post.slug.trim())
+    .filter((post) => !isGlassesMention(`${post.slug} ${post.title || ''}`))
+    .map((post) => ({
+      path: post.canonicalPath || `/blog/${post.slug.trim()}`,
+      label: post.title.trim(),
+      changefreq: 'monthly',
+      priority: '0.7',
+      lastmod: post.updatedAt || post.publishedAt,
+    }));
   try {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const snapshot = await withTimeout(getDocs(collection(db, 'blog_posts')), 6500);
-    return snapshot.docs
+    const remoteRoutes = snapshot.docs
       .map((doc) => ({ ...doc.data(), id: doc.id }))
       .filter((post) => post.status === 'published' && typeof post.slug === 'string' && post.slug.trim() && typeof post.title === 'string' && post.title.trim())
       .filter((post) => !isGlassesMention(post.slug) && !isGlassesMention(post.title))
@@ -86,9 +97,12 @@ export async function getRemotePublishedBlogPosts() {
         priority: '0.7',
         lastmod: post.updatedAt,
       }));
+    const routesByPath = new Map(localRoutes.map((route) => [route.path, route]));
+    remoteRoutes.forEach((route) => routesByPath.set(route.path, route));
+    return [...routesByPath.values()];
   } catch (error) {
     console.warn('Skipping remote blog URLs in sitemap because the blog fetch failed:', error instanceof Error ? error.message : error);
-    return [];
+    return localRoutes;
   }
 }
 

@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { getBlogPosts } from '../services/backend';
+import { getBlogPosts, getProducts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata } from '../services/seo';
 import type { BlogPost } from '../types';
 import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { InfoPage } from './InfoPage';
+import { getBlogProductImage } from '../utils/blogProductImage';
 
 const formatDate = (value?: string) => {
   if (!value) return '';
@@ -98,15 +99,14 @@ export const BlogPostPage: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
-    getBlogPosts()
-      .then((posts) =>
-        setPost(
-            posts.find((item) => item.slug === slug && isBlogPostPublic(item)) ||
-            publishedBlogPosts.find((item) => item.slug === slug && isBlogPostPublic(item)) ||
-            null
-        )
-      )
-      .catch(() => setPost(publishedBlogPosts.find((item) => item.slug === slug && isBlogPostPublic(item)) || null));
+    Promise.all([
+      getBlogPosts().catch(() => []),
+      getProducts().catch(() => []),
+    ]).then(([posts, products]) => {
+      const article = posts.find((item) => item.slug === slug && isBlogPostPublic(item)) ||
+        publishedBlogPosts.find((item) => item.slug === slug && isBlogPostPublic(item)) || null;
+      setPost(article ? { ...article, image: getBlogProductImage(article, products) || article.image } : null);
+    });
   }, [slug]);
 
   useEffect(() => {
