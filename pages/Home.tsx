@@ -14,10 +14,10 @@ import { getProductFallbackImage } from '../utils/productImages';
 import homeCollectionBandImage from '../assets/images/home-collection-bands-banner.webp';
 import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
 import homeCollectionFanImage from '../assets/images/home-collection-fans-banner.webp';
-import homeRainReadyBandBanner from '../assets/images/home-rain-ready-band-banner.webp';
-import homeStormRingBanner from '../assets/images/home-storm-ring-banner.webp';
-import homeWaterproofBandBanner from '../assets/images/home-waterproof-band-banner.webp';
-import tfx5PrecisionSensorsBanner from '../assets/images/tfx5-overview-precision-sensors.webp';
+import homeSmartBandStyleBanner from '../assets/images/home-smart-band-style-today.webp';
+import homeDiwaliSmartRingsBanner from '../assets/images/home-diwali-smart-rings.webp';
+import homeDiwaliSmartBandBanner from '../assets/images/home-diwali-smart-band-wellness.webp';
+import homeDiwaliAirCleanerBanner from '../assets/images/home-diwali-air-cleaner.webp';
 import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
 import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
 import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
@@ -302,30 +302,41 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: string; mobileImage?: string; backgroundColor?: string; scale?: number }> = [
+const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: string; width: number; height: number; backgroundColor?: string }> = [
   {
-    image: tfx5PrecisionSensorsBanner,
-    href: FEATURED_BAND_PRODUCT_PATH,
-    alt: 'The FutureX AI Smart Band TFX5 — Bold. Beautiful. Precise. Sensors engineered for precision and durability.',
-    backgroundColor: '#ffffff',
-    scale: 1.15,
+    image: homeDiwaliSmartBandBanner,
+    href: '/product/tfx-smart-band',
+    alt: 'FutureX smart bands with a wellness shines brighter this Diwali message',
+    width: 1374,
+    height: 1145,
+    backgroundColor: '#ead3ac',
   },
   {
-    image: homeWaterproofBandBanner,
-    href: FEATURED_BAND_PRODUCT_PATH,
-    alt: 'Minimalist TFX smart band with water drops and maximum durability message',
+    image: homeSmartBandStyleBanner,
+    href: '/smart-bands',
+    alt: 'FutureX smart bands in silver, pink and blue with a style today, stronger tomorrow message',
+    width: 1374,
+    height: 1145,
+    backgroundColor: '#ead3ac',
   },
   {
-    image: homeRainReadyBandBanner,
-    href: FEATURED_BAND_PRODUCT_PATH,
-    alt: 'Rain ready fitness ready TFX smart bands in a rainy outdoor scene',
+    image: homeDiwaliSmartRingsBanner,
+    href: '/smart-rings',
+    alt: 'FutureX smart rings in a Diwali setting with a brighter you message',
+    width: 1374,
+    height: 1145,
+    backgroundColor: '#ead3ac',
   },
   {
-    image: homeStormRingBanner,
-    href: FEATURED_RING_PRODUCT_PATH,
-    alt: 'TFX smart rings in rain with elegance meets every storm message',
+    image: homeDiwaliAirCleanerBanner,
+    href: '/bladeless-fan',
+    alt: 'FutureX air cleaners and bladeless fans with a breathe cleaner air this Diwali message',
+    width: 1374,
+    height: 1145,
+    backgroundColor: '#ead3ac',
   },
 ];
+
 const HOME_COLLECTION_CARDS = [
   {
     title: 'Smart Bands',
@@ -1241,7 +1252,7 @@ export const Home: React.FC = () => {
       ), document.body)}
 
       <section
-        className="relative isolate overflow-hidden bg-slate-950 shadow-[0_18px_45px_rgba(15,23,42,0.28)] sm:rounded-b-[1.75rem]"
+        className="relative isolate left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-[#ead3ac] shadow-[0_18px_45px_rgba(15,23,42,0.12)] sm:rounded-b-[1.75rem]"
         aria-label="Homepage banner"
         onMouseEnter={() => setIsHomeBannerPaused(true)}
         onMouseLeave={() => setIsHomeBannerPaused(false)}
@@ -1249,7 +1260,7 @@ export const Home: React.FC = () => {
         onBlur={() => setIsHomeBannerPaused(false)}
       >
         <div
-          className="relative w-full aspect-[21/9] overflow-hidden"
+          className="relative aspect-[6/5] w-full min-w-0 overflow-hidden md:aspect-[4/3]"
           style={{ touchAction: 'pan-y pinch-zoom' }}
           onTouchStart={(event) => {
             suppressBannerClick.current = false;
@@ -1311,15 +1322,13 @@ export const Home: React.FC = () => {
               tabIndex={index === homeWaterBannerIndex ? 0 : -1}
             >
               <picture className="block h-full w-full">
-                {banner.mobileImage && <source media="(max-width: 639px)" srcSet={banner.mobileImage} />}
                 {banner.image && (
                   <img
                     src={banner.image}
                     alt={banner.alt}
-                    width={1200}
-                    height={900}
-                    className="relative z-10 h-full w-full object-contain object-center"
-                    style={{ transform: banner.scale ? `scale(${banner.scale})` : undefined }}
+                    width={banner.width}
+                    height={banner.height}
+                    className="h-full w-full object-cover object-center"
                     loading={index === 0 ? 'eager' : 'lazy'}
                     decoding="async"
                   />
@@ -1383,36 +1392,36 @@ export const Home: React.FC = () => {
         )}
       </section>
 
-      <section id="explore-collection" className="relative z-10 bg-[#fbfbfc] px-3 pb-4 pt-6 sm:px-4 sm:pb-12 sm:pt-12 lg:px-5">
-        <div className="mx-auto max-w-[1600px]">
+      <section id="explore-collection" className="relative z-10 bg-[#fbfbfc] px-0 pb-4 pt-6 sm:pb-12 sm:pt-12">
+        <div className="mx-auto w-full max-w-7xl">
           <RevealOnScroll variant="blur">
-            <h2 className="text-center font-display text-3xl font-black leading-tight tracking-tight text-[#14161a] sm:text-5xl">
+            <h2 className="mx-auto block w-fit rounded-xl border-2 border-slate-950 bg-slate-950 px-5 py-2 text-center font-display text-3xl font-black leading-tight tracking-tight !text-white [-webkit-text-fill-color:#fff] shadow-[0_5px_14px_rgba(15,23,42,0.15)] sm:text-5xl">
               Explore Collection
             </h2>
             <div className="tfx-divider mx-auto mt-3 h-1 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#df0b16]" />
           </RevealOnScroll>
 
-          <div className="mt-6 grid grid-cols-3 gap-2 sm:mt-8 sm:gap-5">
+          <div className="mt-6 grid w-full grid-cols-1 overflow-hidden bg-white sm:mt-8">
             {HOME_COLLECTION_CARDS.map((card, index) => (
-              <RevealOnScroll key={card.title} delayMs={index * 90} variant="scale" className="h-full min-w-0">
+              <RevealOnScroll key={card.title} delayMs={index * 90} variant="up" className="w-full min-w-0 border-b border-slate-200 last:border-b-0">
                 <Link
                   to={card.href}
-                  className="collection-card group flex h-full flex-col items-center overflow-hidden rounded-xl bg-white text-center shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_36px_rgba(15,23,42,0.1)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-sky-500"
+                  className="collection-card group flex w-full flex-col items-center overflow-hidden bg-white text-center transition-colors duration-300 hover:bg-slate-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500"
                 >
-                  <div className="relative flex aspect-[2/1] w-full items-center justify-center overflow-hidden">
+                  <h3 className="flex min-h-14 w-full items-center justify-center px-3 py-3 text-base font-extrabold tracking-wide text-slate-950 sm:min-h-16 sm:text-xl lg:text-2xl">
+                    {card.title}
+                  </h3>
+                  <div className="relative flex aspect-[2/1] w-full items-center justify-center overflow-hidden bg-white">
                     <img
                       src={card.image}
                       alt={card.alt}
                       width={800}
                       height={400}
-                      className="h-full w-full object-contain"
+                      className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
                       loading="lazy"
                       decoding="async"
                     />
                   </div>
-                  <h3 className="px-1 py-3 text-[clamp(10px,2.7vw,14px)] font-bold leading-tight text-[#14161a] sm:px-3 sm:py-4 sm:text-xl lg:py-5 lg:text-2xl">
-                    {card.title}
-                  </h3>
                 </Link>
               </RevealOnScroll>
             ))}
@@ -1422,18 +1431,25 @@ export const Home: React.FC = () => {
 
       <section id="models" className="bg-white px-4 pb-8 pt-5 sm:px-8 sm:py-12 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-5 flex flex-col items-center justify-between gap-3 text-center sm:mb-8 sm:gap-5 lg:flex-row lg:text-left">
+          <div
+            className="relative left-1/2 mb-5 flex w-screen max-w-none -translate-x-1/2 flex-col items-center justify-between gap-2 rounded-none bg-slate-950 px-5 pb-4 pt-7 text-center text-white shadow-[0_12px_28px_rgba(15,23,42,0.18)] sm:mb-8 sm:gap-3 sm:px-7 sm:pb-5 sm:pt-8"
+            style={{ border: '2px solid #111827' }}
+          >
+            <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border-2 border-[#8c351b] bg-gradient-to-r from-[#7f1d1d] via-[#b45309] to-[#7f1d1d] px-4 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#fff7dc] shadow-[0_3px_12px_rgba(124,45,18,0.24)] sm:px-5 sm:text-xs">
+              <span aria-hidden="true">🪔 </span>Diwali New Launch<span aria-hidden="true"> 🪔</span>
+            </span>
             <RevealOnScroll variant="left">
-              <h2 className="tfx-gradient-heading font-display text-3xl font-black leading-tight sm:text-5xl">
+              <h2 className="font-display text-3xl font-black leading-tight text-white [-webkit-text-fill-color:#fff] sm:text-4xl">
                 New Launches
               </h2>
-              <div className="tfx-divider mx-auto mt-3 h-1 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#df0b16] lg:mx-0" />
+              <div className="mx-auto mt-2 h-1 w-16 rounded-full bg-gradient-to-r from-[#fbbf24] via-[#f97316] to-[#dc2626]" />
             </RevealOnScroll>
             <Link
               to="/new-arrivals"
-              className="group inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-[0.34em] text-slate-950 transition hover:text-[#0ea5e9]"
+              style={{ color: '#020617', WebkitTextFillColor: '#020617', background: '#fff', borderColor: '#fff' }}
+              className="group inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.16em] shadow-[0_3px_8px_rgba(255,255,255,0.12)] transition hover:-translate-y-0.5 hover:bg-amber-100"
             >
-              <span className="underline underline-offset-4">View All</span>
+              <span>View All</span>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200 group-hover:translate-x-1">
                 <polyline points="9 18 15 12 9 6" />
               </svg>
