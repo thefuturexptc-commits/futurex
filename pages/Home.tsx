@@ -12,10 +12,13 @@ import { getProductFallbackImage } from '../utils/productImages';
 import homeCollectionBandImage from '../assets/images/home-collection-bands-banner.webp';
 import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
 import homeCollectionFanImage from '../assets/images/home-collection-fans-banner.webp';
-import homeSmartBandStyleBanner from '../assets/images/home-smart-band-style-today.webp';
 import homeDiwaliSmartRingsBanner from '../assets/images/home-diwali-smart-rings.webp';
 import homeDiwaliSmartBandBanner from '../assets/images/home-diwali-smart-band-wellness.webp';
 import homeDiwaliAirCleanerBanner from '../assets/images/home-diwali-air-cleaner.webp';
+import homeDesktopDiwaliBandStyleBanner from '../assets/images/home-desktop-diwali-band-style.webp';
+import homeDesktopDiwaliSmartBandBanner from '../assets/images/home-desktop-diwali-smart-band.webp';
+import homeDesktopDiwaliRingsBanner from '../assets/images/home-desktop-diwali-rings.webp';
+import homeDesktopDiwaliAirCleanerBanner from '../assets/images/home-desktop-diwali-air-cleaner.webp';
 import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
 import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
 import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
@@ -310,9 +313,10 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: string; width: number; height: number; backgroundColor?: string }> = [
+const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; desktopImage: string; mobileWide?: boolean; href: string; alt: string; width: number; height: number; backgroundColor?: string }> = [
   {
     image: homeDiwaliSmartBandBanner,
+    desktopImage: homeDesktopDiwaliBandStyleBanner,
     href: '/product/tfx-smart-band',
     alt: 'FutureX smart bands with a wellness shines brighter this Diwali message',
     width: 1374,
@@ -320,15 +324,18 @@ const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: st
     backgroundColor: '#ead3ac',
   },
   {
-    image: homeSmartBandStyleBanner,
+    image: homeDesktopDiwaliSmartBandBanner,
+    desktopImage: homeDesktopDiwaliSmartBandBanner,
+    mobileWide: true,
     href: '/smart-bands',
-    alt: 'FutureX smart bands in silver, pink and blue with a style today, stronger tomorrow message',
-    width: 1374,
-    height: 1145,
+    alt: 'FutureX smart bands with a Stay Active This Diwali message',
+    width: 1920,
+    height: 820,
     backgroundColor: '#ead3ac',
   },
   {
     image: homeDiwaliSmartRingsBanner,
+    desktopImage: homeDesktopDiwaliRingsBanner,
     href: '/smart-rings',
     alt: 'FutureX smart rings in a Diwali setting with a brighter you message',
     width: 1374,
@@ -337,6 +344,7 @@ const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; href: string; alt: st
   },
   {
     image: homeDiwaliAirCleanerBanner,
+    desktopImage: homeDesktopDiwaliAirCleanerBanner,
     href: '/bladeless-fan',
     alt: 'FutureX air cleaners and bladeless fans with a breathe cleaner air this Diwali message',
     width: 1374,
@@ -1275,7 +1283,7 @@ export const Home: React.FC = () => {
         onBlur={() => setIsHomeBannerPaused(false)}
       >
         <div
-          className="relative aspect-[6/5] w-full min-w-0 overflow-hidden md:aspect-[4/3]"
+          className={`relative w-full min-w-0 overflow-hidden ${HOME_WATER_RESISTANT_BANNERS[homeWaterBannerIndex]?.mobileWide ? 'aspect-[21/9]' : 'aspect-[6/5]'} md:aspect-[21/9]`}
           style={{ touchAction: 'pan-y pinch-zoom' }}
           onTouchStart={(event) => {
             suppressBannerClick.current = false;
@@ -1337,6 +1345,7 @@ export const Home: React.FC = () => {
               tabIndex={index === homeWaterBannerIndex ? 0 : -1}
             >
               <picture className="block h-full w-full">
+                <source media="(min-width: 768px)" srcSet={banner.desktopImage} />
                 {banner.image && (
                   <img
                     src={banner.image}
@@ -1345,6 +1354,7 @@ export const Home: React.FC = () => {
                     height={banner.height}
                     className="h-full w-full object-cover object-center"
                     loading={index === 0 ? 'eager' : 'lazy'}
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
                     decoding="async"
                   />
                 )}

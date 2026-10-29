@@ -10469,20 +10469,29 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
 
 .site-main-content .tfx-warranty .tfx-form input,
 .site-main-content .tfx-warranty .tfx-form select {
-  background-color: #1a2330 !important;
-  border-color: #2a3546 !important;
-  color: #edf0f5 !important;
-  -webkit-text-fill-color: #edf0f5 !important;
+  background-color: #e8f0fe !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
 }
 
 .site-main-content .tfx-warranty .tfx-form input::placeholder {
-  color: #8e97ab !important;
-  -webkit-text-fill-color: #8e97ab !important;
+  color: #64748b !important;
+  -webkit-text-fill-color: #64748b !important;
+}
+
+.site-main-content .tfx-warranty .tfx-form input:-webkit-autofill,
+.site-main-content .tfx-warranty .tfx-form input:-webkit-autofill:hover,
+.site-main-content .tfx-warranty .tfx-form input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #e8f0fe inset !important;
+  -webkit-text-fill-color: #0f172a !important;
+  caret-color: #0f172a !important;
 }
 
 .site-main-content .tfx-warranty .tfx-form select option {
-  background-color: #1a2330 !important;
-  color: #edf0f5 !important;
+  background-color: #e8f0fe !important;
+  color: #0f172a !important;
 }
 
 .site-main-content .complaint-page {
