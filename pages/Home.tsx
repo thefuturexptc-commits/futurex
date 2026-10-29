@@ -313,7 +313,7 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; desktopImage: string; mobileWide?: boolean; href: string; alt: string; width: number; height: number; backgroundColor?: string }> = [
+const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; desktopImage: string; desktopOnly?: boolean; href: string; alt: string; width: number; height: number; backgroundColor?: string }> = [
   {
     image: homeDiwaliSmartBandBanner,
     desktopImage: homeDesktopDiwaliBandStyleBanner,
@@ -326,7 +326,7 @@ const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; desktopImage: string;
   {
     image: homeDesktopDiwaliSmartBandBanner,
     desktopImage: homeDesktopDiwaliSmartBandBanner,
-    mobileWide: true,
+    desktopOnly: true,
     href: '/smart-bands',
     alt: 'FutureX smart bands with a Stay Active This Diwali message',
     width: 1920,
@@ -352,6 +352,15 @@ const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; desktopImage: string;
     backgroundColor: '#ead3ac',
   },
 ];
+
+const getNextHomeBannerIndex = (current: number, direction: -1 | 1): number => {
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  for (let offset = 1; offset <= HOME_WATER_RESISTANT_BANNERS.length; offset += 1) {
+    const candidate = (current + direction * offset + HOME_WATER_RESISTANT_BANNERS.length * 2) % HOME_WATER_RESISTANT_BANNERS.length;
+    if (!isMobile || !HOME_WATER_RESISTANT_BANNERS[candidate].desktopOnly) return candidate;
+  }
+  return current;
+};
 
 const HOME_COLLECTION_CARDS = [
   {
@@ -707,12 +716,23 @@ export const Home: React.FC = () => {
   const [isHomeBannerPaused, setIsHomeBannerPaused] = useState(false);
 
   useEffect(() => {
+    const ensureVisibleBanner = () => {
+      if (window.innerWidth < 768 && HOME_WATER_RESISTANT_BANNERS[homeWaterBannerIndex]?.desktopOnly) {
+        setHomeWaterBannerIndex((current) => getNextHomeBannerIndex(current, 1));
+      }
+    };
+    ensureVisibleBanner();
+    window.addEventListener('resize', ensureVisibleBanner);
+    return () => window.removeEventListener('resize', ensureVisibleBanner);
+  }, [homeWaterBannerIndex]);
+
+  useEffect(() => {
     if (isHomeBannerPaused || isBannerTouching || HOME_WATER_RESISTANT_BANNERS.length <= 1) return undefined;
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       return undefined;
     }
     const intervalId = window.setInterval(() => {
-      setHomeWaterBannerIndex((current) => (current + 1) % HOME_WATER_RESISTANT_BANNERS.length);
+      setHomeWaterBannerIndex((current) => getNextHomeBannerIndex(current, 1));
     }, 4500);
     return () => window.clearInterval(intervalId);
   }, [isHomeBannerPaused, isBannerTouching, homeWaterBannerIndex]);
@@ -1283,7 +1303,7 @@ export const Home: React.FC = () => {
         onBlur={() => setIsHomeBannerPaused(false)}
       >
         <div
-          className={`relative w-full min-w-0 overflow-hidden ${HOME_WATER_RESISTANT_BANNERS[homeWaterBannerIndex]?.mobileWide ? 'aspect-[21/9]' : 'aspect-[6/5]'} md:aspect-[21/9]`}
+          className="relative aspect-[6/5] w-full min-w-0 overflow-hidden md:aspect-[21/9]"
           style={{ touchAction: 'pan-y pinch-zoom' }}
           onTouchStart={(event) => {
             suppressBannerClick.current = false;
@@ -1313,7 +1333,7 @@ export const Home: React.FC = () => {
             if (Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
               suppressBannerClick.current = true;
               setHomeWaterBannerIndex((current) =>
-                (current + (dx < 0 ? 1 : -1) + HOME_WATER_RESISTANT_BANNERS.length) % HOME_WATER_RESISTANT_BANNERS.length
+                getNextHomeBannerIndex(current, dx < 0 ? 1 : -1)
               );
             }
           }}
@@ -1338,7 +1358,7 @@ export const Home: React.FC = () => {
               key={banner.alt}
               to={banner.href || '#'}
               style={{ backgroundColor: banner.backgroundColor }}
-              className={`absolute inset-0 overflow-hidden transition-opacity duration-[900ms] ease-out ${
+              className={`absolute inset-0 overflow-hidden transition-opacity duration-[900ms] ease-out ${banner.desktopOnly ? 'hidden md:block' : ''} ${
                 index === homeWaterBannerIndex ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'
               }`}
               aria-hidden={index !== homeWaterBannerIndex}
@@ -1371,7 +1391,7 @@ export const Home: React.FC = () => {
               type="button"
               onClick={() =>
                 setHomeWaterBannerIndex(
-                  (current) => (current - 1 + HOME_WATER_RESISTANT_BANNERS.length) % HOME_WATER_RESISTANT_BANNERS.length
+                  (current) => getNextHomeBannerIndex(current, -1)
                 )
               }
               aria-label="Previous banner"
@@ -1383,7 +1403,7 @@ export const Home: React.FC = () => {
             </button>
             <button
               type="button"
-              onClick={() => setHomeWaterBannerIndex((current) => (current + 1) % HOME_WATER_RESISTANT_BANNERS.length)}
+              onClick={() => setHomeWaterBannerIndex((current) => getNextHomeBannerIndex(current, 1))}
               aria-label="Next banner"
               className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition-all duration-200 hover:scale-110 hover:bg-white hover:shadow-[0_0_0_4px_rgba(14,165,233,0.25)] active:scale-95 sm:flex"
             >
@@ -1400,7 +1420,7 @@ export const Home: React.FC = () => {
                   onClick={() => setHomeWaterBannerIndex(index)}
                   aria-label={`Show banner ${index + 1} of ${HOME_WATER_RESISTANT_BANNERS.length}`}
                   aria-current={index === homeWaterBannerIndex}
-                  className={`relative h-1.5 overflow-hidden rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
+                  className={`${banner.desktopOnly ? 'hidden md:block' : ''} relative h-1.5 overflow-hidden rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
                     index === homeWaterBannerIndex ? 'w-8 bg-white/30' : 'w-1.5 bg-white/55 hover:bg-white/80'
                   }`}
                 >
