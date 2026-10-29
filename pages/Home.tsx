@@ -1,8 +1,6 @@
-import React, { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { Button } from '../components/ui/Button';
 import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
@@ -26,7 +24,6 @@ import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
 import { homepageFaqs } from '../services/seo';
 
-gsap.registerPlugin(ScrollTrigger);
 
 /**
  * Fades and lifts its children into view the first time they scroll into the
@@ -216,41 +213,52 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
     setReducedMotion(Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches));
   }, []);
 
-  useLayoutEffect(() => {
+  useEffect(() => {
     const wrapper = wrapperRef.current;
     const stage = stageRef.current;
     const panels = panelRefs.current.filter((panel): panel is HTMLElement => Boolean(panel));
     if (!wrapper || !stage || panels.length < 2 || reducedMotion) return undefined;
 
-    const ctx = gsap.context(() => {
-      gsap.set(panels[0], { opacity: 1, scale: 1 });
-      panels.slice(1).forEach((panel) => gsap.set(panel, { opacity: 0, scale: 1.08 }));
+    let cancelled = false;
+    let revertContext: (() => void) | null = null;
+    void Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(([gsapModule, triggerModule]) => {
+      if (cancelled) return;
+      const gsap = gsapModule.default;
+      gsap.registerPlugin(triggerModule.ScrollTrigger);
+      const ctx = gsap.context(() => {
+        gsap.set(panels[0], { opacity: 1, scale: 1 });
+        panels.slice(1).forEach((panel) => gsap.set(panel, { opacity: 0, scale: 1.08 }));
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: wrapper,
-          start: 'top top',
-          end: 'bottom bottom',
-          scrub: 0.6,
-          pin: stage,
-          anticipatePin: 1,
-          onUpdate: (self) => {
-            const raw = self.progress * (panels.length - 1);
-            const nearest = Math.min(panels.length - 1, Math.round(raw));
-            setActiveIndex((prev) => (prev === nearest ? prev : nearest));
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: wrapper,
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: 0.6,
+            pin: stage,
+            anticipatePin: 1,
+            onUpdate: (self) => {
+              const raw = self.progress * (panels.length - 1);
+              const nearest = Math.min(panels.length - 1, Math.round(raw));
+              setActiveIndex((prev) => (prev === nearest ? prev : nearest));
+            },
           },
-        },
-      });
+        });
 
-      panels.forEach((panel, index) => {
-        if (index === panels.length - 1) return;
-        const next = panels[index + 1];
-        tl.to(panel, { opacity: 0, scale: 0.94, ease: 'none' }, index)
-          .fromTo(next, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, ease: 'none' }, index);
-      });
-    }, wrapper);
+        panels.forEach((panel, index) => {
+          if (index === panels.length - 1) return;
+          const next = panels[index + 1];
+          tl.to(panel, { opacity: 0, scale: 0.94, ease: 'none' }, index)
+            .fromTo(next, { opacity: 0, scale: 1.08 }, { opacity: 1, scale: 1, ease: 'none' }, index);
+        });
+      }, wrapper);
+      revertContext = () => ctx.revert();
+    }).catch(() => undefined);
 
-    return () => ctx.revert();
+    return () => {
+      cancelled = true;
+      revertContext?.();
+    };
   }, [reducedMotion]);
 
   const slideCount = FEATURED_BANNER_SLIDES.length;
@@ -375,7 +383,6 @@ const ScrollLinkedBanners: React.FC = () => {
   const tabListRef = React.useRef<HTMLDivElement | null>(null);
   const tabRefs = React.useRef<Array<HTMLAnchorElement | null>>([]);
   const panelRefs = React.useRef<Array<HTMLElement | null>>([]);
-  const scrollTriggerRef = useRef<ScrollTrigger | null>(null);
 
   const updatePill = useCallback(() => {
     const list = tabListRef.current;
@@ -405,42 +412,56 @@ const ScrollLinkedBanners: React.FC = () => {
 
   // Give each product an equal scroll segment. React selects one opaque panel
   // so stopping midway through a scroll never leaves two artworks blended.
-  useLayoutEffect(() => {
+  useEffect(() => {
     // A pinned desktop scene creates a large pin-spacer on a short mobile
     // banner. Phones keep the category links and an unpinned banner.
     if (isMobileViewport) return;
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
-    const context = gsap.context(() => {
-      const panels = gsap.utils.toArray<HTMLElement>('.home-scroll-banner-panel');
-      if (!panels.length || !sectionRef.current || !sceneRef.current) return;
+    let cancelled = false;
+    let revertContext: (() => void) | null = null;
 
-      sceneRef.current.classList.add('home-scroll-banner-scene--scrolling');
-      sceneRef.current.style.setProperty('--banner-pan', '0%');
+    void Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(([gsapModule, triggerModule]) => {
+      if (cancelled) return;
+      const gsap = gsapModule.default;
+      const { ScrollTrigger } = triggerModule;
+      gsap.registerPlugin(ScrollTrigger);
 
-      scrollTriggerRef.current = ScrollTrigger.create({
-        trigger: sectionRef.current,
-        start: () => 'top top+=' + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tfx-sticky-header-height')) || 110),
-        end: () => `+=${Math.max(window.innerHeight * panels.length, 2000)}`,
-        pin: sceneRef.current,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
-        onUpdate: (trigger) => {
-          const nextIndex = Math.min(panels.length - 1, Math.floor(trigger.progress * panels.length));
-          const segmentProgress = trigger.progress * panels.length - nextIndex;
-          // Hold the top and bottom briefly; scroll through taller artwork in between.
-          const pan = Math.max(0, Math.min(1, (segmentProgress - 0.15) / 0.7));
-          sceneRef.current?.style.setProperty('--banner-pan', `${pan * 100}%`);
-          setActiveIndex((current) => current === nextIndex ? current : nextIndex);
-        },
-      });
-    }, sectionRef);
+      const context = gsap.context(() => {
+        const panels = gsap.utils.toArray<HTMLElement>('.home-scroll-banner-panel');
+        if (!panels.length || !sectionRef.current || !sceneRef.current) return;
+
+        sceneRef.current.classList.add('home-scroll-banner-scene--scrolling');
+        sceneRef.current.style.setProperty('--banner-pan', '0%');
+
+        ScrollTrigger.create({
+          trigger: sectionRef.current,
+          start: () => 'top top+=' + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tfx-sticky-header-height')) || 110),
+          end: () => `+=${Math.max(window.innerHeight * panels.length, 2000)}`,
+          pin: sceneRef.current,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+          onUpdate: (trigger) => {
+            const nextIndex = Math.min(panels.length - 1, Math.floor(trigger.progress * panels.length));
+            const segmentProgress = trigger.progress * panels.length - nextIndex;
+            // Hold the top and bottom briefly; scroll through taller artwork in between.
+            const pan = Math.max(0, Math.min(1, (segmentProgress - 0.15) / 0.7));
+            sceneRef.current?.style.setProperty('--banner-pan', `${pan * 100}%`);
+            setActiveIndex((current) => current === nextIndex ? current : nextIndex);
+          },
+        });
+      }, sectionRef);
+
+      revertContext = () => {
+        context.revert();
+        sceneRef.current?.classList.remove('home-scroll-banner-scene--scrolling');
+        sceneRef.current?.style.removeProperty('--banner-pan');
+      };
+    }).catch(() => undefined);
 
     return () => {
-      scrollTriggerRef.current = null;
-      context.revert();
-      sceneRef.current?.classList.remove('home-scroll-banner-scene--scrolling');
-      sceneRef.current?.style.removeProperty('--banner-pan');
+      cancelled = true;
+      revertContext?.();
     };
   }, [isMobileViewport, viewportVersion]);
 
@@ -790,7 +811,7 @@ export const Home: React.FC = () => {
             if (event.target === event.currentTarget) setShowSmartBandReel(false);
           }}
         >
-          <div className="relative w-full max-w-[440px] overflow-hidden rounded-2xl bg-black shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
+          <div className="relative flex w-fit max-w-[calc(100vw-1.5rem)] justify-center overflow-hidden rounded-2xl bg-transparent shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
             <button
               type="button"
               onClick={() => setShowSmartBandReel(false)}
@@ -799,26 +820,20 @@ export const Home: React.FC = () => {
             >
               ×
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/smart-bands')}
-              aria-label="Shop smart bands"
-              className="group relative block w-full cursor-pointer text-left"
+                        <iframe
+              className="block h-[88vh] max-h-[780px] w-auto max-w-[calc(100vw-1.5rem)] aspect-[9/16] bg-black"
+              src="https://www.youtube-nocookie.com/embed/WCaeLk22UwQ?autoplay=1&mute=0&loop=1&playlist=WCaeLk22UwQ&playsinline=1&controls=1&rel=0"
+              title="FutureX TFX Smart Band Silver video"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerPolicy="strict-origin-when-cross-origin"
+              allowFullScreen
+            />
+            <Link
+              to="/product/tfx-smart-band"
+              className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-5 pb-5 pt-12 text-center text-sm font-bold text-white transition hover:text-amber-200"
             >
-              <video
-                className="block max-h-[88vh] w-full object-contain"
-                src="/videos/smart-band-insta-reel.mp4"
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="metadata"
-                aria-hidden="true"
-              />
-              <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/35 to-transparent px-5 pb-5 pt-12 text-center text-sm font-bold text-white opacity-90 transition group-hover:opacity-100">
-                Tap to shop smart bands <span aria-hidden="true">→</span>
-              </span>
-            </button>
+              Tap to shop the TFX Smart Band <span aria-hidden="true">→</span>
+            </Link>
           </div>
         </div>,
         document.body
@@ -1529,7 +1544,7 @@ export const Home: React.FC = () => {
                             {topLeftTag.label}
                           </span>
                         )}
-                        <HomeCatalogProductImage product={product} loading={catalogPage === 1 && index < 4 ? 'eager' : 'lazy'} />
+                        <HomeCatalogProductImage product={product} loading="lazy" />
                       </div>
                       <div className="flex flex-1 flex-col px-2 pb-2 pt-4">
                         <Link to={catalogHref} className="line-clamp-2 min-h-12 text-base font-bold leading-6 text-slate-950 transition hover:text-[#1ca9a4]">
