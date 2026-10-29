@@ -276,6 +276,10 @@
       "destination": "/shop/index.html"
     },
     {
+      "source": "/register-warranty",
+      "destination": "/index.html"
+    },
+    {
       "source": "/admin",
       "destination": "/index.html"
     },

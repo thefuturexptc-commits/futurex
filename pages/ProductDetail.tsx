@@ -483,45 +483,25 @@ const TFX5_SMART_BAND_DESCRIPTION =
   'Train smarter and recover better with the FutureX AI Smart Band TFX5. This screenless fitness tracker follows your workouts, routes, sleep, recovery, and daily energy, then brings your information together in the TFX Vital App with simple AI guidance.';
 
 const TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML = `
-  <p><strong>Train smarter. Recover better.</strong> The FutureX AI Smart Band TFX5 is a screenless fitness tracker for people who want detailed tracking without screen distractions. It follows workouts, routes, sleep, recovery, and daily energy, then brings everything together in the TFX Vital App with simple AI guidance.</p>
-  <p>GPS tracking and 100 sports modes help it keep up with your run, ride, gym session, or weekend game. Between workouts, review heart rate, SpO2, HRV, stress, sleep, and metabolism trends in the app.</p>
-  <h3>GPS Tracking</h3>
-  <p>Track outdoor runs, walks, and rides with route, distance, and pace information in the app.</p>
-  <h3>100 Sports Modes</h3>
-  <p>Choose from running, walking, cycling, gym, yoga, badminton, cricket, and many more activities. Select the mode that matches your workout for relevant tracking.</p>
-  <h3>Complete Wellness Tracking</h3>
+  <p><strong>Everyday fitness, made easier to understand.</strong> The FutureX AI Smart Band V5 is a lightweight, screenless fitness tracker that brings supported activity, sleep, recovery, and wellness information together in the TFX Vital App.</p>
+  <h3>Fitness and Activity Tracking</h3>
   <ul>
-    <li><strong>Heart rate:</strong> Follow heart rate trends through the day.</li>
-    <li><strong>SpO2:</strong> Check blood oxygen readings.</li>
-    <li><strong>HRV and stress:</strong> Review how your body responds to daily activity.</li>
-    <li><strong>Sleep analysis:</strong> Explore sleep patterns and recovery.</li>
-    <li><strong>Metabolism insights:</strong> Review daily energy and calorie trends.</li>
-    <li><strong>Steps and calories:</strong> Track daily movement and energy.</li>
+    <li>Heart rate and blood oxygen (SpO₂)</li>
+    <li>Sleep, stress, mood, and recovery insights</li>
+    <li>Steps, calories, distance, and workout activity</li>
   </ul>
-  <h3>AI Insights in the TFX Vital App</h3>
-  <p>Sync your band with the TFX Vital App over Bluetooth to see your progress and access simple AI-powered guidance. The app also offers meal calorie estimates to help you keep track of what you eat.</p>
-  <h3>Screenless and Distraction-Free</h3>
-  <p>With no screen or notifications to pull your attention away, this slim, lightweight band tracks quietly at the gym, at work, or while you sleep.</p>
-  <h3>7–10 Day Battery</h3>
-  <p>Charge less and spend more time tracking. Battery life is approximately 7–10 days and varies with use and settings. A charging dock is included.</p>
-  <h3>IP68 Water and Dust Resistant</h3>
-  <p>Designed to handle sweat, workouts, rain, and splashes. It is not intended for swimming or diving. Keep it away from hot water, saunas, soap, and chemicals.</p>
-  <h3>Choose Your Style</h3>
-  <p>Choose Black (Metal), Silver (Metal), Pink (Rubber), Blue (Rubber), or White (Rubber). Select a product image below to open that color variant.</p>
-  <h3>How to Use</h3>
-  <ol>
-    <li>Fully charge the band before first use.</li>
-    <li>Download the TFX Vital App and turn on Bluetooth on your phone.</li>
-    <li>Pair the band with the app and allow requested permissions, including location access for GPS features.</li>
-    <li>Wear it snugly on your wrist, just above the wrist bone.</li>
-    <li>Select your sports mode in the app before starting a workout.</li>
-    <li>Open the app to review workout, sleep, stress, metabolism, and AI insights.</li>
-  </ol>
-  <h3>Warranty and Support</h3>
-  <p>Includes a 6-month limited warranty from the delivery date. For help, email <a href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a> or call <a href="tel:8530340676">8530340676</a>.</p>
-  <p>The band and TFX Vital App are intended for general fitness and wellness purposes. Measurements, AI guidance, nutrition information, and calorie estimates are informational only and are not intended for medical diagnosis or treatment. Features may vary based on recorded data, app version, device settings, syncing, and usage conditions.</p>
+  <h3>AI Guidance in the TFX Vital App</h3>
+  <p>The app can turn available profile details and synced activity into simple wellness summaries and general guidance for exercise, walking, recovery, sleep, and everyday fitness. Information that has not been recorded or synced may appear as unavailable.</p>
+  <h3>Metabolism and Nutrition</h3>
+  <p>Keep everyday nutrition information together in the app, including your calorie goal, calories consumed and burned, remaining calories, protein, fat, carbohydrates, and fiber.</p>
+  <h3>Meal Photo Estimates</h3>
+  <p>Capture or upload a meal photo to receive an estimated calorie value, then manage saved meals in the app. Estimates can vary with portion size, ingredients, preparation, and image quality.</p>
+  <h3>Designed for Everyday Wear</h3>
+  <p>The lightweight, screenless design helps reduce on-wrist distractions and supports comfortable wear during daily activities, workouts, and sleep. Supported women’s wellness features are also available in the app.</p>
+  <h3>Water Resistance and Battery</h3>
+  <p>IP68 water and dust resistance is designed for everyday use, workouts, sweat, and light rain. Battery life is approximately 7–10 days, depending on use, settings, and syncing. Recharge the band with the included charging dock.</p>
+  <p><strong>For general wellness only.</strong> Measurements, AI guidance, nutrition information, and calorie estimates are informational and are not intended for medical diagnosis or treatment. Features and displayed information may vary with recorded data, app version, device settings, syncing, and usage conditions.</p>
 `;
-
 const TFX_SMART_BAND_FEATURES = [
   'Heart rate tracking',
   'SpO2 readings',
@@ -2708,10 +2688,10 @@ export const ProductDetail: React.FC = () => {
       : monitoringProfile
         ? monitoringProfile.description
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`);
-  const productDescriptionHtml = product.description?.trim()
-    ? sanitizeProductDescriptionHtml(product.description)
-    : isTfxV5Band
-      ? sanitizeProductDescriptionHtml(TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
+  const productDescriptionHtml = isTfxV5Band
+    ? sanitizeProductDescriptionHtml(TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
+    : product.description?.trim()
+      ? sanitizeProductDescriptionHtml(product.description)
       : isPremiumSmartBand
         ? sanitizeProductDescriptionHtml(TFX_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
         : '';
