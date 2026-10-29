@@ -521,6 +521,15 @@ export const WarrantyRegistration: React.FC = () => {
           opacity: 1 !important;
         }
 
+        .tfx-warranty .tfx-form input:autofill,
+        .tfx-warranty .tfx-form input:-webkit-autofill,
+        .tfx-warranty .tfx-form input:-webkit-autofill:hover,
+        .tfx-warranty .tfx-form input:-webkit-autofill:focus {
+          -webkit-text-fill-color: #0f172a !important;
+          box-shadow: 0 0 0 1000px #e8f0fe inset !important;
+          caret-color: #0f172a !important;
+        }
+
         .tfx-form input:focus,
         .tfx-form select:focus {
           outline: none;
