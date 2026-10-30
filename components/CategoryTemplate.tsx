@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
 import { getProductFallbackImage } from '../utils/productImages';
+import './FanCatalogCards.css';
 
 interface Feature {
   title: string;
@@ -355,7 +356,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
           </div>
 
           {loading ? (
-            <div className={catalogGroups ? 'grid gap-8' : 'grid gap-5 sm:grid-cols-2 xl:grid-cols-3'}>
+            <div className={catalogGroups ? 'grid gap-8' : 'phone-product-grid grid gap-5 sm:grid-cols-2 xl:grid-cols-3'}>
               {(catalogGroups ? [1, 2] : [1, 2, 3]).map((item) => (
                 <div key={item} className={`rounded-[1.5rem] bg-white shadow-sm ${skeletonClassName} animate-pulse max-sm:h-[330px]`} />
               ))}
@@ -439,20 +440,20 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                   return (
                     <article
                       key={product.id}
-                      className={`group relative flex shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] ${
+                      className={`${isFanCatalog ? 'fan-catalog-card' : ''} group relative flex shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] ${
                         catalogGroups ? 'w-[min(82vw,300px)] min-w-0 sm:w-[300px]' : isFanCatalog
                           ? 'min-h-[470px] w-[min(90vw,390px)] min-[420px]:w-[360px] sm:min-h-[500px] sm:w-[390px] lg:w-[calc((100%_-_2.5rem)/3)]'
                           : 'min-h-[394px] w-[min(82vw,286px)] min-[420px]:w-[280px] sm:min-h-[420px] sm:w-[292px]'
                       }`}
                     >
                       {(promoBadgeLabel || product.isNewArrival || product.isFeatured) && (
-                        <div className={`absolute left-2.5 top-2.5 z-10 rounded-r-full px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white ${
+                        <div className={`catalog-card-badge absolute left-2.5 top-2.5 z-10 rounded-r-full px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white ${
                           promoBadgeLabel ? 'bg-[#df0b16] shadow-[0_8px_18px_rgba(223,11,22,0.18)]' : 'bg-[#86d8d2]'
                         }`}>
                           {promoBadgeLabel || (product.isNewArrival ? 'New Launch' : 'Featured')}
                         </div>
                       )}
-                      <Link to={`/product/${getProductSlug(product)}`} className={`flex items-center justify-center overflow-hidden rounded-md bg-white ${
+                      <Link to={`/product/${getProductSlug(product)}`} className={`catalog-card-media flex items-center justify-center overflow-hidden rounded-md bg-white ${
                         catalogGroups ? 'h-60 sm:h-64' : isFanCatalog ? 'h-80 sm:h-96' : 'h-60 sm:h-64'
                       }`}>
                         <img
@@ -471,9 +472,9 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                           }}
                         />
                       </Link>
-                      <div className="flex flex-1 flex-col px-1 pb-1 pt-3">
+                      <div className="catalog-card-body flex flex-1 flex-col px-1 pb-1 pt-3">
                         {previewImages.length > 0 && (
-                          <div className="mb-3 flex items-center gap-2">
+                          <div className="catalog-card-previews mb-3 flex items-center gap-2">
                             {previewImages.map((image, previewIndex) => (
                               <Link
                                 key={`${image}-${previewIndex}`}
@@ -500,15 +501,15 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                             )}
                           </div>
                         )}
-                        <Link to={`/product/${getProductSlug(product)}`} className="min-w-0">
+                        <Link to={`/product/${getProductSlug(product)}`} className="min-w-0" title={product.name}>
                           <h3 className="product-catalog-title truncate text-slate-950 transition hover:text-[#1ca9a4]">
-                            {product.name}
+                            {isFanCatalog ? product.name.split('|')[0].trim() : product.name}
                           </h3>
                         </Link>
-                        <p className="mt-2 truncate text-xs font-medium leading-5 text-slate-600">
+                        <p className="catalog-card-description mt-2 truncate text-xs font-medium leading-5 text-slate-600">
                           {getProductLine(product)}
                         </p>
-                        <div className="mt-2 flex flex-wrap items-end gap-2">
+                        <div className="catalog-card-pricing mt-2 flex flex-wrap items-end gap-2">
                           {mrp > offerPricing.unitOfferPrice && (
                             <span className="text-xs font-bold leading-none text-slate-400 line-through">
                               {formatInrAmount(mrp)}
@@ -519,11 +520,11 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
                           </span>
                         </div>
                         {savings > 0 && (
-                          <p className="mt-1 text-[11px] font-bold text-emerald-600">
+                          <p className="catalog-card-savings mt-1 text-[11px] font-bold text-emerald-600">
                             Save {formatInrAmount(savings)} ({savingsPercent}% off)
                           </p>
                         )}
-                        <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
+                        <div className="catalog-card-actions mt-auto grid grid-cols-2 gap-2 pt-3">
                           <button
                             type="button"
                             onClick={() => handleAddToCart(product)}
@@ -550,7 +551,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
               ))}
               </div>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="phone-product-grid grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
                 {filteredProducts.map((product) => (
                   <ProductCard key={product.id} product={product} compact imageAspectClassName={imageAspectClassName} />
                 ))}

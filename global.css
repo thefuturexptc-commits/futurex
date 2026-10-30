@@ -10686,3 +10686,9 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
   color: #0f172a !important;
 }
 
+/* Preserve emphasis on detailed product feature headings despite the legacy text reset. */
+.product-detail-page .product-information-card .product-feature-heading {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+

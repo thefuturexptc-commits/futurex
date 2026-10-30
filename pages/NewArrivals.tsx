@@ -168,7 +168,7 @@ export const NewArrivals: React.FC = () => {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+          <div className="phone-product-grid grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className="mx-auto w-full max-w-[260px]">
                 <div className="na-skeleton aspect-[4/3] w-full rounded-xl bg-white/5" />
@@ -178,7 +178,7 @@ export const NewArrivals: React.FC = () => {
             ))}
           </div>
         ) : newArrivals.length > 0 ? (
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
+          <div className="phone-product-grid grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4">
             {newArrivals.map((product, index) => (
               <div
                 key={product.id}

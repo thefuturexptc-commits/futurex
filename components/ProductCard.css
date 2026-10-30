@@ -1,0 +1,111 @@
+/* Phone layouts shared by the home catalog, shop, and collection grids. */
+.phone-product-grid > *,
+.product-card-dark,
+.home-catalog-card {
+  min-width: 0;
+}
+
+@media (max-width: 639px) {
+  .phone-product-grid.grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .product-card-dark .product-card-media {
+    min-height: 0;
+    flex-shrink: 0;
+  }
+
+  .product-card-dark .product-card-media > img {
+    position: absolute;
+    inset: 0;
+  }
+
+  .product-card-dark .product-card-previews {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .product-card-dark h3 {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    line-height: 1.4;
+  }
+
+  .product-card-actions.grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .product-card-actions > button {
+    min-width: 0;
+    min-height: 44px;
+    height: auto;
+    padding: 8px;
+    font-size: 12px;
+    line-height: 1.3;
+    white-space: normal;
+  }
+
+  .product-card-badges {
+    position: absolute;
+    inset: 6px 6px auto;
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    pointer-events: none;
+  }
+
+  .product-card-badges > div {
+    position: static;
+    max-width: 100%;
+    padding: 4px 6px;
+    font-size: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .home-catalog-card {
+    padding: 6px;
+    border-radius: 14px;
+  }
+
+  .home-catalog-card .home-catalog-media > a {
+    width: 100%;
+    aspect-ratio: 1;
+  }
+
+  .home-catalog-card .home-catalog-media img {
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .home-catalog-card .home-catalog-badge {
+    top: 6px;
+    left: 6px;
+    max-width: calc(100% - 12px);
+    padding: 4px 6px;
+    font-size: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .home-catalog-card .home-catalog-body {
+    padding: 10px 4px 4px;
+  }
+
+  .home-catalog-card .home-catalog-title {
+    font-size: 13px;
+    line-height: 20px;
+    min-height: 40px;
+    overflow-wrap: anywhere;
+  }
+
+  .home-catalog-card .home-catalog-price {
+    font-size: 17px;
+  }
+}
+
+@media (min-width: 360px) and (max-width: 639px) {
+  .phone-product-grid:not(.phone-product-grid--single) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

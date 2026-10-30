@@ -17,6 +17,8 @@ import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytic
 import { buildProductSeoRecord } from '../utils/productSeoData.js';
 import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification } from '../utils/productSchema.js';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
+import { TP09_PRO_DESCRIPTION, TP09_PRO_FEATURES, TP09_PRO_SPECS } from '../utils/tp09ProContent';
+import { getProductDetailContent } from '../utils/productDetailContent';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringWellness from '../assets/images/ring-wellness.webp';
 import ringDailySync from '../assets/images/ring-daily-sync.webp';
@@ -213,6 +215,7 @@ const normalizeRingCatalogColorKey = (color?: string): string => {
 };
 const getRingColorSizeCatalog = (productName?: string): Record<string, RingCatalogSizeOption[]> | null => {
   const text = String(productName || '').toLowerCase();
+  if (/\btouch\s+smart\s+ring\b|\br08\b/.test(text)) return RING_COLOR_SIZE_CATALOGS.nonDisplay;
   if (/\b(display|screen|oled)\b/.test(text)) return RING_COLOR_SIZE_CATALOGS.display;
   if (/\b(touch|non\s*-?\s*display)\b/.test(text)) return RING_COLOR_SIZE_CATALOGS.nonDisplay;
   if (/\b(metal|ring\s*pro|pro\s*smart\s*ring)\b/.test(text)) return RING_COLOR_SIZE_CATALOGS.metal;
@@ -609,6 +612,7 @@ const TFX_TOUCH_RING_FEATURES = [
 
 const TFX_DISPLAY_PRO_RING_SPECS: Record<string, string> = {
   Brand: 'The FutureX',
+  Material: 'Steel',
   'Product Highlights': 'OLED display, touch navigation, heart rate monitoring, blood oxygen SpO2 monitoring, sleep tracking, temperature monitoring, step counter, calories, Bluetooth BLE, IP68 waterproof design, and long battery life',
   'Suitable For': 'Daily wellness monitoring, fitness tracking, sleep monitoring, activity tracking, quick on-ring viewing, and everyday wearable technology',
   'Package Contents': 'Smart ring, magnetic charging cable, charging dock, and user manual',
@@ -629,6 +633,7 @@ const TFX_DISPLAY_PRO_RING_SPECS: Record<string, string> = {
 
 const TFX_RING_PRO_SPECS: Record<string, string> = {
   Brand: 'The FutureX',
+  Material: 'Premium Stainless Steel',
   'Product Highlights': '24/7 heart rate monitoring, blood oxygen SpO2, sleep tracking, body temperature, activity tracking, calories burned, step counter, Bluetooth BLE, IP68 water resistance, and rechargeable battery',
   'Suitable For': 'Active lifestyles, wellness monitoring, fitness enthusiasts, daily activity tracking, sleep tracking, and everyday smart ring use',
   'Package Contents': 'Smart ring, magnetic charging cable, charging dock, and user manual',
@@ -649,6 +654,7 @@ const TFX_RING_PRO_SPECS: Record<string, string> = {
 
 const TFX_TOUCH_RING_SPECS: Record<string, string> = {
   Brand: 'The FutureX',
+  Material: 'Stainless Steel',
   'Product Highlights': 'Heart rate, SpO2, sleep, steps, calories, sports modes, touch display, BLE 5.0, IP68 water resistance, and rechargeable battery',
   'Suitable For': 'Fitness tracking, daily activity monitoring, sleep analysis, wellness tracking, touch controls, and everyday wearable technology',
   'Box Specifications': 'Smart ring, magnetic charging cable, charging dock, user manual, Qring app support, iOS and Android compatibility, BLE 5.0 connectivity, touch display, IP68 water resistance, and rechargeable battery',
@@ -694,72 +700,9 @@ const FAN_PROFILES = {
     },
   },
   tp09Pro: {
-    description:
-      'The FutureX TP09 PLUS Bladeless Hot & Cool Tower Fan is designed to deliver powerful, year-round comfort with advanced technology, premium safety, and modern style. Equipped with a high-performance BLDC motor up to 14,000 RPM, 10-speed airflow control, and a PTC ceramic heating system, it provides fast cooling in summer and efficient heating during winter. The 180-degree wide-angle oscillation distributes air evenly across the room, ensuring every corner receives consistent airflow. Unlike a traditional fan with exposed blades that cut through the air, the TP09 PLUS draws air in through its bottom inlet. Its high-speed motor and turbocharging system then build strong kinetic energy to create a stable, powerful high-speed airflow. Its bladeless design offers a safer and more comfortable experience than conventional fans. With no exposed blades, it is an excellent choice for homes with children, pets, and elderly family members, while also making it easier to clean and maintain. The smooth, uninterrupted airflow reduces harsh air blasts, creating a more natural and pleasant cooling experience that is ideal for bedrooms, offices, nurseries, and living rooms. Designed for everyday convenience, the TP09 PLUS features remote control operation, a 9-hour timer, quiet low-noise performance, and adjustable temperature settings for personalized comfort. Its sleek, space-saving tower design complements modern interiors while delivering powerful airflow without occupying much floor space. Whether you are looking for safe cooling, energy-efficient heating, whisper-quiet operation, or premium airflow performance, the FutureX TP09 PLUS Bladeless Hot & Cool Tower Fan is the perfect all-season solution. For complete peace of mind, it is backed by a 1-Year Warranty on the Motor and Internal Components, ensuring dependable performance and long-lasting reliability.',
-    features: [
-      'Hot and cool dual function',
-      'Advanced bladeless technology',
-      'Powerful BLDC motor up to 14,000 RPM',
-      'PTC ceramic heating system',
-      '10 speed levels',
-      '180-degree auto oscillation',
-      '382 CFM high air delivery',
-      'Touch control panel and remote operation',
-      '9-hour timer',
-      'Quiet low-noise operation',
-      'Tip-over switch protection',
-      'Child and pet safe design',
-      'Energy-efficient performance',
-      'Durable ABS body',
-      'Modern space-saving premium tower design',
-      '1-year motor and internal components warranty',
-    ],
-    specs: {
-      'Product Highlights': 'Hot and cool dual function, advanced bladeless technology, powerful BLDC motor up to 14,000 RPM, PTC ceramic heating, 10 speed levels, 180-degree auto oscillation, 382 CFM high air delivery, remote control, touch control panel, 9-hour timer, quiet low-noise operation, tip-over switch, child and pet safe design, energy-efficient performance, and premium space-saving tower design',
-      'Key Features': 'PTC tube, PTC heating unit, PTC ceramic heater, strong high-speed airflow, lightweight body, 1-year motor and internal electrical components warranty, no exposed blades, ABS body, low power consumption, automatic timer, touch control panel, remote control, quiet operation, fast heating, 180-degree auto oscillation, 10 speed levels, BLDC motor, and smooth hot/cool airflow',
-      'Selected Features': 'High air delivery, BLDC motor with remote, BLDC motor, remote controlled, silent operation, LED indicators',
-      'Suitable For': 'Year-round temperature comfort, workspaces, living room, kitchen, bedroom, corporate offices, indoor use, office, and home',
-      'Items Included': 'Remote controller cell, remote, user manual, bladeless fan',
-      'Package Contents': 'TP09 PLUS tower fan, remote, remote controller cell, user manual',
-      'Model Number': 'TP09 PLUS',
-      'Model Name': 'TP-09PRO',
-      Color: 'White',
-      'Brand Color': 'White',
-      Type: 'Tower Fan',
-      'Number of Blades': '0',
-      'Number of Speed Settings': '10',
-      'Motor Speed': '14000 RPM',
-      'Power Consumption': '60 W',
-      'Power Requirement': 'AC 220-240 V, 50/60 Hz; power rating 35 W in cool mode and 1950 W in hot mode',
-      'Operational Current': '0.27 A',
-      'Other Power Features': 'Low-noise operation, high-speed airflow, stable performance on 220-240V AC supply, optimized power consumption, advanced PTC ceramic heating, and efficient BLDC motor',
-      Weight: '4 kg',
-      'Blade Sweep': '0 mm',
-      Remote: 'Yes',
-      'BEE Star Rating': 'NA',
-      'Motor Technology': 'BLDC',
-      Series: 'Basic',
-      'Installation Type': 'NA',
-      'Number of Shipping Packages': '1',
-      'Box Height': '75.5 cm',
-      'Box Width': '26.5 cm',
-      'Box Length': '24 cm',
-      'Pack of': '1',
-      Material: 'ABS Material',
-      'Body Material': 'Element for hot and cool model, internal components with BLDC motor and PTC ceramic heating, perforated ABS intake grille, reinforced ABS base housing, ABS air loop with premium matte finish, and high-quality ABS engineering plastic body',
-      'Blade Material': 'ABS air loop with a premium matte finish',
-      Motor: 'DC Brushless Motor',
-      Modes: 'Cool mode: 1-10 speeds',
-      Timer: '9 hours timer',
-      Oscillation: '180-degree auto oscillation',
-      Swing: '180-degree wide-angle air circulation',
-      'Tilting Angle': '0 degree',
-      Safety: 'Tip-over switch',
-      Airflow: '382 CFM airflow with soft natural wind, high-performance cooling, long air throw, and smooth airflow suitable for pregnant women, babies, elders, children, and pets',
-      'Design Type': 'Premium',
-      Finish: 'Elegant white premium matte finish',
-      'Search Keywords': 'The FutureX TP09 PLUS, TFXHot and CoolAir Pro, bladeless hot and cool fan, bladeless tower fan, hot and cool fan, PTC ceramic heating, BLDC motor fan, 14,000 RPM motor, 10 speed control, 180-degree auto oscillation, 9-hour timer, remote control fan, touch control panel, quiet operation, low-noise fan, child safe fan, pet safe fan, no exposed blades, easy to clean, home cooling solution, winter heater fan, bedroom fan, living room fan, office fan, premium tower fan, space-saving fan, modern bladeless fan, energy efficient fan, all-season comfort',
-    },
+    description: TP09_PRO_DESCRIPTION,
+    features: TP09_PRO_FEATURES,
+    specs: TP09_PRO_SPECS,
   },
   hotCool: {
     description:
@@ -1721,9 +1664,10 @@ export const ProductDetail: React.FC = () => {
     const isMonitoringProductForSpecs = /\b(monitor|watch|belt|spo2|ecg|blood\s*pressure|glucose|sleep\s*tracking|sleep\s*tracker)\b/.test(productText);
     const isV5BandProduct = isBandProduct && /\btfx\s*5\b|\btfx5\b|\bv5\b|\bai\s*v5\b/i.test(product?.name || '');
     const isRingProductForSpecs = /\bring\b/.test(productText);
-    const isDisplayRingForSpecs = isRingProductForSpecs && /\b(display|screen|touch\s*display)\b/.test(productText);
+    const isSuppliedTouchRing = getProductDetailContent(product)?.specs['Model Number'] === 'R08';
+    const isDisplayRingForSpecs = isRingProductForSpecs && !isSuppliedTouchRing && /\b(display|screen|touch\s*display)\b/.test(productText);
     const isRingProForSpecs = isRingProductForSpecs && /\bring\s*pro\b/.test(productText);
-    const isTouchRingForSpecs = isRingProductForSpecs && !isDisplayRingForSpecs && !isRingProForSpecs && /\b(touch|ip68)\b/.test(productText);
+    const isTouchRingForSpecs = isSuppliedTouchRing || (isRingProductForSpecs && !isDisplayRingForSpecs && !isRingProForSpecs && /\b(touch|ip68)\b/.test(productText));
     const bandSpecs = isV5BandProduct
       ? TFX5_SMART_BAND_SPECS
       : isBandProduct
@@ -1737,7 +1681,7 @@ export const ProductDetail: React.FC = () => {
           ? TFX_RING_PRO_SPECS
           : {};
     const fanSpecs = isFanProductForSpecs ? FAN_PROFILES[getFanProfileKey(product?.slug?.replace(/-/g, ' ') || product?.name)].specs : {};
-    const monitoringSpecs = isMonitoringProductForSpecs ? MONITORING_PROFILES[getMonitoringProfileKey(product?.name)].specs : {};
+    const monitoringSpecs = isMonitoringProductForSpecs && !isRingProductForSpecs ? MONITORING_PROFILES[getMonitoringProfileKey(product?.name)].specs : {};
     const warrantyFamily = isFanProductForSpecs
       ? 'fan'
       : isBandProduct
@@ -1753,6 +1697,8 @@ export const ProductDetail: React.FC = () => {
     // product.warranty, product.specs.Warranty, or any hardcoded per-product profile,
     // so a stray backend value or an old profile constant can never override it.
     const baseMergedSpecs: Record<string, string> = { ...bandSpecs, ...ringSpecs, ...fanSpecs, ...monitoringSpecs, ...(product?.specs || {}) };
+    const detailedProductContent = getProductDetailContent(product);
+    if (detailedProductContent) Object.assign(baseMergedSpecs, detailedProductContent.specs);
     const warrantySpecs = product ? getWarrantySpecEntries(warrantyFamily) : {};
     const mergedSpecs = { ...baseMergedSpecs, ...warrantySpecs };
     const hasModelSpec = Object.keys(mergedSpecs).some((key) => /model|sku|serial|code|item\s*no|product\s*id|pid/i.test(key));
@@ -2292,8 +2238,15 @@ export const ProductDetail: React.FC = () => {
     (isDisplayProProduct ? DISPLAY_PRO_YOUTUBE_URL : '');
   const productVideoIndex = displayedImages.length;
   const displayedMediaCount = displayedImages.length + (productVideoUrl ? 1 : 0);
-  const shortDescription = stripHtml(product.description);
-  const productSubtitle = stripHtml(product.seoDescription || product.shortDescription || '');
+  const detailedProductContent = getProductDetailContent(product);
+  const detailedProductSpecs: Record<string, string> = detailedProductContent?.specs || {};
+  const displayProductName = detailedProductSpecs['Model Number'] === 'TP-02 (3IN1)'
+    ? product.name.replace(/LED\s+Light\b/gi, 'LED Display')
+    : ['Q11', 'Q10'].includes(detailedProductSpecs['Model Number'])
+      ? product.name.replace(/wireless\s+charging/gi, 'Magnetic Charging')
+    : product.name;
+  const shortDescription = detailedProductContent?.description || stripHtml(product.description);
+  const productSubtitle = detailedProductContent ? detailedProductContent.description : stripHtml(product.seoDescription || product.shortDescription || '');
   const productFamilyText = `${normalizedCategory} ${product.name}`.toLowerCase();
   const productFamily = /\b(band|bracelet)\b/.test(productFamilyText)
     ? 'band'
@@ -2325,7 +2278,7 @@ export const ProductDetail: React.FC = () => {
     { key: 'description', label: isFanMarketplacePage ? 'Description' : 'Overview' },
     { key: 'features', label: 'Features' },
     { key: 'specs', label: 'Specs' },
-    { key: 'battery', label: 'Battery' },
+    ...(!detailedProductContent || productFamily === 'ring' ? [{ key: 'battery' as const, label: 'Battery' }] : []),
     { key: 'faq', label: 'FAQ' },
   ];
   const familyProfiles = {
@@ -2412,11 +2365,12 @@ export const ProductDetail: React.FC = () => {
   const storyImages = uniqueProductImages.length > 0
     ? Array.from({ length: 8 }, (_, index) => uniqueProductImages[index % uniqueProductImages.length])
     : familyProfile.images;
-  const isDisplayProduct = /\bdisplay\b/i.test(product.name);
+  const isDisplayProduct = detailedProductSpecs['Model Number'] === 'Q11' || (detailedProductSpecs['Model Number'] !== 'R08' && /\bdisplay\b/i.test(product.name));
   const isRingProProduct = productFamily === 'ring' && (
+    detailedProductSpecs['Model Number'] === 'Q10' ||
     product.slug === 'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' || /\bring\s*pro\b/i.test(product.name)
   );
-  const isTouchRingProduct = productFamily === 'ring' && !isDisplayProduct && !isRingProProduct && /\b(touch|ip68)\b/i.test(product.name);
+  const isTouchRingProduct = productFamily === 'ring' && (detailedProductSpecs['Model Number'] === 'R08' || (!isDisplayProduct && !isRingProProduct && /\b(touch|ip68)\b/i.test(product.name)));
   const showAllProductBannersOnMobile = isRingProProduct || (productFamily === 'ring' && isDisplayProduct);
   const fanProfile = productFamily === 'fan' ? FAN_PROFILES[getFanProfileKey(product.slug?.replace(/-/g, ' ') || product.name)] : null;
   const monitoringProfile = productFamily === 'monitoring' ? MONITORING_PROFILES[getMonitoringProfileKey(product.name)] : null;
@@ -2531,15 +2485,15 @@ export const ProductDetail: React.FC = () => {
       ['Sensors', product.specs?.Sensors || product.specs?.Hardware || 'Heart rate, SpO2, motion'],
     ],
     ring: [
-      ['Battery life', product.specs?.['Battery life'] || product.specs?.Battery || product.specs?.battery || '7 Days'],
-      ['Waterproof', product.specs?.Waterproof || product.specs?.WaterResistant || product.specs?.['Water Resistant'] || '5ATM'],
+      ['Battery life', detailedProductSpecs['Battery Life'] || product.specs?.['Battery life'] || product.specs?.Battery || product.specs?.battery || '7 Days'],
+      ['Water Resistance', detailedProductSpecs['Water Resistance'] || product.specs?.Waterproof || product.specs?.WaterResistant || product.specs?.['Water Resistant'] || '5ATM'],
       ['OTA Support', product.specs?.['OTA Support'] || product.specs?.OTA || 'Support OTA via BT'],
       ['Size', product.specs?.Size || product.specs?.Width || product.weight || 'Width 8.0mm, Thickness 2.2mm (Min)'],
       ['App Support', product.specs?.['App Support'] || product.specs?.Compatibility || 'Android 5.0 or above, iOS 10.0 or above'],
     ],
     fan: [
       ['Airflow', product.specs?.Airflow || product.specs?.Speed || 'Multi-speed airflow'],
-      ['Modes', product.specs?.Modes || product.specs?.Mode || 'Cool and warm'],
+      ['Modes', detailedProductSpecs['Operating Modes'] || detailedProductSpecs['Operating Function'] || product.specs?.Modes || product.specs?.Mode || 'Cool and warm'],
       ['Control', product.specs?.Control || product.specs?.Connectivity || 'Remote control'],
       ['Noise', product.specs?.Noise || 'Quiet operation'],
       ['Warranty', '1-year limited motor warranty'],
@@ -2583,7 +2537,7 @@ export const ProductDetail: React.FC = () => {
         ? TFX_TOUCH_RING_DESCRIPTION
         : TFX_RING_PRO_DESCRIPTION
     : '';
-  const featureList = product.features?.length
+  const featureList = detailedProductContent ? detailedProductContent.features : product.features?.length
     ? product.features.map(cleanFeatureText).filter(Boolean)
     : isTfxV5Band
       ? TFX5_BAND_FEATURES
@@ -2628,16 +2582,16 @@ export const ProductDetail: React.FC = () => {
   const availableRingSizeLabels = sortRingSizeLabels(
     uniqueCleanValues((product.variants || []).flatMap((variant) => (variant.sizes || []).map((sizeRow) => sizeRow.size)))
   );
-  const ringColorText = ringColorSizeCatalog
+  const ringColorText = detailedProductSpecs['Available Colours'] || (ringColorSizeCatalog
     ? Object.keys(ringColorSizeCatalog).map((color) => RING_CATALOG_COLOR_LABELS[color] || formatSpecLabel(color)).join(', ')
     : availableColorNames.length > 0
       ? availableColorNames.join(', ')
-      : 'Black, Silver, Rose Gold';
-  const ringSizeText = ringColorSizeCatalog
+      : 'Black, Silver, Rose Gold');
+  const ringSizeText = detailedProductSpecs['Available Ring Sizes'] || (ringColorSizeCatalog
     ? formatRingColorSizeCatalog(ringColorSizeCatalog)
     : availableRingSizeLabels.length > 0
       ? availableRingSizeLabels.join(', ')
-      : STANDARD_RING_SIZE_OPTIONS.join(', ');
+      : STANDARD_RING_SIZE_OPTIONS.join(', '));
   const styleSpecEntries: Array<[string, string]> = [
     ...(productFamily === 'ring' ? [['Shape', 'Round'] as [string, string]] : []),
     ['Style Name', 'Modern'],
@@ -2657,8 +2611,8 @@ export const ProductDetail: React.FC = () => {
   const productInformationSpecEntries = [
     ...styleSpecEntries.filter(([key]) => !existingSpecKeys.has(key.trim().toLowerCase())),
     ...specEntries,
-  ];
-  const shouldLimitSpecs = productFamily !== 'ring' && !showAllSpecs;
+  ].filter(([key]) => !detailedProductContent || (!WARRANTY_SPEC_LABELS.has(key) && key !== 'Warranty'));
+  const shouldLimitSpecs = !detailedProductContent && productFamily !== 'ring' && !showAllSpecs;
   const warrantySpecEntries = productInformationSpecEntries.filter(([key]) => WARRANTY_SPEC_LABELS.has(key));
   const regularSpecEntries = productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key));
   // Keep the warranty/contact details visible in the collapsed specification
@@ -2688,7 +2642,9 @@ export const ProductDetail: React.FC = () => {
       : monitoringProfile
         ? monitoringProfile.description
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`);
-  const productDescriptionHtml = isTfxV5Band
+  const productDescriptionHtml = detailedProductContent
+    ? sanitizeProductDescriptionHtml([detailedProductContent.html, detailedProductContent.careHtml].join('\n'))
+    : isTfxV5Band
     ? sanitizeProductDescriptionHtml(TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
     : product.description?.trim()
       ? sanitizeProductDescriptionHtml(product.description)
@@ -2907,7 +2863,7 @@ export const ProductDetail: React.FC = () => {
         ? premiumBandOverviewSections
       : productFamily === 'ring'
         ? isDisplayProduct
-          ? displayRingOverviewSections
+          ? displayRingOverviewSections.filter((section) => detailedProductSpecs['Model Number'] !== 'Q11' || section.image !== displayProWaterResistanceBanner)
           : isTouchRingProduct
             ? touchRingOverviewSections
           : isRingProProduct
@@ -2965,7 +2921,7 @@ export const ProductDetail: React.FC = () => {
     ],
   };
   const productFaqs = [
-    ...(familyProductFaqs[productFamily] || familyProductFaqs.wearable),
+    ...(detailedProductContent ? detailedProductContent.faqs : familyProductFaqs[productFamily] || familyProductFaqs.wearable),
     { q: 'What is the delivery timeline?', a: 'Orders are typically delivered within 3 to 7 business days.' },
     { q: 'Is there a return or refund policy?', a: 'TheFutureX follows a no-return, no-refund policy. If the product has a verified manufacturing defect at delivery, you can request an exchange within 7 days.' },
     { q: 'How do I claim warranty?', a: 'Register the product from the warranty registration page, then share feedback with your order ID, product name, issue description, and photo/video proof.' },
@@ -3145,16 +3101,28 @@ export const ProductDetail: React.FC = () => {
             {featureList.length > 0 && (
               <section>
                 <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Features</h3>
-                <div className="grid gap-2 sm:grid-cols-2">
+                {detailedProductContent ? (
+                  <ul className="list-disc space-y-3 pl-5 text-sm leading-7 text-slate-700 sm:text-base">
+                    {featureList.map((feature) => {
+                      const text = cleanFeatureText(feature);
+                      const separator = text.indexOf(':');
+                      return (
+                        <li key={feature} className="pl-1">
+                          {separator >= 0 ? <><strong className="product-feature-heading">{text.slice(0, separator)}:</strong> {text.slice(separator + 1).trim()}</> : text}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                ) : <div className="grid gap-2 sm:grid-cols-2">
                   {featureList.map((feature) => <p key={feature} className="rounded-lg bg-[#fbfaf7] px-3 py-2 text-xs leading-5 text-slate-700 sm:text-sm">{cleanFeatureText(feature)}</p>)}
-                </div>
+                </div>}
               </section>
             )}
           </div>
         )}
         {activeTfx5DescriptionTab === 'warranty' && (
           <div className="divide-y divide-slate-100">
-            {warrantySpecEntries.length > 0 ? warrantySpecEntries.map(([key, value]) => (
+            {detailedProductContent ? <div className="product-rich-description text-sm leading-7 text-slate-700 sm:text-base" dangerouslySetInnerHTML={{ __html: sanitizeProductDescriptionHtml(detailedProductContent.warrantyHtml) }} /> : warrantySpecEntries.length > 0 ? warrantySpecEntries.map(([key, value]) => (
               <div key={key} className="py-3 first:pt-0 last:pb-0 sm:py-4">
                 <h3 className="text-sm font-bold text-slate-900 sm:text-base">{formatSpecLabel(key)}</h3>
                 <p className="mt-1.5 whitespace-pre-line text-xs leading-6 text-slate-600 sm:text-sm sm:leading-7">{String(value ?? '')}</p>
@@ -3166,6 +3134,15 @@ export const ProductDetail: React.FC = () => {
     </div>
   );
   const arrangedProductInformation = isTfxV5Band ? tfx5ArrangedDescription : generalArrangedDescription;
+  const detailedProductFeatureHighlights = detailedProductContent ? (
+    <div className="mx-auto mt-5 grid max-w-6xl grid-cols-2 gap-2 sm:grid-cols-4">
+      {detailedProductContent.highlights.map((label) => (
+        <div key={label} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-semibold leading-5 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:text-sm">
+          {label}
+        </div>
+      ))}
+    </div>
+  ) : null;
 
   return (
     <div className="product-detail-page min-h-screen bg-white text-slate-950">
@@ -3342,7 +3319,7 @@ export const ProductDetail: React.FC = () => {
             <span>/</span>
             <Link to={'/shop/' + product.category?.toLowerCase()} className="capitalize hover:text-slate-950">{product.category}</Link>
             <span>/</span>
-            <span className="max-w-[260px] truncate text-slate-900">{product.name}</span>
+            <span className="max-w-[260px] truncate text-slate-900">{displayProductName}</span>
           </nav>
         </div>
       </section>
@@ -3493,7 +3470,7 @@ export const ProductDetail: React.FC = () => {
               </div>
             )}
             <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
-              {product.name}
+              {displayProductName}
             </h1>
             <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]">
               Overview
@@ -3861,7 +3838,7 @@ export const ProductDetail: React.FC = () => {
       )}
 
       <section className="product-scroll-section bg-white px-4 py-5 sm:hidden">
-        {activeDetailTab === 'description' && (
+        {activeDetailTab === 'description' && (detailedProductContent ? generalArrangedDescription : (
           <div className="space-y-4">
             <div className={isTfxV5Band ? '' : 'rounded border border-slate-200'}>
               {!isTfxV5Band && <p className="border-b border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-900">
@@ -3928,12 +3905,12 @@ export const ProductDetail: React.FC = () => {
               </div>
             )}
           </div>
-        )}
+        ))}
 
         {activeDetailTab === 'features' && (
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">Key Features</p>
-            {featureList.length > 0 && (
+            {detailedProductFeatureHighlights || (featureList.length > 0 && (
               <div className="mt-4 grid grid-cols-2 gap-2">
                 {featureList.slice(0, 10).map((feature) => (
                   <div key={feature} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
@@ -3941,8 +3918,8 @@ export const ProductDetail: React.FC = () => {
                   </div>
                 ))}
               </div>
-            )}
-            <div className="mt-6">{arrangedProductInformation}</div>
+            ))}
+            {!detailedProductContent && <div className="mt-6">{arrangedProductInformation}</div>}
           </div>
         )}
 
@@ -3978,7 +3955,7 @@ export const ProductDetail: React.FC = () => {
             ) : (
               <p className="mt-3 text-sm font-semibold text-slate-500">No specifications added.</p>
             )}
-            {productFamily !== 'ring' && productInformationSpecEntries.length > 12 && (
+            {!detailedProductContent && productFamily !== 'ring' && productInformationSpecEntries.length > 12 && (
               <button
                 type="button"
                 onClick={() => setShowAllSpecs((prev) => !prev)}
@@ -4036,7 +4013,7 @@ export const ProductDetail: React.FC = () => {
             </h2>
           </div>
 
-          {featureList.length > 0 && (
+          {detailedProductFeatureHighlights || (featureList.length > 0 && (
             <div className="mx-auto mt-5 grid max-w-4xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
               {featureList.slice(0, 8).map((feature) => (
                 <div key={feature} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:text-xs">
@@ -4044,7 +4021,7 @@ export const ProductDetail: React.FC = () => {
                 </div>
               ))}
             </div>
-          )}
+          ))}
         </div>
       </section>
 
@@ -4144,7 +4121,7 @@ export const ProductDetail: React.FC = () => {
           ) : (
             <p className="mt-4 text-slate-500">No specifications added.</p>
           )}
-          {productFamily !== 'ring' && productInformationSpecEntries.length > 12 && (
+          {!detailedProductContent && productFamily !== 'ring' && productInformationSpecEntries.length > 12 && (
             <button
               type="button"
               onClick={() => setShowAllSpecs((prev) => !prev)}

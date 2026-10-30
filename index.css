@@ -1,4 +1,5 @@
 @import './global.css';
+@import './components/ProductCard.css';
 .seo-noscript-main {
   max-width: 1180px;
   margin: 0 auto;

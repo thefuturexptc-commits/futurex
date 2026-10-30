@@ -1532,7 +1532,7 @@ export const Home: React.FC = () => {
             </div>
           ) : catalogProducts.length > 0 ? (
             <>
-            <div className={`mx-auto grid gap-5 ${paginatedCatalogProducts.length === 1 ? 'max-w-xl grid-cols-1' : 'max-w-7xl grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
+            <div className={`phone-product-grid mx-auto grid gap-5 ${paginatedCatalogProducts.length === 1 ? 'phone-product-grid--single max-w-xl grid-cols-1' : 'max-w-7xl grid-cols-1 sm:grid-cols-2 xl:grid-cols-3'}`}>
               {paginatedCatalogProducts.map((product, index) => {
                 const catalogHref = getHomeCatalogHref(product);
                 const salePrice = Number(product.salePrice || product.price || 0);
@@ -1567,22 +1567,22 @@ export const Home: React.FC = () => {
 
                 return (
                   <RevealOnScroll key={product.id} delayMs={(index % CATALOG_PAGE_SIZE) * 70} variant="up" className="h-full">
-                    <article className="group relative flex h-full flex-col overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.07)] transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_20px_44px_rgba(15,63,70,0.13)]">
-                      <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-white to-[#f1f5f7]">
+                    <article className="home-catalog-card group relative flex h-full flex-col overflow-hidden rounded-[1.4rem] border border-slate-200/80 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.07)] transition duration-300 hover:-translate-y-1 hover:border-slate-300 hover:shadow-[0_20px_44px_rgba(15,63,70,0.13)]">
+                      <div className="home-catalog-media relative overflow-hidden rounded-xl bg-gradient-to-br from-slate-50 via-white to-[#f1f5f7]">
                         {topLeftTag && (
-                          <span className={`absolute left-3 top-3 z-10 inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white ${topLeftTag.className}`}>
+                          <span className={`home-catalog-badge absolute left-3 top-3 z-10 inline-flex items-center rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.08em] text-white ${topLeftTag.className}`}>
                             {topLeftTag.label}
                           </span>
                         )}
                         <HomeCatalogProductImage product={product} loading="lazy" />
                       </div>
-                      <div className="flex flex-1 flex-col px-2 pb-2 pt-4">
-                        <Link to={catalogHref} className="line-clamp-2 min-h-12 text-base font-bold leading-6 text-slate-950 transition hover:text-[#1ca9a4]">
+                      <div className="home-catalog-body flex flex-1 flex-col px-2 pb-2 pt-4">
+                        <Link to={catalogHref} className="home-catalog-title line-clamp-2 min-h-12 text-base font-bold leading-6 text-slate-950 transition hover:text-[#1ca9a4]">
                           {product.name}
                         </Link>
                         <p className="mt-1.5 line-clamp-2 min-h-10 text-xs leading-5 text-slate-500">{detailLine}</p>
                         <div className="mt-3 flex flex-wrap items-center gap-2">
-                          <span className="text-xl font-black leading-none tracking-tight text-slate-950">{formatInrAmount(offerPricing.unitOfferPrice)}</span>
+                          <span className="home-catalog-price text-xl font-black leading-none tracking-tight text-slate-950">{formatInrAmount(offerPricing.unitOfferPrice)}</span>
                           {strikeThroughPrice > offerPricing.unitOfferPrice && (
                             <span className="text-sm font-semibold leading-none text-slate-400 line-through">{formatInrAmount(strikeThroughPrice)}</span>
                           )}
@@ -1603,7 +1603,7 @@ export const Home: React.FC = () => {
                             {featureStrip.label}
                           </p>
                         )}
-                        <div className="mt-auto grid grid-cols-2 gap-2 pt-4">
+                        <div className="product-card-actions mt-auto grid grid-cols-2 gap-2 pt-4">
                           <button type="button" onClick={() => handleHomeAddToCart(product)} className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-900 bg-white px-2 text-xs font-extrabold text-slate-900 transition hover:bg-slate-100 sm:text-sm">
                             Add to Cart
                           </button>
