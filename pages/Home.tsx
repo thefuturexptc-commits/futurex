@@ -168,6 +168,7 @@ const TrustMarquee: React.FC = () => {
 };
 
 const CATALOG_PAGE_SIZE = 4;
+const HOME_VIDEO_ID = '36BQ2gCuiiE';
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 const FEATURED_FAN_PRODUCT_PATH = '/product/tfx-advance';
@@ -831,15 +832,15 @@ export const Home: React.FC = () => {
     <div className="smart-bands-page relative min-h-screen overflow-x-hidden bg-white text-slate-950">
       {showSmartBandReel && createPortal(
         <div
-          className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
+          className="fixed inset-0 z-[120] flex items-start justify-center overflow-y-auto bg-slate-950/85 p-3 backdrop-blur-sm sm:p-6"
           role="dialog"
           aria-modal="true"
-          aria-label="FutureX Smart Band video"
+          aria-label="TheFutureX smart band pairing guide"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setShowSmartBandReel(false);
           }}
         >
-          <div className="relative flex w-fit max-w-[calc(100vw-1.5rem)] justify-center overflow-hidden rounded-2xl bg-transparent shadow-[0_24px_90px_rgba(0,0,0,0.55)]">
+          <div className="relative my-auto flex max-w-[calc(100vw-1.5rem)] shrink-0 flex-col overflow-hidden rounded-2xl bg-black shadow-[0_24px_90px_rgba(0,0,0,0.55)]" style={{ width: 'min(calc(100vw - 1.5rem), max(200px, calc((100svh - 8rem) * 9 / 16)), 438px)' }}>
             <button
               type="button"
               onClick={() => setShowSmartBandReel(false)}
@@ -848,20 +849,26 @@ export const Home: React.FC = () => {
             >
               ×
             </button>
-                        <iframe
-              className="block h-[88vh] max-h-[780px] w-auto max-w-[calc(100vw-1.5rem)] aspect-[9/16] bg-black"
-              src="https://www.youtube-nocookie.com/embed/WCaeLk22UwQ?autoplay=1&mute=0&loop=1&playlist=WCaeLk22UwQ&playsinline=1&controls=1&rel=0"
-              title="FutureX TFX Smart Band Silver video"
+            <iframe
+              className="block aspect-[9/16] w-full border-0 bg-black"
+              src={`https://www.youtube-nocookie.com/embed/${HOME_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${HOME_VIDEO_ID}&playsinline=1&controls=1&rel=0`}
+              title="TheFutureX Smart Band: Bluetooth pairing guide"
+              loading="eager"
+              width={438}
+              height={778}
+              style={{ height: 'auto', aspectRatio: '9 / 16' }}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
-            <Link
-              to="/product/tfx-smart-band"
-              className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/85 via-black/45 to-transparent px-5 pb-5 pt-12 text-center text-sm font-bold text-white transition hover:text-amber-200"
-            >
-              Tap to shop the TFX Smart Band <span aria-hidden="true">→</span>
-            </Link>
+            <div className="flex flex-col bg-slate-950 px-4 py-2 text-center text-white">
+              <Link to="/product/tfx-smart-band" className="flex min-h-11 items-center justify-center text-sm font-bold text-white transition hover:text-amber-200">
+                Shop the TFX Smart Band <span className="ml-1" aria-hidden="true">→</span>
+              </Link>
+              <a href={`https://www.youtube.com/shorts/${HOME_VIDEO_ID}`} target="_blank" rel="noopener noreferrer" className="flex min-h-9 items-center justify-center text-xs text-white/80 underline underline-offset-4 hover:text-white">
+                Watch on YouTube
+              </a>
+            </div>
           </div>
         </div>,
         document.body
