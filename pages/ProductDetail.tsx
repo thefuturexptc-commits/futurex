@@ -3525,9 +3525,6 @@ export const ProductDetail: React.FC = () => {
                       <span className="line-through">{formatInrAmount(mrp)}</span>
                     </span>
                     )}
-                    {couponRate > 0 && salePrice > displayedPrice && (
-                      <span className="text-sm font-medium text-slate-400 line-through">{formatInrAmount(salePrice)}</span>
-                    )}
                   </div>
                   {displayedSavings > 0 && (
                     <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">

@@ -6,6 +6,7 @@ import { isSameCollection } from '../utils/productCollections';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
+import { getCatalogOffer } from '../utils/catalogPricing.js';
 import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 import bandCutout from '../assets/images/band-hero-cutout.webp';
 import bandHeroLifestyle from '../assets/images/band-men-women-lifestyle.webp';
@@ -268,9 +269,10 @@ export const SmartBands: React.FC = () => {
               )}
               <div ref={catalogScrollerRef} className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {catalogProducts.map((product, index) => {
-                const salePrice = Number(product.salePrice || product.price || 0);
-                const mrp = salePrice > 0 ? salePrice + 2000 : 0;
+                const mrp = getCatalogOffer(product).regularPrice;
                 const offerPricing = getAutomaticOfferItemPricing(product);
+                const savings = Math.max(0, mrp - offerPricing.unitOfferPrice);
+                const savingsPercent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
                 const detailLine = getCatalogBullets(product).slice(0, 2).join(' | ');
                 const showMegaPriceDrop = isMegaPriceDropBand(product);
                 const allPreviewImages = getProductPreviewImages(product);
@@ -332,23 +334,18 @@ export const SmartBands: React.FC = () => {
                       </Link>
                       <p className="mt-2 truncate text-xs font-medium leading-5 text-slate-600">{detailLine}</p>
                       <div className="mt-2 flex flex-wrap items-end gap-2">
-                        {offerPricing.rate <= 0 && mrp > salePrice && (
+                        {mrp > offerPricing.unitOfferPrice && (
                           <span className="text-xs font-bold leading-none text-slate-400 line-through">
                             {formatInrAmount(mrp)}
-                          </span>
-                        )}
-                        {offerPricing.rate > 0 && (
-                          <span className="text-xs font-bold leading-none text-slate-400 line-through">
-                            {formatInrAmount(salePrice)}
                           </span>
                         )}
                         <span className={`text-base font-black leading-none ${offerPricing.rate > 0 ? 'text-emerald-600' : 'text-slate-950'}`}>
                           {formatInrAmount(offerPricing.unitOfferPrice)}
                         </span>
                       </div>
-                      {offerPricing.rate > 0 && (
+                      {savings > 0 && (
                         <p className="mt-1 text-[11px] font-bold text-emerald-600">
-                          Save {formatInrAmount(offerPricing.unitDiscount)} ({offerPricing.rateLabel} off)
+                          Save {formatInrAmount(savings)} ({savingsPercent}% off)
                         </p>
                       )}
                       <div className="mt-auto grid grid-cols-2 gap-2 pt-3">
