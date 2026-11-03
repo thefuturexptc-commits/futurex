@@ -1,4 +1,5 @@
 import { formatInrAmount } from '../utils/coupons';
+import { getCatalogMrp } from '../utils/catalogPricing.js';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
@@ -502,7 +503,7 @@ export const SupportAssistant: React.FC = () => {
     const specsSummary = topSpecs.map(([k, v]) => `${k}: ${v}`).join(' | ');
     const featureSummary = topFeatures.join(' | ');
 
-    if (intent.price) chunks.push(`Price: ${formatCurrency(product.salePrice || product.price)}${product.mrp ? ` (MRP ${formatCurrency(product.mrp)})` : ''}`);
+    if (intent.price) chunks.push(`Price: ${formatCurrency(product.salePrice || product.price)}${getCatalogMrp(product) ? ` (MRP ${formatCurrency(getCatalogMrp(product))})` : ''}`);
     if (intent.stock) chunks.push(`Stock: ${available > 0 ? `${available} available` : 'Out of stock'}`);
     if (intent.rating) chunks.push(`Rating: ${Number(product.rating || 0).toFixed(1)} from ${Number(product.reviewCount || 0)} reviews`);
     if (intent.warranty) chunks.push(`Warranty: ${formatWarranty(product.warranty)}`);

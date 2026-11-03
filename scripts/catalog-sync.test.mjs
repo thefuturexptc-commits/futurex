@@ -5,6 +5,8 @@ import { buildProductSeoRecord, mergeProductSeoRecords } from '../utils/productS
 import { getAutomaticOfferItemPricing } from '../utils/catalogPricing.js';
 import { renderProductPage } from '../api/product-page.js';
 import { mergeProductReviews } from '../utils/productSchema.js';
+import { buildProductInput } from '../services/merchant-api/merchantService.js';
+import { getCatalogMrp } from '../utils/catalogPricing.js';
 
 const product = {
   id: 'p_1772274359863', slug: 'tfx-pureair-3-in-1',
@@ -24,11 +26,11 @@ test('feed and page preserve saved title, content, offer price and availability'
   assert.match(item, /My updated description/);
   assert.match(item, /My added feature/);
   assert.match(item, /Material: ABS/);
-  assert.match(item, /<g:price>13500.00 INR/);
+  assert.match(item, /<g:price>19000.00 INR/);
   assert.match(item, /<g:availability>out_of_stock/);
   assert.equal(seo.availability, 'https://schema.org/OutOfStock');
   assert.match(item, /additional_image_link/);
-  assert.doesNotMatch(item, /g:sale_price/);
+  assert.match(item, /<g:sale_price>13500.00 INR/);
 });
 
 test('reserved variant inventory and manual unavailability agree across outputs', () => {
@@ -44,7 +46,7 @@ test('new products appear in both feeds; removed products do not return as fallb
   const xml = await generateMerchantFeedXML([added]);
   const csv = await generateMerchantFeedCSV([added]);
   assert.match(xml, /<g:id>new-product/);
-  assert.match(csv, /"new-product","The FutureX New product"/);
+  assert.match(csv, /"new-product","","The FutureX New product"/);
   assert.doesNotMatch(xml, /p-1772274359863/);
   assert.equal(mergeProductSeoRecords([added]).length, 1);
 });
@@ -62,7 +64,7 @@ test('every Merchant title uses the The FutureX brand prefix once', async () => 
 test('standard wearable discounts use the checkout calculation', () => {
   const ring = { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000 };
   assert.equal(buildProductSeoRecord(ring).price, 3800);
-  assert.match(buildProductItem(ring), /<g:price>4000.00 INR/);
+  assert.match(buildProductItem(ring), /<g:price>6000.00 INR/);
   assert.match(buildProductItem(ring), /<g:sale_price>3800.00 INR/);
 });
 
@@ -100,7 +102,7 @@ test('sale price, title and real reviews are visible and agree with structured d
   const ring = { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000, reviews };
   const html = renderProductPage('<head></head><div id="root"></div>', ring);
   assert.match(html, /<h1>My saved title &amp; model<\/h1>/);
-  assert.match(html, /<del>INR 4000.00<\/del>/);
+  assert.match(html, /<del>INR 6000.00<\/del>/);
   assert.match(html, /Sale price: INR 3800.00/);
   assert.match(html, /Works well\./);
   assert.match(html, /Free delivery/);
@@ -109,8 +111,48 @@ test('sale price, title and real reviews are visible and agree with structured d
   assert.equal(schema.aggregateRating.reviewCount, 1);
   assert.equal(schema.aggregateRating.ratingValue, 5);
   assert.equal(schema.offers.price, 3800);
-  assert.equal(schema.offers.priceSpecification.price, 4000);
+  assert.equal(schema.offers.priceSpecification.price, 6000);
   const csv = await generateMerchantFeedCSV([ring]);
   assert.match(csv, /price,sale_price/);
-  assert.match(csv, /"4000.00 INR","3800.00 INR"/);
+  assert.match(csv, /"6000.00 INR","3800.00 INR"/);
+});
+
+test('increased MRPs and unchanged sale prices agree in feeds, API and landing pages', async () => {
+  const products = [
+    { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000, mrp: 6000 },
+    { ...product, slug: 'tfx5-ai-smart-band', name: 'TFX5 AI Smart Band', category: 'Smart Bands', price: 9999 },
+    product,
+    { ...product, slug: 'premium-fan', category: 'Smart Fans', price: 16000, mrp: 18000 },
+  ];
+  for (const value of products) {
+    const mrp = getCatalogMrp(value);
+    const salePrice = getAutomaticOfferItemPricing(value).unitOfferPrice;
+    const xml = buildProductItem(value);
+    const csv = await generateMerchantFeedCSV([value]);
+    const input = buildProductInput(value);
+    assert.match(xml, new RegExp(`<g:price>${mrp.toFixed(2)} INR`));
+    assert.match(xml, new RegExp(`<g:sale_price>${salePrice.toFixed(2)} INR`));
+    assert.ok(csv.includes(`"${mrp.toFixed(2)} INR","${salePrice.toFixed(2)} INR"`));
+    assert.equal(Number(input.productAttributes.price.amountMicros), mrp * 1e6);
+    assert.equal(Number(input.productAttributes.salePrice.amountMicros), salePrice * 1e6);
+    const html = renderProductPage('<head></head><div id="root"></div>', value);
+    assert.ok(html.includes(`<del>INR ${mrp.toFixed(2)}</del>`));
+    assert.ok(html.includes(`Sale price: INR ${salePrice.toFixed(2)}`));
+  }
+});
+
+test('color variant feeds include sale prices alongside the increased MRP', async () => {
+  const ring = {
+    ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000, mrp: 6000,
+    colors: [{ name: 'Black', stock: 4, images: ['/images/ring-black.jpg'] }],
+  };
+  const xml = buildProductItem(ring);
+  const csv = await generateMerchantFeedCSV([ring]);
+  assert.match(xml, /<g:color>Black/);
+  assert.match(xml, /<g:price>8000.00 INR/);
+  assert.match(xml, /<g:sale_price>3800.00 INR/);
+  assert.ok(csv.includes('"8000.00 INR","3800.00 INR"'));
+  const input = buildProductInput(ring, { name: 'Black', slug: 'black', stock: 4, images: ['/images/ring-black.jpg'] });
+  assert.equal(Number(input.productAttributes.price.amountMicros), 8000e6);
+  assert.equal(Number(input.productAttributes.salePrice.amountMicros), 3800e6);
 });

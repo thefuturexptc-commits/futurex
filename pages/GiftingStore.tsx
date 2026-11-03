@@ -5,7 +5,7 @@ import giftingCollectionBanner from '../assets/images/tfx-v5-gifting-collection-
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
 import { getProductSlug, getProducts } from '../services/backend';
 import type { Product } from '../types';
-import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
+import { getCatalogMrp, isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 
 type GiftMode = 'her' | 'him' | 'pairs' | 'solo';
 type PairGroupKey = 'jcv5-band' | 'display-ring' | 'normal-ring' | 'normal-band';
@@ -182,10 +182,7 @@ const getPairSecondImage = (product: Product, preferredTerms: string[] = []) => 
 };
 
 const getPrice = (product: Product) => Number(product.salePrice || product.price || 0);
-const getMrp = (product: Product) => {
-  const price = getPrice(product);
-  return price > 0 ? price + 2000 : 0;
-};
+const getMrp = (product: Product) => getCatalogMrp(product);
 
 const formatPrice = formatInrAmount;
 const sideColorText = (side: GiftPairSide) => `${side.colorName || ''} ${side.imageTerms.join(' ')}`.toLowerCase();

@@ -76,14 +76,22 @@ export const getAutomaticOfferItemPricing = (item) => {
     };
 };
 
-// Use the saved selling price before discounts, never an invented comparison price.
+// Apply the catalog MRP increase once, without changing the selling price.
+export const getCatalogMrp = (product) => {
+    const unitPrice = getOfferBaseUnitPrice(product);
+    const baseMrp = isTfxV5Band(product)
+        ? TFX5_AI_BAND_MRP
+        : isPureAirThreeInOne(product)
+            ? PUREAIR_3_IN_1_MRP
+            : Math.max(Number(product.mrp || 0), Number(product.price || 0), unitPrice);
+    if (baseMrp <= 0) return 0;
+    const increase = unitPrice < 5000 ? 2000 : unitPrice < 10000 ? 3000 : unitPrice < 15000 ? 4000 : 5000;
+    return baseMrp + increase;
+};
+
 export const getCatalogOffer = (product) => {
     const pricing = getAutomaticOfferItemPricing(product);
     const currentPrice = pricing.unitOfferPrice;
-    // Keep the TFX5's displayed regular and selling prices aligned with the
-    // storefront offer and Merchant Center sale_price attributes.
-    if (isTfxV5Band(product))
-        return { currentPrice, regularPrice: TFX5_AI_BAND_MRP, onSale: true };
-    const regularPrice = Math.max(Number(product.mrp || 0), Number(product.price || 0), pricing.unitPrice);
+    const regularPrice = getCatalogMrp(product);
     return { currentPrice, regularPrice, onSale: currentPrice > 0 && regularPrice > currentPrice };
 };

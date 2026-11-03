@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { addOfferLead, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
-import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
+import { getCatalogMrp, isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 import { getProductFallbackImage } from '../utils/productImages';
 import homeCollectionBandImage from '../assets/images/home-collection-bands-banner.webp';
 import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
@@ -1543,9 +1543,7 @@ export const Home: React.FC = () => {
               {paginatedCatalogProducts.map((product, index) => {
                 const catalogHref = getHomeCatalogHref(product);
                 const salePrice = Number(product.salePrice || product.price || 0);
-                const mrp = getProductSlug(product) === 'tfx-pureair-3-in-1'
-                  ? Number(product.mrp)
-                  : salePrice > 0 ? salePrice + 2000 : 0;
+                const mrp = getCatalogMrp(product);
                 const offerPricing = getAutomaticOfferItemPricing(product);
                 const detailLine = getCatalogBullets(product).slice(0, 2).join(' | ');
                 const showMegaPriceDrop = isMegaPriceDropBand(product);
@@ -1553,7 +1551,7 @@ export const Home: React.FC = () => {
                 const extraSwatchCount = Math.max(0, (product.colors?.length || 0) - swatches.length);
                 const featureStrip = getFeatureStrip(product);
                 const hasDiscount = offerPricing.rate > 0 || mrp > salePrice;
-                const strikeThroughPrice = offerPricing.rate > 0 ? salePrice : mrp;
+                const strikeThroughPrice = mrp;
                 const discountLabel =
                   offerPricing.rate > 0
                     ? offerPricing.rateLabel

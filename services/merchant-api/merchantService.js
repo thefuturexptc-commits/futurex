@@ -51,13 +51,15 @@ const merchantApiScope = 'https://www.googleapis.com/auth/content';
 const impersonationSourceScope = 'https://www.googleapis.com/auth/cloud-platform';
 const impersonatedServiceAccount = String(process.env.GOOGLE_IMPERSONATE_SERVICE_ACCOUNT || '').trim();
 
-const auth = new google.auth.GoogleAuth({
-  ...getAuthConfig(),
-  scopes: [impersonatedServiceAccount ? impersonationSourceScope : merchantApiScope],
-});
+let auth;
 
 let impersonatedAuthClient;
 const getAuthClient = async () => {
+  // Credentials are needed for submission, not for building or validating payloads.
+  auth ||= new google.auth.GoogleAuth({
+    ...getAuthConfig(),
+    scopes: [impersonatedServiceAccount ? impersonationSourceScope : merchantApiScope],
+  });
   if (!impersonatedServiceAccount) return auth.getClient();
   if (!impersonatedAuthClient) {
     const sourceClient = await auth.getClient();
@@ -252,7 +254,7 @@ const getColorVariants = (product) => {
   });
 };
 
-const buildProductInput = (product, variant = null) => {
+export const buildProductInput = (product, variant = null) => {
   if (!isCatalogProductPublished(product)) throw new Error('This product is excluded from the published catalog.');
   if (!product?.id) throw new Error('Product id is required for Merchant sync.');
   const variantImages = variant?.images || [];
