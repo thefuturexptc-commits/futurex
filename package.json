@@ -8,6 +8,8 @@
   },
   "scripts": {
     "dev": "vite",
+    "predev": "node scripts/optimize-home-images.mjs",
+    "prebuild": "node scripts/optimize-home-images.mjs",
     "typecheck": "tsc --noEmit",
     "build": "vite build",
     "postbuild": "node scripts/copy-spa-routes.mjs",
@@ -34,8 +36,11 @@
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "autoprefixer": "^10.6.2",
+    "postcss": "^8.5.32",
     "sharp": "^0.35.5",
     "sitemap": "^9.0.1",
+    "tailwindcss": "^3.4.19",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

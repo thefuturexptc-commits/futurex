@@ -565,7 +565,7 @@ const TFX_DISPLAY_PRO_RING_DESCRIPTION =
  'The FutureX Display Pro Smart Ring combines wearable technology with a compact ring design, offering convenient access to essential and activity information directly from the ring. Featuring an integrated display, this smart ring allows users to view selected data while maintaining a lightweight and comfortable form factor suitable for everyday wear. Designed for fitness tracking, activity monitoring and wellness insights, the FutureX Display Pro Smart Ring helps users stay connected to their daily metrics throughout work, exercise, travel and daily activities.';
 
 const TFX_RING_PRO_DESCRIPTION =
- 'The FutureX Ring Pro Smart Ring with App Control is designed for users who want a compact wearable for daily fitness, sleep, and wellness tracking. With companion app connectivity, the ring helps users review activity, heart rate trends, sleep patterns, and everyday progress from a lightweight stainless steel form factor. Its comfortable design supports day and night wear, making it practical for workouts, routines, travel, and connected daily use.';
+ 'The FutureX Smart Ring with App Control is designed for users who want a compact wearable for daily fitness, sleep, and wellness tracking. With companion app connectivity, the ring helps users review activity, heart rate trends, sleep patterns, and everyday progress from a lightweight stainless steel form factor. Its comfortable design supports day and night wear, making it practical for workouts, routines, travel, and connected daily use.';
 
 const TFX_TOUCH_RING_DESCRIPTION =
  'The FutureX Touch Smart Ring combines a sleek wearable design with fitness tracking functionality. Designed for users who prefer a discreet alternative to traditional smartwatches, this smart ring helps monitor daily activities, wellness metrics and fitness progress while maintaining a lightweight and comfortable profile. Its compact design makes it suitable for continuous wear throughout the day, supporting users in tracking movement, sleep and wellness trends through connected mobile app integration.';
@@ -2653,7 +2653,7 @@ export const ProductDetail: React.FC = () => {
         : '';
   const ringOverviewSections = [
     {
-      title: 'The FutureX TFX Ring Pro',
+      title: 'The FutureX TFX Smart Ring',
       copy:
         TFX_RING_PRO_DESCRIPTION,
       image: ringProCharging,
@@ -2679,7 +2679,7 @@ export const ProductDetail: React.FC = () => {
   ];
   const ringProBannerSections = [
     {
-      title: 'TFX Ring Pro multiple sports tracking and real-time activity recording',
+      title: 'TFX Smart Ring multiple sports tracking and real-time activity recording',
       copy: '',
       image: ringProSportsBanner,
       imageWidth: 3334,
@@ -2687,7 +2687,7 @@ export const ProductDetail: React.FC = () => {
       cleanBanner: true,
     },
     {
-      title: 'TFX Ring Pro lovers rings in gold and silver',
+      title: 'TFX Smart Ring lovers rings in gold and silver',
       copy: '',
       image: ringProLoversBanner,
       imageWidth: 3334,
@@ -2695,7 +2695,7 @@ export const ProductDetail: React.FC = () => {
       cleanBanner: true,
     },
     {
-      title: 'TFX Ring Pro premium design, ring size chart and how to measure your ring size',
+      title: 'TFX Smart Ring premium design, ring size chart and how to measure your ring size',
       copy: '',
       image: ringProSizeGuideBanner,
       imageWidth: 4267,
@@ -2703,7 +2703,7 @@ export const ProductDetail: React.FC = () => {
       cleanBanner: true,
     },
     {
-      title: 'TFX Ring Pro premium build and curved metal design',
+      title: 'TFX Smart Ring premium build and curved metal design',
       copy: '',
       image: ringProPremiumBuildBanner,
       imageWidth: 3617,
@@ -2711,7 +2711,7 @@ export const ProductDetail: React.FC = () => {
       cleanBanner: true,
     },
     {
-      title: 'TFX Ring Pro heart rate, activity, wellness tracking and reminders',
+      title: 'TFX Smart Ring heart rate, activity, wellness tracking and reminders',
       copy: '',
       image: ringProWellnessBanner,
       imageWidth: 3334,

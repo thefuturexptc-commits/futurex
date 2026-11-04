@@ -18,18 +18,12 @@ import {
   getAuth as getAuthFromApp,
   User as FirebaseAuthUser
 } from 'firebase/auth';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL 
-} from 'firebase/storage';
 import { initializeApp, deleteApp, FirebaseApp, getApps, getApp } from 'firebase/app';
-import { db, auth, storage, app as mainApp } from './firebaseConfig';
+import { db, auth, app as mainApp } from './firebaseConfig';
 import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, OfferLead, User, UserPermissions, Order, Address, WebsiteSettings, SupportChatMessage, SupportChatSession, CheckoutShippingDetails, SiteAnalyticsEvent, BlogPost } from '../types';
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 import { TFX5_AI_BAND_PRICE, TFX5_AI_BAND_MRP, isTfxV5Band, isPureAirThreeInOne, PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE } from '../utils/coupons';
-import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { correctRingModel, getProductModelNumbers } from '../utils/productModel';
 import { getFanTitle } from '../utils/fanListings';
 import { isCatalogProductPublished } from '../utils/catalogVisibility.js';
@@ -939,7 +933,7 @@ const normalizeProductColors = (product: Product): Product => {
     return acc;
   }, { ...(product.videoByColor || {}) });
 
-  const sourceName = product.name.trim();
+  const sourceName = displayProduct.name.trim();
   const storefrontName = getFanTitle(displayProduct) || sourceName;
 
   return ensureProductReviews({
@@ -1116,6 +1110,8 @@ export const seedDatabase = async () => {
 
 export const uploadFile = async (file: File, path: string): Promise<string> => {
     try {
+        const { ref, uploadBytes, getDownloadURL, getStorage } = await import('firebase/storage');
+        const storage = getStorage(mainApp);
         // Video uploads can take longer on a normal mobile/office connection.
         const timeout = new Promise((_, reject) => 
             setTimeout(() => reject(new Error("Upload timed out after 2 minutes")), 120000)
@@ -3487,6 +3483,7 @@ export const updateWebsiteSettings = async (
 // Published posts are stored separately from settings so drafts never leak into
 // the public sitemap or storefront.
 export const getBlogPosts = async (): Promise<BlogPost[]> => {
+  const { isBlogPostPublic, publishedBlogPosts } = await import('../utils/publishedBlogPosts');
   try {
     const snapshot = await getDocs(collection(db, 'blog_posts'));
     const remotePosts = snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() } as BlogPost));

@@ -1,0 +1,299 @@
+@keyframes tfx-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        .tfx-marquee-track {
+          animation: tfx-marquee 22s linear infinite;
+        }
+        .tfx-marquee-mask {
+          -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+        }
+        @keyframes tfx-shimmer {
+          from { background-position: -400px 0; }
+          to { background-position: 400px 0; }
+        }
+        .tfx-shimmer {
+          background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 40%, #f1f5f9 80%);
+          background-size: 800px 100%;
+          animation: tfx-shimmer 1.4s linear infinite;
+        }
+
+        /* Premium heading gradient sweep */
+        @keyframes tfx-gradient-flow {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .tfx-gradient-heading {
+          background-image: linear-gradient(100deg, #0f172a 0%, #0ea5e9 22%, #df0b16 45%, #0f172a 68%, #0ea5e9 88%, #0f172a 100%);
+          background-size: 250% auto;
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+          animation: tfx-gradient-flow 7s ease-in-out infinite;
+        }
+
+        /* Animated underline accent that draws in on scroll */
+        @keyframes tfx-underline-draw {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+        .tfx-underline-draw {
+          animation: tfx-underline-draw 0.9s cubic-bezier(0.16,1,0.3,1) 0.15s both;
+          transform-origin: left center;
+        }
+
+        /* Card shine sweep on hover - premium tech-site signature move */
+        .tfx-shine {
+          position: relative;
+          overflow: hidden;
+        }
+        .tfx-shine::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(115deg, transparent 20%, rgba(255,255,255,0.55) 40%, transparent 60%);
+          transform: translateX(-130%);
+          transition: transform 0.75s cubic-bezier(0.22,1,0.36,1);
+          pointer-events: none;
+          z-index: 15;
+        }
+        .tfx-shine:hover::after {
+          transform: translateX(130%);
+        }
+
+        /* Soft ambient glow that intensifies on hover */
+        .tfx-glow-card {
+          transition: box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.22,1,0.36,1), border-color 0.35s ease;
+        }
+        .tfx-glow-card:hover {
+          box-shadow: 0 20px 45px -12px rgba(14,165,233,0.28), 0 8px 20px -8px rgba(223,11,22,0.18);
+          border-color: rgba(14,165,233,0.35);
+        }
+
+        /* Pulsing badge glow for New/Best Seller/Price Drop pills */
+        @keyframes tfx-badge-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(223,11,22,0.45); }
+          50% { box-shadow: 0 0 0 6px rgba(223,11,22,0); }
+        }
+        .tfx-badge-pulse {
+          animation: tfx-badge-pulse 2.2s ease-out infinite;
+        }
+
+        /* Hero slide: cinematic scale + fade, more premium than a flat crossfade */
+        @keyframes tfx-hero-in {
+          from { opacity: 0; transform: scale(1.08); filter: saturate(0.85); }
+          to { opacity: 1; transform: scale(1); filter: saturate(1); }
+        }
+        .tfx-hero-slide-active {
+          animation: tfx-hero-in 1.1s cubic-bezier(0.16,1,0.3,1) both;
+        }
+
+        /* Floating micro-motion for the QR / app badge cluster */
+        @keyframes tfx-float {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-6px); }
+        }
+        .tfx-float {
+          animation: tfx-float 3.6s ease-in-out infinite;
+        }
+
+        /* Progress-filling story-style dots for the hero carousel */
+        @keyframes tfx-dot-fill {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
+        }
+        .tfx-dot-fill {
+          animation: tfx-dot-fill 4.5s linear both;
+          transform-origin: left center;
+        }
+
+        /* Pinned scroll-scrub banner (TFX5 / TFX Vital app) */
+        .tfx-featured-banner-stage {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          overflow: hidden;
+          border-radius: 1.5rem;
+          background: #0a0e17;
+          box-shadow: 0 24px 60px -20px rgba(15,23,42,0.35);
+        }
+        .tfx-featured-banner-stage--stacked {
+          height: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 1rem;
+          border-radius: 0;
+          overflow: visible;
+          background: transparent;
+          box-shadow: none;
+        }
+        .tfx-featured-banner-dots {
+          position: absolute;
+          left: 50%;
+          bottom: 1.25rem;
+          transform: translateX(-50%);
+          z-index: 5;
+          display: flex;
+          gap: 0.5rem;
+        }
+        .tfx-featured-banner-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.4);
+          transition: width 0.3s ease, background 0.3s ease;
+        }
+        .tfx-featured-banner-dot.is-active {
+          width: 22px;
+          background: linear-gradient(120deg, #0ea5e9, #df0b16);
+        }
+        .tfx-featured-banner-panel {
+          position: absolute;
+          inset: 0;
+          opacity: 0;
+          transform: scale(1.04);
+          pointer-events: none;
+          will-change: opacity, transform;
+        }
+        .tfx-featured-banner-panel--static {
+          opacity: 1;
+          transform: none;
+          pointer-events: auto;
+        }
+        .tfx-featured-banner-stage--stacked .tfx-featured-banner-panel {
+          position: relative;
+          inset: auto;
+          aspect-ratio: 3 / 4;
+          border-radius: 1.5rem;
+          overflow: hidden;
+        }
+        @media (min-width: 640px) {
+          .tfx-featured-banner-stage--stacked .tfx-featured-banner-panel { aspect-ratio: 16 / 9; }
+        }
+        .tfx-featured-banner-image {
+          position: absolute;
+          inset: 0;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center 22%;
+        }
+        .tfx-featured-banner-shade {
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(180deg, rgba(10,14,23,0) 34%, rgba(10,14,23,0.5) 72%, rgba(10,14,23,0.86) 100%);
+        }
+        .tfx-featured-banner-copy {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          padding: 1.5rem 1.5rem 2rem;
+          color: #fff;
+          max-width: 640px;
+        }
+        @media (min-width: 640px) {
+          .tfx-featured-banner-copy { padding: 2.5rem 3rem 3rem; }
+        }
+        .tfx-featured-banner-eyebrow {
+          font-size: 0.68rem;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: 0.24em;
+          color: #38bdf8;
+          margin: 0 0 0.5rem;
+        }
+        .tfx-featured-banner-copy h2 {
+          font-size: clamp(1.4rem, 4vw, 2.6rem);
+          font-weight: 900;
+          line-height: 1.08;
+          margin: 0 0 0.6rem;
+        }
+        .tfx-featured-banner-description {
+          font-size: 0.9rem;
+          line-height: 1.5;
+          color: rgba(255,255,255,0.85);
+          max-width: 480px;
+          margin: 0 0 1rem;
+        }
+        .tfx-featured-banner-copy ul {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 0.5rem 1.25rem;
+          list-style: none;
+          padding: 0;
+          margin: 0 0 1.5rem;
+        }
+        .tfx-featured-banner-copy ul li {
+          display: flex;
+          align-items: center;
+          gap: 0.4rem;
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: rgba(255,255,255,0.92);
+        }
+        .tfx-featured-banner-copy ul li::before {
+          content: '';
+          width: 5px;
+          height: 5px;
+          border-radius: 999px;
+          background: #38bdf8;
+          box-shadow: 0 0 8px 2px rgba(56,189,248,0.6);
+          flex-shrink: 0;
+        }
+        .tfx-featured-banner-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.4rem;
+          background: #fff;
+          color: #0a0e17;
+          font-weight: 900;
+          font-size: 0.82rem;
+          padding: 0.7rem 1.5rem;
+          border-radius: 999px;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .tfx-featured-banner-cta:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+        }
+
+        /* Section divider accent line */
+        @keyframes tfx-divider-grow {
+          from { width: 0; opacity: 0; }
+          to { width: 64px; opacity: 1; }
+        }
+        .tfx-divider {
+          animation: tfx-divider-grow 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .tfx-shimmer { animation: none; background: #eef2f6; }
+          .tfx-marquee-track,
+          .tfx-shimmer,
+          .tfx-gradient-heading,
+          .tfx-underline-draw,
+          .tfx-shine::after,
+          .tfx-badge-pulse,
+          .tfx-hero-slide-active,
+          .tfx-float,
+          .tfx-dot-fill,
+          .tfx-divider {
+            animation: none !important;
+          }
+          .tfx-gradient-heading {
+            background: none;
+            -webkit-background-clip: initial;
+            background-clip: initial;
+            color: #0f172a;
+          }
+          .tfx-underline-draw,
+          .tfx-divider {
+            transform: none;
+            width: 64px;
+            opacity: 1;
+          }
+          .tfx-shine::after { display: none; }
+        }

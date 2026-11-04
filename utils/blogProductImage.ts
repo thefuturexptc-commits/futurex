@@ -19,7 +19,7 @@ const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, 
 
 /** Pick a catalog product photo for a blog hero, matching the article topic. */
 export const getBlogProductImage = (post: BlogImageRecord, products: ProductImageRecord[]) => {
-  const imageProducts = [...products, ...staticProductSeoRecords];
+  const imageProducts: ProductImageRecord[] = [...products, ...staticProductSeoRecords];
   const articleText = normalize(`${post.title || ''} ${post.slug || ''} ${post.excerpt || ''} ${(post.keywords || []).join(' ')}`);
   const hrefSlug = post.featuredProduct?.href?.split('/').filter(Boolean).pop() || '';
   const preferredCategory = /fan|cooling|air purifier/.test(articleText)

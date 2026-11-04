@@ -1,0 +1,153 @@
+:root {
+        /* Sky blue default */
+        --color-primary-50: 240 249 255;
+        --color-primary-100: 224 242 254;
+        --color-primary-200: 186 230 253;
+        --color-primary-300: 125 211 252;
+        --color-primary-400: 56 189 248;
+        --color-primary-500: 14 165 233;
+        --color-primary-600: 2 132 199;
+        --color-primary-700: 3 105 161;
+        --color-primary-800: 7 89 133;
+        --color-primary-900: 12 74 110;
+      }
+
+      body {
+        font-family: 'Outfit', sans-serif;
+      }
+      html, body, #root {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+      }
+      *, *::before, *::after {
+        box-sizing: border-box;
+      }
+      img, video {
+        max-width: 100%;
+        height: auto;
+      }
+
+      h1, h2, h3, h4, h5, h6, .font-display {
+        font-family: 'Space Grotesk', sans-serif;
+      }
+      
+      /* Advanced Glassmorphism */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.02), 
+          0 2px 4px -1px rgba(0, 0, 0, 0.02),
+          inset 0 0 20px rgba(255, 255, 255, 0.6);
+      }
+      
+      .dark .glass-card {
+        background: rgba(10, 10, 10, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+      }
+
+      .glass-nav {
+         background: rgba(255, 255, 255, 0.8);
+         backdrop-filter: blur(10px);
+         -webkit-backdrop-filter: blur(10px);
+         border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      }
+
+      .dark .glass-nav {
+         background: rgba(5, 5, 5, 0.8);
+         border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      /* Global form contrast fixes for dropdowns/inputs */
+      select {
+        background: #ffffff;
+        color: #111827;
+        border-color: #d1d5db;
+      }
+      .dark select {
+        background: #1f2937;
+        color: #ffffff;
+        border-color: #4b5563;
+      }
+      select option {
+        background: #ffffff;
+        color: #111827;
+      }
+      .dark select option {
+        background: #1f2937;
+        color: #ffffff;
+      }
+
+      img[data-brand-logo="true"] {
+        max-width: 180px;
+      }
+
+      /* Tech Background Pattern - Light Mode Optimized */
+      .bg-grid-pattern {
+        background-size: 60px 60px;
+        background-image: 
+          linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+        mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+      }
+
+      .dark .bg-grid-pattern {
+        background-image: 
+          linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+      }
+
+      .tech-border {
+        position: relative;
+      }
+      .tech-border::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 10px; height: 1px;
+        background: currentColor;
+      }
+      .tech-border::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 1px; height: 10px;
+        background: currentColor;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+      }
+      .dark ::-webkit-scrollbar-thumb {
+        background: #333;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgb(var(--color-primary-500));
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after {
+          animation-duration: 0.01ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.01ms !important;
+          scroll-behavior: auto !important;
+        }
+      }
+
+      .animate-fade-in-up,
+      .animate-fade-in,
+      .animate-float,
+      .animate-float-fast,
+      .animate-float-slow {
+        will-change: transform, opacity;
+      }

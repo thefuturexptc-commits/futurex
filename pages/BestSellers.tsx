@@ -1,10 +1,12 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useEffect, useMemo, useState } from 'react';
 import { ProductCard } from '../components/ProductCard';
-import { ProductComparisonSection } from '../components/ProductComparisonSection';
+import { DeferredSection } from '../components/DeferredSection';
 import { getProducts } from '../services/backend';
 import { Product } from '../types';
 import { getEffectivePrice, isBestSellerProduct } from '../utils/productCollections';
 import bestSellerTfx5AiBandImage from '../assets/images/best-seller-tfx5-ai-band.webp';
+
+const ProductComparisonSection = React.lazy(() => import('../components/ProductComparisonSection').then((module) => ({ default: module.ProductComparisonSection })));
 
 const isTfx5AiBandProduct = (product: Product): boolean => {
   const text = `${product.id || ''} ${product.slug || ''} ${product.name || ''} ${product.category || ''}`.toLowerCase();
@@ -130,13 +132,17 @@ export const BestSellers: React.FC = () => {
         )}
       </div>
       {!loading && bestSellers.length > 0 && (
-        <ProductComparisonSection
-          products={bestSellers}
-          eyebrow="Best seller comparison"
-          title="Compare Best Sellers"
-          subtitle="Compare customer favorites by price, rating, stock status, and practical use case before adding one to your cart."
-          className="mt-14 bg-[#f8fbfb] text-slate-950"
-        />
+        <DeferredSection>
+          <Suspense fallback={null}>
+            <ProductComparisonSection
+              products={bestSellers}
+              eyebrow="Best seller comparison"
+              title="Compare Best Sellers"
+              subtitle="Compare customer favorites by price, rating, stock status, and practical use case before adding one to your cart."
+              className="mt-14 bg-[#f8fbfb] text-slate-950"
+            />
+          </Suspense>
+        </DeferredSection>
       )}
     </div>
   );

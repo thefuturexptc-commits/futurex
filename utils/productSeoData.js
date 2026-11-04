@@ -157,9 +157,9 @@ const productFallbacks = [
   },
   {
     slug: 'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features',
-    name: 'TFX Ring Pro Smart Ring',
+    name: 'TFX Smart Ring',
     category: 'Smart Rings',
-    description: 'Explore TFX Ring Pro Smart Ring with app control, sleep tracking, heart rate trends, activity insights, stainless steel comfort, and everyday app sync.',
+    description: 'Explore TFX Smart Ring with app control, sleep tracking, heart rate trends, activity insights, stainless steel comfort, and everyday app sync.',
     image: '/images/aura-ring-halo.webp',
     price: 2499,
   },

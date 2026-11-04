@@ -11,7 +11,9 @@ export const correctRingModel = (product: Product): Product => {
   ]));
   return {
     ...product,
-    name: replaceR11(product.name),
+    name: replaceR11(product.name)
+      .replace(/\bRing\s+Pro(?:\s+Smart\s+Ring)?\b/gi, 'Smart Ring')
+      .replace(/\bSmart Ring\s*–\s*Smart Ring\b/gi, 'Smart Ring'),
     ...(product.modelNumber ? { modelNumber: replaceR11(product.modelNumber) } : {}),
     ...(product.modelNumbers ? { modelNumbers: product.modelNumbers.map(replaceR11) } : {}),
     specs,

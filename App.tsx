@@ -11,12 +11,12 @@ import { AuthModalProvider } from './context/AuthModalContext';
 import { SiteFooter } from './components/SiteFooter';
 import { FloatingContactRail } from './components/FloatingContactRail';
 import { LoadingFallback } from './components/LoadingFallback';
-import { Home } from './pages/Home';
 import { preloadVisitorGeo, pushPageView } from './services/analytics';
 import { removePageScopedJsonLd, removeProductSocialMetadata, setCollectionPageJsonLd, setHomepageJsonLd, setSeoMetadata } from './services/seo';
 
 // ✅ META PIXEL
 
+const Home = React.lazy(() => import('./pages/Home').then(module => ({ default: module.Home })));
 const Shop = React.lazy(() => import('./pages/Shop').then(module => ({ default: module.Shop })));
 const SmartBands = React.lazy(() => import('./pages/SmartBands').then(module => ({ default: module.SmartBands })));
 const SmartRings = React.lazy(() => import('./pages/SmartRings').then(module => ({ default: module.SmartRings })));

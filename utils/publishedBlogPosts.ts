@@ -15,8 +15,8 @@ const publishedAt = '2026-08-17T00:00:00.000Z';
 
 export const publishedBlogPosts: PublishedBlogPost[] = [
   ...tfx5BlogPosts.map((post) => ({ ...post, status: 'published' as const })),
-  ...bladelessFanBlogPosts,
-  ...aeoGeoBlogPosts,
+  ...bladelessFanBlogPosts.map((post) => ({ ...post, status: post.status as BlogPost['status'] })),
+  ...aeoGeoBlogPosts.map((post) => ({ ...post, status: post.status as BlogPost['status'] })),
   {
     id: 'tfx-smart-band-emi-guide', slug: 'tfx-smart-band-emi-guide', status: 'published', updatedAt: '2026-08-24T00:00:00.000Z',
     title: 'How to Buy a TFX Smart Band on EMI: A Step-by-Step Guide',

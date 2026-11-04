@@ -257,10 +257,11 @@ const upsertTag = (html, pattern, tag) => {
 };
 
 const injectStaticRoot = (html, bodyHtml) => {
-  // Keep crawler-visible fallback markup in the initial HTML without flashing it
-  // over the real app while React loads and replaces the root contents.
-  const staticHtml = `<div id="root"><div class="seo-prerendered-page" style="display:none">${bodyHtml}</div></div>`;
-  return html.replace(/<div id="root"><\/div>/i, staticHtml);
+  // Show useful content before React starts, including when scripts are disabled.
+  const staticHtml = `<div id="root"><div class="seo-prerendered-page">${bodyHtml}</div></div>`;
+  return html
+    .replace(/<noscript>\s*<main\b[\s\S]*?<\/noscript>/gi, '')
+    .replace(/<div id="root"><\/div>/i, staticHtml);
 };
 
 const buildProductCards = (products = [], limit = 8) =>
@@ -274,7 +275,7 @@ const buildProductCards = (products = [], limit = 8) =>
         <article class="seo-product-card">
           <a href="${htmlEscape(url)}">
             <img src="${htmlEscape(image)}" alt="${htmlEscape(product.name)}" loading="lazy" decoding="async" />
-            <h2>${htmlEscape(product.name)}</h2>
+            <h3>${htmlEscape(product.name)}</h3>
           </a>
           <p>${htmlEscape(description)}</p>
           <p><strong>${htmlEscape(formatPrice(product.price))}</strong></p>
@@ -828,7 +829,11 @@ const getRouteHtml = (route, product) => {
       image: DEFAULT_IMAGE,
       jsonLd: `${buildHomepageJsonLd()}\n    <script id="homepage-faq-json-ld" type="application/ld+json">${JSON.stringify(homepageFaqSchema)}</script>`,
     });
-    return injectStaticRoot(html, buildHomeStaticHtml(productRecords));
+    const heroPreloads = [
+      ['home-diwali-smart-band-wellness', '(max-width: 767px)'],
+      ['home-desktop-diwali-band-style', '(min-width: 768px)'],
+    ].map(([name, media]) => `<link rel="preload" as="image" type="image/webp" media="${media}" imagesrcset="${[480, 768, 1280].map((width) => `/images/optimized/${name}-${width}.webp ${width}w`).join(', ')}" imagesizes="100vw" fetchpriority="high">`).join('\n');
+    return injectStaticRoot(html.replace('</head>', `${heroPreloads}\n</head>`), buildHomeStaticHtml(productRecords));
   }
 
   const categoryPage = categoryPages[route];

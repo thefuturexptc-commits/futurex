@@ -1,5 +1,7 @@
+@import './styles/tailwind.css';
 @import './global.css';
 @import './components/ProductCard.css';
+@import './styles/app-shell.css';
 .seo-noscript-main {
   max-width: 1180px;
   margin: 0 auto;

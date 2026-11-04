@@ -87,22 +87,22 @@
   ],
   "redirects": [
     {
-      "source": "/terms-and-conditions/",
+      "source": "/terms-and-conditions",
       "destination": "https://thefuturex.in/info/terms",
       "statusCode": 301
     },
     {
-      "source": "/refund_returns/",
+      "source": "/refund_returns",
       "destination": "https://thefuturex.in/info/returns-refund",
       "statusCode": 301
     },
     {
-      "source": "/privacy-policy/",
+      "source": "/privacy-policy",
       "destination": "https://thefuturex.in/info/privacy",
       "statusCode": 301
     },
     {
-      "source": "/index.php/2023/01/14/hello-world/",
+      "source": "/index.php/2023/01/14/hello-world",
       "destination": "https://thefuturex.in/blog",
       "statusCode": 301
     },
@@ -118,19 +118,23 @@
     },
     {
       "source": "/",
-      "has": [{ "type": "query", "key": "page_id", "value": "5" }],
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/",
-      "has": [{ "type": "host", "value": "www.thefuturex.in" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.thefuturex.in"
+        }
+      ],
       "destination": "https://thefuturex.in/",
       "permanent": true
     },
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "www.thefuturex.in" }],
+      "has": [
+        {
+          "type": "host",
+          "value": "www.thefuturex.in"
+        }
+      ],
       "destination": "https://thefuturex.in/:path*",
       "permanent": true
     },
@@ -211,6 +215,28 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/",
+      "has": [
+        {
+          "type": "query",
+          "key": "page_id",
+          "value": "5"
+        }
+      ],
+      "destination": "/api/legacy-page"
+    },
+    {
+      "source": "/index.php",
+      "has": [
+        {
+          "type": "query",
+          "key": "page_id",
+          "value": "5"
+        }
+      ],
+      "destination": "/api/legacy-page"
+    },
     {
       "source": "/products/:id",
       "destination": "/api/legacy-product?id=:id"

@@ -123,7 +123,7 @@ const ringFaqs = [
   },
   {
     q: 'Which TFX Smart Ring should I choose?',
-    a: 'Choose TFX Display Pro if you want quick on-device information, TFX Touch if you prefer touch-enabled control, and TFX Ring Pro for compact app-connected wellness tracking.',
+    a: 'Choose TFX Display Pro if you want quick on-device information, TFX Touch if you prefer touch-enabled control, and TFX Smart Ring for compact app-connected wellness tracking.',
   },
 ];
 

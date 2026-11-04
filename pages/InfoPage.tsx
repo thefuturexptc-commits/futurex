@@ -40,7 +40,7 @@ const buildFaqJsonLd = (faqs: Array<[string, string]>) => ({
 
 const smartRingBlogProducts = [
   {
-    name: 'TFX Ring Pro',
+    name: 'TFX Smart Ring',
     price: '₹2,374.05',
     image: ringProImage,
     href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features',
@@ -3913,7 +3913,7 @@ const sleepArticleConfigs: Record<string, BandArticleConfig> = {
       { label: 'What Is Sleep Monitoring?', href: '/blog/what-is-sleep-monitoring' },
       { label: 'Sleep Stages Explained', href: '/blog/sleep-stages-explained' },
       { label: 'Benefits of Sleep Monitoring', href: '/blog/benefits-of-sleep-monitoring' },
-      { label: 'TFX Ring Pro Smart Ring', href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
+      { label: 'TFX Smart Ring', href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
       { label: 'TFX Smart Band', href: '/product/tfx-smart-band' },
     ]),
   },
@@ -4080,7 +4080,7 @@ const sleepArticleConfigs: Record<string, BandArticleConfig> = {
       { label: 'What Is Sleep Monitoring?', href: '/blog/what-is-sleep-monitoring' },
       { label: 'How Sleep Tracking Works', href: '/blog/how-sleep-tracking-works' },
       { label: 'Benefits of Sleep Monitoring', href: '/blog/benefits-of-sleep-monitoring' },
-      { label: 'TFX Ring Pro Smart Ring', href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
+      { label: 'TFX Smart Ring', href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
       { label: 'TFX Smart Band', href: '/product/tfx-smart-band' },
     ]),
   },
@@ -4209,7 +4209,7 @@ const sleepArticleConfigs: Record<string, BandArticleConfig> = {
       { label: 'Benefits of Sleep Monitoring', href: '/blog/benefits-of-sleep-monitoring' },
       { label: 'Smart Ring vs Smart Band for Sleep Tracking', href: '/blog/smart-ring-vs-smart-band-for-sleep-tracking' },
       { label: 'How Sleep Monitoring Helps Improve Recovery', href: '/blog/how-sleep-monitoring-helps-improve-recovery' },
-      { label: 'TFX Ring Pro Smart Ring', href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
+      { label: 'TFX Smart Ring', href: '/product/tfx-ring-pro-smart-ring-with-app-control-and-gesture-features' },
     ]),
   },
   'thefuturex-smart-sleep-tracking-monitoring-system': {
@@ -4687,7 +4687,7 @@ Not quite. Smart rings are consumer wellness devices, not medical equipment, and
 ## TheFutureX smart ring range
 
 - **TFX Display Pro Smart Ring**: heart rate, SpO2, sleep insights, wireless charging
-- **TFX Ring Pro**: heart rate trends with app control
+- **TFX Smart Ring**: heart rate trends with app control
 - **TFX Touch Smart Ring**: heart rate and sleep monitoring
 
 [Browse the full Smart Rings range](/smart-rings)
@@ -4746,7 +4746,7 @@ Rings with a built-in display, like the TFX Display Pro Smart Ring, can show tim
 ## TheFutureX smart ring range
 
 - **TFX Display Pro Smart Ring**: built-in display and wireless charging
-- **TFX Ring Pro**: app control with fitness and sleep tracking
+- **TFX Smart Ring**: app control with fitness and sleep tracking
 - **TFX Touch Smart Ring**: touch control and fitness tracking
 
 [Browse the full Smart Rings range](/smart-rings)

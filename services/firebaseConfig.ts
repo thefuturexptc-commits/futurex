@@ -1,7 +1,6 @@
 
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
 import { browserLocalPersistence, getAuth, setPersistence } from 'firebase/auth';
 
 // Replace these with your actual Firebase project configuration
@@ -26,7 +25,6 @@ export const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
-export const storage = getStorage(app);
 
 void setPersistence(auth, browserLocalPersistence).catch(() => {
   // Keep default persistence if explicit local persistence cannot be set.
