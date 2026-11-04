@@ -2653,7 +2653,7 @@ export const ProductDetail: React.FC = () => {
         : '';
   const ringOverviewSections = [
     {
-      title: 'The FutureX TFX Smart Ring',
+      title: 'Smart Ring',
       copy:
         TFX_RING_PRO_DESCRIPTION,
       image: ringProCharging,
