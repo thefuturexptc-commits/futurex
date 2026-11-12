@@ -11,7 +11,7 @@ html .site-main-content .product-comparison-section :is(h2, p, .comparison-produ
 }
 
 html .site-main-content .product-comparison-section .comparison-label {
-  background-color: #f3f8f8 !important;
+  background-color: #f3f8f8 !important; 
   color: #475569 !important;
 }
 

@@ -4,8 +4,11 @@ import { Product, ProductColor, ProductPublicReview } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
+import { auth } from '../services/firebaseConfig';
 import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById, getProductReviews, getProductSlug, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
+import { DeliveryEstimate } from '../components/DeliveryEstimate';
+import { BundleOffer } from '../components/BundleOffer';
 import { getProductFallbackImage } from '../utils/productImages';
 import { ProductCard } from '../components/ProductCard';
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
@@ -15,7 +18,7 @@ import { getProductModelIdentifiers } from '../utils/productSearch';
 import { getFanFlipkartListing } from '../utils/fanListings';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
 import { buildProductSeoRecord } from '../utils/productSeoData.js';
-import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification } from '../utils/productSchema.js';
+import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification, getSchemaReviews, withProductReviewSummary } from '../utils/productSchema.js';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
 import { TP09_PRO_DESCRIPTION, TP09_PRO_FEATURES, TP09_PRO_SPECS } from '../utils/tp09ProContent';
 import { getProductDetailContent } from '../utils/productDetailContent';
@@ -137,26 +140,37 @@ const getYouTubeEmbedUrl = (url: string) => {
 };
 
 const ProductOverviewVideo: React.FC<{ src: string; title: string; className: string }> = ({ src, title, className }) => {
+  const wrapper = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    if (!wrapper.current) return;
+    if (typeof IntersectionObserver === 'undefined') { setVisible(true); return; }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { setVisible(true); observer.disconnect(); }
+    }, { rootMargin: '200px' });
+    observer.observe(wrapper.current);
+    return () => observer.disconnect();
+  }, []);
   const embedUrl = getYouTubeEmbedUrl(src);
 
   if (embedUrl) {
     return (
-      <iframe
+      <div ref={wrapper} className={className}>{visible && <iframe
         src={`${embedUrl}?rel=0&modestbranding=1&playsinline=1&controls=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
         title={title}
-        className={className}
+        className="h-full min-h-[220px] w-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
-        loading="eager"
+        loading="lazy"
         referrerPolicy="strict-origin-when-cross-origin"
-      />
+      />}</div>
     );
   }
 
   return (
-    <video className={className} autoPlay muted loop playsInline preload="metadata" controls aria-label={title}>
-      <source src={src} type="video/mp4" />
-    </video>
+    <div ref={wrapper} className={className}><video className="h-full w-full" muted playsInline preload="none" controls aria-label={title}>
+      {visible && <source src={src} type="video/mp4" />}
+    </video></div>
   );
 };
 const normalizeOptionKey = (value?: string) =>
@@ -1319,11 +1333,7 @@ const RazorpayEmiModal: React.FC<{
 };
 
 const getDisplayReviews = (reviews: ProductPublicReview[]) => {
-  const uniqueReviews = reviews.filter((review, index, list) => {
-    const signature = `${review.name}|${review.comment}`.trim().toLowerCase();
-    return list.findIndex((item) => `${item.name}|${item.comment}`.trim().toLowerCase() === signature) === index;
-  });
-  return uniqueReviews;
+  return getSchemaReviews(reviews);
 };
 
 const DetailIcon: React.FC<{ kind: 'delivery' | 'shield' | 'support' | 'payment' | 'location' }> = ({ kind }) => {
@@ -1462,6 +1472,11 @@ export const ProductDetail: React.FC = () => {
   const [emiPhone, setEmiPhone] = useState('');
   const [surprisePriceRevealed, setSurprisePriceRevealed] = useState(false);
   const [showMobileStickyCta, setShowMobileStickyCta] = useState(false);
+  useEffect(() => {
+    if (loading || !product || window.location.hash !== '#reviews') return;
+    const frame = window.requestAnimationFrame(() => document.getElementById('reviews')?.scrollIntoView({ block: 'start' }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, product?.id]);
   const [isBuyNowPressed, setIsBuyNowPressed] = useState(false);
   const [detailTabsFixed, setDetailTabsFixed] = useState(false);
   const [detailTabsHeight, setDetailTabsHeight] = useState(48);
@@ -1484,15 +1499,8 @@ export const ProductDetail: React.FC = () => {
           setError('Product not found');
         } else {
           const publicReviews = await getProductReviews(p.id);
-          // The review collection is the source of truth for customer reviews.
-          // Product records can contain legacy/seeded review fields; do not expose
-          // those as customer proof or include them in Product structured data.
-          const displayReviews = getDisplayReviews(publicReviews);
-          const nextReviewCount = displayReviews.length;
-          const nextRating = nextReviewCount
-            ? Number((displayReviews.reduce((sum, item) => sum + Number(item.rating || 0), 0) / nextReviewCount).toFixed(1))
-            : 0;
-          setProduct({ ...p, reviews: displayReviews, reviewCount: nextReviewCount, rating: nextRating });
+          setProduct(withProductReviewSummary(p, publicReviews));
+          setVisibleReviewCount(2);
           setSelectedColor(p.colors?.[0] ?? null);
         }
       })
@@ -2086,7 +2094,12 @@ export const ProductDetail: React.FC = () => {
     try {
       const imageUrls: string[] = [];
       for (const file of reviewImages.slice(0, 2)) {
-        const url = await uploadFile(file, `reviews/${product.id}/${Date.now()}_${file.name}`);
+        if (!auth.currentUser) { setReviewMessage('Please sign in to upload review photos.'); return; }
+        if (!/^image\/(jpeg|png|webp)$/.test(file.type) || file.size > 5 * 1024 * 1024) {
+          setReviewMessage('Review photos must be JPG, PNG or WebP and at most 5 MB each.');
+          return;
+        }
+        const url = await uploadFile(file, `reviews/${auth.currentUser.uid}/${product.id}/${Date.now()}_${file.name}`);
         if (url) imageUrls.push(url);
       }
 
@@ -2113,7 +2126,8 @@ export const ProductDetail: React.FC = () => {
       setReviewComment('');
       setReviewImages([]);
       setReviewRating(5);
-      setReviewMessage('Review submitted. Admin can review it.');
+      setVisibleReviewCount(2);
+      setReviewMessage('Your review has been saved. Thank you for sharing your experience.');
       window.dispatchEvent(new Event('reviews-updated'));
       window.dispatchEvent(new Event('products-updated'));
     } catch {
@@ -3372,13 +3386,7 @@ export const ProductDetail: React.FC = () => {
                     }`}
                     aria-label={`Play ${product.name} video`}
                   >
-                    <video
-                      src={productVideoUrl}
-                      className="h-full w-full object-cover object-bottom"
-                      muted
-                      playsInline
-                      preload="metadata"
-                    />
+                    <img src={activeImages[0] || product.images[0]} alt="" className="h-full w-full object-cover" loading="lazy" />
                     <span className="absolute inset-0 grid place-items-center bg-black/20">
                           <span className="grid h-6 w-6 place-items-center rounded-full bg-white/90 text-slate-950 shadow-lg min-[360px]:h-7 min-[360px]:w-7 sm:h-8 sm:w-8">
                         <svg className="ml-0.5 h-3.5 w-3.5 sm:h-4 sm:w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -3699,6 +3707,8 @@ export const ProductDetail: React.FC = () => {
                   View Cart
                 </button>
               )}
+
+              <DeliveryEstimate warranty={getWarrantyDisplayText(productFamily)} />
 
               {flipkartListing && (
                 <a
@@ -4144,17 +4154,23 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
+      {(productFamily === 'band' || productFamily === 'ring') && <BundleOffer />}
       <section id="reviews" className="product-scroll-section scroll-mt-32 bg-[#f8fbfb] px-4 py-10 sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-5xl">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#8a6a20]">Customer Reviews</p>
-              <h2 className="mt-2 font-display text-xl font-black text-slate-950 sm:text-3xl lg:text-4xl">Write a Review</h2>
+              <h2 className="mt-2 font-display text-xl font-black text-slate-950 sm:text-3xl lg:text-4xl">Customer reviews</h2>
             </div>
             <p className="max-w-md text-sm font-semibold leading-6 text-slate-500">
               Add your rating, review, and up to 2 product photos.
             </p>
           </div>
+
+          {!!product.reviewCount && <div className="product-review-summary mb-6 flex flex-wrap items-center gap-4 rounded-2xl bg-white p-5">
+            <p className="text-3xl font-bold">{product.rating?.toFixed(1)}<span className="ml-1 text-sm font-medium text-slate-500">/ 5</span></p>
+            <div><p className="product-review-stars text-lg tracking-widest" aria-label={`${product.rating} out of 5 stars`}>{'★'.repeat(Math.round(product.rating || 0))}{'☆'.repeat(5 - Math.round(product.rating || 0))}</p><p className="text-sm text-slate-600">Based on {product.reviewCount} {product.reviewCount === 1 ? 'review' : 'reviews'}</p></div>
+          </div>}
 
           <form onSubmit={handleSubmitReview} className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -4242,16 +4258,17 @@ export const ProductDetail: React.FC = () => {
           {product.reviews && product.reviews.length > 0 ? (
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               {product.reviews.slice(0, visibleReviewCount).map((review, i) => (
-                <article key={i} className="rounded-[1rem] border border-slate-200 bg-white p-4 shadow-sm">
+                <article key={review.id || i} className="product-customer-review rounded-[1rem] border border-slate-200 bg-white p-4 shadow-sm">
                   <div className="flex items-center justify-between gap-2">
                     <p className="font-black text-slate-950">{review.name}</p>
+                    {review.date && Number.isFinite(Date.parse(review.date)) && <time dateTime={new Date(review.date).toISOString().slice(0, 10)} className="text-xs text-slate-500">{new Date(review.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</time>}
                   </div>
-                  <p className="mt-2 text-sm font-black text-amber-500">{'\u2605'.repeat(Math.max(1, Math.min(5, Number(review.rating || 0))))}</p>
+                  <p className="product-review-stars mt-2 text-sm font-black" aria-label={`${review.rating} out of 5 stars`}>{'\u2605'.repeat(Math.max(1, Math.min(5, Number(review.rating || 0))))}</p>
                   <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{review.comment}</p>
                   {review.images && review.images.length > 0 && (
                     <div className="mt-3 flex gap-2">
                       {review.images.slice(0, 2).map((image) => (
-                        <img key={image} src={image} alt={`${review.name} review`} className="h-16 w-16 rounded-lg object-cover" loading="lazy" decoding="async" />
+                        <a key={image} href={image} target="_blank" rel="noopener noreferrer" aria-label={`Open ${review.name}'s product photo`} className="rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"><img src={image} alt={`${review.name} review`} width={80} height={80} className="h-20 w-20 rounded-lg border border-slate-200 object-cover" loading="lazy" decoding="async" /></a>
                       ))}
                     </div>
                   )}
@@ -4263,7 +4280,7 @@ export const ProductDetail: React.FC = () => {
           )}
 
           {product.reviews && product.reviews.length > 2 && (
-            <button
+            <div className="mt-5 flex flex-wrap items-center gap-4"><p className="text-sm text-slate-600">Showing {Math.min(visibleReviewCount, product.reviews.length)} of {product.reviews.length} reviews</p><button
               type="button"
               onClick={() =>
                 setVisibleReviewCount((prev) =>
@@ -4272,10 +4289,10 @@ export const ProductDetail: React.FC = () => {
                     : 2
                 )
               }
-              className="mt-5 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-950 transition hover:border-slate-950 sm:px-5 sm:py-3 sm:text-sm"
+              className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-950 transition hover:border-slate-950 sm:px-5 sm:py-3 sm:text-sm"
             >
               {visibleReviewCount < (product.reviews?.length ?? 0) ? 'View More Reviews' : 'Show Less'}
-            </button>
+            </button></div>
           )}
         </div>
       </section>
@@ -4299,7 +4316,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       )}
 
-      <div className={`fixed inset-x-0 bottom-0 z-[80] border-t border-slate-200 bg-white/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl backdrop-blur transition-transform duration-300 sm:hidden ${showMobileStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
+      <div aria-label="Mobile product actions" aria-hidden={!showMobileStickyCta} inert={!showMobileStickyCta} className={`fixed inset-x-0 bottom-0 z-[80] border-t border-slate-200 bg-white/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl backdrop-blur transition-transform duration-300 sm:hidden ${showMobileStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a6a20]">Price</p>

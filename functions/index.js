@@ -1,5 +1,6 @@
 const { onRequest } = require('firebase-functions/v2/https');
 const axios = require('axios');
+Object.assign(exports, require('./engagement'));
 
 const firstHeaderValue = (value) => {
   if (Array.isArray(value)) return value[0] || '';

@@ -6,6 +6,8 @@ import type { Product } from '../types';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { addOfferLead, getProductSlug } from '../services/backend';
+import { WearableFinder } from '../components/WearableFinder';
+import { BundleOffer } from '../components/BundleOffer';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogMrp, isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 import { getProductFallbackImage } from '../utils/productImages';
@@ -644,6 +646,7 @@ export const Home: React.FC = () => {
   const [offerPhone, setOfferPhone] = useState('');
   const [offerConsent, setOfferConsent] = useState(false);
   const [offerMessage, setOfferMessage] = useState('');
+  const [offerSaving, setOfferSaving] = useState(false);
   const [offerUnlocked, setOfferUnlocked] = useState(false);
   const [copiedOfferCode, setCopiedOfferCode] = useState('');
   const [homeWaterBannerIndex, setHomeWaterBannerIndex] = useState(0);
@@ -693,16 +696,34 @@ export const Home: React.FC = () => {
   }, [loadProducts]);
 
   useEffect(() => {
-    setShowOfferPopup(false);
-    return undefined;
-  }, []);
+    if (user || window.sessionStorage.getItem('tfx_offer_popup_dismissed') || window.localStorage.getItem('tfx_surprise_coupon_phone')) return;
+    const timer = window.setTimeout(() => setShowOfferPopup(true), 12000);
+    return () => window.clearTimeout(timer);
+  }, [user]);
 
   useEffect(() => {
     if (!showOfferPopup) return undefined;
     const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement as HTMLElement | null;
     document.body.style.overflow = 'hidden';
+    const dialog = document.getElementById('first-order-offer');
+    const elements = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button, input, a[href]') || []).filter(element => !element.hasAttribute('disabled'));
+    elements()[0]?.focus();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { window.sessionStorage.setItem('tfx_offer_popup_dismissed', '1'); setShowOfferPopup(false); }
+      if (event.key === 'Tab') {
+        const focusable = elements();
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+      }
+    };
+    document.addEventListener('keydown', onKey);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', onKey);
+      previousFocus?.focus();
     };
   }, [showOfferPopup]);
 
@@ -788,17 +809,24 @@ export const Home: React.FC = () => {
       return;
     }
 
-    window.localStorage.setItem('tfx_surprise_coupon_phone', normalizedPhone);
-    window.localStorage.setItem('tfx_surprise_coupon_name', offerName.trim());
-    await addOfferLead({
+    if (offerSaving) return;
+    setOfferSaving(true);
+    try {
+      await addOfferLead({
       name: offerName.trim(),
       phone: normalizedPhone,
       source: 'home_popup',
       couponCodes: [],
       message: 'Direct offer: 10% off fans, 5% off rings and eligible bands',
+      marketingConsent: true,
+      consentAt: new Date().toISOString(),
     });
+    window.localStorage.setItem('tfx_surprise_coupon_phone', normalizedPhone);
+    window.localStorage.setItem('tfx_surprise_coupon_name', offerName.trim());
     setOfferMessage('');
     setOfferUnlocked(true);
+    } catch { setOfferMessage('Unable to save your details. Please try again.'); }
+    finally { setOfferSaving(false); }
   };
 
   const handleCopyOfferCode = async (code: string) => {
@@ -885,6 +913,10 @@ export const Home: React.FC = () => {
 
       {showOfferPopup && createPortal((
         <div
+          id="first-order-offer"
+          role="dialog"
+          aria-modal="true"
+          aria-label="First order offer"
           className={`fixed inset-0 flex min-h-[100dvh] items-center justify-center overflow-y-auto bg-black/85 px-3 py-5 transition-opacity duration-300 ease-out sm:px-4 sm:py-8 ${
             popupEntered ? 'opacity-100' : 'opacity-0'
           }`}
@@ -960,6 +992,7 @@ export const Home: React.FC = () => {
               <input
                 type="text"
                 value={offerName}
+                aria-label="Your name"
                 onChange={(event) => setOfferName(event.target.value)}
                 placeholder="Enter your name"
                 className="h-10 w-full rounded-xl border border-white/20 bg-white/10 px-4 text-sm font-semibold text-white shadow-[inset_0_1px_3px_rgba(15,23,42,0.18)] outline-none placeholder:text-slate-300 focus:border-[#df0b16]"
@@ -975,6 +1008,7 @@ export const Home: React.FC = () => {
                   type="tel"
                   inputMode="numeric"
                   value={offerPhone}
+                  aria-label="WhatsApp mobile number"
                   onChange={(event) => setOfferPhone(event.target.value.replace(/\D/g, '').slice(0, 12))}
                   placeholder="Phone number"
                   className="min-w-0 flex-1 bg-transparent px-4 text-sm font-semibold text-white outline-none placeholder:text-slate-300"
@@ -996,9 +1030,10 @@ export const Home: React.FC = () => {
               <button
                 type="button"
                 onClick={handleAvailHomeOffer}
+                disabled={offerSaving}
                 className="mt-2 h-11 w-full rounded-xl bg-[#df0b16] text-sm font-black text-white shadow-[0_16px_28px_rgba(223,11,22,0.26)] transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#c70712] hover:shadow-[0_20px_34px_rgba(223,11,22,0.32)] active:translate-y-0 active:scale-[0.97] sm:h-12 sm:text-base"
               >
-                Unlock Offer Now
+                {offerSaving ? 'Saving…' : 'Unlock Offer Now'}
               </button>
             </div>
               </>
@@ -1389,6 +1424,14 @@ export const Home: React.FC = () => {
       </section>
 
       <ScrollLinkedBanners />
+
+      <WearableFinder />
+      <BundleOffer catalog={products} />
+      <section className="bg-slate-50 px-4 py-10 text-center text-slate-950">
+        <h2 className="text-2xl font-bold">From the TheFutureX blog</h2>
+        <p className="mt-2 text-slate-600">Buying guides, product comparisons and tips for your everyday routine.</p>
+        <Link to="/blog" className="mt-4 inline-block rounded-xl bg-slate-950 px-6 py-3 font-semibold text-white">Read our guides</Link>
+      </section>
 
       <section className="bg-slate-50 px-4 py-14 sm:py-20">
         <div className="mx-auto max-w-4xl">

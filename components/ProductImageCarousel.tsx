@@ -269,7 +269,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                 }`}
                 aria-label={`View ${alt} ${item.type} ${idx + 1}`}
               >
-                {item.type === 'video' ? (() => {
+                {item.type === 'video' && idx !== selectedIndex ? <span className="grid h-full place-items-center bg-slate-100 text-slate-600">Select to load video</span> : item.type === 'video' ? (() => {
                   const embedUrl = getVideoEmbedUrl(item.src);
                   return embedUrl ? (
                     <iframe
@@ -278,7 +278,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                       className="h-full w-full bg-black"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                       allowFullScreen
-                      loading="eager"
+                      loading="lazy"
                       referrerPolicy="strict-origin-when-cross-origin"
                       onClick={(event) => event.stopPropagation()}
                     />
@@ -286,11 +286,10 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                   <video
                     src={processedImages[item.src] || item.src}
                       className={`product-gallery-video h-full w-full bg-white object-center ${videoFit === 'cover' ? 'object-cover' : 'object-contain'}`}
-                      autoPlay
                       muted
                       loop
                       playsInline
-                    preload="metadata"
+                    preload="none"
                     controls
                     />
                   );

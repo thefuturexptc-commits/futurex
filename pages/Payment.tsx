@@ -216,6 +216,8 @@ export const Payment: React.FC = () => {
       },
     };
 
+    pushDataLayerEvent('purchase', purchaseEvent);
+
     try {
       await saveAddressIfNeeded(addressForOrder);
     } catch (addressError) {

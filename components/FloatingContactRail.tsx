@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 
 type ContactKey = 'inquiry' | 'email' | 'phone' | 'whatsapp';
 
@@ -65,40 +65,10 @@ const contactItems: Array<{
 
 export const FloatingContactRail: React.FC = () => {
   const [activeKey, setActiveKey] = useState<ContactKey | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const activeItem = contactItems.find((item) => item.key === activeKey);
 
-  useEffect(() => {
-    let showTimer: number | undefined;
-    let hideTimer: number | undefined;
-
-    const scheduleShow = () => {
-      showTimer = window.setTimeout(() => {
-        setIsVisible(true);
-        hideTimer = window.setTimeout(() => {
-          setActiveKey(null);
-          setIsVisible(false);
-          scheduleShow();
-        }, 5500);
-      }, 2500);
-    };
-
-    scheduleShow();
-
-    return () => {
-      if (showTimer) window.clearTimeout(showTimer);
-      if (hideTimer) window.clearTimeout(hideTimer);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!isVisible) {
-      setActiveKey(null);
-    }
-  }, [isVisible]);
-
   return (
-    <aside className={`floating-contact-rail ${isVisible ? 'is-visible' : 'is-hidden'}`} aria-label="Quick contact shortcuts">
+    <aside className="floating-contact-rail is-visible" aria-label="Quick contact shortcuts">
       {activeItem && (
         <div className="floating-contact-card">
           <p className="floating-contact-card-label">{activeItem.label}</p>
@@ -110,7 +80,9 @@ export const FloatingContactRail: React.FC = () => {
       )}
 
       <div className="floating-contact-stack">
-        {contactItems.map((item) => (
+        {contactItems.map((item) => item.key === 'whatsapp' ? (
+          <a key={item.key} href={item.href} aria-label="Chat on WhatsApp" title="Chat on WhatsApp" target="_blank" rel="noopener noreferrer" className="floating-contact-button !bg-emerald-600 !text-white">{item.icon}</a>
+        ) : (
           <button
             key={item.key}
             type="button"

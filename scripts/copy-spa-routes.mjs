@@ -7,7 +7,7 @@ import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/
 import { generateSitemapXML, getRemotePublishedBlogPosts } from '../utils/generateSitemap.js';
 import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/generateMerchantFeed.js';
 import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
-import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification } from '../utils/productSchema.js';
+import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification, withProductReviewSummary } from '../utils/productSchema.js';
 import { tfx5BlogPosts } from '../utils/tfx5BlogPosts.js';
 import { getBlogProductImage } from '../utils/blogProductImage.ts';
 import { publishedBlogPosts, isBlogPostPublic } from '../utils/publishedBlogPosts.ts';
@@ -240,9 +240,7 @@ const fetchRemoteProducts = async () => {
     return snapshot.docs
       .map((doc) => {
         const product = { ...doc.data(), id: doc.id };
-        const reviews = new Map((Array.isArray(product.reviews) ? product.reviews : []).map((review, index) => [review.id || `embedded-${index}`, review]));
-        (reviewsByProduct.get(doc.id) || []).forEach((review) => reviews.set(review.id, review));
-        return { ...product, reviews: [...reviews.values()] };
+        return withProductReviewSummary(product, reviewsByProduct.get(doc.id) || []);
       })
       .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
   } catch (error) {
@@ -809,7 +807,12 @@ const productRoutes = [...productRouteMap.keys()]
   .map((slug) => `product/${slug}`);
 
 const publishedRoutes = [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes].map((route) => route.path.replace(/^\//, ''));
-const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...productRoutes]);
+// Retired catalog slugs must never receive an indexable homepage shell as their
+// product fallback. Emit product pages only when current Product/Offer data exists.
+const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...productRoutes].filter(route => {
+  const clean = String(route).replace(/^\/+|\/+$/g, '');
+  return !clean.startsWith('product/') || productRouteMap.has(clean.slice('product/'.length));
+}));
 
 const getRouteHtml = (route, product) => {
   if (product) {

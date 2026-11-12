@@ -3,7 +3,7 @@ import { User } from '../types';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '../services/firebaseConfig';
 import { resolveAuthenticatedUser } from '../services/backend';
-import { pushDataLayerEvent } from '../services/analytics';
+import { pushDataLayerEvent, setAnalyticsIdentity } from '../services/analytics';
 
 interface AuthContextType {
   user: User | null;
@@ -47,12 +47,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setAnalyticsIdentity(false, false);
       // Professional auth behavior:
       // treat app login as valid only when Firebase has a non-anonymous session.
       if (!firebaseUser || firebaseUser.isAnonymous) {
         setUser(null);
         localStorage.removeItem('aura_active_user');
         setIsAuthReady(true);
+        setAnalyticsIdentity(true, false);
         return;
       }
 
@@ -61,11 +63,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const sanitized = sanitizeUserForStorage(resolvedUser);
           setUser(sanitized);
           localStorage.setItem('aura_active_user', JSON.stringify(sanitized));
+          setAnalyticsIdentity(true, ['admin', 'superadmin'].includes(sanitized.role));
         })
         .catch(() => {
           // If profile restore fails, keep auth deterministic and logged out.
           setUser(null);
           localStorage.removeItem('aura_active_user');
+          // A failed profile lookup cannot establish that this is a customer.
+          setAnalyticsIdentity(true, true);
         })
         .finally(() => {
           setIsAuthReady(true);
@@ -78,6 +83,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const sanitized = sanitizeUserForStorage(userData);
     setUser(sanitized);
     localStorage.setItem('aura_active_user', JSON.stringify(sanitized));
+    setAnalyticsIdentity(true, ['admin', 'superadmin'].includes(sanitized.role));
     pushDataLayerEvent('login', {
       user_id: sanitized.id,
       method: 'site',
@@ -88,6 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem('aura_active_user');
+    setAnalyticsIdentity(true, false);
     void signOut(auth).catch(() => {
       // Ignore signout failures and still clear local session.
     });

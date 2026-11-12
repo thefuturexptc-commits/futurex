@@ -6,7 +6,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return signedIn() &&
+      return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in ['admin', 'superadmin'];
     }
 
@@ -56,7 +56,8 @@ service cloud.firestore {
     }
 
     match /orders/{orderId} {
-      allow create: if signedIn();
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid &&
+        request.resource.data.status == 'Processing';
       allow read: if signedIn() && (resource.data.userId == request.auth.uid || isAdmin() || isSuperAdminEmail());
       allow update, delete: if isAdmin() || isSuperAdminEmail();
     }
@@ -67,8 +68,27 @@ service cloud.firestore {
     }
 
     match /site_analytics/{eventId} {
-      allow create: if true;
+      allow create: if !(isAdmin() || isSuperAdminEmail()) &&
+        !request.resource.data.pagePath.matches('^/admin(/.*|[?].*|$)');
       allow read, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /analytics_excluded_sessions/{sessionId} {
+      allow read, write: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /offer_leads/{leadId} {
+      allow create: if request.resource.data.phone is string && request.resource.data.phone.size() <= 20;
+      allow read, update, delete: if isAdmin() || isSuperAdminEmail();
+    }
+
+    match /recovery_carts/{userId} {
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow create, update: if signedIn() && request.auth.uid == userId &&
+        request.resource.data.userId == userId && request.resource.data.consent is bool &&
+        request.resource.data.items is list && request.resource.data.items.size() <= 50 &&
+        request.resource.data.keys().hasOnly(['userId', 'consent', 'consentAt', 'items', 'updatedAt', 'completed']);
+      allow delete: if signedIn() && request.auth.uid == userId;
     }
 
     match /users/{userId} {

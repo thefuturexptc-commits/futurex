@@ -1520,6 +1520,7 @@ export const AdminDashboard: React.FC = () => {
 
       {activeTab === 'analytics' && (
         <AnalyticsTab
+          users={users}
           products={products}
           orders={orders}
           siteEvents={siteAnalyticsEvents}

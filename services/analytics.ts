@@ -1,6 +1,7 @@
 import type { CartItem } from '../types';
 import type { Product } from '../types';
-import { addDoc, collection } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
+import { isAdminPath } from '../utils/analyticsPolicy.js';
 import { auth, db } from './firebaseConfig';
 import type { SiteAnalyticsEvent, SiteAnalyticsEventName } from '../types';
 
@@ -183,6 +184,7 @@ const fetchAndStoreVisitorGeo = async ({ forceRefresh = false }: { forceRefresh?
 export const getApproxVisitorGeo = (): Promise<VisitorGeo> => fetchAndStoreVisitorGeo();
 
 export const preloadVisitorGeo = () => {
+  if (!analyticsReady || isTrackingExcluded()) return;
   void fetchAndStoreVisitorGeo({ forceRefresh: true }).then((ipGeo) => {
     if (hasGeoValue(ipGeo)) {
       pushDataLayerEvent('location_update', { locationSource: ipGeo.locationSource || 'lookup' });
@@ -194,21 +196,63 @@ const getStoredActiveUser = () => {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem('aura_active_user');
-    return raw ? (JSON.parse(raw) as { email?: string; phone?: string }) : null;
+    return raw ? (JSON.parse(raw) as { email?: string; phone?: string; role?: string }) : null;
   } catch {
     return null;
   }
+};
+
+let analyticsReady = false;
+let analyticsAdmin = false;
+let gtmInitialized = false;
+let memorySession: { id: string; lastSeen: number } | null = null;
+const markedAdminSessions = new Set<string>();
+const pendingEvents: Array<() => void> = [];
+export const setAnalyticsIdentity = (ready: boolean, admin: boolean) => {
+  analyticsReady = ready;
+  analyticsAdmin = admin;
+  if (typeof window !== 'undefined') {
+    const target = window as unknown as Record<string, unknown>;
+    target.tfxAnalyticsExcluded = !ready || admin || isAdminPath(window.location.pathname);
+    const measurementId = import.meta.env.VITE_FIREBASE_MEASUREMENT_ID;
+    if (measurementId) target[`ga-disable-${measurementId}`] = target.tfxAnalyticsExcluded;
+  }
+  if (ready) pendingEvents.splice(0).forEach(work => { if (!admin) work(); });
+  if (ready && admin && auth.currentUser) {
+    const sessions = [getAnalyticsSessionId()];
+    try {
+      const legacy = window.localStorage.getItem(ANALYTICS_SESSION_KEY);
+      if (legacy) sessions.push(legacy);
+    } catch { /* Optional legacy attribution. */ }
+    sessions.forEach(sessionId => {
+      if (markedAdminSessions.has(sessionId)) return;
+      markedAdminSessions.add(sessionId);
+      // This is an exclusion marker, never a visitor or conversion event.
+      void setDoc(doc(db, 'analytics_excluded_sessions', sessionId), { userId: auth.currentUser!.uid, timestamp: new Date().toISOString() }).catch(() => markedAdminSessions.delete(sessionId));
+    });
+  }
+};
+export const isTrackingExcluded = (path?: string) => {
+  const stored = getStoredActiveUser();
+  return typeof window === 'undefined' || analyticsAdmin ||
+    isAdminPath(path || window.location.pathname) || isAdminPath(window.location.pathname) ||
+    ['admin', 'superadmin'].includes(stored?.role || '') ||
+    stored?.email?.toLowerCase() === 'thefuturex.ptc@gmail.com';
 };
 
 const getAnalyticsSessionId = () => {
   if (typeof window === 'undefined') return 'server';
   const next = `session_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
   try {
-    const existing = window.localStorage.getItem(ANALYTICS_SESSION_KEY);
-    if (existing) return existing;
-    window.localStorage.setItem(ANALYTICS_SESSION_KEY, next);
+    const existing = JSON.parse(window.sessionStorage.getItem(ANALYTICS_SESSION_KEY) || 'null');
+    const active = existing && Date.now() - existing.lastSeen < 30 * 60 * 1000;
+    const id = active ? existing.id : next;
+    window.sessionStorage.setItem(ANALYTICS_SESSION_KEY, JSON.stringify({ id, lastSeen: Date.now() }));
+    return id;
   } catch {
-    return next;
+    const id = memorySession && Date.now() - memorySession.lastSeen < 30 * 60 * 1000 ? memorySession.id : next;
+    memorySession = { id, lastSeen: Date.now() };
+    return id;
   }
   return next;
 };
@@ -271,7 +315,8 @@ const toSiteAnalyticsEvent = (event: SiteAnalyticsEventName, payload: DataLayerE
     timestamp: new Date().toISOString(),
     sessionId: getAnalyticsSessionId(),
     userId: auth.currentUser?.uid,
-    isLoggedIn: Boolean(auth.currentUser?.uid || storedUser),
+    isLoggedIn: Boolean((auth.currentUser && !auth.currentUser.isAnonymous) || storedUser),
+    userRole: storedUser?.role || 'visitor',
     userEmail: auth.currentUser?.email || storedUser?.email || undefined,
     userPhone: typeof payload.phone === 'string' ? payload.phone : storedUser?.phone || undefined,
     referrer: String(payload.referrer || (typeof document !== 'undefined' ? document.referrer : '') || ''),
@@ -307,10 +352,13 @@ const toSiteAnalyticsEvent = (event: SiteAnalyticsEventName, payload: DataLayerE
 const recordSiteAnalyticsEvent = async (event: string, payload: DataLayerEvent) => {
   if (typeof window === 'undefined' || !TRACKED_SITE_EVENTS.has(event as SiteAnalyticsEventName)) return;
   try {
-    await fetchAndStoreVisitorGeo();
+    if (isTrackingExcluded(String(payload.page_path || ''))) return;
     const analyticsEvent = toSiteAnalyticsEvent(event as SiteAnalyticsEventName, payload);
+    if (event === 'purchase' && analyticsEvent.orderId) analyticsEvent.id = `purchase_${analyticsEvent.orderId}`;
+    // Firestore rejects undefined values. Keep the event's original page and time.
+    const cleanEvent = JSON.parse(JSON.stringify(analyticsEvent));
     writeLocalAnalyticsEvent(analyticsEvent);
-    addDoc(collection(db, 'site_analytics'), analyticsEvent).catch(() => {
+    setDoc(doc(db, 'site_analytics', analyticsEvent.id), cleanEvent).catch(() => {
       // local fallback is already saved
     });
   } catch {
@@ -426,28 +474,51 @@ const pushMetaEvent = (event: string, payload: DataLayerEvent) => {
 };
 
 export const pushDataLayerEvent = (event: string, payload: DataLayerEvent = {}) => {
+  if (isTrackingExcluded(String(payload.page_path || ''))) return;
+  if (!analyticsReady) {
+    const snapshot = { page_path: window.location.pathname, page_location: window.location.href, page_title: document.title, ...payload };
+    pendingEvents.push(() => pushDataLayerEvent(event, snapshot));
+    return;
+  }
+  if (event === 'purchase') {
+    const orderId = firstAnalyticsItem(payload).ecommerce?.transaction_id;
+    if (!orderId) return;
+    try {
+      const key = `tfx_purchase_tracked_${orderId}`;
+      if (window.localStorage.getItem(key)) return;
+      window.localStorage.setItem(key, '1');
+    } catch { /* Tracking still works without storage. */ }
+  }
   const dataLayer = getDataLayer();
+  if (!gtmInitialized && dataLayer) {
+    gtmInitialized = true;
+    dataLayer.push({ 'gtm.start': Date.now(), event: 'gtm.js' });
+    const script = document.createElement('script');
+    script.async = true;
+    script.src = 'https://www.googletagmanager.com/gtm.js?id=GTM-MFP4VCPQ';
+    document.head.appendChild(script);
+  }
   if (dataLayer) {
     dataLayer.push({ ecommerce: null });
     dataLayer.push({ event, ...payload });
   }
   void recordSiteAnalyticsEvent(event, payload);
   pushMetaEvent(event, payload);
+  if (event === 'page_view') trackMetaEvent('PageView');
 };
 
 export const pushPageView = (path: string, title: string) => {
-  void fetchAndStoreVisitorGeo().finally(() => {
-    pushDataLayerEvent('page_view', {
+  if (isTrackingExcluded(path)) return;
+  pushDataLayerEvent('page_view', {
       page_path: path,
       page_location: window.location.href,
       page_title: title,
       referrer: document.referrer,
     });
-  });
   pushDataLayerEvent('virtual_page_view', {
     page_path: path,
     page_location: window.location.href,
     page_title: title,
   });
-  trackMetaEvent('PageView');
+  // Route Meta events pass through the same auth-ready gate.
 };

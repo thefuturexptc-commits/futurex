@@ -216,6 +216,10 @@
   ],
   "rewrites": [
     {
+      "source": "/product-reviews.xml",
+      "destination": "/api/product-reviews"
+    },
+    {
       "source": "/",
       "has": [
         {

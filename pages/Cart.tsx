@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '../components/ui/Button';
+import { CartReminder } from '../components/CartReminder';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 
 export const Cart: React.FC = () => {
@@ -33,6 +34,7 @@ export const Cart: React.FC = () => {
   return (
     <div className="cart-page min-h-screen max-w-7xl mx-auto px-4 py-10 sm:py-12 pb-24 sm:pb-12">
       <h1 className="text-2xl sm:text-3xl font-bold text-white mb-6 sm:mb-8">Shopping Cart</h1>
+      <CartReminder />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-4">

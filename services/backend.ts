@@ -27,6 +27,7 @@ import { TFX5_AI_BAND_PRICE, TFX5_AI_BAND_MRP, isTfxV5Band, isPureAirThreeInOne,
 import { correctRingModel, getProductModelNumbers } from '../utils/productModel';
 import { getFanTitle } from '../utils/fanListings';
 import { isCatalogProductPublished } from '../utils/catalogVisibility.js';
+import { getSchemaReviews, withProductReviewSummary } from '../utils/productSchema.js';
 
 const logDevWarning = (...args: unknown[]) => {
   if (import.meta.env.DEV) {
@@ -671,18 +672,7 @@ const buildDefaultProductReviews = (product: Product): ProductPublicReview[] => 
 const ensureProductReviews = (product: Product): Product => {
   // Never manufacture social proof. Only persisted customer reviews may be
   // displayed or included in Product structured data.
-  const reviews = (Array.isArray(product.reviews) ? product.reviews : [])
-    .filter((review) => !String(review.id || '').includes('_seed_review_'));
-  const rating = reviews.length
-    ? Number((reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length).toFixed(1))
-    : 0;
-
-  return {
-    ...product,
-    reviews,
-    reviewCount: reviews.length,
-    rating,
-  };
+  return withProductReviewSummary(product);
 };
 
 const stripUnsupportedRingGestureText = (value = ''): string =>
@@ -1110,6 +1100,8 @@ export const seedDatabase = async () => {
 
 export const uploadFile = async (file: File, path: string): Promise<string> => {
     try {
+        const { compressImage } = await import('../utils/compressImage');
+        file = await compressImage(file);
         const { ref, uploadBytes, getDownloadURL, getStorage } = await import('firebase/storage');
         const storage = getStorage(mainApp);
         // Video uploads can take longer on a normal mobile/office connection.
@@ -1160,10 +1152,15 @@ export const getProducts = async (): Promise<Product[]> => {
     const requestRevision = productsCacheRevision;
     try {
       await ensureFirebaseConnection();
-      const querySnapshot = await withTimeout(getDocs(collection(db, 'products')), 6000);
+      const [querySnapshot, reviewSnapshot] = await Promise.all([
+        withTimeout(getDocs(collection(db, 'products')), 6000),
+        withTimeout(getDocs(collection(db, 'product_reviews')), 4500).catch(() => null),
+      ]);
+      const publicReviews = reviewSnapshot?.docs.map(review => ({ ...review.data(), id: review.id })) || [];
       const fbProducts: Product[] = [];
       querySnapshot.forEach((snapshotDoc) => {
-        fbProducts.push({ ...(snapshotDoc.data() as Product), id: snapshotDoc.id });
+        const product = { ...(snapshotDoc.data() as Product), id: snapshotDoc.id };
+        fbProducts.push(withProductReviewSummary(product, publicReviews.filter(review => review.productId === product.id)));
       });
       const normalized = fbProducts.filter(isCatalogProductPublished).map(normalizeProductColors);
       if (requestRevision !== productsCacheRevision && productsCache) return [...productsCache.data];
@@ -1225,7 +1222,6 @@ export const getProductById = async (id: string): Promise<Product | undefined> =
 };
 
 export const getProductReviews = async (productId: string): Promise<ProductPublicReview[]> => {
-  const localReviews = getMockData<ProductPublicReview[]>(`product_reviews_${productId}`, []);
   let remoteReviews: ProductPublicReview[] = [];
 
   try {
@@ -1241,14 +1237,7 @@ export const getProductReviews = async (productId: string): Promise<ProductPubli
     }
   }
 
-  const combined = [...remoteReviews];
-  localReviews.forEach((localReview) => {
-    if (!combined.some((review) => review.id === localReview.id)) {
-      combined.push(localReview);
-    }
-  });
-
-  return combined.sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
+  return getSchemaReviews(remoteReviews);
 };
 
 export const addProductReview = async (productId: string, review: ProductPublicReview): Promise<ProductPublicReview> => {
@@ -1257,9 +1246,15 @@ export const addProductReview = async (productId: string, review: ProductPublicR
     ...review,
     id: reviewId,
     productId,
+    date: new Date().toISOString(),
+    source: 'website',
+    verifiedBuyer: false,
     images: (review.images || []).slice(0, 2),
     rating: Math.max(1, Math.min(5, Number(review.rating || 0))),
   }) as ProductPublicReview;
+
+  await ensureFirebaseConnection();
+  await setDoc(doc(db, 'product_reviews', reviewId), cleanReview);
 
   const localReviews = getMockData<ProductPublicReview[]>(`product_reviews_${productId}`, []);
   setMockData(`product_reviews_${productId}`, [cleanReview, ...localReviews.filter((item) => item.id !== reviewId)]);
@@ -1277,15 +1272,6 @@ export const addProductReview = async (productId: string, review: ProductPublicR
     });
     setMockData('products', products);
     refreshProductsCache(products);
-  }
-
-  try {
-    await ensureFirebaseConnection();
-    await setDoc(doc(db, 'product_reviews', reviewId), cleanReview, { merge: true });
-  } catch (error) {
-    if (!isPermissionDeniedError(error) && !isAbortLikeError(error)) {
-      logDevWarning('Failed to sync product review:', error);
-    }
   }
 
   return cleanReview;
@@ -1410,6 +1396,7 @@ export const addOfferLead = async (
     if (!isPermissionDeniedError(error) && !isAbortLikeError(error) && !isTimeoutLikeError(error)) {
       logDevWarning('Failed to sync offer lead:', error);
     }
+    throw new Error('Unable to save your offer details. Please try again.');
   }
 
   return offerLead;

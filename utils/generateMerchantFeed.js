@@ -4,7 +4,7 @@ import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { getCustomerFacingPrice } from './productSeoData.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
 import { getCatalogOffer, isTfxV5Band } from './catalogPricing.js';
-import { mergeProductReviews } from './productSchema.js';
+import { withProductReviewSummary } from './productSchema.js';
 import { formatProductName } from './productName.js';
 import { getFanTitle } from './fanListings.js';
 import { getFallbackProductImageUrl } from './productImageFallback.js';
@@ -233,7 +233,7 @@ const withTimeout = (promise, timeoutMs) =>
     }),
   ]);
 
-export const getRemoteProducts = async ({ includeReviews = false } = {}) => {
+export const getRemoteProducts = async ({ includeReviews = false, requireReviews = false } = {}) => {
   const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const snapshot = await withTimeout(getDocs(collection(db, 'products')), 6500);
@@ -246,11 +246,17 @@ export const getRemoteProducts = async ({ includeReviews = false } = {}) => {
   try {
     const reviews = await withTimeout(getDocs(collection(db, 'product_reviews')), 6500);
     const rows = reviews.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
-    return products.map((product) => ({ ...product, reviews: mergeProductReviews(product.reviews, rows.filter((review) => review.productId === product.id)) }));
+    return products.map((product) => withProductReviewSummary(product, rows.filter((review) => review.productId === product.id)));
   } catch (error) {
+    if (requireReviews) throw error;
     console.warn('Public review fetch failed; using saved product reviews.');
-    return products;
+    return products.map(product => withProductReviewSummary(product));
   }
+};
+
+export const getMerchantReviewSkus = product => {
+  const variants = getColorVariants(product);
+  return variants.length ? variants.map(variant => getVariantProductId(product, variant)) : [getMerchantProductId(product)];
 };
 
 const tag = (name, value) => {

@@ -1,6 +1,10 @@
 import { formatInrAmount } from '../../../utils/coupons';
 import React, { useEffect, useMemo, useState } from 'react';
-import { Order, Product, SiteAnalyticsEvent } from '../../../types';
+import { Order, Product, SiteAnalyticsEvent, User } from '../../../types';
+import { buildConversionFunnel, filterStorefrontEvents } from '../../../utils/analyticsPolicy.js';
+import { getProductStock } from '../../../utils/productAvailability.js';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '../../../services/firebaseConfig';
 import { Button } from '../../ui/Button';
 import { SectionHeader } from '../common/SectionHeader';
 import { AnalyticsRange, filterOrdersByRange } from '../types';
@@ -9,6 +13,7 @@ interface Props {
   products: Product[];
   orders: Order[];
   siteEvents: SiteAnalyticsEvent[];
+  users: User[];
   range: AnalyticsRange;
   onRangeChange: (range: AnalyticsRange) => void;
 }
@@ -182,11 +187,23 @@ const eventTime = (event: SiteAnalyticsEvent) => getEventDate(event)?.getTime() 
 
 const toDateInput = (date: Date) => date.toISOString().slice(0, 10);
 
-export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, range, onRangeChange }) => {
+export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: rawEvents, users, range, onRangeChange }) => {
+  const [excludedSessions, setExcludedSessions] = useState<Set<string>>(new Set());
+  const [exclusionError, setExclusionError] = useState('');
+  useEffect(() => onSnapshot(collection(db, 'analytics_excluded_sessions'), snapshot => { setExcludedSessions(new Set(snapshot.docs.map(doc => doc.id))); setExclusionError(''); }, () => setExclusionError('Admin session exclusions could not load. Deploy the updated Firestore rules before relying on these totals.')), []);
+  const siteEvents = useMemo(() => filterStorefrontEvents(rawEvents, users.filter(user => ['admin', 'superadmin'].includes(user.role))).filter(event => !excludedSessions.has(event.sessionId)), [rawEvents, users, excludedSessions]);
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const rangedOrders = useMemo(() => filterOrdersByRange(orders, range), [orders, range]);
   const rangedSiteEvents = useMemo(() => filterEventsByRange(siteEvents, range), [siteEvents, range]);
+  const funnel = useMemo(() => buildConversionFunnel(rangedSiteEvents), [rangedSiteEvents]);
+  const dayKey = (date: Date) => date.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' });
+  const today = dayKey(new Date());
+  const yesterday = dayKey(new Date(Date.now() - 86400000));
+  const dailySummary = [today, yesterday].map(day => {
+    const daily = orders.filter(order => order.status !== 'Cancelled' && order.status !== 'Returned' && getOrderDate(order) && dayKey(getOrderDate(order)!) === day);
+    return { orders: daily.length, revenue: daily.reduce((sum, order) => sum + getOrderTotal(order), 0), views: siteEvents.filter(event => event.event === 'page_view' && getEventDate(event) && dayKey(getEventDate(event)!) === day).length };
+  });
   const yearlyOrders = useMemo(
     () => orders.filter((o) => getOrderDate(o)?.getFullYear() === selectedYear),
     [orders, selectedYear]
@@ -717,6 +734,22 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents, ra
 
   return (
     <div className="space-y-8 animate-fade-in-up">
+      {exclusionError && <p role="status" className="rounded-xl border border-amber-400/30 p-4 text-sm text-amber-300">{exclusionError}</p>}
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-5 text-white">
+        <h2 className="text-xl font-bold">Today vs yesterday</h2>
+        <p className="mt-1 text-xs text-slate-400">India time · partial day compared with full yesterday</p>
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">{dailySummary.map((day, index) => <div key={index}><h3 className="font-semibold">{index === 0 ? 'Today' : 'Yesterday'}</h3><p>{day.views} page views · {day.orders} orders · {formatInrAmount(day.revenue)}</p></div>)}</div>
+        <h3 className="mt-5 font-semibold">Low stock (5 or fewer available)</h3>
+        <ul className="mt-2 text-sm text-amber-300">{products.filter(product => getProductStock(product) <= 5).map(product => <li key={product.id}>{product.name}: {Math.max(0, getProductStock(product))}</li>)}</ul>
+        <h3 className="mt-5 font-semibold">Top products in selected period</h3>
+        <ol className="mt-2 text-sm text-slate-300">{summary.topProducts.filter(product => product.sold > 0).map(product => <li key={product.id}>{product.name} · {product.sold} sold</li>)}</ol>
+      </section>
+      <section className="rounded-xl border border-white/10 bg-slate-900 p-5 text-white">
+        <h2 className="text-xl font-bold">Storefront conversion funnel</h2>
+        <p className="mt-1 text-sm text-slate-400">Unique sessions completing these steps in order during the selected period. Admin sessions excluded. Latest 1,500 events; older incomplete sessions can be undercounted.</p>
+        <div className="mt-5 grid gap-4 sm:grid-cols-4">{['View', 'Add to cart', 'Checkout', 'Purchase'].map((label, index) => <div key={label}><p className="text-sm text-slate-300">{label}</p><p className="text-3xl font-bold">{funnel[index]}</p><p className="text-xs text-slate-400">{index === 0 ? 'Entry sessions' : `${funnel[index - 1] ? ((funnel[index] / funnel[index - 1]) * 100).toFixed(1) : '0'}% from previous step`}</p></div>)}</div>
+        <p className="mt-4 text-sm text-emerald-300">Overall conversion: {funnel[0] ? ((funnel[3] / funnel[0]) * 100).toFixed(1) : '0'}%</p>
+      </section>
       <SectionHeader
         title="Analytics"
         subtitle="Revenue, demand trend, and category-level performance (auto-updates as new monthly data arrives)"

@@ -43,7 +43,7 @@ export const Checkout: React.FC = () => {
   );
 
   useEffect(() => {
-    if (items.length === 0) return;
+    if (!isAuthReady || items.length === 0) return;
     const firedKey = window.sessionStorage.getItem('tfx_begin_checkout_key');
     if (firedKey === checkoutEventKey) return;
     window.sessionStorage.setItem('tfx_begin_checkout_key', checkoutEventKey);
@@ -54,7 +54,7 @@ export const Checkout: React.FC = () => {
         items: cartItemsToAnalyticsItems(items),
       },
     });
-  }, [checkoutEventKey, items, discountedTotal]);
+  }, [checkoutEventKey, items, discountedTotal, isAuthReady]);
 
   useEffect(() => {
     if (!isAuthReady || user || items.length === 0) return;

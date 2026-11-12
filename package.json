@@ -11,6 +11,8 @@
     "predev": "node scripts/optimize-home-images.mjs",
     "prebuild": "node scripts/optimize-home-images.mjs",
     "typecheck": "tsc --noEmit",
+    "test:conversion": "node --test scripts/analytics.test.mjs scripts/engagement.test.cjs scripts/bundles.test.mjs scripts/reviews.test.mjs scripts/product-review-feed.test.mjs",
+    "audit:seo": "node scripts/audit-conversion-seo.mjs",
     "build": "vite build",
     "postbuild": "node scripts/copy-spa-routes.mjs",
     "preview": "vite preview",

@@ -41,6 +41,7 @@ export interface ProductPublicReview {
   userId?: string;
   userEmail?: string;
   verifiedBuyer?: boolean;
+  source?: 'website';
 }
 
 export interface ProductNotifyRequest {
@@ -66,6 +67,8 @@ export interface OfferLead {
   productId?: string;
   productName?: string;
   createdAt: string;
+  marketingConsent?: boolean;
+  consentAt?: string;
 }
 
 export interface SupportChatMessage {
@@ -259,6 +262,8 @@ export interface SiteAnalyticsEvent {
   timestamp: string;
   sessionId: string;
   userId?: string;
+  userRole?: string;
+  isAdmin?: boolean;
   pagePath?: string;
   pageTitle?: string;
   pageLocation?: string;

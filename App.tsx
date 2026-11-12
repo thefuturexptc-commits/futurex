@@ -11,6 +11,7 @@ import { AuthModalProvider } from './context/AuthModalContext';
 import { SiteFooter } from './components/SiteFooter';
 import { FloatingContactRail } from './components/FloatingContactRail';
 import { LoadingFallback } from './components/LoadingFallback';
+import { CartRecoverySync } from './components/CartReminder';
 import { preloadVisitorGeo, pushPageView } from './services/analytics';
 import { removePageScopedJsonLd, removeProductSocialMetadata, setCollectionPageJsonLd, setHomepageJsonLd, setSeoMetadata } from './services/seo';
 
@@ -464,11 +465,10 @@ const usePastHeroBanner = () => {
 
 const FloatingAfterHero: React.FC = () => {
   const pastHero = usePastHeroBanner();
-  if (!pastHero) return null;
 
   return (
     <>
-      <DeferredSupportAssistant />
+      {pastHero && <DeferredSupportAssistant />}
       <FloatingContactRail />
     </>
   );
@@ -489,6 +489,7 @@ const App: React.FC = () => {
               <ScrollToTop />
               <RouteSeo />
               <RouteAnalytics />
+              <CartRecoverySync />
               <OrderSourceTracker />
               <div className="flex flex-col min-h-screen text-gray-100 bg-dark-bg transition-colors duration-300 relative overflow-x-hidden">
                 <Header />
