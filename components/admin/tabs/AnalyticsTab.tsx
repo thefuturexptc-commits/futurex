@@ -739,6 +739,25 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: ra
 
   return (
     <div className="space-y-8 animate-fade-in-up">
+      <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-slate-900 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h2 className="text-lg font-semibold">Download analytics</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Export customer activity and locations for the selected date range and location filters ({filteredLocationEvents.length} events).
+          </p>
+          {!filteredLocationEvents.length && <p role="status" className="mt-1 text-sm text-slate-400">No events match the current filters.</p>}
+        </div>
+        <Button
+          size="sm"
+          variant="primary"
+          className="shrink-0"
+          disabled={!filteredLocationEvents.length}
+          onClick={() => downloadLocationCsv(filteredLocationEvents)}
+        >
+          <svg aria-hidden="true" className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 3v12m-5-5 5 5 5-5M5 16v5h14v-5" /></svg>
+          Download location CSV
+        </Button>
+      </div>
       {exclusionError && <p role="status" className="rounded-xl border border-amber-400/30 p-4 text-sm text-amber-300">{exclusionError}</p>}
       <section className="rounded-xl border border-white/10 bg-slate-900 p-5 text-white">
         <h2 className="text-xl font-bold">Today vs yesterday</h2>
