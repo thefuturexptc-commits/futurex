@@ -81,11 +81,17 @@
 
 @media (max-width: 639px) {
   #root .product-detail-page .product-specifications-header { flex-direction: column; gap: 12px; }
-  #root .product-detail-page .product-specifications-grid,
-  #root .product-detail-page .product-feature-list { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  #root .product-detail-page .product-specifications-grid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  #root .product-detail-page .product-feature-list { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   #root .product-detail-page .product-specifications-group summary { padding: 14px; }
   #root .product-detail-page .product-specifications-row { gap: 12px; padding: 12px 14px; }
-  #root .product-detail-page .product-feature-list > li { padding: 16px; }
+  #root .product-detail-page .product-feature-list > li { gap: 8px; min-width: 0; padding: 12px 10px; }
+  #root .product-detail-page .product-feature-list > li > div { min-width: 0; }
+  #root .product-detail-page .product-feature-check { width: 22px; height: 22px; }
+  #root .product-detail-page .product-feature-check svg { width: 14px; height: 14px; }
+  #root .product-detail-page .product-feature-list h3,
+  #root .product-detail-page .product-feature-list .product-feature-title { font-size: 12px; overflow-wrap: anywhere; }
+  #root .product-detail-page .product-feature-list p { font-size: 12px; }
 }
 
 @media (max-width: 359px) {
