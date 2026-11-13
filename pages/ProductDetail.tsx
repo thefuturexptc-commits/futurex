@@ -9,6 +9,8 @@ import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
 import { DeliveryEstimate } from '../components/DeliveryEstimate';
 import { BundleOffer } from '../components/BundleOffer';
+import { ReviewPhotos } from '../components/ReviewPhotos';
+import { BandAppShowcase } from '../components/BandAppShowcase';
 import { getProductFallbackImage } from '../utils/productImages';
 import { ProductCard } from '../components/ProductCard';
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
@@ -2896,6 +2898,9 @@ export const ProductDetail: React.FC = () => {
     ...overviewSections.slice(1),
   ];
   const mobileProductBannerSections = overviewMediaSections.filter((section) => section.image || section.video);
+  const bandAppShowcaseAfterTitle = productFamily === 'band'
+    ? overviewMediaSections.find(section => section.image)?.title
+    : undefined;
   const tfx5SecondOverviewImageTitle = isTfxV5Band
     ? overviewMediaSections.filter((section) => section.image)[1]?.title
     : undefined;
@@ -3826,6 +3831,7 @@ export const ProductDetail: React.FC = () => {
                   </div>
                 )}
               </RevealOnScroll>
+              {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
               {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-2">{tfx5Showcase}</div>}
               </React.Fragment>
             ))}
@@ -4097,6 +4103,7 @@ export const ProductDetail: React.FC = () => {
                     </div>
                   )}
                 </RevealOnScroll>
+                {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
                 {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-3">{tfx5Showcase}</div>}
                 </React.Fragment>
               ))}
@@ -4266,11 +4273,7 @@ export const ProductDetail: React.FC = () => {
                   <p className="product-review-stars mt-2 text-sm font-black" aria-label={`${review.rating} out of 5 stars`}>{'\u2605'.repeat(Math.max(1, Math.min(5, Number(review.rating || 0))))}</p>
                   <p className="mt-3 text-sm font-medium leading-6 text-slate-600">{review.comment}</p>
                   {review.images && review.images.length > 0 && (
-                    <div className="mt-3 flex gap-2">
-                      {review.images.slice(0, 2).map((image) => (
-                        <a key={image} href={image} target="_blank" rel="noopener noreferrer" aria-label={`Open ${review.name}'s product photo`} className="rounded-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-teal-600"><img src={image} alt={`${review.name} review`} width={80} height={80} className="h-20 w-20 rounded-lg border border-slate-200 object-cover" loading="lazy" decoding="async" /></a>
-                      ))}
-                    </div>
+                    <ReviewPhotos images={review.images} reviewer={review.name} />
                   )}
                 </article>
               ))}

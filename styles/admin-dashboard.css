@@ -1,0 +1,69 @@
+/* Keep the admin workspace readable independently of storefront theme rules. */
+#root .site-main-content .admin-dashboard-dark {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  color-scheme: light;
+}
+
+#root .site-main-content .admin-dashboard-dark :is(.bg-slate-900, .bg-gray-900, .bg-gray-800, .bg-dark-surface, .bg-white, .bg-gray-50, .dark\:bg-dark-surface, .dark\:bg-gray-800, .dark\:bg-white\/5) {
+  background: #ffffff !important;
+  border-color: #dbe3ed !important;
+}
+
+#root .site-main-content .admin-dashboard-dark :is(h1, h2, h3, h4, h5, h6, p, span, li, label, td, th, a, .text-white, .text-gray-900, .text-gray-800, .text-gray-700) {
+  color: #0f172a !important;
+}
+
+#root .site-main-content .admin-dashboard-dark h1 { font-size: clamp(1.5rem, 3vw, 2rem) !important; line-height: 1.2; }
+#root .site-main-content .admin-dashboard-dark h2 { font-size: 1.375rem !important; line-height: 1.35; }
+#root .site-main-content .admin-dashboard-dark h3 { font-size: 1.05rem !important; line-height: 1.4; }
+
+#root .site-main-content .admin-dashboard-dark :is(.text-slate-300, .text-slate-400, .text-gray-300, .text-gray-400, .text-gray-500, .text-gray-600, .dark\:text-gray-300, .dark\:text-gray-400) {
+  color: #526175 !important;
+}
+
+#root .site-main-content .admin-dashboard-dark :is(.text-cyan-300, .text-primary-600) { color: #036980 !important; }
+#root .site-main-content .admin-dashboard-dark :is(.text-amber-300, .text-amber-300 li, .text-amber-200) { color: #854d0e !important; }
+#root .site-main-content .admin-dashboard-dark :is(.text-emerald-300, .text-emerald-200) { color: #047857 !important; }
+#root .site-main-content .admin-dashboard-dark :is(.text-red-300, .text-red-200) { color: #b91c1c !important; }
+
+#root .site-main-content .admin-dashboard-dark :is(.bg-white\/5, .bg-white\/10, thead) { background-color: #f1f5f9 !important; }
+#root .site-main-content .admin-dashboard-dark :is(.border-white\/10, .border-white\/15) { border-color: #dbe3ed !important; }
+
+#root .site-main-content .admin-dashboard-dark :is(input:not([type='checkbox']):not([type='radio']):not([type='color']), select, textarea, option) {
+  background: #fff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+  -webkit-text-fill-color: #0f172a !important;
+}
+
+#root .site-main-content .admin-dashboard-dark button {
+  color: #334155 !important;
+}
+
+#root .site-main-content .admin-dashboard-dark :is(button.bg-primary-600, .holi-btn-primary) {
+  background: #036980 !important;
+  border-color: #036980 !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+#root .site-main-content .admin-dashboard-dark :is(button.bg-red-600, button.bg-red-500, .holi-btn-danger) {
+  background: #b91c1c !important;
+  color: #fff !important;
+  box-shadow: none !important;
+}
+
+#root .site-main-content .admin-dashboard-dark :is(.holi-btn-outline, .holi-btn-secondary) {
+  background: #fff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: none !important;
+}
+
+#root .site-main-content .admin-dashboard-dark button:focus-visible {
+  outline: 2px solid #036980;
+  outline-offset: 3px;
+}
+
+#root .site-main-content .admin-dashboard-dark :is(button.bg-primary-600, .holi-btn-primary, .holi-btn-danger) :is(span, svg) { color: #fff !important; }

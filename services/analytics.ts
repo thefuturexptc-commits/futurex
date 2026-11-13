@@ -196,7 +196,7 @@ const getStoredActiveUser = () => {
   if (typeof window === 'undefined') return null;
   try {
     const raw = window.localStorage.getItem('aura_active_user');
-    return raw ? (JSON.parse(raw) as { email?: string; phone?: string; role?: string }) : null;
+    return raw ? (JSON.parse(raw) as { name?: string; email?: string; phone?: string; role?: string }) : null;
   } catch {
     return null;
   }
@@ -318,6 +318,7 @@ const toSiteAnalyticsEvent = (event: SiteAnalyticsEventName, payload: DataLayerE
     isLoggedIn: Boolean((auth.currentUser && !auth.currentUser.isAnonymous) || storedUser),
     userRole: storedUser?.role || 'visitor',
     userEmail: auth.currentUser?.email || storedUser?.email || undefined,
+    userName: auth.currentUser?.displayName || storedUser?.name || undefined,
     userPhone: typeof payload.phone === 'string' ? payload.phone : storedUser?.phone || undefined,
     referrer: String(payload.referrer || (typeof document !== 'undefined' ? document.referrer : '') || ''),
     ipAddress: geo.ipAddress,

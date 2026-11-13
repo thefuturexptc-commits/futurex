@@ -1,0 +1,125 @@
+﻿html #root .band-app-showcase {
+  padding: clamp(40px, 7vw, 96px) clamp(16px, 3vw, 40px);
+  background: #fff !important;
+  color: #101820 !important;
+}
+.band-app-showcase__layout {
+  display: grid;
+  align-items: center;
+  gap: 36px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.band-app-showcase__copy { min-width: 0; }
+html #root .band-app-showcase h2 {
+  max-width: 560px;
+  margin-top: 0;
+  font-family: 'Space Grotesk', Arial, sans-serif !important;
+  font-size: clamp(32px, 4vw, 52px) !important;
+  font-weight: 600;
+  line-height: 1.1 !important;
+  letter-spacing: -.045em;
+  text-wrap: balance;
+  color: #101820 !important;
+}
+.band-app-showcase__details {
+  min-height: 125px;
+  margin-top: 32px;
+  padding-top: 26px;
+  border-top: 1px solid #e9edef;
+}
+html #root .band-app-showcase__details {
+  opacity: 1 !important;
+  animation: none !important;
+  transform: none !important;
+}
+html #root .band-app-showcase h3 {
+  margin-top: 12px;
+  font-family: 'Space Grotesk', Arial, sans-serif !important;
+  font-size: clamp(23px, 2.5vw, 30px) !important;
+  font-weight: 600;
+  line-height: 1.25 !important;
+  letter-spacing: -.03em;
+  color: #17232c !important;
+}
+html #root .band-app-showcase__details > p {
+  max-width: 470px;
+  margin-top: 14px;
+  font-size: 14px !important;
+  line-height: 1.85 !important;
+  color: #617079 !important;
+}
+html #root .band-app-showcase__phone {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  padding: 44px 12px 40px;
+  overflow: hidden;
+  border: 1px solid #e9eff0 !important;
+  border-radius: 28px;
+  background: radial-gradient(ellipse at 50% 43%, #e3efec 0%, #f4f7f6 43%, #fafbfb 75%) !important;
+}
+.band-app-showcase__phone::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  bottom: 40px;
+  width: 44%;
+  height: 18px;
+  border-radius: 50%;
+  background: #173a4426;
+  filter: blur(16px);
+}
+.band-app-showcase__screens { position: relative; width: 100%; height: 400px; }
+html #root .band-app-showcase .band-app-showcase__screens > img {
+  position: static;
+  width: 100%;
+  height: 100%;
+  object-fit: contain !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: none !important;
+  filter: none !important;
+  animation: none !important;
+  transition: none !important;
+}
+html #root .band-app-showcase__counter {
+  position: absolute;
+  right: 24px;
+  bottom: 16px;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .12em;
+  color: #36565a !important;
+}
+html #root .band-app-showcase__counter span { color: #91a2a8 !important; }
+@media (max-width: 767px) {
+  html #root .band-app-showcase {
+    width: 100%;
+    max-width: 100%;
+    padding: 28px 16px;
+    box-sizing: border-box;
+  }
+  .band-app-showcase__layout { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+  .band-app-showcase__copy { padding-right: 32px; }
+  html #root .band-app-showcase h2 { margin-top: 0; font-size: 24px !important; }
+  html #root .band-app-showcase h3 { margin-top: 0; font-size: 18px !important; }
+  html #root .band-app-showcase__details > p { margin-top: 8px; font-size: 13px !important; line-height: 1.65 !important; }
+  .band-app-showcase__details { min-height: 100px; margin-top: 18px; padding-top: 16px; }
+  html #root .band-app-showcase__phone { padding: 42px 10px 34px; border-radius: 24px; }
+  .band-app-showcase__screens { height: clamp(300px, 85vw, 390px); }
+  html #root .band-app-showcase__counter { right: 18px; bottom: 12px; }
+}
+@media (min-width: 768px) {
+  .band-app-showcase__layout { grid-template-columns: 1fr 1fr; gap: clamp(36px, 6vw, 80px); }
+  .band-app-showcase__details { margin-top: 28px; min-height: 130px; }
+  html #root .band-app-showcase__phone { padding: 52px 16px 44px; border-radius: 36px; }
+  .band-app-showcase__screens { height: 510px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .band-app-showcase__details { animation: none; }
+  .band-app-showcase__screens img { transition: none; }
+}

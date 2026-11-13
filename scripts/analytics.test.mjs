@@ -59,6 +59,15 @@ test('customer events persist clean ecommerce data, preserve session, and dedupl
   assert.equal(Object.values(savedEvents[1].event).includes(undefined), false);
   assert.deepEqual(buildConversionFunnel(savedEvents.map(item => item.event)), [1, 1, 1, 1]);
 });
+test('customer names and contact details are saved with cart events when available', async () => {
+  const analytics = await tracking('/', { name: 'Cart Customer', email: 'cart@example.test', phone: '9876543210', role: 'customer' });
+  analytics.setAnalyticsIdentity(true, false);
+  analytics.pushDataLayerEvent('add_to_cart', { ecommerce: { items: [{ item_id: 'fan', quantity: 1 }] } });
+  assert.equal(savedEvents[0].event.userName, 'Cart Customer');
+  assert.equal(savedEvents[0].event.userEmail, 'cart@example.test');
+  assert.equal(savedEvents[0].event.userPhone, '9876543210');
+});
+
 test('admin login marks both current and legacy browser sessions for historical exclusion', async () => {
   const analytics = await tracking();
   window.localStorage.setItem('tfx_analytics_session_id', 'legacy-owner-session');

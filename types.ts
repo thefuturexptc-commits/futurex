@@ -278,6 +278,7 @@ export interface SiteAnalyticsEvent {
   userAgent?: string;
   isLoggedIn?: boolean;
   userEmail?: string;
+  userName?: string;
   userPhone?: string;
   referrer?: string;
   city?: string;

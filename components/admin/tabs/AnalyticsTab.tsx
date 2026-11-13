@@ -8,6 +8,7 @@ import { db } from '../../../services/firebaseConfig';
 import { Button } from '../../ui/Button';
 import { SectionHeader } from '../common/SectionHeader';
 import { AnalyticsRange, filterOrdersByRange } from '../types';
+import { downloadLocationCsv, enrichAnalyticsCustomers } from '../../../utils/analyticsReport';
 
 interface Props {
   products: Product[];
@@ -191,7 +192,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: ra
   const [excludedSessions, setExcludedSessions] = useState<Set<string>>(new Set());
   const [exclusionError, setExclusionError] = useState('');
   useEffect(() => onSnapshot(collection(db, 'analytics_excluded_sessions'), snapshot => { setExcludedSessions(new Set(snapshot.docs.map(doc => doc.id))); setExclusionError(''); }, () => setExclusionError('Admin session exclusions could not load. Deploy the updated Firestore rules before relying on these totals.')), []);
-  const siteEvents = useMemo(() => filterStorefrontEvents(rawEvents, users.filter(user => ['admin', 'superadmin'].includes(user.role))).filter(event => !excludedSessions.has(event.sessionId)), [rawEvents, users, excludedSessions]);
+  const siteEvents = useMemo(() => enrichAnalyticsCustomers(filterStorefrontEvents(rawEvents, users.filter(user => ['admin', 'superadmin'].includes(user.role))).filter(event => !excludedSessions.has(event.sessionId)), users), [rawEvents, users, excludedSessions]);
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(currentYear);
   const rangedOrders = useMemo(() => filterOrdersByRange(orders, range), [orders, range]);
@@ -483,6 +484,10 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: ra
       return true;
     });
   }, [locationFilters, rangedSiteEvents]);
+
+  const customerCartEvents = useMemo(() => filteredLocationEvents
+    .filter(event => event.event === 'add_to_cart')
+    .sort((a, b) => eventTime(b) - eventTime(a)), [filteredLocationEvents]);
 
   const locationSummary = useMemo(() => {
     const groupByLocationValue = (selector: (event: SiteAnalyticsEvent) => string) => {
@@ -832,9 +837,13 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: ra
               </span>
             </div>
             <p className="mt-1 text-sm text-slate-400">
-              Anonymous visitor activity by page, product, cart action, checkout, login, and approximate IP or checkout location.
+              Visitor activity by page, product, cart action, checkout, login, and approximate IP or checkout location. CSV exports all loaded events matching these filters (up to the latest 1,500 events).
             </p>
           </div>
+          <div className="flex flex-wrap gap-2">
+          <Button size="sm" variant="secondary" disabled={!filteredLocationEvents.length} onClick={() => downloadLocationCsv(filteredLocationEvents)}>
+            Download location CSV ({filteredLocationEvents.length})
+          </Button>
           <Button
             size="sm"
             variant="outline"
@@ -852,6 +861,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: ra
           >
             Reset filters
           </Button>
+          </div>
         </div>
 
         <div className="mb-5 rounded-xl border border-white/10 bg-slate-900 p-4 border-white/10 bg-slate-900">
@@ -1047,6 +1057,28 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: ra
           </div>
         </div>
 
+        <div className="mt-5 rounded-xl border border-white/10 bg-slate-900 p-5">
+          <h3 className="text-base font-semibold text-white">Customers who added to cart</h3>
+          <p className="mt-1 mb-4 text-xs text-slate-400">Cart actions matching the location filters. Contact details appear when recorded for the account or session; guests remain anonymous. Times are in IST.</p>
+          <div className="overflow-x-auto max-h-[480px]">
+            <table className="w-full min-w-[950px] text-sm text-left">
+              <thead className="bg-white/5"><tr>{['Time (IST)', 'Customer / Session', 'Contact', 'Product', 'Quantity', 'Value', 'Location'].map(label => <th key={label} className="px-3 py-2 text-slate-400">{label}</th>)}</tr></thead>
+              <tbody>{customerCartEvents.map(event => (
+                <tr key={event.id} className="border-b border-white/10">
+                  <td className="px-3 py-3 whitespace-nowrap">{new Date(event.timestamp).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}</td>
+                  <td className="px-3 py-3"><p className="font-semibold">{event.userName || event.userEmail || event.userPhone || 'Anonymous visitor'}</p><p className="text-xs text-slate-400 break-all">{event.sessionId || event.userId || event.id}</p></td>
+                  <td className="px-3 py-3"><p>{event.userEmail || '-'}</p><p>{event.userPhone || '-'}</p></td>
+                  <td className="px-3 py-3">{event.productName || event.productId || '-'}</td>
+                  <td className="px-3 py-3">{event.quantity ?? 1}</td>
+                  <td className="px-3 py-3">{event.value != null ? formatInrAmount(event.value) : '-'}</td>
+                  <td className="px-3 py-3">{formatVisitorLocation(event)}<p className="text-xs text-slate-400">{formatLocationSource(event.locationSource)}</p></td>
+                </tr>
+              ))}</tbody>
+            </table>
+            {!customerCartEvents.length && <p className="py-4 text-sm text-slate-400">No add-to-cart activity matches these filters.</p>}
+          </div>
+        </div>
+
         <div className="mt-5 rounded-xl border border-white/10 bg-slate-900 p-5 shadow-sm border-white/10 bg-slate-900">
           <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -1076,7 +1108,7 @@ export const AnalyticsTab: React.FC<Props> = ({ products, orders, siteEvents: ra
                     <td className="whitespace-nowrap px-3 py-2 text-slate-300">{new Date(event.timestamp).toLocaleString()}</td>
                     <td className="px-3 py-2 font-semibold text-white">{formatEventName(isCheckoutEvent(event.event) ? 'checkout' : event.event)}</td>
                     <td className="max-w-[210px] px-3 py-2 text-slate-300">
-                      <p className="truncate" title={eventVisitorKey(event)}>{eventVisitorKey(event)}</p>
+                      <p className="truncate" title={eventVisitorKey(event)}>{event.userName || event.userEmail || event.userPhone || 'Anonymous visitor'}</p>
                       <p className="truncate text-[11px] text-slate-400" title={event.sessionId}>{event.sessionId || '-'}</p>
                     </td>
                     <td className="max-w-[200px] px-3 py-2 text-slate-300">

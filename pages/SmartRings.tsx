@@ -14,9 +14,6 @@ import ringOverviewCharging from '../assets/images/ring-overview-charging.jpg';
 import ringOverviewWaterproof from '../assets/images/ring-overview-waterproof.jpg';
 import ringOverviewColors from '../assets/images/ring-overview-colors.jpg';
 import smartRingHeroVideo from '../assets/images/smart-ring-hero-video.mp4';
-import appAssistantScreen from '../assets/images/tfxvital-ai-assistant-screen.webp';
-import appVitalAgeScreen from '../assets/images/tfxvital-vital-age-screen.webp';
-import appExerciseScreen from '../assets/images/tfxvital-exercise-screen.webp';
 import smartRingsCatalogBanner from '../assets/images/smart-rings-catalog-banner.webp';
 
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
@@ -67,30 +64,6 @@ const stats = [
   ['TFXVital', 'app connected'],
 ];
 
-const aiCards = [
-  {
-    title: 'AI Assistant',
-    detail: 'Ask TFXVital for reports, trends, recovery cues, and simple plans based on your latest vitals.',
- tagline: 'AI guidance, reports and daily decisions in one flow.',
-    image: appAssistantScreen,
-    imagePosition: 'center',
-  },
-  {
-    title: 'Vital Age Estimate',
-    detail: 'Build a clearer bio-age signal from sleep, heart rate, exercise, and step data over time.',
-    tagline: 'Daily signals turn into simple long-term wellness insight.',
-    image: appVitalAgeScreen,
-    imagePosition: 'center',
-  },
-  {
-    title: 'Workout Tracking',
- detail: 'Start GPS-based runs, follow distance and pace and keep workouts connected to your profile.',
-    tagline: 'Live activity tracking with goals, steps, calories, and route context.',
-    image: appExerciseScreen,
-    imagePosition: 'center',
-  },
-];
-
 interface RingPageReview {
   id: string;
   name: string;
@@ -132,7 +105,6 @@ export const SmartRings: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [heroTextProgress, setHeroTextProgress] = useState(0);
-  const [selectedInsight, setSelectedInsight] = useState(0);
   const [ringReviews, setRingReviews] = useState<RingPageReview[]>([]);
   const [visibleRingReviewCount, setVisibleRingReviewCount] = useState(2);
   const catalogScrollerRef = useRef<HTMLDivElement | null>(null);
@@ -211,17 +183,6 @@ export const SmartRings: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
-
-    const intervalId = window.setInterval(() => {
-      if (document.hidden) return;
-      setSelectedInsight((current) => (current + 1) % aiCards.length);
-    }, 3600);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
 
   const handleAddToCart = (product: Product) => {
     addToCart(product, 1);
@@ -260,7 +221,6 @@ export const SmartRings: React.FC = () => {
     });
   }, [products]);
 
-  const selectedCard = aiCards[selectedInsight];
 
   useEffect(() => {
     if (loading || catalogProducts.length < 2) return;
@@ -567,54 +527,7 @@ export const SmartRings: React.FC = () => {
         </div>
       </section>
 
-      <section className="bg-white px-5 py-14 sm:px-8 lg:px-10 lg:py-20">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.38fr_0.62fr] lg:items-center">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#1ca9a4]">Explore the App</p>
-            <h2 className="mt-4 max-w-xl font-display text-3xl font-black leading-tight text-slate-950 sm:text-6xl">
-              TFXVital app showcase
-            </h2>
-            <p className="mt-5 max-w-md text-base leading-8 text-slate-600 sm:text-lg">
-              Three app screens rotate automatically in a clean preview.
-            </p>
-            <div key={selectedCard.title} className="mt-7 animate-[fadeIn_450ms_ease]">
-              <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#1ca9a4]">Selected screen</p>
-              <h3 className="mt-3 text-2xl font-black text-slate-950">{selectedCard.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-slate-600">{selectedCard.detail}</p>
-              <p className="mt-4 inline-flex rounded-full bg-[#e7fbfa] px-4 py-2 text-xs font-bold text-[#117c78]">
-                {selectedCard.tagline}
-              </p>
-            </div>
-            <div className="mt-5 flex flex-wrap gap-2">
-              {aiCards.map((card, index) => (
-                <button
-                  key={card.title}
-                  type="button"
-                  onClick={() => setSelectedInsight(index)}
-                  className={`h-2.5 rounded-full transition-all ${
-                    selectedInsight === index ? 'w-10 bg-[#0ea5e9]' : 'w-2.5 bg-slate-300 hover:bg-slate-400'
-                  }`}
-                  aria-label={`Show ${card.title}`}
-                />
-              ))}
-            </div>
-          </div>
 
-          <div className="relative min-h-[360px] overflow-visible bg-transparent p-0 shadow-none sm:min-h-[560px]">
-            <div className="flex h-full min-h-[340px] items-center justify-center sm:min-h-[520px]">
-              <img
-                key={selectedCard.title}
-                src={selectedCard.image}
-                alt={`${selectedCard.title} app screen`}
-                className="max-h-[340px] w-full object-contain animate-[fadeIn_500ms_ease] sm:max-h-[510px]"
-                style={{ objectPosition: selectedCard.imagePosition }}
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-          </div>
-        </div>
-      </section>
 
       <section className="bg-[#f2fbfb] px-5 py-12 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-4xl">
