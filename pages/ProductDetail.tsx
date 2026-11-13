@@ -11,6 +11,7 @@ import { DeliveryEstimate } from '../components/DeliveryEstimate';
 import { BundleOffer } from '../components/BundleOffer';
 import { ReviewPhotos } from '../components/ReviewPhotos';
 import { BandAppShowcase } from '../components/BandAppShowcase';
+import { ProductFeatureList, ProductSpecifications } from '../components/ProductDetailsSections';
 import { getProductFallbackImage } from '../utils/productImages';
 import { ProductCard } from '../components/ProductCard';
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
@@ -346,16 +347,16 @@ const getSpecGroupLabel = (key: string) => {
 
 const buildSpecGroups = (entries: Array<[string, unknown]>) => {
   const order = [
-    'Additional details',
-    'Warranty & Support',
+    'Item details',
     'Style',
     'Battery',
     'Display',
     'Compatibility',
-    'User guide',
-    'Item details',
     'Connectivity',
     'Measurements',
+    'Additional details',
+    'User guide',
+    'Warranty & Support',
   ];
   const grouped = entries.reduce<Record<string, Array<[string, unknown]>>>((acc, entry) => {
     const group = getSpecGroupLabel(entry[0]);
@@ -1455,7 +1456,6 @@ export const ProductDetail: React.FC = () => {
   const [isTfx5DescriptionExpanded, setIsTfx5DescriptionExpanded] = useState(false);
   const [isHeroDescriptionExpanded, setIsHeroDescriptionExpanded] = useState(false);
   const [showAllMobileOverview, setShowAllMobileOverview] = useState(false);
-  const [showAllSpecs, setShowAllSpecs] = useState(false);
   const [visibleReviewCount, setVisibleReviewCount] = useState(2);
   const [reviewName, setReviewName] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
@@ -1779,10 +1779,6 @@ export const ProductDetail: React.FC = () => {
       },
     ];
   }, [product?.category, product?.name]);
-  const visibleSpecEntries = useMemo(
-    () => (showAllSpecs || isRingProduct ? specEntries : specEntries.slice(0, 8)),
-    [isRingProduct, showAllSpecs, specEntries]
-  );
 
   useEffect(() => {
     if (!product) return;
@@ -2628,23 +2624,8 @@ export const ProductDetail: React.FC = () => {
     ...styleSpecEntries.filter(([key]) => !existingSpecKeys.has(key.trim().toLowerCase())),
     ...specEntries,
   ].filter(([key]) => !detailedProductContent || (!WARRANTY_SPEC_LABELS.has(key) && key !== 'Warranty'));
-  const shouldLimitSpecs = !detailedProductContent && productFamily !== 'ring' && !showAllSpecs;
   const warrantySpecEntries = productInformationSpecEntries.filter(([key]) => WARRANTY_SPEC_LABELS.has(key));
-  const regularSpecEntries = productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key));
-  // Keep the warranty/contact details visible in the collapsed specification
-  // view for every product; customers should not have to expand the list to
-  // find out how to raise a support request.
-  const regularSpecLimit = Math.max(0, 12 - warrantySpecEntries.length);
-  const priorityWearableSpecEntries = regularSpecEntries.filter(([key]) => /sweatproof|swimming/i.test(key));
-  const otherRegularSpecEntries = regularSpecEntries.filter(([key]) => !/sweatproof|swimming/i.test(key));
-  const displayedRegularSpecEntries = [
-    ...priorityWearableSpecEntries.slice(0, regularSpecLimit),
-    ...otherRegularSpecEntries.slice(0, Math.max(0, regularSpecLimit - priorityWearableSpecEntries.length)),
-  ];
-  const displayedSpecEntries = shouldLimitSpecs
-    ? [...displayedRegularSpecEntries, ...warrantySpecEntries]
-    : productInformationSpecEntries;
-  const specGroups = buildSpecGroups(displayedSpecEntries);
+  const specGroups = buildSpecGroups(productInformationSpecEntries);
   const whyBuyCopy = shortDescription || (isSmartGlassesProduct
     ? `${product.name} is designed for hands-free capture, Bluetooth calling, music, voice assistant support, and everyday smart eyewear convenience in one modern frame.`
     : isTfxV5Band
@@ -3154,13 +3135,7 @@ export const ProductDetail: React.FC = () => {
   );
   const arrangedProductInformation = isTfxV5Band ? tfx5ArrangedDescription : generalArrangedDescription;
   const detailedProductFeatureHighlights = detailedProductContent ? (
-    <div className="mx-auto mt-5 grid max-w-6xl grid-cols-2 gap-2 sm:grid-cols-4">
-      {detailedProductContent.highlights.map((label) => (
-        <div key={label} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-xs font-semibold leading-5 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:text-sm">
-          {label}
-        </div>
-      ))}
-    </div>
+    <ProductFeatureList features={detailedProductContent.highlights} />
   ) : null;
 
   return (
@@ -3924,60 +3899,14 @@ export const ProductDetail: React.FC = () => {
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">Key Features</p>
             {detailedProductFeatureHighlights || (featureList.length > 0 && (
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {featureList.slice(0, 10).map((feature) => (
-                  <div key={feature} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)]">
-                    {cleanFeatureText(feature)}
-                  </div>
-                ))}
-              </div>
+              <ProductFeatureList features={featureList} />
             ))}
             {!detailedProductContent && <div className="mt-6">{arrangedProductInformation}</div>}
           </div>
         )}
 
         {activeDetailTab === 'specs' && (
-          <div>
-            <h3 className="text-base font-bold text-slate-900">Specifications</h3>
-            {productInformationSpecEntries.length > 0 ? (
-              <div className="mt-3 overflow-hidden rounded border border-slate-200">
-                {specGroups.map((group, groupIndex) => (
-                  <details
-                    key={group.title}
-                    className={`group ${groupIndex > 0 ? 'border-t border-slate-200' : ''}`}
-                    open={groupIndex === 0}
-                  >
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-2 bg-slate-50 px-3 py-2.5">
-                      <span className="text-[13px] font-bold text-slate-900">{group.title}</span>
-                      <svg viewBox="0 0 24 24" fill="none" className="h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 group-open:rotate-180">
-                        <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                      </svg>
-                    </summary>
-                    {group.entries.map(([key, value], rowIndex) => (
-                      <div
-                        key={key}
-                        className={`grid grid-cols-[0.42fr_0.58fr] gap-2 border-t border-slate-100 px-3 py-2.5 ${rowIndex % 2 === 1 ? 'bg-slate-50/70' : 'bg-white'}`}
-                      >
-                        <p className="pr-2 text-xs text-slate-500">{formatSpecLabel(key)}</p>
-                        <p className="text-xs font-medium leading-5 text-slate-800">{String(value ?? '')}</p>
-                      </div>
-                    ))}
-                  </details>
-                ))}
-              </div>
-            ) : (
-              <p className="mt-3 text-sm font-semibold text-slate-500">No specifications added.</p>
-            )}
-            {!detailedProductContent && productFamily !== 'ring' && productInformationSpecEntries.length > 12 && (
-              <button
-                type="button"
-                onClick={() => setShowAllSpecs((prev) => !prev)}
-                className="mt-4 w-full rounded border border-slate-300 bg-white px-4 py-2.5 text-xs font-bold text-[#2874f0] transition hover:bg-slate-50"
-              >
-                {showAllSpecs ? 'Show Less' : 'Show More Specs'}
-              </button>
-            )}
-          </div>
+          <ProductSpecifications groups={specGroups} formatLabel={formatSpecLabel} renderIcon={title => <SpecGroupIcon title={title} />} />
         )}
 
         {activeDetailTab === 'battery' && (
@@ -4027,13 +3956,7 @@ export const ProductDetail: React.FC = () => {
           </div>
 
           {detailedProductFeatureHighlights || (featureList.length > 0 && (
-            <div className="mx-auto mt-5 grid max-w-4xl grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-              {featureList.slice(0, 8).map((feature) => (
-                <div key={feature} className="rounded-xl border border-slate-200 bg-white px-3 py-3 text-center text-[11px] font-semibold leading-4 text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:text-xs">
-                  {cleanFeatureText(feature)}
-                </div>
-              ))}
-            </div>
+            <ProductFeatureList features={featureList} />
           ))}
         </div>
       </section>
@@ -4112,38 +4035,9 @@ export const ProductDetail: React.FC = () => {
         </>
       )}
 
-      <section id="specs" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-12 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-16">
-        <div className="mx-auto max-w-5xl">
-          <h2 className="text-xl font-bold text-slate-900 sm:text-2xl">Specifications</h2>
-          {productInformationSpecEntries.length > 0 ? (
-            <div className="mt-5 overflow-hidden rounded border border-slate-200">
-              {specGroups.map((group, groupIndex) => (
-                <div key={group.title} className={groupIndex > 0 ? 'border-t border-slate-200' : ''}>
-                  <p className="bg-slate-50 px-5 py-3 text-sm font-bold text-slate-900 sm:text-base">{group.title}</p>
-                  {group.entries.map(([key, value], rowIndex) => (
-                    <div
-                      key={key}
-                      className={`grid grid-cols-[0.3fr_0.7fr] gap-4 border-t border-slate-100 px-5 py-3 sm:grid-cols-[0.26fr_0.74fr] ${rowIndex % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}`}
-                    >
-                      <p className="text-sm text-slate-500">{formatSpecLabel(key)}</p>
-                      <p className="text-sm font-medium leading-6 text-slate-800">{String(value ?? '')}</p>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-4 text-slate-500">No specifications added.</p>
-          )}
-          {!detailedProductContent && productFamily !== 'ring' && productInformationSpecEntries.length > 12 && (
-            <button
-              type="button"
-              onClick={() => setShowAllSpecs((prev) => !prev)}
-              className="mt-5 rounded border border-slate-300 bg-white px-6 py-2.5 text-sm font-bold text-[#2874f0] transition hover:bg-slate-50"
-            >
-              {showAllSpecs ? 'See Less' : 'See More'}
-            </button>
-          )}
+      <section id="specs" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
+        <div className="mx-auto max-w-6xl">
+          <ProductSpecifications groups={specGroups} formatLabel={formatSpecLabel} renderIcon={title => <SpecGroupIcon title={title} />} />
         </div>
       </section>
 
