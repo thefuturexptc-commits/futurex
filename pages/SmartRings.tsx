@@ -14,7 +14,7 @@ import ringOverviewCharging from '../assets/images/ring-overview-charging.jpg';
 import ringOverviewWaterproof from '../assets/images/ring-overview-waterproof.jpg';
 import ringOverviewColors from '../assets/images/ring-overview-colors.jpg';
 import smartRingHeroVideo from '../assets/images/smart-ring-hero-video.mp4';
-import smartRingsCatalogBanner from '../assets/images/smart-rings-catalog-banner.webp';
+import smartRingsCatalogBanner from '../assets/images/smart-rings-main-banner.webp';
 
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 
@@ -249,13 +249,16 @@ export const SmartRings: React.FC = () => {
     <div className="smart-rings-page min-h-screen bg-white text-slate-950">
       <section
         className="smart-rings-fixed-hero smart-rings-banner-hero relative z-0 w-full cursor-pointer overflow-hidden bg-black text-white"
-        aria-label="TFX smart ring health banner"
+        aria-label="Meet the TFX Smart Ring"
       >
         <img
           src={smartRingsCatalogBanner}
-          alt="Your health one touch away smart ring banner"
+          alt="Meet the TFX Smart Ring. Smart Insights. Seamless Style. Fitness, sleep and heart rate tracking."
+          width={1983}
+          height={793}
           className="site-hero-media smart-rings-banner-image absolute inset-0 h-full w-full object-contain object-center"
           loading="eager"
+          fetchPriority="high"
           decoding="async"
         />
         <Link to={FEATURED_RING_PRODUCT_PATH} className="absolute inset-0 z-10" aria-label="View The FutureX TFX Display Pro Smart Ring">
