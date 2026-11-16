@@ -7,6 +7,7 @@ import { getProductSlug, getProducts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
 import type { Product } from '../types';
 import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
+import './BlogPostPage.css';
 import ringHeroImage from '../assets/images/ring-overview-colors.jpg';
 import ringSleepImage from '../assets/images/ring-sleep-hero.webp';
 import ringProImage from '../assets/images/mainring.webp';
@@ -6344,7 +6345,7 @@ const BlogShell: React.FC<{
         </div>
       </header>
 
-      {children}
+      <div className="blog-legacy-content">{children}</div>
     </article>
   </main>
 );

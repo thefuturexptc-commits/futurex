@@ -1,9 +1,9 @@
 import { getProductStock } from './productAvailability.js';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
-import { getCustomerFacingPrice } from './productSeoData.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
-import { getCatalogOffer, isTfxV5Band } from './catalogPricing.js';
+import { isTfxV5Band } from './catalogPricing.js';
+import { getMerchantPricing } from './merchantPricing.js';
 import { withProductReviewSummary } from './productSchema.js';
 import { formatProductName } from './productName.js';
 import { getFanTitle } from './fanListings.js';
@@ -134,8 +134,7 @@ const collectVideos = (product) => {
 };
 
 const getPrice = (product) => {
-  const price = getCustomerFacingPrice(product);
-  return Number.isFinite(price) && price > 0 ? price.toFixed(2) : '';
+  return getMerchantPricing(product).currentPrice.toFixed(2);
 };
 
 export const buildDescription = (product) => {
@@ -277,7 +276,7 @@ const buildSingleProductItem = (product, variant = null) => {
   const availability = variant ? (variant.stock > 0 ? 'in_stock' : 'out_of_stock') : getMerchantAvailability(product);
   const availabilityDate = getAvailabilityDate(product);
   const additionalImages = images.slice(1, 11).map((image) => tag('g:additional_image_link', image));
-  const offer = getCatalogOffer(product);
+  const offer = getMerchantPricing(product);
 
   return [
     '  <item>',
@@ -346,7 +345,7 @@ export async function generateMerchantFeedCSV(products = undefined) {
     const items = variants.length ? variants : [null];
     return items.map((variant) => {
       const images = variant?.images?.length ? variant.images.map(resolveUrl).filter(Boolean) : collectImages(product);
-      const offer = getCatalogOffer(product);
+      const offer = getMerchantPricing(product);
       const availability = variant ? (variant.stock > 0 ? 'in_stock' : 'out_of_stock') : getMerchantAvailability(product);
       return [
     variant ? getVariantProductId(product, variant) : getMerchantProductId(product), variant ? getMerchantProductId(product) : '', variant ? `${getMerchantTitle(product)} - ${variant.name}` : getMerchantTitle(product), buildDescription(product) || product.name,

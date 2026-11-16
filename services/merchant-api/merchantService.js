@@ -1,6 +1,5 @@
-import { getCustomerFacingPrice } from '../../utils/productSeoData.js';
 import { isCatalogProductPublished } from '../../utils/catalogVisibility.js';
-import { getCatalogOffer } from '../../utils/catalogPricing.js';
+import { getMerchantPricing } from '../../utils/merchantPricing.js';
 import { getProductStock } from '../../utils/productAvailability.js';
 import { getMerchantProductId, getMerchantTitle, buildDescription } from '../../utils/generateMerchantFeed.js';
 import { getFallbackProductImageUrl } from '../../utils/productImageFallback.js';
@@ -86,6 +85,22 @@ const apiRequest = async ({ version, path: apiPath, method = 'GET', params, data
     data,
   });
   return response.data;
+};
+
+// Read processed listings to verify what Merchant Center actually received.
+export const listMerchantProducts = async () => {
+  const products = [];
+  let pageToken = '';
+  do {
+    const page = await apiRequest({
+      version: 'products/v1',
+      path: `${accountName()}/products`,
+      params: { pageSize: 250, ...(pageToken ? { pageToken } : {}) },
+    });
+    products.push(...(page.products || []));
+    pageToken = page.nextPageToken || '';
+  } while (pageToken);
+  return products;
 };
 
 const ensureProductDataSource = async () => {
@@ -262,7 +277,7 @@ export const buildProductInput = (product, variant = null) => {
   const imageLink = images[0] || toAbsoluteUrl(getFallbackProductImageUrl(product));
   if (!imageLink) throw new Error(`Product ${product.id} needs a public image URL.`);
 
-  const offer = getCatalogOffer(product);
+  const offer = getMerchantPricing(product);
   const stock = variant ? variant.stock : getProductStock(product);
   const productAttributes = {
     title: variant ? `${getMerchantTitle(product)} - ${variant.name}` : getMerchantTitle(product),
@@ -272,7 +287,7 @@ export const buildProductInput = (product, variant = null) => {
     availability: stock > 0 && product.inStock !== false ? 'IN_STOCK' : 'OUT_OF_STOCK',
     sellOnGoogleQuantity: String(Math.max(0, stock)),
     condition: 'NEW',
-    price: toMerchantPrice(offer.regularPrice),
+    price: toMerchantPrice(offer.onSale ? offer.regularPrice : offer.currentPrice),
     brand: product.brand || 'TheFutureX',
   };
 
@@ -296,7 +311,7 @@ export const buildProductInput = (product, variant = null) => {
   if (gtin) productAttributes.gtins = [String(gtin)];
   if (mpn) productAttributes.mpn = String(mpn);
   if (!gtin && !mpn) productAttributes.identifierExists = false;
-  if (offer.onSale) productAttributes.salePrice = toMerchantPrice(getCustomerFacingPrice(product));
+  if (offer.onSale) productAttributes.salePrice = toMerchantPrice(offer.currentPrice);
 
   return {
     offerId: variant

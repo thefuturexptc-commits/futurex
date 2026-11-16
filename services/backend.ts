@@ -24,6 +24,7 @@ import { Product, ProductColor, ProductNotifyRequest, ProductPublicReview, Offer
 import { INITIAL_PRODUCTS } from './mockData';
 import { DEFAULT_FOOTER_SECTIONS, DEFAULT_PAGE_CONTENT, DEFAULT_SOCIAL_LINKS } from './contentDefaults';
 import { TFX5_AI_BAND_PRICE, TFX5_AI_BAND_MRP, isTfxV5Band, isPureAirThreeInOne, PUREAIR_3_IN_1_MRP, PUREAIR_3_IN_1_SALE_PRICE } from '../utils/coupons';
+import { isQ8Pro, Q8_PRO_SALE_PRICE } from '../utils/catalogPricing.js';
 import { correctRingModel, getProductModelNumbers } from '../utils/productModel';
 import { getFanTitle } from '../utils/fanListings';
 import { isCatalogProductPublished } from '../utils/catalogVisibility.js';
@@ -790,7 +791,14 @@ const normalizeProductColors = (product: Product): Product => {
           price: PUREAIR_3_IN_1_SALE_PRICE,
           variants: displayProduct.variants?.map((variant) => ({ ...variant, price: PUREAIR_3_IN_1_SALE_PRICE })),
         }
-      : displayProduct;
+      : isQ8Pro({ ...displayProduct, slug })
+        ? {
+            ...displayProduct,
+            price: Q8_PRO_SALE_PRICE,
+            salePrice: Q8_PRO_SALE_PRICE,
+            variants: displayProduct.variants?.map(variant => ({ ...variant, price: Q8_PRO_SALE_PRICE })),
+          }
+        : displayProduct;
   const rawColors = Array.isArray(product.colors) ? product.colors : [];
   const existingColorMap = new Map<string, ProductColor>(
     rawColors

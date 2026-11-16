@@ -6,6 +6,13 @@ import type { BlogPost } from '../types';
 import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
 import { InfoPage } from './InfoPage';
 import { getBlogProductImage } from '../utils/blogProductImage';
+import './BlogPostPage.css';
+
+const headingId = (text: string, line: number) => `article-${text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section'}-${line}`;
+const articleHeadings = (content: string) => content.split('\n').flatMap((line, index) => {
+  const match = line.trim().match(/^#{2,3}\s+(.+)$/);
+  return match ? [{ title: match[1].replace(/\*\*/g, ''), id: headingId(match[1], index), level: line.trim().startsWith('###') ? 3 : 2 }] : [];
+});
 
 const formatDate = (value?: string) => {
   if (!value) return '';
@@ -26,6 +33,7 @@ const renderInline = (value: string, key: string) => {
     const link = part.match(/^\[([^\]]+)\]\(([^\s)]+)\)$/);
     if (link) {
       const [, label, href] = link;
+      if (!/^(https?:\/\/|mailto:|tel:|\/(?!\/)|#)/i.test(href)) return label;
       const className = 'font-semibold text-[#8a6d38] underline decoration-[#ad8a4c]/50 underline-offset-4 transition hover:text-[#17130f]';
       return href.startsWith('/') ? <Link key={`${key}-${index}`} to={href} className={className}>{label}</Link> : <a key={`${key}-${index}`} href={href} className={className}>{label}</a>;
     }
@@ -56,7 +64,7 @@ const renderArticleContent = (content: string) => {
       continue;
     }
     if (line.startsWith('### ')) {
-      blocks.push(<h3 key={`subheading-${index}`} className="mt-8 text-xl font-semibold">{renderInline(line.slice(4), `subheading-${index}`)}</h3>);
+      blocks.push(<h3 id={headingId(line.slice(4), index)} key={`subheading-${index}`} className="mt-8 text-xl font-semibold">{renderInline(line.slice(4), `subheading-${index}`)}</h3>);
       index += 1;
       continue;
     }
@@ -66,11 +74,11 @@ const renderArticleContent = (content: string) => {
       index += 2;
       const rows: string[][] = [];
       while (index < lines.length && lines[index].trim().startsWith('|')) rows.push(cells(lines[index++]));
-      blocks.push(<div key={`table-${index}`} className="my-8 overflow-x-auto"><table className="w-full min-w-[520px] border-collapse text-left text-sm"><thead><tr>{headings.map((heading, i) => <th key={i} scope="col" className="border border-slate-200 p-3">{renderInline(heading, `th-${index}-${i}`)}</th>)}</tr></thead><tbody>{rows.map((row, r) => <tr key={r}>{row.map((cell, c) => <td key={c} className="border border-slate-200 p-3">{renderInline(cell, `td-${index}-${r}-${c}`)}</td>)}</tr>)}</tbody></table></div>);
+      blocks.push(<div key={`table-${index}`} className="blog-comparison-table my-8 overflow-x-auto" role="region" aria-label="Article comparison table" tabIndex={0}><table className="w-full min-w-[520px] border-collapse text-left text-sm"><thead><tr>{headings.map((heading, i) => <th key={i} scope="col" className="border border-slate-200 p-3">{renderInline(heading, `th-${index}-${i}`)}</th>)}</tr></thead><tbody>{rows.map((row, r) => <tr key={r}>{row.map((cell, c) => <td key={c} className="border border-slate-200 p-3">{renderInline(cell, `td-${index}-${r}-${c}`)}</td>)}</tr>)}</tbody></table></div>);
       continue;
     }
     if (line.startsWith('## ')) {
-      blocks.push(<h2 key={`heading-${index}`} className="mt-12 font-serif text-3xl font-semibold leading-tight text-[#17130f]">{renderInline(line.slice(3), `heading-${index}`)}</h2>);
+      blocks.push(<h2 id={headingId(line.slice(3), index)} key={`heading-${index}`} className="mt-12 font-serif text-3xl font-semibold leading-tight text-[#17130f]">{renderInline(line.slice(3), `heading-${index}`)}</h2>);
       index += 1;
       continue;
     }
@@ -99,14 +107,19 @@ export const BlogPostPage: React.FC = () => {
   const [openFaq, setOpenFaq] = useState<number | null>(0);
 
   useEffect(() => {
+    let cancelled = false;
+    setPost(undefined);
+    setOpenFaq(0);
     Promise.all([
       getBlogPosts().catch(() => []),
       getProducts().catch(() => []),
     ]).then(([posts, products]) => {
+      if (cancelled) return;
       const article = posts.find((item) => item.slug === slug && isBlogPostPublic(item)) ||
         publishedBlogPosts.find((item) => item.slug === slug && isBlogPostPublic(item)) || null;
       setPost(article ? { ...article, image: getBlogProductImage(article, products) || article.image } : null);
     });
+    return () => { cancelled = true; };
   }, [slug]);
 
   useEffect(() => {
@@ -149,11 +162,14 @@ export const BlogPostPage: React.FC = () => {
 
   const publishedLabel = formatDate(post.publishedAt || post.updatedAt);
   const readingTime = estimateReadingTime(post.content);
+  const headings = articleHeadings(post.content);
+  const hasTopLevelHeadings = headings.some(heading => heading.level === 2);
+  const contentsLinks = <ol>{headings.map(heading => <li key={heading.id} className={heading.level === 3 && hasTopLevelHeadings ? 'blog-contents-subsection' : ''}><a href={`#${heading.id}`}>{heading.title}</a></li>)}</ol>;
 
   return (
     <main className="blog-post-page bg-[#fffdf9]">
       {/* ─── Hero ─────────────────────────────────────────────── */}
-      <section className="border-b border-[#17130f0f] bg-[#faf7f1]">
+      <section className="blog-post-header border-b border-[#17130f0f] bg-[#faf7f1]">
         <div className="mx-auto max-w-3xl px-5 pb-10 pt-28 sm:pt-32">
           <Link
             to="/blog"
@@ -188,7 +204,7 @@ export const BlogPostPage: React.FC = () => {
 
       {post.image && (
         <div className="mx-auto -mt-1 max-w-5xl px-5">
-          <div className="overflow-hidden rounded-2xl border border-[#17130f0f] shadow-[0_30px_60px_rgba(23,19,15,0.12)]">
+          <div className="blog-post-cover overflow-hidden rounded-2xl border border-[#17130f0f] shadow-[0_30px_60px_rgba(23,19,15,0.12)]">
             <img
               src={post.image}
               alt={post.imageAlt || post.title}
@@ -201,13 +217,18 @@ export const BlogPostPage: React.FC = () => {
       )}
 
       {/* ─── Article body ─────────────────────────────────────── */}
-      <article className="mx-auto max-w-3xl px-5 py-14 sm:py-16">
-        <div className="text-[17px] leading-[1.9] text-[#2b241c]">
+      <div className={`blog-reading-layout${headings.length > 2 ? ' blog-has-contents' : ''}`}>
+        {headings.length > 2 && <aside className="blog-contents">
+          <nav className="blog-contents-desktop" aria-label="Article contents"><p>In this article</p>{contentsLinks}</nav>
+          <details className="blog-contents-mobile"><summary>In this article <span>{headings.length} sections</span></summary><nav aria-label="Article contents">{contentsLinks}</nav></details>
+        </aside>}
+      <article className="blog-reading-article mx-auto max-w-3xl px-5 py-14 sm:py-16">
+        <div className="blog-article-copy text-[17px] leading-[1.9] text-[#2b241c]">
           {renderArticleContent(post.content)}
         </div>
 
         {post.featuredProduct && (
-          <section className="mt-14 overflow-hidden rounded-2xl border border-[#17130f14] bg-[#faf7f1]">
+          <section className="blog-featured-product mt-14 overflow-hidden rounded-2xl border border-[#17130f14] bg-[#faf7f1]">
             <div className="grid items-center sm:grid-cols-[180px_1fr]">
               <div className="flex min-h-48 items-center justify-center bg-white p-6">
                 <img src={post.featuredProduct.image} alt={post.featuredProduct.name} className="max-h-40 w-full object-contain" />
@@ -218,7 +239,7 @@ export const BlogPostPage: React.FC = () => {
                 {post.featuredProduct.price && <p className="mt-2 text-lg font-bold text-[#17130f]">{post.featuredProduct.price}</p>}
                 <p className="mt-3 text-[15px] leading-7 text-[#4a4238]">{post.featuredProduct.description}</p>
                 <Link to={post.featuredProduct.href} className="mt-5 inline-flex rounded-full bg-[#17130f] px-5 py-3 text-xs font-bold uppercase tracking-[0.14em] text-white transition hover:bg-[#8a6d38]">
-                  View TFX5 AI Smart Band
+                  View product
                 </Link>
               </div>
             </div>
@@ -227,7 +248,7 @@ export const BlogPostPage: React.FC = () => {
 
         {/* ─── FAQs ────────────────────────────────────────────── */}
         {post.faqs && post.faqs.length > 0 && (
-          <section className="mt-16 border-t border-[#17130f0f] pt-10">
+          <section className="blog-article-faq mt-16 border-t border-[#17130f0f] pt-10">
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-[#ad8a4c]">
               Good to know
             </p>
@@ -277,6 +298,7 @@ export const BlogPostPage: React.FC = () => {
           </Link>
         </div>
       </article>
+      </div>
     </main>
   );
 };

@@ -276,7 +276,7 @@ Prices range widely from compact portable units to large premium models. Our Fut
 | Model | Type | Sale price |
 | --- | --- | --- |
 | [TP02 PLUS](/product/tfx-breeze-pro) | BLDC tower fan | ₹10,800 |
-| [Q8 PRO](/product/tfx-advance) | Hot & cool tower | ₹11,339.10 |
+| [Q8 PRO](/product/tfx-advance) | Hot & cool tower | ₹11,999 |
 | [4319B](/product/tfx-airwall-pro) | Hot & cool wall-mount | ₹11,699.10 |
 | [TP09 PRO](/product/tfxhot-and-coolair-pro) | Hot & cool tower | ₹11,880 |
 | [QG830](/product/tfx-smart-10x-air) | Hot & cool, 10 speeds | ₹12,599.10 |
@@ -499,7 +499,7 @@ Heating draws more power than cooling. That is true of any electric heater. Comp
 
 | Model | Why choose it | Sale price |
 | --- | --- | --- |
-| [Q8 PRO](/product/tfx-advance) | Straightforward all-season tower | ₹11,339.10 |
+| [Q8 PRO](/product/tfx-advance) | Straightforward all-season tower | ₹11,999 |
 | [4319B](/product/tfx-airwall-pro) | Wall-mount to save floor space | ₹11,699.10 |
 | [TP09 PRO](/product/tfxhot-and-coolair-pro) | All-season tower with ABS body | ₹11,880 |
 | [QG830](/product/tfx-smart-10x-air) | 10 cooling speeds and PC + ABS body | ₹12,599.10 |
@@ -697,7 +697,7 @@ The bladeless outlet releases a smooth stream of warmed air that pulls surroundi
 
 | Model | Details | Sale price |
 | --- | --- | --- |
-| [Q8 PRO](/product/tfx-advance) | Bladeless tower, hot & cool, remote, PTC ceramic | ₹11,339.10 |
+| [Q8 PRO](/product/tfx-advance) | Bladeless tower, hot & cool, remote, PTC ceramic | ₹11,999 |
 | [TP09 PRO](/product/tfxhot-and-coolair-pro) | Bladeless tower, hot & cool, remote, ABS body | ₹11,880 |
 | [4319B](/product/tfx-airwall-pro) | Wall-mount, hot & cool, anti-fire ABS | ₹11,699.10 |
 | [QG830](/product/tfx-smart-10x-air) | Tower, hot & cool, 10 cooling speeds | ₹12,599.10 |
@@ -867,7 +867,7 @@ Prices below are listed sale prices at the time of writing, after a 10% discount
 | Remote control | Yes | Yes | Yes | Not stated in listing |
 | Notable feature | Remote, quiet cooling | ABS body | Anti-fire ABS plastic body | 10 cooling speeds |
 | Body | Not specified | ABS | Anti-fire ABS | Anti-fire PC + ABS |
-| Sale price | ₹11,339.10 | ₹11,880 | ₹11,699.10 | ₹12,599.10 |
+| Sale price | ₹11,999 | ₹11,880 | ₹11,699.10 | ₹12,599.10 |
 
 ## Futurex Q8 PRO: the straightforward all-season tower
 
@@ -966,7 +966,7 @@ Gifts that are used every day are the ones people remember. A bladeless fan fits
 
 | Occasion | Pick | Why it works | Sale price |
 | --- | --- | --- | --- |
-| Housewarming | [Q8 PRO](/product/tfx-advance) | All-season tower, modern look | ₹11,339.10 |
+| Housewarming | [Q8 PRO](/product/tfx-advance) | All-season tower, modern look | ₹11,999 |
 | Diwali gift for family | [TP09 PRO](/product/tfxhot-and-coolair-pro) | Remote control, simple to use | ₹11,880 |
 | Wedding gift | [TP12](/product/tfx-luxair-pro) | Fan and purifier in one | ₹14,805 |
 | Small flat or first rental | [4319B](/product/tfx-airwall-pro) | Wall-mount saves floor space | ₹11,699.10 |

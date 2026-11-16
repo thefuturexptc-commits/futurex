@@ -1,6 +1,9 @@
 // Shared by checkout, storefront metadata, and Merchant feeds.
 export const PUREAIR_3_IN_1_MRP = 15000;
 export const PUREAIR_3_IN_1_SALE_PRICE = 13500;
+export const Q8_PRO_SALE_PRICE = 11999;
+export const isQ8Pro = (item = {}) => item.slug === 'tfx-advance' ||
+    /\bq\s*-?\s*8\s*pro\b/i.test(`${item.name || ''} ${item.specs?.Model || item.specs?.['Model Number'] || ''}`);
 export const isPureAirThreeInOne = (item) => {
     if (item.slug)
         return item.slug === 'tfx-pureair-3-in-1';
@@ -27,6 +30,8 @@ export const isTfxV5Band = (item) => {
     return category.includes('band') && /\btfx\s*v?5\b|\btfx5\b|\bai\s*v5\b|\bv5\b/i.test(name);
 };
 export const getOfferBaseUnitPrice = (item) => {
+    if (isQ8Pro(item))
+        return Q8_PRO_SALE_PRICE;
     if (isPureAirThreeInOne(item))
         return PUREAIR_3_IN_1_SALE_PRICE;
     if (isTfxV5Band(item))
@@ -44,6 +49,8 @@ export const isWearableOfferItem = (item) => {
     return text.includes('ring') || text.includes('band');
 };
 export const getAutomaticOfferRateForItem = (item) => {
+    if (isQ8Pro(item))
+        return 0;
     if (isPureAirThreeInOne(item))
         return 0;
     if (isTfxV5Band(item))
@@ -76,17 +83,19 @@ export const getAutomaticOfferItemPricing = (item) => {
     };
 };
 
-// Apply the catalog MRP increase once, without changing the selling price.
+// Use the catalog's regular price without adding an artificial MRP markup.
 export const getCatalogMrp = (product) => {
     const unitPrice = getOfferBaseUnitPrice(product);
-    const baseMrp = isTfxV5Band(product)
+    const savedMrp = Number(product.mrp || 0);
+    const baseMrp = savedMrp > 0
+        ? savedMrp
+        : isTfxV5Band(product)
         ? TFX5_AI_BAND_MRP
         : isPureAirThreeInOne(product)
             ? PUREAIR_3_IN_1_MRP
-            : Math.max(Number(product.mrp || 0), Number(product.price || 0), unitPrice);
+            : Math.max(Number(product.price || 0), unitPrice);
     if (baseMrp <= 0) return 0;
-    const increase = unitPrice < 5000 ? 2000 : unitPrice < 10000 ? 3000 : unitPrice < 15000 ? 4000 : 5000;
-    return baseMrp + increase;
+    return baseMrp;
 };
 
 export const getCatalogOffer = (product) => {
