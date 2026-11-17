@@ -1,0 +1,112 @@
+{
+  "merchantId": "5807768582",
+  "syncedAt": "2026-11-17T11:15:23.685Z",
+  "accepted": 13,
+  "failed": 0,
+  "results": [
+    {
+      "id": "p-1772265903701",
+      "accepted": true,
+      "expectedMrp": 13999,
+      "expectedSale": 11999,
+      "returnedMrp": 13999,
+      "returnedSale": 11999
+    },
+    {
+      "id": "p-1772271848557",
+      "accepted": true,
+      "expectedMrp": 12799,
+      "expectedSale": 10800,
+      "returnedMrp": 12799,
+      "returnedSale": 10800
+    },
+    {
+      "id": "p-1772272230782",
+      "accepted": true,
+      "expectedMrp": 17399,
+      "expectedSale": 14805,
+      "returnedMrp": 17399,
+      "returnedSale": 14805
+    },
+    {
+      "id": "p-1772272596770",
+      "accepted": true,
+      "expectedMrp": 17999,
+      "expectedSale": 13499.1,
+      "returnedMrp": 17999,
+      "returnedSale": 13499.1
+    },
+    {
+      "id": "p-1772273378310",
+      "accepted": true,
+      "expectedMrp": 15999,
+      "expectedSale": 12599.1,
+      "returnedMrp": 15999,
+      "returnedSale": 12599.1
+    },
+    {
+      "id": "p-1772274359863",
+      "accepted": true,
+      "expectedMrp": 15000,
+      "expectedSale": 13500,
+      "returnedMrp": 15000,
+      "returnedSale": 13500
+    },
+    {
+      "id": "p-1772274734241-red",
+      "accepted": true,
+      "expectedMrp": 13999,
+      "expectedSale": 11699.1,
+      "returnedMrp": 13999,
+      "returnedSale": 11699.1
+    },
+    {
+      "id": "p-1772274734241-silver",
+      "accepted": true,
+      "expectedMrp": 13999,
+      "expectedSale": 11699.1,
+      "returnedMrp": 13999,
+      "returnedSale": 11699.1
+    },
+    {
+      "id": "p-1772608609188-n1aiy-rose-gold",
+      "accepted": true,
+      "expectedMrp": 3690,
+      "expectedSale": 3662.25,
+      "returnedMrp": 3690,
+      "returnedSale": 3662.25
+    },
+    {
+      "id": "p-1772608609188-n1aiy-silver",
+      "accepted": true,
+      "expectedMrp": 3690,
+      "expectedSale": 3662.25,
+      "returnedMrp": 3690,
+      "returnedSale": 3662.25
+    },
+    {
+      "id": "p-1772608609188-n1aiy-black",
+      "accepted": true,
+      "expectedMrp": 3690,
+      "expectedSale": 3662.25,
+      "returnedMrp": 3690,
+      "returnedSale": 3662.25
+    },
+    {
+      "id": "p-1772706011058-026xu",
+      "accepted": true,
+      "expectedMrp": 5099,
+      "expectedSale": 3990,
+      "returnedMrp": 5099,
+      "returnedSale": 3990
+    },
+    {
+      "id": "p-1775474147719-9jkpt",
+      "accepted": true,
+      "expectedMrp": 7560,
+      "expectedSale": 5985,
+      "returnedMrp": 7560,
+      "returnedSale": 5985
+    }
+  ]
+}

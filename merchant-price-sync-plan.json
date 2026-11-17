@@ -1,0 +1,84 @@
+{
+  "merchantId": "5807768582",
+  "createdAt": "2026-11-17T11:15:14.492Z",
+  "changes": [
+    {
+      "id": "p-1772265903701",
+      "mrp": 13999,
+      "sale": 11999,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772271848557",
+      "mrp": 12799,
+      "sale": 10800,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772272230782",
+      "mrp": 17399,
+      "sale": 14805,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772272596770",
+      "mrp": 17999,
+      "sale": 13499.1,
+      "action": "insert-missing"
+    },
+    {
+      "id": "p-1772273378310",
+      "mrp": 15999,
+      "sale": 12599.1,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772274359863",
+      "mrp": 15000,
+      "sale": 13500,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772274734241-red",
+      "mrp": 13999,
+      "sale": 11699.1,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772274734241-silver",
+      "mrp": 13999,
+      "sale": 11699.1,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772608609188-n1aiy-rose-gold",
+      "mrp": 3690,
+      "sale": 3662.25,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772608609188-n1aiy-silver",
+      "mrp": 3690,
+      "sale": 3662.25,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772608609188-n1aiy-black",
+      "mrp": 3690,
+      "sale": 3662.25,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1772706011058-026xu",
+      "mrp": 5099,
+      "sale": 3990,
+      "action": "update-prices"
+    },
+    {
+      "id": "p-1775474147719-9jkpt",
+      "mrp": 7560,
+      "sale": 5985,
+      "action": "update-prices"
+    }
+  ]
+}

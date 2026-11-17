@@ -3,6 +3,7 @@
 @import './components/ProductCard.css';
 @import './styles/app-shell.css';
 @import './styles/admin-dashboard.css';
+@import './styles/content-layout.css';
 .seo-noscript-main {
   max-width: 1180px;
   margin: 0 auto;

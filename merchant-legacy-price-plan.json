@@ -1,0 +1,35 @@
+{
+  "createdAt": "2026-11-17T11:17:31.220Z",
+  "changes": [
+    {
+      "id": "9595bc04-27dc-405b-9426-ad96df3237bb",
+      "from": "accounts/5807768582/dataSources/10760226853",
+      "to": "accounts/5807768582/dataSources/10763963755",
+      "price": {
+        "link": "https://thefuturex.in/product/tfx-touch-smart-ring/black",
+        "mrp": 3199,
+        "sale": 2888
+      }
+    },
+    {
+      "id": "87492e05-8c3a-4075-9199-7a8721e9d59c",
+      "from": "accounts/5807768582/dataSources/10760226853",
+      "to": "accounts/5807768582/dataSources/10763963755",
+      "price": {
+        "link": "https://thefuturex.in/product/tfx-smart-10x-air",
+        "mrp": 15999,
+        "sale": 12599.1
+      }
+    },
+    {
+      "id": "d2456e4e-fc00-4a5e-b6ab-f4b5d85e1a2f",
+      "from": "accounts/5807768582/dataSources/10760226853",
+      "to": "accounts/5807768582/dataSources/10763963755",
+      "price": {
+        "link": "https://thefuturex.in/product/tfx-luxair-pro",
+        "mrp": 17399,
+        "sale": 14805
+      }
+    }
+  ]
+}

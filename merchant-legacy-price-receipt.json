@@ -1,0 +1,29 @@
+{
+  "syncedAt": "2026-11-17T11:17:33.424Z",
+  "results": [
+    {
+      "id": "9595bc04-27dc-405b-9426-ad96df3237bb",
+      "accepted": true,
+      "expectedMrp": 3199,
+      "expectedSale": 2888,
+      "returnedMrp": 3199,
+      "returnedSale": 2888
+    },
+    {
+      "id": "87492e05-8c3a-4075-9199-7a8721e9d59c",
+      "accepted": true,
+      "expectedMrp": 15999,
+      "expectedSale": 12599.1,
+      "returnedMrp": 15999,
+      "returnedSale": 12599.1
+    },
+    {
+      "id": "d2456e4e-fc00-4a5e-b6ab-f4b5d85e1a2f",
+      "accepted": true,
+      "expectedMrp": 17399,
+      "expectedSale": 14805,
+      "returnedMrp": 17399,
+      "returnedSale": 14805
+    }
+  ]
+}

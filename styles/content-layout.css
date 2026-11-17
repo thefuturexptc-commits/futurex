@@ -1,0 +1,59 @@
+/* A shared reading width and spacing rhythm for the lower page sections. */
+#root .site-main-content .store-section-heading {
+  margin-bottom: 0;
+  color: #153846 !important;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: clamp(23px, 2.8vw, 32px) !important;
+  font-weight: 650;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+  text-wrap: balance;
+}
+
+#root .site-main-content .store-section-eyebrow {
+  margin: 0 0 10px;
+  color: #087481 !important;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .13em;
+  text-transform: uppercase;
+}
+
+#root .site-main-content .store-section-description {
+  margin: 12px 0 0;
+  color: #526875 !important;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+#root .site-main-content .store-guides-section { padding-block: 48px; background: #fff !important; }
+#root .site-main-content .store-guides-card { display: flex; align-items: center; justify-content: space-between; gap: 32px; width: 100%; max-width: 1152px; margin: 0 auto; padding: 36px 40px; border: 1px solid #dce7e9; border-radius: 20px; background: #f4f9f9; }
+#root .site-main-content .store-guides-card > div { min-width: 0; max-width: 680px; }
+#root .site-main-content .store-guides-link { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: 16px; min-height: 46px; padding: 12px 20px; border-radius: 10px; background: #123d4c !important; color: #fff !important; font-size: 14px; font-weight: 600; text-decoration: none; }
+#root .site-main-content .store-guides-link span { color: #fff !important; }
+#root .site-main-content .store-guides-link:hover { background: #087481 !important; }
+#root .site-main-content .store-home-faq { padding-block: 48px; background: #f8fbfc !important; border-top: 1px solid #e6eef0; }
+
+#root .site-main-content .product-detail-page > .product-scroll-section:not(.product-mobile-details) { padding-top: 48px; padding-bottom: 48px; }
+#root .site-main-content .product-detail-page > .product-scroll-section:not(.product-mobile-details):not(#more-information) > div { max-width: 1152px; }
+#root .site-main-content .product-detail-page > :is(#features, #specs, #faq, #reviews) { border-top: 1px solid #e4ecef !important; }
+#root .site-main-content .product-detail-page .product-mobile-details { padding-top: 24px; padding-bottom: 32px; min-height: 0; }
+#root .site-main-content .product-detail-page .product-battery-grid > div { border: 1px solid #dce7e9 !important; border-radius: 12px; padding: 16px; box-shadow: none !important; }
+#root .site-main-content .product-detail-page .store-product-faq details { padding: 0; border: 1px solid #dce7e9 !important; border-radius: 12px; background: #f8fbfc !important; box-shadow: none !important; }
+#root .site-main-content .product-detail-page .store-product-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 60px; padding: 18px 20px; color: #1a3c49 !important; font-size: 15px; font-weight: 600; line-height: 1.65; list-style: none; }
+#root .site-main-content .product-detail-page .store-product-faq summary::-webkit-details-marker { display: none; }
+#root .site-main-content .product-detail-page .store-product-faq summary::after { content: '+'; flex-shrink: 0; color: #087481; font-size: 22px; font-weight: 400; line-height: 1; }
+#root .site-main-content .product-detail-page .store-product-faq details[open] summary::after { content: '−'; }
+#root .site-main-content .product-detail-page .store-product-faq details > p { margin: 0; padding: 0 20px 20px; max-width: 80ch; color: #526875 !important; font-size: 14px; line-height: 1.85; }
+#root .site-main-content :is(.store-guides-link, .store-product-faq summary):focus-visible { outline: 2px solid #087481; outline-offset: 4px; }
+
+@media (max-width: 639px) {
+  #root .site-main-content .store-guides-section,
+  #root .site-main-content .store-home-faq { padding-block: 32px; }
+  #root .site-main-content .store-guides-card { flex-direction: column; align-items: stretch; gap: 22px; padding: 24px 20px; border-radius: 16px; }
+  #root .site-main-content .store-guides-link { align-self: flex-start; }
+  #root .site-main-content .store-section-description { font-size: 14px; }
+  #root .site-main-content .product-detail-page > .product-scroll-section:not(.product-mobile-details) { padding-top: 32px; padding-bottom: 32px; }
+  #root .site-main-content .product-detail-page .store-product-faq summary { padding: 16px; font-size: 14px; }
+  #root .site-main-content .product-detail-page .store-product-faq details > p { padding: 0 16px 16px; font-size: 13px; }
+}

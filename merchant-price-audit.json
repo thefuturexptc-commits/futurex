@@ -1,0 +1,280 @@
+{
+  "verifiedAt": "2026-11-17T11:20:27.832Z",
+  "merchantId": "5807768582",
+  "expectedListings": 30,
+  "merchantListings": 30,
+  "matched": 30,
+  "mismatches": [],
+  "rows": [
+    {
+      "id": "p-1772265903701",
+      "expectedMrp": 13999,
+      "expectedSale": 11999,
+      "merchantMrp": 13999,
+      "merchantSale": 11999,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772271848557",
+      "expectedMrp": 12799,
+      "expectedSale": 10800,
+      "merchantMrp": 12799,
+      "merchantSale": 10800,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772272230782",
+      "expectedMrp": 17399,
+      "expectedSale": 14805,
+      "merchantMrp": 17399,
+      "merchantSale": 14805,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772272596770",
+      "expectedMrp": 17999,
+      "expectedSale": 13499.1,
+      "merchantMrp": 17999,
+      "merchantSale": 13499.1,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772273378310",
+      "expectedMrp": 15999,
+      "expectedSale": 12599.1,
+      "merchantMrp": 15999,
+      "merchantSale": 12599.1,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772273989383",
+      "expectedMrp": 13860,
+      "expectedSale": 11880,
+      "merchantMrp": 13860,
+      "merchantSale": 11880,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772274359863",
+      "expectedMrp": 15000,
+      "expectedSale": 13500,
+      "merchantMrp": 15000,
+      "merchantSale": 13500,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772274734241-red",
+      "expectedMrp": 13999,
+      "expectedSale": 11699.1,
+      "merchantMrp": 13999,
+      "merchantSale": 11699.1,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772274734241-silver",
+      "expectedMrp": 13999,
+      "expectedSale": 11699.1,
+      "merchantMrp": 13999,
+      "merchantSale": 11699.1,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772445142757-black-metal",
+      "expectedMrp": 11999,
+      "expectedSale": 9999,
+      "merchantMrp": 11999,
+      "merchantSale": 9999,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772445142757-pink-rubber",
+      "expectedMrp": 11999,
+      "expectedSale": 9999,
+      "merchantMrp": 11999,
+      "merchantSale": 9999,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772445142757-blue-rubber",
+      "expectedMrp": 11999,
+      "expectedSale": 9999,
+      "merchantMrp": 11999,
+      "merchantSale": 9999,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772445142757-white-rubber",
+      "expectedMrp": 11999,
+      "expectedSale": 9999,
+      "merchantMrp": 11999,
+      "merchantSale": 9999,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772445142757-silver-metal",
+      "expectedMrp": 11999,
+      "expectedSale": 9999,
+      "merchantMrp": 11999,
+      "merchantSale": 9999,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772605499360-t17c8-silver",
+      "expectedMrp": 2600,
+      "expectedSale": 2346.5,
+      "merchantMrp": 2600,
+      "merchantSale": 2346.5,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772605499360-t17c8-gold",
+      "expectedMrp": 2600,
+      "expectedSale": 2346.5,
+      "merchantMrp": 2600,
+      "merchantSale": 2346.5,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772605499360-t17c8-black",
+      "expectedMrp": 2600,
+      "expectedSale": 2346.5,
+      "merchantMrp": 2600,
+      "merchantSale": 2346.5,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772608609188-n1aiy-rose-gold",
+      "expectedMrp": 3690,
+      "expectedSale": 3662.25,
+      "merchantMrp": 3690,
+      "merchantSale": 3662.25,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772608609188-n1aiy-silver",
+      "expectedMrp": 3690,
+      "expectedSale": 3662.25,
+      "merchantMrp": 3690,
+      "merchantSale": 3662.25,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772608609188-n1aiy-black",
+      "expectedMrp": 3690,
+      "expectedSale": 3662.25,
+      "merchantMrp": 3690,
+      "merchantSale": 3662.25,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772611457450-saczr-black",
+      "expectedMrp": 3199,
+      "expectedSale": 2888,
+      "merchantMrp": 3199,
+      "merchantSale": 2888,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772611457450-saczr-gold",
+      "expectedMrp": 3199,
+      "expectedSale": 2888,
+      "merchantMrp": 3199,
+      "merchantSale": 2888,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772611457450-saczr-silver",
+      "expectedMrp": 3199,
+      "expectedSale": 2888,
+      "merchantMrp": 3199,
+      "merchantSale": 2888,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772618757914-ib3xp-black",
+      "expectedMrp": 5699,
+      "expectedSale": 3499.8,
+      "merchantMrp": 5699,
+      "merchantSale": 3499.8,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772618757914-ib3xp-sliver",
+      "expectedMrp": 5699,
+      "expectedSale": 3499.8,
+      "merchantMrp": 5699,
+      "merchantSale": 3499.8,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1772706011058-026xu",
+      "expectedMrp": 5099,
+      "expectedSale": 3990,
+      "merchantMrp": 5099,
+      "merchantSale": 3990,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "p-1775474147719-9jkpt",
+      "expectedMrp": 7560,
+      "expectedSale": 5985,
+      "merchantMrp": 7560,
+      "merchantSale": 5985,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "9595bc04-27dc-405b-9426-ad96df3237bb",
+      "expectedMrp": 3199,
+      "expectedSale": 2888,
+      "merchantMrp": 3199,
+      "merchantSale": 2888,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "87492e05-8c3a-4075-9199-7a8721e9d59c",
+      "expectedMrp": 15999,
+      "expectedSale": 12599.1,
+      "merchantMrp": 15999,
+      "merchantSale": 12599.1,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    },
+    {
+      "id": "d2456e4e-fc00-4a5e-b6ab-f4b5d85e1a2f",
+      "expectedMrp": 17399,
+      "expectedSale": 14805,
+      "merchantMrp": 17399,
+      "merchantSale": 14805,
+      "dataSource": "accounts/5807768582/dataSources/10763963755",
+      "ok": true
+    }
+  ]
+}

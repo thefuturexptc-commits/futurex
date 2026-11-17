@@ -7,7 +7,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { addOfferLead, getProductSlug } from '../services/backend';
 import { WearableFinder } from '../components/WearableFinder';
-import { BundleOffer } from '../components/BundleOffer';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogMrp, isMegaPriceDropProduct } from '../utils/catalogPricing.js';
 import { getProductFallbackImage } from '../utils/productImages';
@@ -1426,18 +1425,23 @@ export const Home: React.FC = () => {
       <ScrollLinkedBanners />
 
       <WearableFinder />
-      <BundleOffer catalog={products} />
-      <section className="bg-slate-50 px-4 py-10 text-center text-slate-950">
-        <h2 className="text-2xl font-bold">From the TheFutureX blog</h2>
-        <p className="mt-2 text-slate-600">Buying guides, product comparisons and tips for your everyday routine.</p>
-        <Link to="/blog" className="mt-4 inline-block rounded-xl bg-slate-950 px-6 py-3 font-semibold text-white">Read our guides</Link>
+      <section className="store-guides-section px-4 text-slate-950" aria-labelledby="home-guides-heading">
+        <div className="store-guides-card">
+          <div>
+            <p className="store-section-eyebrow">TheFutureX journal</p>
+            <h2 id="home-guides-heading" className="store-section-heading">Find the right fit for your everyday life</h2>
+            <p className="store-section-description">Buying guides, product comparisons and practical tips, all in one place.</p>
+          </div>
+          <Link to="/blog" className="store-guides-link">Read our guides <span aria-hidden="true">→</span></Link>
+        </div>
       </section>
 
-      <section className="bg-slate-50 px-4 py-14 sm:py-20">
+      <section className="store-home-faq bg-slate-50 px-4 py-14 sm:py-20" aria-labelledby="home-faq-heading">
         <div className="mx-auto max-w-4xl">
           <RevealOnScroll variant="blur">
             <p className="text-center text-xs font-black uppercase tracking-[0.2em] text-cyan-700">TheFutureX help centre</p>
-            <h2 className="tfx-gradient-heading mt-3 text-center text-3xl font-black sm:text-4xl">Frequently Asked Questions</h2>
+            <h2 id="home-faq-heading" className="store-section-heading mt-3 text-center">Frequently asked questions</h2>
+            <p className="store-section-description text-center">A little help with choosing, ordering and caring for your product.</p>
             <div className="tfx-divider mx-auto mt-3 h-1 rounded-full bg-gradient-to-r from-[#0ea5e9] to-[#df0b16]" />
           </RevealOnScroll>
           <div className="mt-8 space-y-3">

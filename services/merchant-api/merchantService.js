@@ -54,12 +54,13 @@ let auth;
 
 let impersonatedAuthClient;
 const getAuthClient = async () => {
+  const directAuth = process.env.GOOGLE_MERCHANT_DIRECT_AUTH === 'true';
   // Credentials are needed for submission, not for building or validating payloads.
   auth ||= new google.auth.GoogleAuth({
     ...getAuthConfig(),
-    scopes: [impersonatedServiceAccount ? impersonationSourceScope : merchantApiScope],
+    scopes: [impersonatedServiceAccount && !directAuth ? impersonationSourceScope : merchantApiScope],
   });
-  if (!impersonatedServiceAccount) return auth.getClient();
+  if (directAuth || !impersonatedServiceAccount) return auth.getClient();
   if (!impersonatedAuthClient) {
     const sourceClient = await auth.getClient();
     impersonatedAuthClient = new Impersonated({
@@ -388,7 +389,7 @@ export const getMerchantSyncConfig = () => ({
   merchantId,
   siteUrl,
   dataSource: cachedDataSource || null,
-  authMode: impersonatedServiceAccount ? 'service-account-impersonation' : 'service-account',
+  authMode: process.env.GOOGLE_MERCHANT_DIRECT_AUTH === 'true' ? 'direct-google-auth' : impersonatedServiceAccount ? 'service-account-impersonation' : 'service-account',
   merchantApiScope,
   impersonatedServiceAccount: impersonatedServiceAccount || null,
   hasServiceAccountJson: Boolean(process.env.GOOGLE_SERVICE_ACCOUNT_JSON || process.env.GOOGLE_APPLICATION_CREDENTIALS_JSON),

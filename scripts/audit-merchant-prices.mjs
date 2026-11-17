@@ -1,5 +1,20 @@
 import { writeFile } from 'node:fs/promises';
-import { listMerchantProducts, getMerchantSyncConfig } from '../services/merchant-api/merchantService.js';
+import { existsSync } from 'node:fs';
+import { homedir } from 'node:os';
+import { join } from 'node:path';
+
+// Explicitly select the existing Google user sign-in for local account audits.
+// This does not change the deployed server's service-account configuration.
+if (process.argv.includes('--google-user')) {
+  const credentials = [
+    join(process.env.APPDATA || join(homedir(), '.config'), 'gcloud', 'application_default_credentials.json'),
+    join(homedir(), '.config', 'gcloud', 'application_default_credentials.json'),
+  ].find(existsSync);
+  if (!credentials) throw new Error('No local Google application-default sign-in was found.');
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = credentials;
+  process.env.GOOGLE_MERCHANT_DIRECT_AUTH = 'true';
+}
+const { listMerchantProducts, getMerchantSyncConfig } = await import('../services/merchant-api/merchantService.js');
 
 const site = getMerchantSyncConfig().siteUrl;
 const decode = value => value.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'");

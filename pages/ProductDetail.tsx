@@ -8,7 +8,6 @@ import { auth } from '../services/firebaseConfig';
 import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById, getProductReviews, getProductSlug, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
 import { DeliveryEstimate } from '../components/DeliveryEstimate';
-import { BundleOffer } from '../components/BundleOffer';
 import { ReviewPhotos } from '../components/ReviewPhotos';
 import { BandAppShowcase } from '../components/BandAppShowcase';
 import { ProductFeatureList, ProductSpecifications } from '../components/ProductDetailsSections';
@@ -3713,6 +3712,7 @@ export const ProductDetail: React.FC = () => {
       {detailTabsFixed && <div aria-hidden="true" style={{ height: detailTabsHeight }} />}
       <nav
         ref={detailTabsBarRef as React.RefObject<HTMLElement>}
+        aria-label="Product information"
         className={`product-detail-sticky-tabs border-y border-slate-200 bg-[#faf8f4]/95 shadow-[0_4px_16px_rgba(15,23,42,0.05)] backdrop-blur ${
           detailTabsFixed ? 'fixed inset-x-0 z-[70]' : 'sticky z-[60]'
         }`}
@@ -3729,6 +3729,7 @@ export const ProductDetail: React.FC = () => {
                 }
                 setActiveDetailTab(tab.key);
               }}
+              aria-pressed={activeDetailTab === tab.key}
               className={`product-detail-sticky-tab snap-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold tracking-wide transition ${
                 activeDetailTab === tab.key ? 'is-active border-[#a9812f]' : 'border-transparent'
               }`}
@@ -3825,7 +3826,7 @@ export const ProductDetail: React.FC = () => {
         </section>
       )}
 
-      <section className="product-scroll-section bg-white px-4 py-5 sm:hidden">
+      <section className="product-mobile-details product-scroll-section bg-white px-4 py-5 sm:hidden">
         {activeDetailTab === 'description' && (detailedProductContent ? generalArrangedDescription : (
           <div className="space-y-4">
             <div className={isTfxV5Band ? '' : 'rounded border border-slate-200'}>
@@ -3897,11 +3898,11 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'features' && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">Key Features</p>
+            <h2 className="store-section-heading">Key features</h2>
+            <p className="store-section-description">The product highlights at a glance.</p>
             {detailedProductFeatureHighlights || (featureList.length > 0 && (
               <ProductFeatureList features={featureList} />
             ))}
-            {!detailedProductContent && <div className="mt-6">{arrangedProductInformation}</div>}
           </div>
         )}
 
@@ -3911,9 +3912,9 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'battery' && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">Battery</p>
+            <h2 className="store-section-heading">Battery &amp; power</h2>
             {(mobileBatterySpecEntries.length > 0 || batteryFeatureEntries.length > 0) ? (
-              <div className="mt-4 grid grid-cols-1 gap-2">
+              <div className="product-battery-grid mt-4 grid grid-cols-1 gap-3">
                 {mobileBatterySpecEntries.map(([key, value]) => (
                   <div key={key} className="rounded-xl border border-slate-200 bg-white px-3 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#8a6a20]">{formatSpecLabel(key)}</p>
@@ -3934,8 +3935,8 @@ export const ProductDetail: React.FC = () => {
 
         {activeDetailTab === 'faq' && (
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#8a6a20]">FAQ</p>
-            <div className="mt-4 space-y-3">
+            <h2 className="store-section-heading">Frequently asked questions</h2>
+            <div className="store-product-faq mt-4 space-y-3">
               {productFaqs.map((item) => (
                 <details key={item.q} className="rounded-xl border border-slate-200 bg-[#f8fbfb] p-4">
                   <summary className="cursor-pointer text-sm font-black text-slate-950">{item.q}</summary>
@@ -3949,10 +3950,9 @@ export const ProductDetail: React.FC = () => {
 
       <section id="features" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-8">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-4 flex items-center justify-center">
-            <h2 className="rounded-full border border-[#a9812f]/25 bg-[#fbf6ea] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a6a20] sm:text-xs">
-              Key Features
-            </h2>
+          <div className="mb-5">
+            <h2 className="store-section-heading">Key features</h2>
+            <p className="store-section-description">The product highlights at a glance.</p>
           </div>
 
           {detailedProductFeatureHighlights || (featureList.length > 0 && (
@@ -4043,8 +4043,8 @@ export const ProductDetail: React.FC = () => {
 
       <section id="faq" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-5xl">
-          <h2 className="font-display text-xl font-black text-slate-950 sm:text-3xl lg:text-4xl">FAQs</h2>
-          <div className="mt-6 space-y-3">
+          <h2 className="store-section-heading">Frequently asked questions</h2>
+          <div className="store-product-faq mt-6 space-y-3">
             {productFaqs.map((item) => (
               <details key={item.q} className="rounded-[1rem] border border-slate-200 bg-[#f8fbfb] p-4 sm:p-5">
                 <summary className="cursor-pointer text-sm font-black text-slate-950 sm:text-base">{item.q}</summary>
@@ -4055,7 +4055,6 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      {(productFamily === 'band' || productFamily === 'ring') && <BundleOffer />}
       <section id="reviews" className="product-scroll-section scroll-mt-32 bg-[#f8fbfb] px-4 py-10 sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-5xl">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
