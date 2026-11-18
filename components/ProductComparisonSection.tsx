@@ -3,6 +3,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import type { Product } from '../types';
 import { getProductSlug } from '../services/backend';
+import { applyProductImageFallback, getProductThumbnail } from '../utils/productImages';
 import './ProductComparisonSection.css';
 
 interface ProductComparisonSectionProps {
@@ -19,9 +20,6 @@ const cleanText = (value: unknown): string =>
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-
-const getImage = (product: Product): string =>
-  product.colors?.[0]?.images?.[0] || product.images?.[0] || product.variants?.[0]?.images?.[0] || '';
 
 const getStock = (product: Product): number => {
   const firstColor = product.colors?.[0];
@@ -154,11 +152,7 @@ export const ProductComparisonSection: React.FC<ProductComparisonSectionProps> =
             <article key={product.id} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_12px_34px_rgba(15,63,70,0.08)]">
               <Link to={`/product/${getProductSlug(product)}`} className="grid grid-cols-[92px_minmax(0,1fr)] gap-3 border-b border-slate-200 bg-[#fbfdfd] p-3">
                 <div className="grid h-24 place-items-center rounded-lg bg-white p-2">
-                  {getImage(product) ? (
-                    <img src={getImage(product)} alt={product.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
-                  ) : (
-                    <span className="text-xs font-bold text-slate-400">TheFutureX</span>
-                  )}
+                  <img src={getProductThumbnail(product)} alt={product.name} className="h-full w-full object-contain" loading="lazy" decoding="async" onError={(event) => applyProductImageFallback(event.currentTarget, product)} />
                 </div>
                 <div className="min-w-0 self-center">
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#1ca9a4]">Model</p>
@@ -195,11 +189,7 @@ export const ProductComparisonSection: React.FC<ProductComparisonSectionProps> =
                 className="group border-b border-r border-slate-200 bg-white p-4 transition hover:bg-[#f0fbfb]"
               >
                 <div className="flex min-h-24 items-center justify-center rounded-lg bg-[#f7fbfb] p-2">
-                  {getImage(product) ? (
-                    <img src={getImage(product)} alt={product.name} className="h-20 w-full object-contain transition duration-300 group-hover:scale-[1.03]" loading="lazy" decoding="async" />
-                  ) : (
-                    <span className="text-xs font-bold text-slate-400">TheFutureX</span>
-                  )}
+                  <img src={getProductThumbnail(product)} alt={product.name} className="h-20 w-full object-contain transition duration-300 group-hover:scale-[1.03]" loading="lazy" decoding="async" onError={(event) => applyProductImageFallback(event.currentTarget, product)} />
                 </div>
                 <h3 className="comparison-product-title mt-3 text-sm font-black leading-5 text-slate-950 transition group-hover:text-[#117c78]">{product.name}</h3>
               </Link>

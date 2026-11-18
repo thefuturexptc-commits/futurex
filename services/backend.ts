@@ -1,5 +1,5 @@
 import { 
-  collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, getFirestore
+  collection, getDocs, getDocsFromServer, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, getFirestore
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
@@ -850,7 +850,9 @@ const normalizeProductColors = (product: Product): Product => {
         colorName,
         colorHex: String(variant?.colorHex || variant?.hex || '#6b7280'),
         price: Number(isTfxV5Band(pricedProduct) ? TFX5_AI_BAND_PRICE : variant?.price ?? pricedProduct.salePrice ?? pricedProduct.price ?? 0),
-        images: Array.isArray(variant?.images) && variant.images.length > 0 ? variant.images : [...(product.images || [])],
+        images: Array.isArray(variant?.images) && variant.images.length > 0
+          ? variant.images
+          : existingColorMap.get(colorName.toLowerCase())?.images || [...(product.images || [])],
         sizes,
         videoUrl: String(variant?.videoUrl || ''),
       };
@@ -1159,9 +1161,8 @@ export const getProducts = async (): Promise<Product[]> => {
   productsInFlight = (async () => {
     const requestRevision = productsCacheRevision;
     try {
-      await ensureFirebaseConnection();
       const [querySnapshot, reviewSnapshot] = await Promise.all([
-        withTimeout(getDocs(collection(db, 'products')), 6000),
+        withTimeout(getDocsFromServer(collection(db, 'products')), 6000),
         withTimeout(getDocs(collection(db, 'product_reviews')), 4500).catch(() => null),
       ]);
       const publicReviews = reviewSnapshot?.docs.map(review => ({ ...review.data(), id: review.id })) || [];
@@ -1177,10 +1178,12 @@ export const getProducts = async (): Promise<Product[]> => {
       return normalized;
     } catch (error) {
       if (requestRevision !== productsCacheRevision && productsCache) return [...productsCache.data];
-      if (isAbortLikeError(error) || isPermissionDeniedError(error)) {
+      const unavailable = (error as { code?: string })?.code === 'unavailable';
+      if (unavailable || isTimeoutLikeError(error) || isAbortLikeError(error) || isPermissionDeniedError(error)) {
         const localProducts = getMockData<Product[]>('products', INITIAL_PRODUCTS)
           .filter(isCatalogProductPublished)
           .map(normalizeProductColors);
+        if (localProducts.length === 0) throw error;
         productsCache = { data: localProducts, ts: Date.now() };
         return localProducts;
       }

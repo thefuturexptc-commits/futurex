@@ -13,16 +13,19 @@ export const Shop: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [sortBy, setSortBy] = useState('featured');
   const [searchQuery, setSearchQuery] = useState('');
 
   const loadProducts = useCallback(() => {
     setLoading(true);
+    setLoadFailed(false);
     getProducts().then(data => {
       setProducts(data);
       setLoading(false);
     }).catch(() => {
       setProducts([]);
+      setLoadFailed(true);
       setLoading(false);
     });
   }, []);
@@ -131,6 +134,13 @@ export const Shop: React.FC = () => {
               <div className="absolute top-0 left-0 w-full h-full border-4 border-primary-500/30 rounded-full animate-ping"></div>
               <div className="absolute top-0 left-0 w-full h-full border-4 border-primary-500 rounded-full animate-spin border-t-transparent"></div>
            </div>
+        </div>
+      ) : loadFailed ? (
+        <div className="py-24 text-center">
+          <p role="status" className="text-lg font-bold text-slate-950">Couldn’t load products.</p>
+          <button type="button" onClick={loadProducts} className="mt-4 rounded-lg bg-slate-950 px-5 py-2 font-semibold text-white">
+            Try again
+          </button>
         </div>
       ) : filteredProducts.length > 0 ? (
         <div className="phone-product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

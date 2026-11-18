@@ -8,7 +8,7 @@ import { Button } from './ui/Button';
 import { addProductNotifyRequest, getProductSlug } from '../services/backend';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogOffer, isMegaPriceDropProduct } from '../utils/catalogPricing.js';
-import { getProductFallbackImage } from '../utils/productImages';
+import { applyProductImageFallback, getProductThumbnail } from '../utils/productImages';
 
 interface ProductCardProps {
   product: Product;
@@ -182,17 +182,14 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   }, [product.colors, product.stock, product.reservedStock]);
   const canAdd = selectedColorStock > 0;
 
-  const defaultImage = useMemo(() => {
-    return product.colors?.[0]?.images?.[0] || product.images?.[0] || getProductFallbackImage(product);
-  }, [product.colors, product.images, product.variants, product.category, product.name]);
-  const activeImage = defaultImage;
+  const activeImage = getProductThumbnail(product);
   const productPreviewImages = useMemo(() => {
     const colorImages = (product.colors || []).map((color) => color.images?.[0]).filter(Boolean);
     const variantImages = (product.variants || []).map((variant) => variant.images?.[0]).filter(Boolean);
     const productImages = (product.images || []).filter(Boolean);
     const images = colorImages.length ? colorImages : variantImages.length ? variantImages : productImages;
     return Array.from(new Set(images));
-  }, [product.colors, product.images]);
+  }, [product.colors, product.images, product.variants]);
   const previewImages = productPreviewImages.slice(0, 2);
   const extraPreviewCount = Math.max(0, productPreviewImages.length - previewImages.length);
 
@@ -312,12 +309,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           height={800}
           className={`product-card-first-image h-full w-full ${imageFit === 'cover' ? 'object-cover' : 'object-contain'} object-center transition-all duration-300 ease-out ${enableHoverEffects ? 'group-hover:scale-[1.025]' : ''
             }`}
-          onError={(event) => {
-            const image = event.currentTarget;
-            if (image.dataset.fallbackApplied) return;
-            image.dataset.fallbackApplied = 'true';
-            image.src = getProductFallbackImage(product);
-          }}
+          onError={(event) => applyProductImageFallback(event.currentTarget, product)}
         />
         <div
           className={`absolute inset-0 bg-gradient-to-t from-black/40 to-transparent transition-opacity duration-300 ${enableHoverEffects ? 'opacity-0 group-hover:opacity-100' : 'opacity-0'
@@ -335,12 +327,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
                 className="grid h-11 w-11 place-items-center rounded-md border border-[#0ea5e9] bg-white p-1 shadow-sm sm:h-12 sm:w-12"
                 aria-label={`View ${product.name} preview ${index + 1}`}
               >
-                <img src={image} alt="" className="h-full w-full object-contain" loading="lazy" decoding="async" aria-hidden="true" onError={(event) => {
-                  const preview = event.currentTarget;
-                  if (preview.dataset.fallbackApplied) return;
-                  preview.dataset.fallbackApplied = 'true';
-                  preview.src = getProductFallbackImage(product);
-                }} />
+                <img src={image} alt="" className="h-full w-full object-contain" loading="lazy" decoding="async" aria-hidden="true" onError={(event) => applyProductImageFallback(event.currentTarget, product)} />
               </Link>
             ))}
             {extraPreviewCount > 0 && (
