@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { infoRoutes, sitemapRoutes, spaFallbackRoutes } from '../utils/siteRoutes.js';
+import { fanGuideRoutes } from '../utils/fanGuideRoutes.js';
 import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/productSeoData.js';
 import { generateSitemapXML, getRemotePublishedBlogPosts } from '../utils/generateSitemap.js';
 import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/generateMerchantFeed.js';
@@ -154,6 +155,7 @@ const remoteBlogRoutes = remotePublishedBlogPosts.map((post) => ({
   priority: post.priority,
   post,
 }));
+const unlistedJournalPaths = new Set(fanGuideRoutes.filter(({ listedInJournal }) => !listedInJournal).map(({ path }) => path));
 
 const blogPages = Object.fromEntries(
   [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes]
@@ -338,7 +340,7 @@ const buildCategoryStaticHtml = (page, products = []) => {
 
 const buildBlogIndexStaticHtml = () => {
   const posts = Object.entries(blogPages)
-    .filter(([route]) => route !== 'blog')
+    .filter(([route]) => route !== 'blog' && !unlistedJournalPaths.has(`/${route}`))
     .map(([route, page]) => `<li><a href="/${htmlEscape(route)}">${htmlEscape(page.title)}</a></li>`)
     .join('');
 
@@ -807,10 +809,12 @@ const productRoutes = [...productRouteMap.keys()]
   .map((slug) => `product/${slug}`);
 
 const publishedRoutes = [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes].map((route) => route.path.replace(/^\//, ''));
+const standaloneBlogPaths = new Set(fanGuideRoutes.map(({ path }) => path));
 // Retired catalog slugs must never receive an indexable homepage shell as their
 // product fallback. Emit product pages only when current Product/Offer data exists.
 const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...productRoutes].filter(route => {
   const clean = String(route).replace(/^\/+|\/+$/g, '');
+  if (standaloneBlogPaths.has(`/${clean}`)) return false;
   return !clean.startsWith('product/') || productRouteMap.has(clean.slice('product/'.length));
 }));
 

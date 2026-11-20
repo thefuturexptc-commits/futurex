@@ -7677,6 +7677,7 @@ body {
   .tfx-footer *,
   .tfx-current-offer-bar-static *,
   .blog-article-page *,
+  .blog-journal *,
   .blog-post-page *,
   .complaint-page *,
   .tfx-warranty *,
@@ -8751,44 +8752,6 @@ html.dark .tfx-footer,
 #root .product-detail-page button.product-detail-action-button,
 #root .product-detail-page button.product-detail-action-button * {
   color: #ffffff !important;
-}
-
-/* Blog index: explicit light reading surface so global theme overrides cannot
-   leave the page's dark cards and text with insufficient contrast. */
-.blog-landing-page {
-  background: #f8fafc !important;
-  color: #0f172a !important;
-}
-
-.blog-landing-page h1,
-.blog-landing-page h2 {
-  color: #0f172a !important;
-}
-
-.blog-landing-page > div > header p,
-.blog-landing-page > div > section > div > div > p,
-.blog-landing-page .text-slate-400 {
-  color: #475569 !important;
-}
-
-.blog-landing-card {
-  border-color: #dbe4ee !important;
-  background: #ffffff !important;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-}
-
-.blog-landing-card:hover {
-  border-color: #0ea5a4 !important;
-  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
-}
-
-.blog-landing-card h3 {
-  color: #0f172a !important;
-}
-
-.blog-landing-card .text-slate-400,
-.blog-landing-card .text-slate-500 {
-  color: #475569 !important;
 }
 
 /* Admin analytics uses dark data panels on a light dashboard. Keep all text

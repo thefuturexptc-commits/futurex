@@ -7,6 +7,7 @@ import { getProductSlug, getProducts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
 import type { Product } from '../types';
 import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
+import { BlogJournal, type JournalArticle } from './BlogJournal';
 import './BlogPostPage.css';
 import ringHeroImage from '../assets/images/ring-overview-colors.jpg';
 import ringSleepImage from '../assets/images/ring-sleep-hero.webp';
@@ -6350,162 +6351,43 @@ const BlogShell: React.FC<{
   </main>
 );
 
-const BlogLandingPage: React.FC = () => {
-  const blogPages = [
-    {
-      title: 'Smart Bands',
-      href: '/smart-bands',
-      count: '34 posts',
-      image: bandHeroImage,
-      description: 'Sleep tracking, recovery, setup, battery, straps, accuracy, running, seniors, and daily band care.',
-    },
-    {
-      title: 'Smart Rings',
-      href: '/smart-rings',
-      count: '34 posts',
-      image: ringHeroImage,
-      description: 'Sizing, materials, sleep comfort, charging, recovery, office use, travel, and smart ring comparisons.',
-    },
-    {
-      title: 'Bladeless Fans',
-      href: '/bladeless-fan',
-      count: '34 posts',
-      image: fanHeroImage,
-      description: 'Airflow, safety, cleaning, energy bills, all-season fans, HEPA filters, placement, and fan myths.',
-    },
-    {
-      title: 'Smart Monitoring',
-      href: '/smart-monitoring',
-      count: '31 posts',
-      image: monitoringHeroImage,
-      description: 'SpO2, heart rate, HRV, recovery, health alerts, training load, privacy, shift work, and family setup.',
-    },
-    {
-      title: 'AI Smart Glasses',
-      href: '/smart-glasses',
-      count: '32 posts',
-      image: smartGlassesImage,
-      description: 'Bluetooth calling, voice assistants, recording, charging cases, travel, creators, lenses, and warranty.',
-    },
-  ];
+const journalTopicNames: Record<string, RegExp> = {
+  'smart-bands': /\b(?:smart band|fitness band|activity tracker|tfx5)\b/i,
+  'smart-rings': /\bsmart rings?\b/i,
+  'bladeless-fans': /\b(?:bladeless|tower fan|purifier fan)\b/i,
+  'smart-monitoring': /\b(?:smart monitoring|heart rate monitor|chest strap)\b/i,
+  'ai-smart-glasses': /\bsmart glasses\b/i,
+};
 
-  const renderCard = (
-    item: { title: string; href: string; image: string; description: string; count?: string },
-  ) => (
-    <Link
-      key={item.href}
-      to={item.href}
-      className="blog-landing-card group block overflow-hidden rounded-2xl border transition hover:-translate-y-1"
-    >
-      <div className="aspect-[4/3] bg-black">
-        <img src={item.image} alt={item.title} className="h-full w-full object-contain p-5 transition duration-300 group-hover:scale-[1.03]" />
-      </div>
-      <div className="p-5">
-        <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0ad7bd]">{item.count || 'Blog Post'}</p>
-        <p className="mt-2 text-xs font-bold text-slate-500">By Team TheFutureX</p>
-        <h3 className="mt-3 text-base font-black leading-snug text-white">{item.title}</h3>
-        <p className="mt-3 text-sm leading-6 text-slate-400">{item.description}</p>
-        <div className="mt-5 flex items-center justify-between text-sm font-black text-[#0ad7bd]">
-          <span>View Blog</span>
-          <span aria-hidden="true">-&gt;</span>
-        </div>
-      </div>
-    </Link>
-  );
+const BlogLandingPage: React.FC = () => {
+  const plannedArticles = new Map(blogPlanCards.map((post) => [post.slug, post]));
+  const publishedArticles = publishedBlogPosts
+    .filter((post) => isBlogPostPublic(post))
+    .sort((first, second) => Date.parse(second.publishedAt || second.updatedAt) - Date.parse(first.publishedAt || first.updatedAt))
+    .map((post) => {
+      const planned = plannedArticles.get(post.slug);
+      const subject = `${post.title} ${post.featuredProduct?.name || ''}`;
+      const category = blogPlanCategories.find(({ key }) => journalTopicNames[key]?.test(subject));
+      const label = planned?.category || category?.label || 'More guides';
+      return {
+        href: blogPath(post.slug),
+        title: post.title,
+        description: post.excerpt,
+        category: label,
+      };
+    });
+
+  const articles = new Map<string, JournalArticle>();
+  for (const post of [...publishedArticles, ...blogPlanCards, ...seoReadyExtraCards]) {
+    if (!articles.has(post.href)) articles.set(post.href, post);
+  }
 
   return (
-    <main className="blog-landing-page min-h-screen px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="max-w-3xl">
-          <p className="text-xs font-black uppercase tracking-[0.3em] text-[#0ad7bd]">TheFutureX Journal</p>
-          <h1 className="mt-4 text-4xl font-black leading-tight text-white sm:text-5xl">
-            Smart wearable blogs and product guides.
-          </h1>
-          <p className="mt-5 text-base leading-8 text-slate-400">
-            Browse 195 TheFutureX blog pages across smart bands, smart rings, bladeless fans, smart monitoring, and AI smart glasses.
-          </p>
-        </header>
-
-        <section className="mt-12">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0ad7bd]">Latest guides</p>
-          <h2 className="mt-2 text-2xl font-black text-white">New from TheFutureX Journal</h2>
-          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {publishedBlogPosts.filter(isBlogPostPublic).map((post) => (
-              <Link
-                key={post.slug}
-                to={`/blog/${post.slug}`}
-                className="blog-landing-card rounded-lg border p-4 transition hover:-translate-y-1"
-              >
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0ad7bd]">TheFutureX Guide</p>
-                <h3 className="mt-2 text-sm font-black leading-6 text-white">{post.title}</h3>
-                <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{post.excerpt}</p>
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-12">
-          <h2 className="text-2xl font-black text-white">Blogs</h2>
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
-            {blogPages.map((item) => renderCard(item))}
-          </div>
-        </section>
-
-        {blogPlanCategories.map((category) => {
-          const posts = blogPlanCards.filter((post) => post.category === category.label);
-          return (
-            <section key={category.key} className="mt-12">
-              <div className="flex flex-wrap items-end justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0ad7bd]">{category.label}</p>
-                  <h2 className="mt-2 text-2xl font-black text-white">{category.label} Blog Posts</h2>
-                </div>
-                <Link to={category.categoryHref} className="text-sm font-black text-[#0ad7bd] hover:text-white">
-                  View category
-                </Link>
-              </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {posts.map((post) => (
-                  <Link
-                    key={post.href}
-                    to={post.href}
-                    className="blog-landing-card rounded-lg border p-4 transition hover:-translate-y-1"
-                  >
-                    <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0ad7bd]">{post.category}</p>
-                    <h3 className="mt-2 text-sm font-black leading-6 text-white">{post.title}</h3>
-                    <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{post.description}</p>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          );
-        })}
-
-        {seoReadyExtraCards.length > 0 && (
-          <section className="mt-12">
-            <div className="flex flex-wrap items-end justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.22em] text-[#0ad7bd]">More Guides</p>
-                <h2 className="mt-2 text-2xl font-black text-white">SEO-Ready Wellness, Brand, and Support Guides</h2>
-              </div>
-            </div>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {seoReadyExtraCards.map((post) => (
-                <Link
-                  key={post.href}
-                  to={post.href}
-                  className="blog-landing-card rounded-lg border p-4 transition hover:-translate-y-1"
-                >
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#0ad7bd]">{post.category}</p>
-                  <h3 className="mt-2 text-sm font-black leading-6 text-white">{post.title}</h3>
-                  <p className="mt-2 line-clamp-2 text-xs leading-5 text-slate-400">{post.description}</p>
-                </Link>
-              ))}
-            </div>
-          </section>
-        )}
-      </div>
-    </main>
+    <BlogJournal
+      featuredImage={fanHeroImage}
+      articles={[...articles.values()]}
+      topics={blogPlanCategories.map(({ label, categoryHref }) => ({ label, href: categoryHref }))}
+    />
   );
 };
 

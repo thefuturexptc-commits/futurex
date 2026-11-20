@@ -5,6 +5,7 @@ import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import sharp from 'sharp';
 import { generateSitemapXML } from './utils/generateSitemap.js';
+import { fanGuideRoutes } from './utils/fanGuideRoutes.js';
 
 const optimizeImportedImages = () => ({
   name: 'optimize-imported-images',
@@ -330,6 +331,10 @@ export default defineConfig(({ mode }) => {
       ],
       build: {
         rollupOptions: {
+          input: [
+            path.resolve(__dirname, 'index.html'),
+            ...fanGuideRoutes.map((route) => path.resolve(__dirname, `.${route.path}.html`)),
+          ],
           output: {
             manualChunks: {
               router: ['react-router-dom'],

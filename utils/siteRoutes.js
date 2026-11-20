@@ -2,6 +2,7 @@ import { staticProductSeoRecords } from './productSeoData.js';
 import { tfx5BlogPosts } from './tfx5BlogPosts.js';
 import { aeoGeoBlogPosts } from './aeoGEOBlogPosts.js';
 import { bladelessFanBlogPosts } from './bladelessFanBlogPosts.js';
+import { fanGuideRoutes } from './fanGuideRoutes.js';
 
 export const SITE_URL = 'https://thefuturex.in';
 
@@ -393,6 +394,7 @@ export const sitemapRoutes = dedupeRoutes([
     priority: '0.7',
   })),
   ...publishedBlogRoutes,
+  ...fanGuideRoutes,
 ]);
 
 // Do not generate fallback files for retired/blog-plan URLs. Unknown legacy

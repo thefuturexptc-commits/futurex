@@ -322,6 +322,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/blog/bladeless-tower-fan-:page(guide|in-bengaluru|in-pune|in-varanasi|in-unnao|in-malappuram|in-falakata)",
+      "destination": "/blog/bladeless-tower-fan-:page.html"
+    },
+    {
       "source": "/blog/:slug",
       "destination": "/index.html"
     },
