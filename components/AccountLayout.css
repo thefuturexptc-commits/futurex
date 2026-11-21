@@ -48,6 +48,10 @@
   object-position: center 42%;
 }
 
+.account-visual-image-changing {
+  animation: account-product-image-in 520ms ease-out both;
+}
+
 .account-visual::after {
   content: '';
   background: linear-gradient(180deg, transparent 36%, #17120c66 60%, #17120cf5 100%);
@@ -69,11 +73,70 @@
   text-wrap: balance;
 }
 
+.account-product-rotation {
+  margin-top: 18px;
+}
+
+.account-product-name {
+  overflow: hidden;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-product-dots {
+  display: flex;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.account-product-dots span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.account-product-dots .is-active {
+  width: 18px;
+  background: #ffffff;
+}
+
+@keyframes account-product-image-in {
+  from { opacity: 0.25; transform: scale(1.025); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .account-visual-image-changing { animation: none; }
+}
+
 .account-content {
   align-self: center;
   width: min(100%, 32rem);
   margin-inline: auto;
   padding: clamp(28px, 3.3vw, 48px);
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+  .account-page {
+    padding-inline: 24px;
+  }
+
+  .account-layout {
+    grid-template-columns: minmax(16rem, 0.78fr) minmax(0, 1fr);
+  }
+
+  .account-visual {
+    min-height: 37rem;
+    padding: 30px;
+  }
+
+  .account-content {
+    padding: 32px;
+  }
 }
 
 .account-heading {
@@ -237,6 +300,12 @@
 }
 
 @media (max-width: 767px) {
+  .account-page {
+    display: block;
+    min-height: calc(100svh - var(--fx-header-height, 72px));
+    padding: 16px 12px 28px;
+  }
+
   .account-layout {
     grid-template-columns: minmax(0, 1fr);
     max-width: 31rem;
@@ -248,6 +317,34 @@
   }
 
   .account-content {
-    padding: 28px clamp(18px, 5vw, 34px);
+    padding: 24px clamp(18px, 5vw, 34px) 28px;
+  }
+
+  .account-heading {
+    margin-bottom: 20px;
+  }
+
+  .account-heading h1 {
+    font-size: clamp(1.85rem, 9vw, 2.35rem);
+  }
+
+  .account-page .account-button,
+  .account-field input {
+    min-height: 48px;
+  }
+}
+
+@media (max-width: 374px) {
+  .account-page {
+    padding-inline: 8px;
+  }
+
+  .account-content {
+    padding-inline: 16px;
+  }
+
+  .account-divider {
+    gap: 8px;
+    font-size: 0.75rem;
   }
 }

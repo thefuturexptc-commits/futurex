@@ -3358,21 +3358,20 @@ html.dark .site-footer-dark {
 html,
 body,
 #root,
-.holi-lite,
 .site-navbar,
-section,
-article,
-div,
+.site-navbar a,
+.site-navbar button,
 button,
 a,
 input,
 textarea,
 select {
   transition:
-    background-color 220ms ease,
-    border-color 220ms ease,
-    color 220ms ease,
-    box-shadow 220ms ease;
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
 }
 
 html.dark .holi-lite,

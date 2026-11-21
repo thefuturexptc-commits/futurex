@@ -192,7 +192,6 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   }, [product.colors, product.images, product.variants]);
   const previewImages = productPreviewImages.slice(0, 2);
   const extraPreviewCount = Math.max(0, productPreviewImages.length - previewImages.length);
-
   useEffect(() => {
     if (monochrome) return;
     let cancelled = false;

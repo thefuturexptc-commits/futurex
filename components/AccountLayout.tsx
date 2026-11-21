@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ringPhoto from '../assets/images/ring-wellness.webp';
 import { Button } from './ui/Button';
+import { getProducts } from '../services/backend';
 import './AccountLayout.css';
+
+type ShowcaseProduct = { image: string; name: string };
+
+const signupFallbackProducts: ShowcaseProduct[] = [
+  { image: ringPhoto, name: 'TheFutureX smart wearables' },
+];
 
 type AccountLayoutProps = React.PropsWithChildren<{
   mode: 'login' | 'signup';
@@ -20,15 +27,62 @@ export const AccountLayout = ({
 }: AccountLayoutProps) => {
   const isSignup = mode === 'signup';
   const alternateAction = isSignup ? 'Sign in' : 'Create an account';
+  const [showcaseProducts, setShowcaseProducts] = useState<ShowcaseProduct[]>(signupFallbackProducts);
+  const [activeProductIndex, setActiveProductIndex] = useState(0);
+  const activeProduct = showcaseProducts[activeProductIndex] || signupFallbackProducts[0];
+
+  useEffect(() => {
+    if (!isSignup) return;
+    let cancelled = false;
+
+    void getProducts().then((products) => {
+      const items = products
+        .map((product) => ({ image: product.colors?.[0]?.images?.[0] || product.images?.[0] || '', name: product.name }))
+        .filter((product): product is ShowcaseProduct => Boolean(product.image));
+      if (!cancelled && items.length) {
+        setShowcaseProducts(items);
+        setActiveProductIndex(0);
+      }
+    }).catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isSignup]);
+
+  useEffect(() => {
+    if (!isSignup || showcaseProducts.length < 2) return;
+    const timer = window.setInterval(() => {
+      setActiveProductIndex((current) => (current + 1) % showcaseProducts.length);
+    }, 4200);
+    return () => window.clearInterval(timer);
+  }, [isSignup, showcaseProducts.length]);
 
   return (
     <div className="account-page">
       <div className="account-layout">
         <div className="account-visual">
-          <img src={ringPhoto} alt="" decoding="async" loading="lazy" />
+          <img
+            key={isSignup ? activeProduct.image : ringPhoto}
+            src={isSignup ? activeProduct.image : ringPhoto}
+            alt=""
+            decoding="async"
+            loading="eager"
+            className={isSignup ? 'account-visual-image account-visual-image-changing' : 'account-visual-image'}
+          />
           <div className="account-visual-copy">
             <p className="account-visual-title">Your FutureX account</p>
             <p>View past orders and manage your saved addresses.</p>
+            {isSignup && showcaseProducts.length > 1 && (
+              <div className="account-product-rotation" aria-live="polite">
+                <p className="account-product-name">{activeProduct.name}</p>
+                <div className="account-product-dots" aria-hidden="true">
+                  {showcaseProducts.slice(0, 6).map((product, index) => (
+                    <span key={product.image} className={index === activeProductIndex % Math.min(showcaseProducts.length, 6) ? 'is-active' : ''} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
         <section className="account-content" aria-labelledby="account-title">
