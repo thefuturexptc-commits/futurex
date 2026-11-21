@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useLayoutEffect, useState } from 'react';
 
 type ContactKey = 'inquiry' | 'email' | 'phone' | 'whatsapp';
 
@@ -63,9 +63,62 @@ const contactItems: Array<{
   },
 ];
 
-export const FloatingContactRail: React.FC = () => {
+const bannerSelector = [
+  '[aria-label="Homepage banner"]',
+  '#explore-collection .collection-card',
+  '.tfx-featured-banner-section',
+  '.home-scroll-banner-section',
+  '[data-product-hero]',
+  '.product-banner-group',
+  '.smart-bands-fixed-hero',
+  '.smart-rings-fixed-hero',
+  '.category-template-hero',
+].join(', ');
+
+export const FloatingContactRail: React.FC<{ pathname: string }> = ({ pathname }) => {
   const [activeKey, setActiveKey] = useState<ContactKey | null>(null);
+  const [isVisible, setIsVisible] = useState(false);
   const activeItem = contactItems.find((item) => item.key === activeKey);
+
+  useLayoutEffect(() => {
+    const main = document.querySelector('.site-main-content');
+    if (!main) return;
+
+    const needsBanner = pathname === '/' || /^\/(product|product-category)\//i.test(pathname) ||
+      /^\/(smart-bands|smart-rings|bladeless-fan|smart-fans|smart-monitoring)\/?$/i.test(pathname);
+    const updateVisibility = () => {
+      const banners = main.querySelectorAll(bannerSelector);
+      const hasVisibleBanner = Array.from(banners).some((banner) => {
+        const { top, bottom, height } = banner.getBoundingClientRect();
+        return height > 0 && bottom > 0 && top < window.innerHeight;
+      });
+      setIsVisible((!needsBanner || banners.length > 0) && !hasVisibleBanner);
+    };
+
+    const observer = new ResizeObserver(updateVisibility);
+    observer.observe(main);
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    window.addEventListener('resize', updateVisibility);
+    updateVisibility();
+
+    const stopWatching = () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', updateVisibility);
+      window.removeEventListener('resize', updateVisibility);
+    };
+    const timeout = window.setTimeout(() => {
+      stopWatching();
+      setIsVisible(false);
+      setActiveKey(null);
+    }, 1000);
+
+    return () => {
+      window.clearTimeout(timeout);
+      stopWatching();
+    };
+  }, [pathname]);
+
+  if (!isVisible) return null;
 
   return (
     <aside className="floating-contact-rail is-visible" aria-label="Quick contact shortcuts">

@@ -1438,6 +1438,7 @@ export const ProductDetail: React.FC = () => {
   const { openLogin } = useAuthModal();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const isQ8ProProduct = product !== null && getProductSlug(product) === 'tfx-advance';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -1525,8 +1526,8 @@ export const ProductDetail: React.FC = () => {
 
   useEffect(() => {
     if (!product) return;
-    setShowEmiModal(true);
-  }, [product]);
+    setShowEmiModal(!isQ8ProProduct);
+  }, [product, isQ8ProProduct]);
 
   useEffect(() => {
     if (!product) return;
@@ -3317,7 +3318,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      <section className="product-scroll-section overflow-hidden bg-[#faf9f6] px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-12">
+      <section data-product-hero className="product-scroll-section overflow-hidden bg-[#faf9f6] px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-12">
         <div
           className={`mx-auto grid w-full max-w-[calc(100vw-1.5rem)] min-w-0 gap-7 sm:max-w-2xl lg:max-w-7xl lg:items-start ${
             useMarketplaceArrangement
@@ -3456,37 +3457,54 @@ export const ProductDetail: React.FC = () => {
                 {isMegaPriceDropBand ? 'Mega Price Drop' : 'Limited Time Offer'}
               </div>
             )}
-            <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
-              {displayProductName}
+            <h1 className={`${isQ8ProProduct ? 'mt-0' : isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
+              {isQ8ProProduct ? 'TFX Advance Q8 PRO' : displayProductName}
             </h1>
-            <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]">
-              Overview
-            </span>
-            <div className="relative mt-1.5 max-w-none">
-              <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? 'line-clamp-3' : ''}`}>
-                {productSubtitle || shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
-              </p>
-              {!isHeroDescriptionExpanded && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent sm:h-5" />
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsHeroDescriptionExpanded((prev) => !prev)}
-              className="mt-1.5 w-fit text-xs font-bold text-[#8a6a20] transition hover:text-slate-950 sm:text-sm"
-            >
-              {isHeroDescriptionExpanded ? 'Read Less' : 'Read More'}
-            </button>
-            <div className="mt-4 flex flex-wrap items-center justify-start gap-3">
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]">
-                <span className="tracking-tight text-[#a9812f]">
-                  {Array.from({ length: 5 }).map((_, index) => (
-                    <span key={index}>{index < Math.round(Number(product.rating || 0)) ? '\u2605' : '\u2606'}</span>
+            {isQ8ProProduct ? (
+              <div className="mt-3 text-left">
+                <p className="text-base leading-6 text-slate-700 sm:text-lg">Bladeless tower fan with cool airflow and PTC ceramic heating.</p>
+                <ul className="q8-at-a-glance mt-4 flex flex-wrap gap-2" aria-label="Key features">
+                  {['Hot and cool modes', 'Remote control', 'Tip-over protection'].map((feature) => (
+                    <li key={feature} className="rounded-lg border border-[#e8e9e1] bg-[#f4f5f1] px-3 py-2 text-sm font-semibold text-slate-900">{feature}</li>
                   ))}
-                </span>
-                <span>{Number(product.rating || 0).toFixed(1)}</span>
-                <span className="text-xs font-medium text-slate-400">({product.reviewCount || product.reviews?.length || 0} reviews)</span>
+                </ul>
               </div>
+            ) : (
+              <>
+                <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]">
+                  Overview
+                </span>
+                <div className="relative mt-1.5 max-w-none">
+                  <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? 'line-clamp-3' : ''}`}>
+                    {productSubtitle || shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
+                  </p>
+                  {!isHeroDescriptionExpanded && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent sm:h-5" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsHeroDescriptionExpanded((prev) => !prev)}
+                  className="mt-1.5 w-fit text-xs font-bold text-[#8a6a20] transition hover:text-slate-950 sm:text-sm"
+                >
+                  {isHeroDescriptionExpanded ? 'Read Less' : 'Read More'}
+                </button>
+              </>
+            )}
+            <div className="mt-4 flex flex-wrap items-center justify-start gap-3">
+              {isQ8ProProduct && !product.reviewCount && !product.reviews?.length ? (
+                <span className="text-sm text-slate-600">No reviews yet</span>
+              ) : (
+                <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]">
+                  <span className="tracking-tight text-[#a9812f]">
+                    {Array.from({ length: 5 }).map((_, index) => (
+                      <span key={index}>{index < Math.round(Number(product.rating || 0)) ? '\u2605' : '\u2606'}</span>
+                    ))}
+                  </span>
+                  <span>{Number(product.rating || 0).toFixed(1)}</span>
+                  <span className="text-xs font-medium text-slate-400">({product.reviewCount || product.reviews?.length || 0} reviews)</span>
+                </div>
+              )}
               <a
                 href="#reviews"
                 onClick={(event) => {
@@ -3518,11 +3536,11 @@ export const ProductDetail: React.FC = () => {
                       Save {formatInrAmount(displayedSavings)}{!hidePercentageOffer ? ` (${displayedPercent}% off)` : ''}
                     </span>
                   )}
-                  <span className={`font-display text-2xl font-semibold tracking-tight sm:text-3xl ${couponRate > 0 ? 'text-emerald-700' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
+                  <span className={`font-display text-2xl font-semibold tracking-tight sm:text-3xl ${isQ8ProProduct ? 'order-first' : ''} ${couponRate > 0 ? 'text-emerald-700' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
                 </div>
 
-                {offerLine}
-                {paymentOfferBlock}
+                {!isQ8ProProduct && offerLine}
+                {!isQ8ProProduct && paymentOfferBlock}
 
               </div>
 
@@ -3634,9 +3652,9 @@ export const ProductDetail: React.FC = () => {
                 </p>
               </div>
 
-              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />
+              {!isQ8ProProduct && <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />}
 
-              <div ref={mobileCtaAnchorRef} className="mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2">
+              <div ref={mobileCtaAnchorRef} className={`mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2 ${isQ8ProProduct && canAdd ? 'min-[360px]:grid-cols-2' : ''}`}>
                 <button
                   type="button"
                   onClick={handleAddButtonClick}
@@ -3685,6 +3703,13 @@ export const ProductDetail: React.FC = () => {
                 >
                   View Cart
                 </button>
+              )}
+
+              {isQ8ProProduct && (
+                <>
+                  <div className="mt-5">{offerLine}{paymentOfferBlock}</div>
+                  <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />
+                </>
               )}
 
               <DeliveryEstimate warranty={getWarrantyDisplayText(productFamily)} />

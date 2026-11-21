@@ -1,7 +1,7 @@
 const modes = {
   cool: {
     label: 'Cool',
-    color: '#abcfe7',
+    color: '#426f85',
     speed: 0.30,
     spread: 0.19,
     rise: 0,
@@ -12,7 +12,7 @@ const modes = {
   },
   sway: {
     label: 'Sway',
-    color: '#9ed6da',
+    color: '#3c746e',
     speed: 0.29,
     spread: 0.23,
     rise: 0,
@@ -23,7 +23,7 @@ const modes = {
   },
   strong: {
     label: 'Strong',
-    color: '#d2e7f7',
+    color: '#32566f',
     speed: 0.65,
     spread: 0.31,
     rise: 0,
@@ -34,7 +34,7 @@ const modes = {
   },
   ion: {
     label: 'Ion',
-    color: '#c1bce8',
+    color: '#655788',
     speed: 0.33,
     spread: 0.22,
     rise: 0,
@@ -45,7 +45,7 @@ const modes = {
   },
   warm: {
     label: 'Warm',
-    color: '#e9b58d',
+    color: '#92562e',
     speed: 0.23,
     spread: 0.22,
     rise: 0.12,
@@ -62,7 +62,7 @@ function createAirflowIllustration(canvas) {
   if (!context || !fan) return () => {};
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-  const laneCount = 7;
+  const laneCount = 5;
   let modeName = 'cool';
   let mode = modes.cool;
   let width = 0;
@@ -94,9 +94,9 @@ function createAirflowIllustration(canvas) {
     canvas.height = Math.max(1, Math.round(height * pixelRatio));
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     // Position the stream over the Q8 PRO's right-hand outlet slots.
-    outletX = fanBounds.left - bounds.left + fanBounds.width * 0.92;
-    outletY = fanBounds.top - bounds.top + fanBounds.height * 0.28;
-    outletHeight = fanBounds.height * 0.26;
+    outletX = fanBounds.left - bounds.left + fanBounds.width * 0.81;
+    outletY = fanBounds.top - bounds.top + fanBounds.height * 0.3;
+    outletHeight = fanBounds.height * 0.35;
     setInk();
     draw();
   }
@@ -135,34 +135,27 @@ function createAirflowIllustration(canvas) {
       const lane = index / (laneCount - 1) - 0.5;
       const position = (elapsed * mode.speed + index * 0.37) % 1;
       const centerWeight = 1 - Math.abs(lane);
-      context.globalAlpha = 0.09 * centerWeight;
-      context.lineWidth = modeName === 'strong' ? 11 : 8;
+      context.globalAlpha = 0.045 * centerWeight;
+      context.lineWidth = modeName === 'strong' ? 14 : 10;
       trace(lane, 0, 1, sweep);
-      context.globalAlpha = 0.36 * centerWeight;
+      context.globalAlpha = 0.17 * centerWeight;
       context.lineWidth = 1;
       trace(lane, 0, 1, sweep);
-      context.globalAlpha = 0.9 * centerWeight;
-      context.lineWidth = modeName === 'strong' ? 2.2 : 1.45;
+      context.globalAlpha = 0.56 * centerWeight;
+      context.lineWidth = modeName === 'strong' ? 1.65 : 1.1;
       trace(lane, Math.max(0, position - mode.streak), position, sweep);
     }
 
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.font = '700 12px system-ui, sans-serif';
-    const dotCount = modeName === 'ion' ? 20 : 9;
-    for (let index = 0; index < dotCount; index++) {
-      const lane = (index * 0.381966) % 1 - 0.5;
-      const position = (elapsed * mode.speed * (0.72 + index % 4 * 0.13) + index * 0.618034) % 1;
-      const x = xAt(position);
-      const y = yAt(lane, position, sweep);
-      context.globalAlpha = Math.sin(position * Math.PI) * 0.86;
-      context.fillStyle = index % 4 ? mode.color : '#ffffff';
-      if (modeName === 'ion' && index % 3 === 0) {
-        context.fillText(index % 2 ? '+' : '−', x, y);
-      } else {
-        context.beginPath();
-        context.arc(x, y, index % 4 ? 1.2 : 1.7, 0, Math.PI * 2);
-        context.fill();
+    if (modeName === 'ion') {
+      for (let index = 0; index < 7; index++) {
+        const lane = (index * 0.381966) % 1 - 0.5;
+        const position = (elapsed * mode.speed * (0.72 + index % 4 * 0.13) + index * 0.618034) % 1;
+        context.globalAlpha = Math.sin(position * Math.PI) * 0.64;
+        context.fillStyle = mode.color;
+        context.fillText(index % 2 ? '+' : '−', xAt(position), yAt(lane, position, sweep));
       }
     }
     context.globalAlpha = 1;

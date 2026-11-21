@@ -465,11 +465,12 @@ const usePastHeroBanner = () => {
 
 const FloatingAfterHero: React.FC = () => {
   const pastHero = usePastHeroBanner();
+  const { pathname } = useLocation();
 
   return (
     <>
       {pastHero && <DeferredSupportAssistant />}
-      <FloatingContactRail />
+      <FloatingContactRail key={pathname} pathname={pathname} />
     </>
   );
 };
