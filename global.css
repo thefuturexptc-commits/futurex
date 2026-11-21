@@ -10639,6 +10639,45 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
   background: #334155 !important;
 }
 
+/* Contact is a dark support page. Keep its contrast intact after the global light-theme reset. */
+.site-main-content .info-page-contact {
+  background: #050505 !important;
+  color: #e2e8f0 !important;
+}
+
+.site-main-content .info-page-contact > .rounded-2xl {
+  background: #101820 !important;
+  border-color: rgba(148, 163, 184, 0.3) !important;
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.28);
+}
+
+.site-main-content .info-page-contact :is(h1, h2) {
+  color: #ffffff !important;
+}
+
+.site-main-content .info-page-contact :is(.whitespace-pre-wrap, address, .space-y-1, .space-y-1 p) {
+  color: #cbd5e1 !important;
+}
+
+.site-main-content .info-page-contact a:not([class*="bg-"]) {
+  color: #7dd3fc !important;
+  text-decoration: underline;
+  text-decoration-color: rgba(125, 211, 252, 0.45);
+  text-underline-offset: 3px;
+}
+
+.site-main-content .info-page-contact button {
+  background: #f8fafc !important;
+  border-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+.site-main-content .info-page-contact button:hover {
+  background: #dbeafe !important;
+  border-color: #dbeafe !important;
+  color: #0f172a !important;
+}
+
 /* Product information tabs are intentionally light cards, including in dark mode. */
 .product-detail-page .product-information-card :is(p, li, span, strong, h1, h2, h3, h4, dt, dd, .product-rich-description) {
   color: #334155 !important;
