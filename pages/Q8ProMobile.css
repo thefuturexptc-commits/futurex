@@ -1,0 +1,213 @@
+.q8-pro-product :is(.product-mobile-detail, .product-payment-detail-toggle) {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .q8-pro-product .product-desktop-detail {
+    display: none;
+  }
+
+  .q8-pro-product .product-mobile-detail {
+    display: block;
+    min-width: 0;
+    border: 1px solid #dce5e1;
+    border-radius: 10px;
+    background: #f8faf9;
+  }
+
+  .q8-pro-product .product-mobile-detail > summary,
+  .q8-pro-product .product-payment-detail-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 7px 8px;
+    color: #19362e;
+    font-size: 0.73rem;
+    line-height: 1.3;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .q8-pro-product .product-mobile-detail > summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .q8-pro-product .product-mobile-detail > summary::after,
+  .q8-pro-product .product-payment-detail-toggle::after {
+    content: '';
+    flex: 0 0 6px;
+    height: 6px;
+    margin-inline-start: auto;
+    border-right: 1.5px solid currentColor;
+    border-bottom: 1.5px solid currentColor;
+    transform: translateY(-2px) rotate(45deg);
+  }
+
+  .q8-pro-product .product-mobile-detail[open] > summary::after,
+  .q8-pro-product .product-payment-detail-toggle[aria-expanded='true']::after {
+    transform: translateY(2px) rotate(225deg);
+  }
+
+  .q8-pro-product .product-mobile-detail-body {
+    padding: 0 9px 9px;
+    overflow-wrap: anywhere;
+    color: #435951;
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  .q8-pro-product .product-emi-disclosure {
+    margin-top: 12px;
+  }
+
+  .q8-pro-product .product-emi-disclosure > summary span:nth-child(2) {
+    margin-inline-start: auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .q8-pro-product .product-emi-disclosure > summary::after {
+    margin-inline-start: 4px;
+  }
+
+  .q8-pro-product .product-emi-options-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: #17634f;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .q8-pro-product .product-payment-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .q8-pro-product .product-payment-detail-toggle {
+    border-radius: 8px;
+  }
+
+  .q8-pro-product :is(.product-mobile-detail > summary, .product-payment-detail-toggle, .product-emi-options-link):focus-visible {
+    outline: 2px solid #17634f;
+    outline-offset: -2px;
+  }
+
+  .q8-pro-product [data-product-hero] > div {
+    gap: 18px;
+  }
+
+  .q8-pro-product .product-purchase-panel {
+    padding: 12px;
+    border: 1px solid #e1e8e5;
+    border-radius: 16px;
+  }
+
+  .q8-pro-product .product-pricing-card {
+    padding: 0;
+    background: #fff;
+    box-shadow: none;
+  }
+
+  .q8-pro-product .product-price-summary {
+    flex-flow: row wrap;
+    align-items: baseline;
+    column-gap: 9px;
+  }
+
+  .q8-pro-product .product-current-price {
+    order: -1;
+    white-space: nowrap;
+  }
+
+  .q8-pro-product .product-emi-dialog {
+    max-height: calc(100dvh - 24px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .q8-pro-product .product-emi-dialog button[aria-label] {
+    min-width: 44px;
+    min-height: 44px;
+    inset: 4px 4px auto auto;
+  }
+
+  .q8-pro-product .product-payment-offers {
+    max-width: none;
+    margin-top: 14px;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .q8-pro-product .product-payment-offers h3,
+  .q8-pro-product .product-payment-offers [role='group'] {
+    padding: 0;
+  }
+
+  .q8-pro-product .product-payment-offer-option {
+    min-height: 48px;
+    gap: 7px;
+    padding: 9px;
+    border-radius: 10px;
+    box-shadow: none !important;
+    line-height: 1.3;
+  }
+
+  .q8-pro-product .product-payment-offer-option .flex {
+    gap: 4px;
+  }
+
+  .q8-pro-product .product-payment-price {
+    font-size: clamp(0.77rem, 3.6vw, 0.94rem);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .q8-pro-product .product-payment-radio {
+    width: 17px;
+    min-width: 17px;
+    height: 17px;
+  }
+
+  .q8-pro-product .tfx-trust-tile-icon {
+    width: 26px;
+    height: 26px;
+  }
+
+  .q8-pro-product .product-purchase-actions--in-stock {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .q8-pro-product .product-purchase-actions > button {
+    min-height: 48px;
+    padding-inline: 6px;
+    gap: 5px;
+    font-size: 0.71rem;
+    letter-spacing: 0.015em;
+  }
+
+  #root .q8-pro-product button.product-buy-now:not(.product-detail-buy-now-active) {
+    border: 1px solid #17634f !important;
+    background: #17634f !important;
+    color: #fff !important;
+  }
+
+  .q8-pro-product .product-view-cart {
+    min-height: 44px;
+    margin-top: 2px;
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .q8-pro-product .product-mobile-actions {
+    border-top: 1px solid #dde7e2 !important;
+    padding-block: 7px calc(7px + env(safe-area-inset-bottom));
+    box-shadow: 0 -4px 18px rgb(15 23 42 / 8%);
+  }
+
+  .q8-pro-product .product-mobile-actions .truncate {
+    font-size: clamp(0.75rem, 3.5vw, 0.95rem);
+  }
+}

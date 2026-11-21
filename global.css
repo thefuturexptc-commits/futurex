@@ -7681,7 +7681,8 @@ body {
   .blog-post-page *,
   .complaint-page *,
   .tfx-warranty *,
-  .tfx-standard-page *
+  .tfx-standard-page *,
+  .account-page *
 ),
 .site-footer-dark :where(h1, h2, h3, h4, h5, h6, p, span, li, label, strong, small, address, summary, dt, dd, td, th, a, button) {
   color: var(--fx-ink) !important;
@@ -8660,7 +8661,7 @@ html.dark .site-navbar {
   box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06) !important;
 }
 
-.site-main-content :where([class*="border"], .border, .border-t, .border-b, .border-l, .border-r),
+.site-main-content :where([class*="border"], .border, .border-t, .border-b, .border-l, .border-r):not(:where(.account-page *)),
 .site-footer-dark :where([class*="border"], .border, .border-t, .border-b, .border-l, .border-r),
 .site-navbar :where([class*="border"], .border, .border-t, .border-b, .border-l, .border-r) {
   border-color: transparent !important;
@@ -8814,7 +8815,7 @@ html.dark .tfx-footer,
 }
 
 :where(.bg-slate-950, .bg-slate-900, .bg-gray-900, .bg-gray-800, .bg-dark-bg, .bg-dark-surface)
-  :is(.text-black, .text-slate-950, .text-slate-900, .text-slate-800, .text-slate-700, .text-gray-900, .text-gray-800, .text-gray-700) {
+  :is(.text-black, .text-slate-950, .text-slate-900, .text-slate-800, .text-slate-700, .text-gray-900, .text-gray-800, .text-gray-700):not(:where(.account-page *)) {
   color: #f8fafc !important;
 }
 
@@ -8879,9 +8880,7 @@ html.dark .tfx-footer,
   color: #ffffff !important;
 }
 
-input,
-textarea,
-select,
+:is(input, textarea, select):not(:where(.account-page *)),
 .site-navbar input,
 .site-navbar select,
 .site-navbar textarea,

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useId, useMemo, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { Product, ProductColor, ProductPublicReview } from '../types';
 import { useCart } from '../context/CartContext';
@@ -24,6 +24,7 @@ import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification, g
 import { getCatalogOffer } from '../utils/catalogPricing.js';
 import { TP09_PRO_DESCRIPTION, TP09_PRO_FEATURES, TP09_PRO_SPECS } from '../utils/tp09ProContent';
 import { getProductDetailContent } from '../utils/productDetailContent';
+import { getQ8ProContent } from '../utils/q8ProContent';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringWellness from '../assets/images/ring-wellness.webp';
 import ringDailySync from '../assets/images/ring-daily-sync.webp';
@@ -68,9 +69,21 @@ import fanFamilyHero from '../assets/images/fan-family-hero.webp';
 import fanSlideOne from '../assets/images/fan-slide-1.webp';
 import fanSlideTwo from '../assets/images/fan-slide-2.webp';
 import fanSlideThree from '../assets/images/fan-slide-3.webp';
+import q8ProOverviewStructure from '../assets/images/q8-pro-overview-01.webp';
+import q8ProOverviewAssembly from '../assets/images/q8-pro-overview-02.webp';
+import q8ProOverviewCare from '../assets/images/q8-pro-overview-03.webp';
+import q8ProOverviewModes from '../assets/images/q8-pro-overview-04.webp';
 import monitoringHero from '../assets/images/monitoring-proactive-wellness-hero.webp';
 import monitoringHeartRate from '../assets/images/monitoring-hero-heart-rate.webp';
 import monitoringPhonePhoto from '../assets/images/monitoring-phone-photo.webp';
+import './Q8ProMobile.css';
+
+const Q8_PRO_OVERVIEW_BANNERS = [
+  { src: q8ProOverviewStructure, alt: 'Q8 Pro fan parts, remote and touch controls, and specifications' },
+  { src: q8ProOverviewAssembly, alt: 'Q8 Pro base assembly and display controls' },
+  { src: q8ProOverviewCare, alt: 'Q8 Pro cleaning, clearing blockages, heater precautions, and remote battery replacement' },
+  { src: q8ProOverviewModes, alt: 'Q8 Pro cool and hot modes, airflow, cleaning, and direction adjustment' },
+];
 
 const featureMarkerPattern = /^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/;
 const cleanFeatureText = (feature: string) => feature.replace(featureMarkerPattern, '').trim();
@@ -1004,10 +1017,11 @@ const getWarrantyDisplayText = (productFamily: string) => {
   return '6-month limited warranty';
 };
 
-const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: string; dark?: boolean }> = ({
+const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: string; dark?: boolean; mobileDetails?: boolean }> = ({
   product,
   productFamily = 'wearable',
   dark = false,
+  mobileDetails = false,
 }) => {
   const [isWarrantyExpanded, setIsWarrantyExpanded] = useState(false);
   const warrantyText = product ? getWarrantyDisplayText(productFamily) : 'Brand-backed help';
@@ -1092,59 +1106,85 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
           .tfx-trust-tile--warranty .tfx-trust-tile-icon svg,
         }
       `}</style>
-      <div className="grid grid-cols-2 items-stretch gap-2 sm:gap-3">
+      <div className="product-trust-grid grid grid-cols-2 items-stretch gap-2 sm:gap-3">
         {productCheckoutTrustSignals.map((signal, index) => {
           const { title, mobileTitle, text, icon } = signal;
           const isWarrantyTile = title === 'Brand warranty support';
           const tileClass = `${tileBaseClass} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'col-span-2' : ''}`;
           const tileStyle = { animationDelay: `${index * 90}ms` };
+          const warrantyLinks = (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <Link to={registrationPath} className={registerBadgeClass}>Register product</Link>
+              <Link to="/info/warranty-policy" className={warrantyPolicyBadgeClass}>Warranty policy</Link>
+            </div>
+          );
+          const mobileTile = mobileDetails && (
+            <details className="product-mobile-detail product-trust-disclosure">
+              <summary>
+                <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                <span>{mobileTitle}</span>
+              </summary>
+              <div className="product-mobile-detail-body">
+                <p>{isWarrantyTile ? warrantyText : text || 'Across India'}</p>
+                {isWarrantyTile && (
+                  <>
+                    <a href="mailto:thefuturex.ptc@gmail.com" className="break-words underline">thefuturex.ptc@gmail.com</a>
+                    {' · '}
+                    <a href="tel:+918530340676" className="underline">8530340676</a>
+                    {warrantyLinks}
+                  </>
+                )}
+              </div>
+            </details>
+          );
+          const desktopTileClass = `${tileClass} ${mobileDetails ? 'product-desktop-detail' : ''}`;
 
           if (isWarrantyTile && product) {
             return (
-              <div key={title} className={tileClass} style={tileStyle}>
-                <div className="flex items-start gap-3">
-                  <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
-                  <div className="min-w-0">
-                    <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
-                    <a href="mailto:thefuturex.ptc@gmail.com" className={`${tileTextClass} hidden hover:underline sm:block`}>
-                      {text}
-                    </a>
-                    {isWarrantyExpanded ? (
-                      <>
-                        <p className={tileMutedClass}>{warrantyText}</p>
-                        <div className="mt-2 flex flex-wrap gap-x-1.5 gap-y-1.5">
-                          <Link to={registrationPath} className={registerBadgeClass}>
-                            Register product
-                          </Link>
-                          <Link to="/info/warranty-policy" className={warrantyPolicyBadgeClass}>
-                            Warranty policy
-                          </Link>
-                        </div>
-                      </>
-                    ) : null}
-                    <button
-                      type="button"
-                      onClick={() => setIsWarrantyExpanded((prev) => !prev)}
-                      className={`mt-2 inline-flex text-[11px] font-semibold underline-offset-2 hover:underline ${dark ? 'text-primary-200' : 'text-[#8a6a20]'}`}
-                    >
-                      {isWarrantyExpanded ? 'Show less' : 'Read more'}
-                    </button>
+              <React.Fragment key={title}>
+                {mobileTile}
+                <div className={desktopTileClass} style={tileStyle}>
+                  <div className="flex items-start gap-3">
+                    <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                    <div className="min-w-0">
+                      <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
+                      <a href="mailto:thefuturex.ptc@gmail.com" className={`${tileTextClass} hidden hover:underline sm:block`}>
+                        {text}
+                      </a>
+                      {isWarrantyExpanded ? (
+                        <>
+                          <p className={tileMutedClass}>{warrantyText}</p>
+                          {warrantyLinks}
+                        </>
+                      ) : null}
+                      <button
+                        type="button"
+                        aria-expanded={isWarrantyExpanded}
+                        className={`product-warranty-toggle mt-2 inline-flex text-[11px] font-semibold underline-offset-2 hover:underline ${dark ? 'text-primary-200' : 'text-[#8a6a20]'}`}
+                        onClick={() => setIsWarrantyExpanded((prev) => !prev)}
+                      >
+                        {isWarrantyExpanded ? 'Show less' : 'Read more'}
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </React.Fragment>
             );
           }
 
           return (
-            <div key={title} className={tileClass} style={tileStyle}>
-              <div className="flex items-start gap-3">
-                <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
-                <div className="min-w-0">
-                  <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
-                  {text && <p className={`${tileTextClass} hidden sm:block`}>{text}</p>}
+            <React.Fragment key={title}>
+              {mobileTile}
+              <div className={desktopTileClass} style={tileStyle}>
+                <div className="flex items-start gap-3">
+                  <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                  <div className="min-w-0">
+                    <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
+                    {text && <p className={`${tileTextClass} hidden sm:block`}>{text}</p>}
+                  </div>
                 </div>
               </div>
-            </div>
+            </React.Fragment>
           );
         })}
       </div>
@@ -1154,33 +1194,49 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
 
 const formatInr = (amount: number) => formatInrAmount(Math.max(0, amount || 0));
 
-const RazorpayEmiStrip: React.FC<{ price: number; onOpen: () => void }> = ({ price, onOpen }) => {
+const RazorpayEmiStrip: React.FC<{ price: number; onOpen: () => void; mobileDetails?: boolean }> = ({ price, onOpen, mobileDetails = false }) => {
   const payNowAmount = price / 9;
   const sixMonthAmount = price / 6;
   const nineMonthAmount = price / 9;
+  const upfront = `Pay only ${formatInr(payNowAmount)} now`;
+  const terms = `${formatInr(sixMonthAmount)}/month for 6 months or ${formatInr(nineMonthAmount)}/month for 9 months.`;
 
   return (
-    <button
-      type="button"
-      onClick={onOpen}
-      className="product-detail-emi-strip mt-4 w-full max-w-sm rounded-lg border-2 border-slate-950 bg-white px-3 py-2 text-left shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.12)] sm:max-w-none"
-      aria-label="View Razorpay EMI options"
-    >
-      <span className="product-detail-emi-badge mb-1 inline-flex rounded bg-slate-950 px-3 py-0.5 text-[10px] font-black text-white">
-        Razorpay EMI
-      </span>
-      <span className="block text-sm font-black leading-5 text-slate-950 sm:text-base">
-        Pay only {formatInr(payNowAmount)} now
-      </span>
-      <span className="mt-1 block text-[11px] font-bold leading-4 text-slate-600">
-        {formatInr(sixMonthAmount)}/month for 6 months or {formatInr(nineMonthAmount)}/month for 9 months.
-      </span>
-    </button>
+    <>
+      {mobileDetails && (
+        <details className="product-mobile-detail product-emi-disclosure">
+          <summary><span>Razorpay EMI</span><span>{upfront}</span></summary>
+          <div className="product-mobile-detail-body">
+            <p>{terms}</p>
+            <button type="button" onClick={onOpen} className="product-emi-options-link">View EMI options</button>
+          </div>
+        </details>
+      )}
+      <button
+        type="button"
+        onClick={onOpen}
+        className={`product-detail-emi-strip mt-4 w-full max-w-sm rounded-lg border-2 border-slate-950 bg-white px-3 py-2 text-left shadow-[0_8px_18px_rgba(15,23,42,0.08)] transition hover:-translate-y-0.5 hover:shadow-[0_12px_24px_rgba(15,23,42,0.12)] sm:max-w-none ${mobileDetails ? 'product-desktop-detail' : ''}`}
+        aria-label="View Razorpay EMI options"
+      >
+        <span className="product-detail-emi-badge mb-1 inline-flex rounded bg-slate-950 px-3 py-0.5 text-[10px] font-black text-white">
+          Razorpay EMI
+        </span>
+        <span className="block text-sm font-black leading-5 text-slate-950 sm:text-base">
+          {upfront}
+        </span>
+        <span className="mt-1 block text-[11px] font-bold leading-4 text-slate-600">
+          {terms}
+        </span>
+      </button>
+    </>
   );
 };
 
-const ProductPaymentOfferOptions: React.FC<{ product: Product; price: number; dark?: boolean }> = ({ product, price, dark = false }) => {
+const ProductPaymentOfferOptions: React.FC<{ product: Product; price: number; dark?: boolean; mobileDetails?: boolean }> = ({ product, price, dark = false, mobileDetails = false }) => {
   const [selectedPayment, setSelectedPayment] = useState<'online' | 'cod'>('online');
+  const [showDetails, setShowDetails] = useState(false);
+  const detailsId = useId();
+  const captionClass = mobileDetails && !showDetails ? 'product-desktop-detail' : '';
   const prepaidDiscount = getPrepaidDiscountForItems([product], price);
   const onlinePrice = Number(Math.max(0, price - prepaidDiscount).toFixed(2));
   const panelClass = dark
@@ -1191,7 +1247,20 @@ const ProductPaymentOfferOptions: React.FC<{ product: Product; price: number; da
   const selectedRowClass = dark ? 'is-selected bg-emerald-400/10' : 'is-selected bg-emerald-50/90';
   return (
     <div className={`${panelClass} product-payment-offers ${dark ? 'product-payment-offers-dark' : ''}`}>
-      <h3 className={`px-3 pt-3 text-[13px] font-black sm:text-sm ${dark ? 'text-white' : 'text-slate-950'}`}>Payment offers</h3>
+      <div className="product-payment-heading">
+        <h3 className={`px-3 pt-3 text-[13px] font-black sm:text-sm ${dark ? 'text-white' : 'text-slate-950'}`}>Payment offers</h3>
+        {mobileDetails && (
+          <button
+            type="button"
+            className="product-payment-detail-toggle"
+            aria-expanded={showDetails}
+            aria-controls={`${detailsId}-online ${detailsId}-cod`}
+            onClick={() => setShowDetails((visible) => !visible)}
+          >
+            Details
+          </button>
+        )}
+      </div>
       <div className="mt-2 grid gap-1.5 px-2.5 pb-2.5" role="group" aria-label="Choose payment offer">
         <button
           type="button"
@@ -1208,9 +1277,9 @@ const ProductPaymentOfferOptions: React.FC<{ product: Product; price: number; da
                 </span>
               )}
             </div>
-            <p className={`mt-0.5 text-[11px] font-semibold ${mutedClass}`}>UPI, Card, Wallets</p>
+            <p id={`${detailsId}-online`} className={`mt-0.5 text-[11px] font-semibold ${mutedClass} ${captionClass}`}>UPI, Card, Wallets</p>
           </div>
-          <p className="text-base font-black text-emerald-600 sm:text-[17px]">{formatInrAmount(onlinePrice)}</p>
+          <p className="product-payment-price text-base font-black text-emerald-600 sm:text-[17px]">{formatInrAmount(onlinePrice)}</p>
           <span className={`product-payment-radio ${selectedPayment === 'online' ? 'is-selected' : ''}`} aria-hidden="true">
             <span className="product-payment-radio-dot" />
           </span>
@@ -1223,9 +1292,9 @@ const ProductPaymentOfferOptions: React.FC<{ product: Product; price: number; da
         >
           <div className="min-w-0">
             <p className="text-sm font-black sm:text-[15px]">Cash on Delivery</p>
-            <p className={`mt-0.5 text-[11px] font-semibold ${mutedClass}`}>Pay when your order arrives</p>
+            <p id={`${detailsId}-cod`} className={`mt-0.5 text-[11px] font-semibold ${mutedClass} ${captionClass}`}>Pay when your order arrives</p>
           </div>
-          <p className={`text-base font-black sm:text-[17px] ${codPriceClass}`}>{formatInrAmount(price)}</p>
+          <p className={`product-payment-price text-base font-black sm:text-[17px] ${codPriceClass}`}>{formatInrAmount(price)}</p>
           <span className={`product-payment-radio ${selectedPayment === 'cod' ? 'is-selected' : ''}`} aria-hidden="true">
             <span className="product-payment-radio-dot" />
           </span>
@@ -1255,7 +1324,7 @@ const RazorpayEmiModal: React.FC<{
 
   return (
     <div className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-[380px] overflow-hidden rounded-2xl bg-white text-slate-950 shadow-[0_28px_90px_rgba(0,0,0,0.35)]">
+      <div className="product-emi-dialog relative w-full max-w-[380px] overflow-hidden rounded-2xl bg-white text-slate-950 shadow-[0_28px_90px_rgba(0,0,0,0.35)]">
         <button
           type="button"
           onClick={onClose}
@@ -1438,6 +1507,7 @@ export const ProductDetail: React.FC = () => {
   const { openLogin } = useAuthModal();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const isQ8ProProduct = Boolean(getQ8ProContent(product));
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -1449,7 +1519,7 @@ export const ProductDetail: React.FC = () => {
   const productThumbnailStripRef = useRef<HTMLDivElement | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  const [activeDetailTab, setActiveDetailTab] = useState<ProductDetailTabKey>('description');
+  const [activeDetailTab, setActiveDetailTab] = useState<ProductDetailTabKey>('more-information');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [activeTfx5DescriptionTab, setActiveTfx5DescriptionTab] = useState<'description' | 'additional' | 'warranty'>('description');
   const [isTfx5DescriptionExpanded, setIsTfx5DescriptionExpanded] = useState(false);
@@ -1525,8 +1595,8 @@ export const ProductDetail: React.FC = () => {
 
   useEffect(() => {
     if (!product) return;
-    setShowEmiModal(true);
-  }, [product]);
+    setShowEmiModal(!isQ8ProProduct || !window.matchMedia('(max-width: 767px)').matches);
+  }, [product, isQ8ProProduct]);
 
   useEffect(() => {
     if (!product) return;
@@ -2139,9 +2209,11 @@ export const ProductDetail: React.FC = () => {
 
     const sectionIds: ProductDetailTabKey[] = [
       'features',
+      'more-information',
       'description',
       'specs',
       'faq',
+      'reviews',
     ];
 
     const updateActiveTabFromScroll = () => {
@@ -2152,7 +2224,7 @@ export const ProductDetail: React.FC = () => {
       ) || 80;
       const offset = headerHeight + detailTabsHeight + 16;
       const currentPosition = window.scrollY + offset;
-      let currentTab = sectionIds[0];
+      let currentTab: ProductDetailTabKey = 'more-information';
 
       for (const id of sectionIds) {
         const element = document.getElementById(id);
@@ -2274,10 +2346,13 @@ export const ProductDetail: React.FC = () => {
   const useMarketplaceArrangement = true;
   const isFanMarketplacePage = productFamily === 'fan';
   const productGalleryVideoFit: 'contain' | 'cover' = productFamily === 'fan' ? 'contain' : 'cover';
-  const showProductOverview = productFamily !== 'fan';
+  const showProductOverview = productFamily !== 'fan' && !isQ8ProProduct;
+  const overviewTab = { key: 'more-information' as const, label: 'Overview' };
+  const descriptionTab = { key: 'description' as const, label: 'Description' };
   const detailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
     { key: 'features', label: 'Features' },
-    ...(showProductOverview || isFanMarketplacePage ? [{ key: 'description' as const, label: isFanMarketplacePage ? 'Description' : 'Overview' }] : []),
+    overviewTab,
+    descriptionTab,
     { key: 'specs', label: 'Specifications' },
     { key: 'faq', label: 'FAQs' },
     { key: 'reviews', label: 'Reviews' },
@@ -2286,7 +2361,8 @@ export const ProductDetail: React.FC = () => {
     return tab.label;
   };
   const mobileDetailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
-    { key: 'description', label: isFanMarketplacePage ? 'Description' : 'Overview' },
+    overviewTab,
+    descriptionTab,
     { key: 'features', label: 'Features' },
     { key: 'specs', label: 'Specs' },
     ...(!detailedProductContent || productFamily === 'ring' ? [{ key: 'battery' as const, label: 'Battery' }] : []),
@@ -2877,7 +2953,13 @@ export const ProductDetail: React.FC = () => {
       : []),
     ...overviewSections.slice(1),
   ];
-  const mobileProductBannerSections = overviewMediaSections.filter((section) => section.image || section.video);
+  const mobileProductBannerSections = isQ8ProProduct ? [] : overviewMediaSections.filter((section) => section.image || section.video);
+  const overviewFallback = (
+    <>
+      <h2 className="store-section-heading mb-4">Product Overview</h2>
+      <img src={displayedImages[0]} alt={displayProductName} loading="lazy" decoding="async" className="mx-auto max-h-80 w-full object-contain" />
+    </>
+  );
   const bandAppShowcaseAfterTitle = productFamily === 'band'
     ? overviewMediaSections.find(section => section.image)?.title
     : undefined;
@@ -2930,10 +3012,10 @@ export const ProductDetail: React.FC = () => {
     fanProfile?.description ||
     `${product.name} is a modern tower fan designed for year-round comfort, smooth airflow, quiet indoor use, and convenient remote operation.`;
   const offerLine = (
-    <RazorpayEmiStrip price={displayedPrice || salePrice} onOpen={() => setShowEmiModal(true)} />
+    <RazorpayEmiStrip price={displayedPrice || salePrice} onOpen={() => setShowEmiModal(true)} mobileDetails={isQ8ProProduct} />
   );
   const paymentOfferBlock = product ? (
-    <ProductPaymentOfferOptions product={product} price={displayedPrice || salePrice} />
+    <ProductPaymentOfferOptions product={product} price={displayedPrice || salePrice} mobileDetails={isQ8ProProduct} />
   ) : null;
   const darkPaymentOfferBlock = product ? (
     <ProductPaymentOfferOptions product={product} price={displayedPrice || salePrice} dark />
@@ -2951,6 +3033,17 @@ export const ProductDetail: React.FC = () => {
       const top = element.getBoundingClientRect().top + window.scrollY - offset;
       window.scrollTo({ top, behavior: 'smooth' });
     }, 0);
+  };
+  const selectMobileDetailTab = (key: ProductDetailTabKey) => {
+    if (detailTabsFixed && key !== activeDetailTab) {
+      const anchor = detailTabsAnchorRef.current;
+      const tabs = detailTabsBarRef.current;
+      if (anchor && tabs) {
+        const top = window.scrollY + anchor.getBoundingClientRect().top - tabs.getBoundingClientRect().top;
+        window.scrollTo({ top, behavior: 'instant' });
+      }
+    }
+    setActiveDetailTab(key);
   };
   const tfx5Showcase = (
     <img
@@ -3138,7 +3231,7 @@ export const ProductDetail: React.FC = () => {
   ) : null;
 
   return (
-    <div className="product-detail-page min-h-screen bg-white text-slate-950">
+    <div className={`product-detail-page min-h-screen bg-white text-slate-950 ${isQ8ProProduct ? 'q8-pro-product' : ''}`}>
       <style>{`
         @keyframes productPanelIn {
           from { opacity: 0; transform: translateY(14px); }
@@ -3502,9 +3595,9 @@ export const ProductDetail: React.FC = () => {
           </div>
 
           {useMarketplaceArrangement && (
-            <aside className="product-panel-in order-3 w-full min-w-0 max-w-full overflow-hidden bg-white text-left lg:col-start-2 lg:row-start-2 lg:order-none">
-              <div className="rounded-2xl border border-slate-100 bg-gradient-to-br from-[#f8fbfb] to-white p-4 shadow-[0_2px_14px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_6px_22px_rgba(15,23,42,0.08)] sm:p-5">
-                <div className="flex flex-col items-start gap-2">
+            <aside className="product-purchase-panel product-panel-in order-3 w-full min-w-0 max-w-full overflow-hidden bg-white text-left lg:col-start-2 lg:row-start-2 lg:order-none">
+              <div className="product-pricing-card rounded-2xl border border-slate-100 bg-gradient-to-br from-[#f8fbfb] to-white p-4 shadow-[0_2px_14px_rgba(15,23,42,0.05)] transition-shadow duration-300 hover:shadow-[0_6px_22px_rgba(15,23,42,0.08)] sm:p-5">
+                <div className="product-price-summary flex flex-col items-start gap-2">
                   <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
                     {mrp > displayedPrice && (
                     <span className="text-sm font-medium text-slate-400">
@@ -3518,7 +3611,7 @@ export const ProductDetail: React.FC = () => {
                       Save {formatInrAmount(displayedSavings)}{!hidePercentageOffer ? ` (${displayedPercent}% off)` : ''}
                     </span>
                   )}
-                  <span className={`font-display text-2xl font-semibold tracking-tight sm:text-3xl ${couponRate > 0 ? 'text-emerald-700' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
+                  <span className={`product-current-price font-display text-2xl font-semibold tracking-tight sm:text-3xl ${couponRate > 0 ? 'text-emerald-700' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
                 </div>
 
                 {offerLine}
@@ -3634,9 +3727,9 @@ export const ProductDetail: React.FC = () => {
                 </p>
               </div>
 
-              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} />
+              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} mobileDetails={isQ8ProProduct} />
 
-              <div ref={mobileCtaAnchorRef} className="mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2">
+              <div ref={mobileCtaAnchorRef} className={`product-purchase-actions mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2 ${canAdd ? 'product-purchase-actions--in-stock' : ''}`}>
                 <button
                   type="button"
                   onClick={handleAddButtonClick}
@@ -3666,7 +3759,7 @@ export const ProductDetail: React.FC = () => {
                       setIsBuyNowPressed(true);
                       window.setTimeout(() => handleBuyNowClick(), 140);
                     }}
-                    className={`flex min-h-[3.25rem] w-full min-w-0 items-center justify-center rounded-xl border-2 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.04em] shadow-[0_1px_0_rgba(255,255,255,0.15)_inset] transition-all duration-300 ease-out active:translate-y-0 active:scale-[0.98] ${
+                    className={`product-buy-now flex min-h-[3.25rem] w-full min-w-0 items-center justify-center rounded-xl border-2 px-4 py-3 text-center text-sm font-semibold uppercase tracking-[0.04em] shadow-[0_1px_0_rgba(255,255,255,0.15)_inset] transition-all duration-300 ease-out active:translate-y-0 active:scale-[0.98] ${
                       isBuyNowPressed
                         ? 'product-detail-buy-now-active border-[#a9812f] bg-gradient-to-b from-[#c79a3d] to-[#a9812f] text-white shadow-[0_10px_24px_rgba(169,129,47,0.32)]'
                         : 'border-slate-950 bg-white text-slate-950 hover:border-[#a9812f] hover:text-[#8a6a20]'
@@ -3681,7 +3774,7 @@ export const ProductDetail: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => navigate('/cart')}
-                  className="mt-2.5 flex w-full items-center justify-center text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 underline-offset-4 transition hover:text-slate-950 hover:underline"
+                  className="product-view-cart mt-2.5 flex w-full items-center justify-center text-xs font-semibold uppercase tracking-[0.08em] text-slate-500 underline-offset-4 transition hover:text-slate-950 hover:underline"
                 >
                   View Cart
                 </button>
@@ -3727,7 +3820,7 @@ export const ProductDetail: React.FC = () => {
                   scrollToDetailSection(tab.key);
                   return;
                 }
-                setActiveDetailTab(tab.key);
+                selectMobileDetailTab(tab.key);
               }}
               aria-pressed={activeDetailTab === tab.key}
               className={`product-detail-sticky-tab snap-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold tracking-wide transition ${
@@ -3743,6 +3836,7 @@ export const ProductDetail: React.FC = () => {
             <a
               key={tab.key}
               href={`#${tab.key}`}
+              aria-current={activeDetailTab === tab.key ? 'location' : undefined}
               onClick={(event) => {
                 event.preventDefault();
                 scrollToDetailSection(tab.key);
@@ -3757,7 +3851,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </nav>
 
-      {activeDetailTab === 'description' && mobileProductBannerSections.length > 0 && (
+      {activeDetailTab === 'more-information' && mobileProductBannerSections.length > 0 && (
         <section className={`product-mobile-banners ${productFamily === 'ring' && isDisplayProduct ? 'product-mobile-banners--display' : ''} bg-white px-4 py-4 sm:hidden`}>
           <div className="space-y-3">
             {(showAllProductBannersOnMobile || showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section, index) => (
@@ -3826,8 +3920,12 @@ export const ProductDetail: React.FC = () => {
         </section>
       )}
 
-      <section className="product-mobile-details product-scroll-section bg-white px-4 py-5 sm:hidden">
-        {activeDetailTab === 'description' && (detailedProductContent ? generalArrangedDescription : (
+      {!isQ8ProProduct && activeDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
+        <section className="bg-white px-4 py-5 sm:hidden">{overviewFallback}</section>
+      )}
+
+      <section className={`product-mobile-details product-scroll-section bg-white px-4 py-5 sm:hidden ${activeDetailTab === 'more-information' || (isQ8ProProduct && activeDetailTab === 'description') ? 'hidden' : ''}`}>
+        {!isQ8ProProduct && activeDetailTab === 'description' && (detailedProductContent ? generalArrangedDescription : (
           <div className="space-y-4">
             <div className={isTfxV5Band ? '' : 'rounded border border-slate-200'}>
               {!isTfxV5Band && <p className="border-b border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-900">
@@ -3857,42 +3955,6 @@ export const ProductDetail: React.FC = () => {
               )}
               {isTfxV5Band && tfx5ArrangedDescription}
             </div>
-            {showProductOverview && mobileProductBannerSections.length === 0 && (
-              <div className="space-y-3">
-                {(showAllMobileOverview ? overviewMediaSections : overviewMediaSections.slice(0, 2)).map((section, index) => (
-                  <article key={section.title} className="overflow-hidden">
-                    {section.image && (
-                      <div className="relative overflow-hidden bg-[#f8fbfb]">
-                        <img
-                          src={section.image}
-                          alt={section.title}
-                          className="h-auto w-full"
-                          loading="lazy"
-                          fetchPriority="low"
-                          decoding="async"
-                        />
-                        {!isTfxV5Band && !section.cleanBanner && (
-                          <div className="pointer-events-none absolute left-4 top-4 max-w-[62%] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)]">
-                            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/85">0{index + 1}</p>
-                            <h2 className="mt-1 font-display text-base font-black leading-tight">{section.title}</h2>
-                            <p className="mt-1 text-[11px] font-semibold leading-4 text-white/90">{section.copy}</p>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </article>
-                ))}
-                {overviewSections.length > 3 && (
-                  <button
-                    type="button"
-                    onClick={() => setShowAllMobileOverview((prev) => !prev)}
-                    className="w-full rounded-xl border border-slate-200 bg-[#fbfaf7] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
-                  >
-                    {showAllMobileOverview ? 'Show Less' : 'Show More Banners'}
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         ))}
 
@@ -3961,79 +4023,106 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
-      {isFanMarketplacePage && (
-        <section id="description" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
-          <div className="mx-auto max-w-5xl rounded border border-slate-200">
-            <div className="p-3 sm:p-4">{arrangedProductInformation}</div>
-          </div>
-        </section>
-      )}
-
-      {showProductOverview && (
-        <>
-          <section id="description" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
-            <div className={`mx-auto max-w-7xl ${isTfxV5Band ? '' : 'rounded border border-slate-200 p-3 sm:p-4'}`}>
-              {arrangedProductInformation}
-            </div>
-          </section>
-
-          <section id="more-information" className="product-scroll-section hidden scroll-mt-32 bg-white px-0 pb-10 sm:block sm:scroll-mt-36 lg:pb-14">
-            <div className="mx-auto w-full max-w-[1200px] space-y-4 px-4 sm:px-6 lg:px-0">
-              {overviewMediaSections.map((section, index) => (
-                <React.Fragment key={section.title}>
-                <RevealOnScroll className="product-banner-group overflow-hidden bg-transparent shadow-none">
-                  {section.video ? (
-                    <div className="aspect-[12/5] overflow-hidden bg-slate-950">
-                      <ProductOverviewVideo
-                        src={section.video}
-                        title={section.title}
-                        className="band-hero-video product-banner-media h-full w-full border-0 object-contain object-center"
-                      />
-                    </div>
-                  ) : section.image && (
-                    <div className="relative w-full overflow-hidden bg-[#f8fbfb]">
-                      <img
-                        src={section.image}
-                        alt={section.title}
-                        width={section.imageWidth}
-                        height={section.imageHeight}
-                        className="product-banner-media h-auto w-full object-contain object-center"
-                        loading="lazy"
-                        fetchPriority="low"
-                        decoding="async"
-                      />
-                      {section.overlayText && (
-                        <div className="pointer-events-none absolute left-5 top-5 max-w-[62%] text-white drop-shadow-[0_4px_22px_rgba(0,0,0,0.76)] sm:left-8 sm:top-8 lg:left-10 lg:top-10">
-                          <h2 className="font-display text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
-                            {section.overlayText}
-                          </h2>
-                        </div>
-                      )}
-                      {isRingOverview && !section.cleanBanner && (
-                        <div className="pointer-events-none absolute left-4 top-4 max-w-[58%] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:left-7 sm:top-7 sm:max-w-[42%] lg:left-9 lg:top-9">
-                          <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/85 sm:text-xs">0{index + 1}</p>
-                          <h2 className="mt-1 font-display text-lg font-black leading-tight sm:text-2xl lg:text-3xl">{section.title}</h2>
-                          <p className="mt-2 max-w-sm text-xs font-semibold leading-5 text-white/90 sm:text-sm sm:leading-6">{section.copy}</p>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  {!isRingOverview && !isTfxV5Band && !section.cleanBanner && (
-                    <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8a6a20] sm:text-xs">0{index + 1}</p>
-                      <h2 className="mt-2 font-display text-lg font-black leading-tight text-slate-950 sm:text-2xl lg:text-3xl">{section.title}</h2>
-                      <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">{section.copy}</p>
-                    </div>
-                  )}
-                </RevealOnScroll>
-                {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
-                {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-3">{tfx5Showcase}</div>}
-                </React.Fragment>
+      {isQ8ProProduct ? (
+        <section
+          id="more-information"
+          aria-labelledby="q8-pro-overview-title"
+          className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 ${activeDetailTab === 'more-information' ? '' : 'hidden'}`}
+        >
+          <div className="mx-auto max-w-[1200px]">
+            <h2 id="q8-pro-overview-title" className="store-section-heading mb-4">Product Overview</h2>
+            <p className="mb-3 text-sm text-slate-600 sm:hidden">Tap a diagram to enlarge it.</p>
+            <div className="space-y-3 sm:space-y-4">
+              {Q8_PRO_OVERVIEW_BANNERS.map(({ src, alt }) => (
+                <a
+                  key={src}
+                  href={src}
+                  target="_blank"
+                  rel="noreferrer"
+                  aria-label={`Enlarge ${alt} (opens in a new tab)`}
+                  className="product-banner-group block cursor-zoom-in overflow-hidden rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-700"
+                >
+                  <img src={src} alt={alt} width={3200} height={1365} loading="lazy" decoding="async" className="block h-auto w-full" />
+                </a>
               ))}
             </div>
-          </section>
+          </div>
+        </section>
+      ) : (
+        <>
+          {showProductOverview && overviewMediaSections.length > 0 && (
+            <section id="more-information" className="product-scroll-section hidden scroll-mt-32 bg-white px-0 pb-10 sm:block sm:scroll-mt-36 lg:pb-14">
+              <div className="mx-auto w-full max-w-[1200px] space-y-4 px-4 sm:px-6 lg:px-0">
+                {overviewMediaSections.map((section, index) => (
+                  <React.Fragment key={section.title}>
+                  <RevealOnScroll className="product-banner-group overflow-hidden bg-transparent shadow-none">
+                    {section.video ? (
+                      <div className="aspect-[12/5] overflow-hidden bg-slate-950">
+                        <ProductOverviewVideo
+                          src={section.video}
+                          title={section.title}
+                          className="band-hero-video product-banner-media h-full w-full border-0 object-contain object-center"
+                        />
+                      </div>
+                    ) : section.image && (
+                      <div className="relative w-full overflow-hidden bg-[#f8fbfb]">
+                        <img
+                          src={section.image}
+                          alt={section.title}
+                          width={section.imageWidth}
+                          height={section.imageHeight}
+                          className="product-banner-media h-auto w-full object-contain object-center"
+                          loading="lazy"
+                          fetchPriority="low"
+                          decoding="async"
+                        />
+                        {section.overlayText && (
+                          <div className="pointer-events-none absolute left-5 top-5 max-w-[62%] text-white drop-shadow-[0_4px_22px_rgba(0,0,0,0.76)] sm:left-8 sm:top-8 lg:left-10 lg:top-10">
+                            <h2 className="font-display text-3xl font-black leading-tight sm:text-5xl lg:text-6xl">
+                              {section.overlayText}
+                            </h2>
+                          </div>
+                        )}
+                        {isRingOverview && !section.cleanBanner && (
+                          <div className="pointer-events-none absolute left-4 top-4 max-w-[58%] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.72)] sm:left-7 sm:top-7 sm:max-w-[42%] lg:left-9 lg:top-9">
+                            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-white/85 sm:text-xs">0{index + 1}</p>
+                            <h2 className="mt-1 font-display text-lg font-black leading-tight sm:text-2xl lg:text-3xl">{section.title}</h2>
+                            <p className="mt-2 max-w-sm text-xs font-semibold leading-5 text-white/90 sm:text-sm sm:leading-6">{section.copy}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {!isRingOverview && !isTfxV5Band && !section.cleanBanner && (
+                      <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-8">
+                        <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8a6a20] sm:text-xs">0{index + 1}</p>
+                        <h2 className="mt-2 font-display text-lg font-black leading-tight text-slate-950 sm:text-2xl lg:text-3xl">{section.title}</h2>
+                        <p className="mt-3 text-sm leading-7 text-slate-600 sm:text-base sm:leading-8">{section.copy}</p>
+                      </div>
+                    )}
+                  </RevealOnScroll>
+                  {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
+                  {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-3">{tfx5Showcase}</div>}
+                  </React.Fragment>
+                ))}
+              </div>
+            </section>
+          )}
+          {(!showProductOverview || overviewMediaSections.length === 0) && (
+            <section id="more-information" className="product-scroll-section hidden scroll-mt-36 bg-white px-6 py-10 sm:block">
+              <div className="mx-auto max-w-5xl">{overviewFallback}</div>
+            </section>
+          )}
         </>
       )}
+
+      <section
+        id="description"
+        className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 lg:px-8 lg:py-14 ${isQ8ProProduct && activeDetailTab === 'description' ? '' : 'hidden'}`}
+      >
+        <div className={`mx-auto ${showProductOverview ? 'max-w-7xl' : 'max-w-5xl'} ${isTfxV5Band ? '' : 'rounded border border-slate-200 p-3 sm:p-4'}`}>
+          {arrangedProductInformation}
+        </div>
+      </section>
 
       <section id="specs" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-6xl">
@@ -4212,7 +4301,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       )}
 
-      <div aria-label="Mobile product actions" aria-hidden={!showMobileStickyCta} inert={!showMobileStickyCta} className={`fixed inset-x-0 bottom-0 z-[80] border-t border-slate-200 bg-white/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl backdrop-blur transition-transform duration-300 sm:hidden ${showMobileStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
+      <div aria-label="Mobile product actions" aria-hidden={!showMobileStickyCta} inert={!showMobileStickyCta} className={`product-mobile-actions fixed inset-x-0 bottom-0 z-[80] border-t border-slate-200 bg-white/95 px-3 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3 shadow-2xl backdrop-blur transition-transform duration-300 sm:hidden ${showMobileStickyCta ? 'translate-y-0' : 'translate-y-full'}`}>
         <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2">
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#8a6a20]">Price</p>
@@ -4229,7 +4318,7 @@ export const ProductDetail: React.FC = () => {
                 setIsBuyNowPressed(true);
                 window.setTimeout(() => handleBuyNowClick(), 140);
               }}
-              className={`min-h-11 min-w-[76px] rounded-xl border-2 px-2.5 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.03em] leading-tight shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all duration-300 ease-out active:scale-[0.96] min-[360px]:min-w-[92px] min-[360px]:text-xs ${
+              className={`product-buy-now min-h-11 min-w-[76px] rounded-xl border-2 px-2.5 py-2 text-center text-[11px] font-semibold uppercase tracking-[0.03em] leading-tight shadow-[0_4px_12px_rgba(15,23,42,0.08)] transition-all duration-300 ease-out active:scale-[0.96] min-[360px]:min-w-[92px] min-[360px]:text-xs ${
                 isBuyNowPressed
                   ? 'product-detail-buy-now-active border-[#a9812f] bg-[#a9812f] text-white'
                   : 'border-slate-950 bg-white text-slate-950'

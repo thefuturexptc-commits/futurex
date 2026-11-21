@@ -466,11 +466,12 @@ const usePastHeroBanner = () => {
 const FloatingAfterHero: React.FC = () => {
   const pastHero = usePastHeroBanner();
   const { pathname } = useLocation();
+  const isAccountEntry = /^\/(login|signup)\/?$/i.test(pathname);
 
   return (
     <>
       {pastHero && <DeferredSupportAssistant />}
-      <FloatingContactRail key={pathname} pathname={pathname} />
+      {!isAccountEntry && <FloatingContactRail key={pathname} pathname={pathname} />}
     </>
   );
 };

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { loginUser, loginWithGoogle } from '../services/backend';
-import { Button } from '../components/ui/Button';
+import { AccountLayout } from '../components/AccountLayout';
 import { removeProductJsonLd } from '../services/seo';
 
 export const Login: React.FC = () => {
@@ -98,99 +98,62 @@ export const Login: React.FC = () => {
   const signupPath = signupQuery ? `/signup?${signupQuery}` : '/signup';
 
   return (
-    <div className="auth-page tfx-standard-page min-h-screen overflow-x-hidden px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-5xl items-center justify-center">
-        <div className="auth-card mx-auto w-full max-w-md space-y-6 rounded-2xl bg-white p-5 shadow-[0_18px_52px_rgba(15,23,42,0.08)] sm:p-8">
-          <div>
-            <p className="text-center text-xs font-black uppercase tracking-[0.22em] text-[#df0b16]">Welcome back</p>
-            <h1 className="mt-3 text-center text-3xl font-black text-slate-950">Login</h1>
-            <p className="mt-2 text-center text-sm leading-6 text-slate-600">Sign in to continue checkout and view your orders.</p>
-          </div>
-        <form className="mt-8 space-y-5" onSubmit={handleSubmit}>
-          {error && <div className="rounded-lg bg-red-50 p-3 text-center text-sm font-semibold text-red-700" role="alert">{error}</div>}
-          {authHint && (
-            <div className="rounded-lg bg-cyan-50 p-3 text-center text-sm font-semibold text-cyan-800 break-words" role="status" aria-live="polite">
-              <p>{authHint}</p>
-              <Button type="button" size="sm" variant="outline" className="mt-3 w-full rounded-lg" onClick={() => navigate(signupPath)}>
-                Create account
-              </Button>
-            </div>
-          )}
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="email-address" className="mb-1.5 block text-sm font-bold text-slate-800">Email address</label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                required
-                autoComplete="email"
-                inputMode="email"
-                enterKeyHint="next"
-                className="auth-input relative block w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-950 placeholder:text-slate-400 outline-none transition focus:border-[#df0b16] focus:ring-2 focus:ring-[#df0b16]/15"
-                placeholder="you@example.com"
-                value={email}
-                disabled={loading || googleLoading}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setAuthHint('');
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="mb-1.5 block text-sm font-bold text-slate-800">Password</label>
-              <div className="flex gap-2">
-                <input
-                  id="password"
-                  name="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  autoComplete="current-password"
-                  enterKeyHint="done"
-                  className="auth-input relative block min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm text-slate-950 placeholder:text-slate-400 outline-none transition focus:border-[#df0b16] focus:ring-2 focus:ring-[#df0b16]/15"
-                  placeholder="Enter your password"
-                  value={password}
-                  disabled={loading || googleLoading}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <Button type="button" size="sm" variant="outline" className="h-auto rounded-lg px-4" disabled={loading || googleLoading} onClick={() => setShowPassword((prev) => !prev)}>
-                  {showPassword ? 'Hide' : 'Show'}
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <Button type="submit" className="w-full rounded-lg" isLoading={loading} disabled={googleLoading}>
-              Login
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-gray-300 dark:bg-white/15" />
-            <span className="text-xs text-gray-500 dark:text-gray-400 font-semibold">OR</span>
-            <div className="h-px flex-1 bg-gray-300 dark:bg-white/15" />
-          </div>
-
-          <Button
+    <AccountLayout
+      mode="login"
+      alternatePath={signupPath}
+      error={error}
+      authHint={authHint}
+      loading={loading}
+      googleLoading={googleLoading}
+      onSubmit={handleSubmit}
+      onGoogle={handleGoogleLogin}
+    >
+      <div className="account-field">
+        <label htmlFor="email-address">Email address</label>
+        <input
+          id="email-address"
+          name="email"
+          type="email"
+          required
+          autoComplete="email"
+          inputMode="email"
+          enterKeyHint="next"
+          placeholder="you@example.com"
+          value={email}
+          disabled={loading || googleLoading}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            setAuthHint('');
+          }}
+        />
+      </div>
+      <div className="account-field">
+        <label htmlFor="password">Password</label>
+        <div className="account-password">
+          <input
+            id="password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            required
+            autoComplete="current-password"
+            enterKeyHint="done"
+            placeholder="Enter your password"
+            value={password}
+            disabled={loading || googleLoading}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <button
             type="button"
-            variant="outline"
-            className="auth-google-button w-full rounded-lg"
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            isLoading={googleLoading}
+            className="account-password-toggle"
+            aria-label={showPassword ? 'Hide password' : 'Show password'}
+            aria-controls="password"
+            disabled={loading || googleLoading}
+            onClick={() => setShowPassword((previous) => !previous)}
           >
-            <span className="auth-google-button__icon mr-2 grid h-5 w-5 place-items-center rounded-full text-sm font-black">G</span>
-            Continue with Google
-          </Button>
-
-          <div className="text-center mt-4">
-            <span className="text-slate-500 text-sm">Don't have an account? </span>
-            <Link to={signupPath} className="text-primary-600 hover:text-primary-500 text-sm font-medium">Sign up</Link>
-          </div>
-        </form>
+            {showPassword ? 'Hide' : 'Show'}
+          </button>
+        </div>
       </div>
-      </div>
-    </div>
+    </AccountLayout>
   );
 };
