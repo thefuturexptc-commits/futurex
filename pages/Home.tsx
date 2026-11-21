@@ -14,10 +14,7 @@ import homeCollectionBandImage from '../assets/images/home-collection-bands-bann
 import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
 import homeCollectionFanImage from '../assets/images/home-collection-fans-banner.webp';
 import homeDiwaliSmartRingsBanner from '../assets/images/home-diwali-smart-rings.webp';
-import homeDiwaliSmartBandBanner from '../assets/images/home-diwali-smart-band-wellness.webp';
 import homeDiwaliAirCleanerBanner from '../assets/images/home-diwali-air-cleaner.webp';
-import homeDesktopDiwaliBandStyleBanner from '../assets/images/home-desktop-diwali-band-style.webp';
-import homeDesktopDiwaliSmartBandBanner from '../assets/images/home-desktop-diwali-smart-band.webp';
 import homeDesktopDiwaliRingsBanner from '../assets/images/home-desktop-diwali-rings.webp';
 import homeDesktopDiwaliAirCleanerBanner from '../assets/images/home-desktop-diwali-air-cleaner.webp';
 import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
@@ -317,26 +314,7 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; desktopImage: string; desktopOnly?: boolean; href: string; alt: string; width: number; height: number; backgroundColor?: string }> = [
-  {
-    image: homeDiwaliSmartBandBanner,
-    desktopImage: homeDesktopDiwaliBandStyleBanner,
-    href: '/product/tfx-smart-band',
-    alt: 'FutureX smart bands with a wellness shines brighter this Diwali message',
-    width: 1374,
-    height: 1145,
-    backgroundColor: '#ead3ac',
-  },
-  {
-    image: homeDesktopDiwaliSmartBandBanner,
-    desktopImage: homeDesktopDiwaliSmartBandBanner,
-    desktopOnly: true,
-    href: '/smart-bands',
-    alt: 'FutureX smart bands with a Stay Active This Diwali message',
-    width: 1920,
-    height: 820,
-    backgroundColor: '#ead3ac',
-  },
+const HOME_WATER_RESISTANT_BANNERS = [
   {
     image: homeDiwaliSmartRingsBanner,
     desktopImage: homeDesktopDiwaliRingsBanner,
@@ -358,12 +336,8 @@ const HOME_WATER_RESISTANT_BANNERS: Array<{ image: string; desktopImage: string;
 ];
 
 const getNextHomeBannerIndex = (current: number, direction: -1 | 1): number => {
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
-  for (let offset = 1; offset <= HOME_WATER_RESISTANT_BANNERS.length; offset += 1) {
-    const candidate = (current + direction * offset + HOME_WATER_RESISTANT_BANNERS.length * 2) % HOME_WATER_RESISTANT_BANNERS.length;
-    if (!isMobile || !HOME_WATER_RESISTANT_BANNERS[candidate].desktopOnly) return candidate;
-  }
-  return current;
+  const count = HOME_WATER_RESISTANT_BANNERS.length;
+  return (current + direction + count) % count;
 };
 
 const HOME_COLLECTION_CARDS = [
@@ -743,17 +717,6 @@ export const Home: React.FC = () => {
   const [isHomeBannerPaused, setIsHomeBannerPaused] = useState(false);
 
   useEffect(() => {
-    const ensureVisibleBanner = () => {
-      if (window.innerWidth < 768 && HOME_WATER_RESISTANT_BANNERS[homeWaterBannerIndex]?.desktopOnly) {
-        setHomeWaterBannerIndex((current) => getNextHomeBannerIndex(current, 1));
-      }
-    };
-    ensureVisibleBanner();
-    window.addEventListener('resize', ensureVisibleBanner);
-    return () => window.removeEventListener('resize', ensureVisibleBanner);
-  }, [homeWaterBannerIndex]);
-
-  useEffect(() => {
     if (isHomeBannerPaused || isBannerTouching || HOME_WATER_RESISTANT_BANNERS.length <= 1) return undefined;
     if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
       return undefined;
@@ -1106,18 +1069,18 @@ export const Home: React.FC = () => {
               key={banner.alt}
               to={banner.href || '#'}
               style={{ backgroundColor: banner.backgroundColor }}
-              className={`absolute inset-0 overflow-hidden transition-opacity duration-[900ms] ease-out ${banner.desktopOnly ? 'hidden md:block' : ''} ${
+              className={`absolute inset-0 overflow-hidden transition-opacity duration-[900ms] ease-out ${
                 index === homeWaterBannerIndex ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'
               }`}
               aria-hidden={index !== homeWaterBannerIndex}
               tabIndex={index === homeWaterBannerIndex ? 0 : -1}
             >
               {(visitedHeroBanners.has(index) || index === homeWaterBannerIndex) && <picture className="block h-full w-full">
-                <source media="(min-width: 768px)" srcSet={index === 0 ? homeImageSrcSet('home-desktop-diwali-band-style') : banner.desktopImage} sizes="100vw" />
+                <source media="(min-width: 768px)" srcSet={index === 0 ? homeImageSrcSet('home-desktop-diwali-rings') : banner.desktopImage} sizes="100vw" />
                 {banner.image && (
                   <img
                     src={banner.image}
-                    srcSet={index === 0 ? homeImageSrcSet('home-diwali-smart-band-wellness') : undefined}
+                    srcSet={index === 0 ? homeImageSrcSet('home-diwali-smart-rings') : undefined}
                     sizes="100vw"
                     alt={banner.alt}
                     width={banner.width}
@@ -1170,7 +1133,7 @@ export const Home: React.FC = () => {
                   onClick={() => setHomeWaterBannerIndex(index)}
                   aria-label={`Show banner ${index + 1} of ${HOME_WATER_RESISTANT_BANNERS.length}`}
                   aria-current={index === homeWaterBannerIndex}
-                  className={`${banner.desktopOnly ? 'hidden md:block' : ''} relative h-1.5 overflow-hidden rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
+                  className={`relative h-1.5 overflow-hidden rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
                     index === homeWaterBannerIndex ? 'w-8 bg-white/30' : 'w-1.5 bg-white/55 hover:bg-white/80'
                   }`}
                 >

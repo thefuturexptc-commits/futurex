@@ -837,8 +837,8 @@ const getRouteHtml = (route, product) => {
       jsonLd: `${buildHomepageJsonLd()}\n    <script id="homepage-faq-json-ld" type="application/ld+json">${JSON.stringify(homepageFaqSchema)}</script>`,
     });
     const heroPreloads = [
-      ['home-diwali-smart-band-wellness', '(max-width: 767px)'],
-      ['home-desktop-diwali-band-style', '(min-width: 768px)'],
+      ['home-diwali-smart-rings', '(max-width: 767px)'],
+      ['home-desktop-diwali-rings', '(min-width: 768px)'],
     ].map(([name, media]) => `<link rel="preload" as="image" type="image/webp" media="${media}" imagesrcset="${[480, 768, 1280].map((width) => `/images/optimized/${name}-${width}.webp ${width}w`).join(', ')}" imagesizes="100vw" fetchpriority="high">`).join('\n');
     return injectStaticRoot(html.replace('</head>', `${heroPreloads}\n</head>`), buildHomeStaticHtml(productRecords));
   }
