@@ -263,10 +263,56 @@ const SMART_SLEEP_MONITOR_PRODUCT: Product = {
   ],
 };
 
+const TFX_ADVANCE_PRODUCT: Product = {
+  id: 'p-1772265903701',
+  slug: 'tfx-advance',
+  name: 'TFX Advance – All-Season Bladeless Fan | Cool in Summer & Warm in Winter',
+  category: 'Smart Fans',
+  description: 'A modern bladeless fan for smooth cooling in summer and warm airflow in winter. Designed for quieter, safer everyday comfort in bedrooms, living spaces, and work areas.',
+  mrp: 13999,
+  salePrice: Q8_PRO_SALE_PRICE,
+  price: Q8_PRO_SALE_PRICE,
+  stock: 10,
+  reservedStock: 0,
+  sold: 0,
+  inStock: true,
+  images: ['https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2F1782201273422_Q8%20pro1.webp?alt=media&token=22b0e245-9ade-4962-8675-e88d26984a90'],
+  colors: [{
+    name: 'Black',
+    hex: '#111827',
+    images: ['https://firebasestorage.googleapis.com/v0/b/futurexweb-ae46b.firebasestorage.app/o/products%2F1782201273422_Q8%20pro1.webp?alt=media&token=22b0e245-9ade-4962-8675-e88d26984a90'],
+    stock: 10,
+    reservedStock: 0,
+    sold: 0,
+  }],
+  features: ['Bladeless airflow', 'Cool and warm modes', 'PTC ceramic heating', 'Remote control', 'Tip-over protection', 'Low-noise operation'],
+  specs: {
+    Model: 'Q8 Pro',
+    'Heating Technology': 'PTC ceramic heating elements',
+    'Control Type': 'Remote and display',
+    'Safety Features': 'Overheat and tip-over protection',
+    'Suitable Season': 'All season',
+  },
+  warranty: '1 year warranty',
+};
+
 const getKnownProductFallback = (id: string): Product | undefined => {
   const normalized = toProductSlug(id);
   if (normalized === SMART_SLEEP_MONITOR_SLUG) return normalizeProductColors(SMART_SLEEP_MONITOR_PRODUCT);
+  if (normalized === 'tfx-advance') return normalizeProductColors(TFX_ADVANCE_PRODUCT);
   return undefined;
+};
+
+export const getProductFallbackById = (id: string): Product | undefined => {
+  if (/\b(?:ai-?)?smart-?glasses?\b/i.test(id)) return undefined;
+  const products = getMockData<Product[]>('products', INITIAL_PRODUCTS);
+  const localFound =
+    products.find((product) => product.id === id) ||
+    products.find((product) => getProductSlug(product) === id) ||
+    products.find((product) => toProductSlug(product.name) === id);
+  return localFound && isCatalogProductPublished(localFound)
+    ? normalizeProductColors(localFound)
+    : getKnownProductFallback(id);
 };
 
 export const isProductSlugUnique = (products: Product[], slug: string, currentProductId?: string): boolean => {

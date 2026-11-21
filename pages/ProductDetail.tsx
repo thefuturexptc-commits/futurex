@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useAuthModal } from '../context/AuthModalContext';
 import { auth } from '../services/firebaseConfig';
-import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById, getProductReviews, getProductSlug, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
+import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById, getProductFallbackById, getProductReviews, getProductSlug, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
 import { DeliveryEstimate } from '../components/DeliveryEstimate';
 import { ReviewPhotos } from '../components/ReviewPhotos';
@@ -1562,21 +1562,56 @@ export const ProductDetail: React.FC = () => {
   );
   const loadProduct = useCallback(() => {
     if (!id) return;
+    let cancelled = false;
     setLoading(true);
     setError(null);
-    getProductById(id)
-      .then(async (p) => {
+    const displayProduct = (p: Product) => {
+      if (cancelled) return;
+      setProduct(p);
+      setVisibleReviewCount(2);
+      setSelectedColor(p.colors?.[0] ?? null);
+      setLoading(false);
+    };
+    const refreshReviews = (p: Product) => {
+      void getProductReviews(p.id).then((publicReviews) => {
+        if (!cancelled) setProduct((current) => current?.id === p.id ? withProductReviewSummary(current, publicReviews) : current);
+      });
+    };
+    const fallback = getProductFallbackById(id);
+
+    if (fallback) {
+      displayProduct(fallback);
+      refreshReviews(fallback);
+      void getProductById(id).then((freshProduct) => {
+        if (freshProduct) {
+          displayProduct(freshProduct);
+          refreshReviews(freshProduct);
+        }
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void getProductById(id)
+      .then((p) => {
         if (!p) {
-          setError('Product not found');
+          if (!cancelled) setError('Product not found');
         } else {
-          const publicReviews = await getProductReviews(p.id);
-          setProduct(withProductReviewSummary(p, publicReviews));
-          setVisibleReviewCount(2);
-          setSelectedColor(p.colors?.[0] ?? null);
+          displayProduct(p);
+          refreshReviews(p);
         }
       })
-      .catch(() => setError('Failed to load product'))
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!cancelled) setError('Failed to load product');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   useEffect(() => loadProduct(), [loadProduct]);
