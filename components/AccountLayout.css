@@ -30,11 +30,14 @@
   align-items: flex-end;
   min-width: 0;
   padding: clamp(32px, 4vw, 60px);
-  background: #30251a;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(104, 211, 163, 0.3), transparent 25%),
+    radial-gradient(circle at 18% 82%, rgba(67, 129, 112, 0.28), transparent 34%),
+    linear-gradient(145deg, #10271f, #071511);
   color: #fff;
 }
 
-.account-visual img,
 .account-visual::after {
   position: absolute;
   inset: 0;
@@ -43,21 +46,14 @@
   z-index: -1;
 }
 
-.account-visual img {
-  object-fit: cover;
-  object-position: center 42%;
-}
-
-.account-visual-image-changing {
-  animation: account-product-image-in 520ms ease-out both;
-}
-
 .account-visual::after {
   content: '';
-  background: linear-gradient(180deg, transparent 36%, #17120c66 60%, #17120cf5 100%);
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), transparent 46%, rgba(0, 0, 0, 0.36));
 }
 
 .account-visual-copy {
+  position: relative;
+  z-index: 1;
   max-width: 21rem;
   color: #fff8ef;
   line-height: 1.5;
@@ -73,44 +69,62 @@
   text-wrap: balance;
 }
 
-.account-product-rotation {
-  margin-top: 18px;
-}
-
-.account-product-name {
+.account-visual-motion {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
-  font-size: 0.82rem;
-  font-weight: 600;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  pointer-events: none;
 }
 
-.account-product-dots {
-  display: flex;
-  gap: 6px;
-  margin-top: 10px;
+.account-motion-orbit {
+  position: absolute;
+  border: 1px solid rgba(201, 255, 228, 0.32);
+  border-radius: 50%;
+  box-shadow: inset 0 0 34px rgba(118, 234, 178, 0.08), 0 0 48px rgba(73, 191, 132, 0.08);
 }
 
-.account-product-dots span {
-  width: 6px;
-  height: 6px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.42);
+.account-motion-orbit-one {
+  top: -32%;
+  right: -26%;
+  width: 27rem;
+  aspect-ratio: 1;
+  animation: account-orbit-drift 12s ease-in-out infinite;
 }
 
-.account-product-dots .is-active {
-  width: 18px;
-  background: #ffffff;
+.account-motion-orbit-two {
+  bottom: -48%;
+  left: -30%;
+  width: 23rem;
+  aspect-ratio: 1;
+  animation: account-orbit-drift 15s ease-in-out infinite reverse;
 }
 
-@keyframes account-product-image-in {
-  from { opacity: 0.25; transform: scale(1.025); }
-  to { opacity: 1; transform: scale(1); }
+.account-motion-spark {
+  position: absolute;
+  width: 8px;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #d7ffe8;
+  box-shadow: 0 0 0 7px rgba(215, 255, 232, 0.07), 0 0 26px rgba(215, 255, 232, 0.72);
+  animation: account-spark-pulse 3.4s ease-in-out infinite;
+}
+
+.account-motion-spark-one { top: 23%; right: 23%; }
+.account-motion-spark-two { right: 44%; bottom: 18%; animation-delay: -1.7s; }
+
+@keyframes account-orbit-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(-18px, 14px, 0) rotate(9deg); }
+}
+
+@keyframes account-spark-pulse {
+  0%, 100% { opacity: 0.35; transform: scale(0.75); }
+  50% { opacity: 1; transform: scale(1); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .account-visual-image-changing { animation: none; }
+  .account-motion-orbit,
+  .account-motion-spark { animation: none; }
 }
 
 .account-content {
@@ -313,7 +327,18 @@
   }
 
   .account-visual {
-    display: none;
+    display: flex;
+    min-height: 14rem;
+    padding: 22px;
+  }
+
+  .account-visual-title {
+    margin-bottom: 6px;
+    font-size: clamp(1.8rem, 9vw, 2.35rem);
+  }
+
+  .account-visual-copy > p:not(.account-visual-title) {
+    font-size: 0.85rem;
   }
 
   .account-content {
