@@ -22,9 +22,57 @@ import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytic
 import { buildProductSeoRecord } from '../utils/productSeoData.js';
 import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification, getSchemaReviews, withProductReviewSummary } from '../utils/productSchema.js';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
-import { TP09_PRO_DESCRIPTION, TP09_PRO_FEATURES, TP09_PRO_SPECS } from '../utils/tp09ProContent';
+import {
+  TP09_PRO_DESCRIPTION,
+  TP09_PRO_FEATURES,
+  TP09_PRO_LISTING_DESCRIPTION_HTML,
+  TP09_PRO_LISTING_FAQS,
+  TP09_PRO_LISTING_SPECS,
+  TP09_PRO_LISTING_TITLE,
+  TP09_PRO_SPECS,
+} from '../utils/tp09ProContent';
+import {
+  TP02_PLUS_LISTING_DESCRIPTION_HTML,
+  TP02_PLUS_LISTING_FAQS,
+  TP02_PLUS_LISTING_SPECS,
+  TP02_PLUS_LISTING_TITLE,
+} from '../utils/tp02PlusContent';
+import {
+  TP02_THREE_IN_ONE_LISTING_DESCRIPTION_HTML,
+  TP02_THREE_IN_ONE_LISTING_FAQS,
+  TP02_THREE_IN_ONE_LISTING_SPECS,
+  TP02_THREE_IN_ONE_LISTING_TITLE,
+} from '../utils/tp02ThreeInOneContent';
+import {
+  TP12_LISTING_DESCRIPTION_HTML,
+  TP12_LISTING_FAQS,
+  TP12_LISTING_SPECS,
+  TP12_LISTING_TITLE,
+} from '../utils/tp12Content';
 import { getProductDetailContent } from '../utils/productDetailContent';
-import { getQ8ProContent } from '../utils/q8ProContent';
+import { DISPLAY_PRO_RING_DESCRIPTION_HTML, DISPLAY_PRO_RING_TITLE } from '../utils/displayProRingContent';
+import { TOUCH_SMART_RING_DESCRIPTION_HTML, TOUCH_SMART_RING_TITLE } from '../utils/touchSmartRingContent';
+import {
+  WALL_MOUNT_4319B_DESCRIPTION_HTML,
+  WALL_MOUNT_4319B_FAQS,
+  WALL_MOUNT_4319B_SPECS,
+  WALL_MOUNT_4319B_TITLE,
+} from '../utils/wallMount4319bContent';
+import {
+  SMART_BAND_2208A_DESCRIPTION_HTML,
+  SMART_BAND_2208A_FAQS,
+  SMART_BAND_2208A_SLUG,
+  SMART_BAND_2208A_SPECS,
+  SMART_BAND_2208A_TITLE,
+} from '../utils/smartBand2208AContent';
+import {
+  SMART_SLEEP_MONITOR_DESCRIPTION_HTML,
+  SMART_SLEEP_MONITOR_FAQS,
+  SMART_SLEEP_MONITOR_SLUG,
+  SMART_SLEEP_MONITOR_SPECS,
+} from '../utils/smartSleepMonitoringContent';
+import { getQ8ProContent, Q8_PRO_DESCRIPTION_HTML, Q8_PRO_FAQS, Q8_PRO_SPECS, Q8_PRO_TITLE } from '../utils/q8ProContent';
+import { QG830_DESCRIPTION_HTML, QG830_TITLE } from '../utils/qg830Content';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringWellness from '../assets/images/ring-wellness.webp';
 import ringDailySync from '../assets/images/ring-daily-sync.webp';
@@ -173,7 +221,7 @@ const ProductOverviewVideo: React.FC<{ src: string; title: string; className: st
       <div ref={wrapper} className={className}>{visible && <iframe
         src={`${embedUrl}?rel=0&modestbranding=1&playsinline=1&controls=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
         title={title}
-        className="h-full min-h-[220px] w-full"
+        className="block h-full min-h-0 w-full"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
         loading="lazy"
@@ -1044,9 +1092,21 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
   const tileBaseClass = dark
     ? 'tfx-trust-tile min-h-[4rem] min-w-0 rounded-xl border border-white/10 bg-white/5 px-2.5 py-2.5 text-left shadow-[0_10px_24px_rgba(0,0,0,0.12)] sm:min-h-[4.5rem] sm:px-3 sm:py-3'
     : 'tfx-trust-tile min-h-[4rem] min-w-0 rounded-xl border border-slate-200 bg-[#fbfaf7] px-2.5 py-2.5 text-left shadow-[0_1px_2px_rgba(15,23,42,0.04)] sm:min-h-[4.5rem] sm:px-3 sm:py-3';
-  const iconChipClass = dark
+  const tileAccentClasses: Record<keyof typeof TRUST_TILE_ICONS, string> = {
+    shipping: 'border-emerald-200 bg-emerald-50/80',
+    warranty: 'border-sky-200 bg-sky-50/80',
+    secure: 'border-violet-200 bg-violet-50/80',
+    exchange: 'border-amber-200 bg-amber-50/80',
+  };
+  const iconAccentClasses: Record<keyof typeof TRUST_TILE_ICONS, string> = {
+    shipping: 'bg-emerald-600/10 text-emerald-700',
+    warranty: 'bg-sky-600/10 text-sky-700',
+    secure: 'bg-violet-600/10 text-violet-700',
+    exchange: 'bg-amber-500/15 text-amber-800',
+  };
+  const iconChipClass = (icon: keyof typeof TRUST_TILE_ICONS) => dark
     ? 'tfx-trust-tile-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-500/15 text-primary-300'
-    : 'tfx-trust-tile-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#a9812f]/10 text-[#8a6a20]';
+    : `tfx-trust-tile-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconAccentClasses[icon]}`;
   return (
     <div className="relative mt-4">
       <style>{`
@@ -1110,7 +1170,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
         {productCheckoutTrustSignals.map((signal, index) => {
           const { title, mobileTitle, text, icon } = signal;
           const isWarrantyTile = title === 'Brand warranty support';
-          const tileClass = `${tileBaseClass} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'col-span-2' : ''}`;
+          const tileClass = `${tileBaseClass} ${dark ? '' : tileAccentClasses[icon]} tfx-trust-tile--${icon} ${isWarrantyTile && isWarrantyExpanded ? 'col-span-2' : ''}`;
           const tileStyle = { animationDelay: `${index * 90}ms` };
           const warrantyLinks = (
             <div className="mt-2 flex flex-wrap gap-1.5">
@@ -1121,7 +1181,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
           const mobileTile = mobileDetails && (
             <details className="product-mobile-detail product-trust-disclosure">
               <summary>
-                <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                <span className={iconChipClass(icon)}>{TRUST_TILE_ICONS[icon]}</span>
                 <span>{mobileTitle}</span>
               </summary>
               <div className="product-mobile-detail-body">
@@ -1145,7 +1205,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
                 {mobileTile}
                 <div className={desktopTileClass} style={tileStyle}>
                   <div className="flex items-start gap-3">
-                    <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                    <span className={iconChipClass(icon)}>{TRUST_TILE_ICONS[icon]}</span>
                     <div className="min-w-0">
                       <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
                       <a href="mailto:thefuturex.ptc@gmail.com" className={`${tileTextClass} hidden hover:underline sm:block`}>
@@ -1177,7 +1237,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
               {mobileTile}
               <div className={desktopTileClass} style={tileStyle}>
                 <div className="flex items-start gap-3">
-                  <span className={iconChipClass}>{TRUST_TILE_ICONS[icon]}</span>
+                  <span className={iconChipClass(icon)}>{TRUST_TILE_ICONS[icon]}</span>
                   <div className="min-w-0">
                     <p className={tileTitleClass}><span className="sm:hidden">{mobileTitle}</span><span className="hidden sm:inline">{title}</span></p>
                     {text && <p className={`${tileTextClass} hidden sm:block`}>{text}</p>}
@@ -1507,7 +1567,35 @@ export const ProductDetail: React.FC = () => {
   const { openLogin } = useAuthModal();
 
   const [product, setProduct] = useState<Product | null>(null);
+  const [productRouteId, setProductRouteId] = useState<string>();
   const isQ8ProProduct = Boolean(getQ8ProContent(product));
+  const productSlug = product ? getProductSlug(product) : '';
+  const isStandardBand = productSlug === SMART_BAND_2208A_SLUG;
+  const isSmartSleepMonitor = productSlug === SMART_SLEEP_MONITOR_SLUG;
+  const isDisplayProProduct = Boolean(product && (
+    productSlug === DISPLAY_PRO_PRODUCT_SLUG ||
+    toProductSlug(product.name) === DISPLAY_PRO_PRODUCT_SLUG
+  ));
+  const isTouchSmartRingListing = productSlug === 'tfx-touch-smart-ring';
+  const isWallMount4319bListing = productSlug === 'tfx-airwall-pro';
+  const isQg830Listing = productSlug === 'tfx-smart-10x-air';
+  const isTp09ProListing = productSlug === 'tfxhot-and-coolair-pro';
+  const isTp02PlusListing = productSlug === 'tfx-breeze-pro';
+  const isTp12Listing = productSlug === 'tfx-luxair-pro';
+  const isTp02ThreeInOneListing = productSlug === 'tfx-pureair-3-in-1';
+  const supplementalSpecs = isTp12Listing ? TP12_LISTING_SPECS
+    : isTp02ThreeInOneListing ? TP02_THREE_IN_ONE_LISTING_SPECS
+    : isTp02PlusListing ? TP02_PLUS_LISTING_SPECS : null;
+  const suppliedFanHeading = isQ8ProProduct ? Q8_PRO_TITLE
+    : isQg830Listing ? QG830_TITLE
+    : isTp09ProListing ? TP09_PRO_LISTING_TITLE
+    : isTp02PlusListing ? TP02_PLUS_LISTING_TITLE
+    : isTp12Listing ? TP12_LISTING_TITLE
+    : isTp02ThreeInOneListing ? TP02_THREE_IN_ONE_LISTING_TITLE
+    : isWallMount4319bListing ? WALL_MOUNT_4319B_TITLE : '';
+  const suppliedProductTitle = isDisplayProProduct ? DISPLAY_PRO_RING_TITLE
+    : isTouchSmartRingListing ? TOUCH_SMART_RING_TITLE
+    : isStandardBand ? SMART_BAND_2208A_TITLE : '';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -1519,7 +1607,8 @@ export const ProductDetail: React.FC = () => {
   const productThumbnailStripRef = useRef<HTMLDivElement | null>(null);
   const [addedToCart, setAddedToCart] = useState(false);
 
-  const [activeDetailTab, setActiveDetailTab] = useState<ProductDetailTabKey>('more-information');
+  const [activeMobileDetailTab, setActiveMobileDetailTab] = useState<ProductDetailTabKey>('more-information');
+  const [activeDesktopDetailTab, setActiveDesktopDetailTab] = useState<ProductDetailTabKey>('more-information');
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [activeTfx5DescriptionTab, setActiveTfx5DescriptionTab] = useState<'description' | 'additional' | 'warranty'>('description');
   const [isTfx5DescriptionExpanded, setIsTfx5DescriptionExpanded] = useState(false);
@@ -1556,82 +1645,84 @@ export const ProductDetail: React.FC = () => {
   const detailTabsAnchorRef = useRef<HTMLDivElement | null>(null);
   const detailTabsBarRef = useRef<HTMLElement | HTMLDivElement | null>(null);
   const trackedProductViewRef = useRef('');
+  const initialEmiProductRef = useRef('');
   const reviewImagePreviews = useMemo(
     () => reviewImages.map((file) => ({ file, url: URL.createObjectURL(file) })),
     [reviewImages]
   );
-  const loadProduct = useCallback(() => {
+
+  useEffect(() => {
     if (!id) return;
-    let cancelled = false;
+    let requestVersion = 0;
+    let displayedProduct: Product | undefined;
     setLoading(true);
-    setError(null);
-    const displayProduct = (p: Product) => {
-      if (cancelled) return;
-      setProduct(p);
-      setVisibleReviewCount(2);
-      setSelectedColor(p.colors?.[0] ?? null);
+    setActiveMobileDetailTab('more-information');
+    setShowAllMobileOverview(false);
+
+    const displayProduct = (nextProduct: Product) => {
+      const isFirstDisplay = !displayedProduct;
+      displayedProduct = nextProduct;
+      setProduct(nextProduct);
+      setProductRouteId(id);
+      if (isFirstDisplay) setVisibleReviewCount(2);
+      setSelectedColor((current) => (
+        (!isFirstDisplay && nextProduct.colors?.find((color) => color.name === current?.name)) ||
+        nextProduct.colors?.[0] ||
+        null
+      ));
       setLoading(false);
     };
-    const refreshReviews = (p: Product) => {
-      void getProductReviews(p.id).then((publicReviews) => {
-        if (!cancelled) setProduct((current) => current?.id === p.id ? withProductReviewSummary(current, publicReviews) : current);
-      });
+
+    const refreshReviews = async (currentProduct: Product, version: number) => {
+      const publicReviews = await getProductReviews(currentProduct.id);
+      if (version !== requestVersion || displayedProduct !== currentProduct) return;
+      setProduct((current) => current?.id === currentProduct.id ? withProductReviewSummary(current, publicReviews) : current);
     };
+
+    const loadProduct = async () => {
+      const version = ++requestVersion;
+      setError(null);
+      try {
+        const nextProduct = await getProductById(id);
+        if (version !== requestVersion) return;
+        if (nextProduct) {
+          displayProduct(nextProduct);
+          await refreshReviews(nextProduct, version);
+        } else if (!displayedProduct) {
+          setError('Product not found');
+        }
+      } catch {
+        if (version === requestVersion && !displayedProduct) setError('Failed to load product');
+      } finally {
+        if (version === requestVersion) setLoading(false);
+      }
+    };
+
     const fallback = getProductFallbackById(id);
-
-    if (fallback) {
-      displayProduct(fallback);
-      refreshReviews(fallback);
-      void getProductById(id).then((freshProduct) => {
-        if (freshProduct) {
-          displayProduct(freshProduct);
-          refreshReviews(freshProduct);
-        }
-      });
-      return () => {
-        cancelled = true;
-      };
-    }
-
-    void getProductById(id)
-      .then((p) => {
-        if (!p) {
-          if (!cancelled) setError('Product not found');
-        } else {
-          displayProduct(p);
-          refreshReviews(p);
-        }
-      })
-      .catch(() => {
-        if (!cancelled) setError('Failed to load product');
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
+    if (fallback) displayProduct(fallback);
+    void loadProduct();
+    if (fallback) void refreshReviews(fallback, requestVersion).catch(() => {});
+    window.addEventListener('products-updated', loadProduct);
     return () => {
-      cancelled = true;
+      requestVersion += 1;
+      window.removeEventListener('products-updated', loadProduct);
     };
   }, [id]);
 
-  useEffect(() => loadProduct(), [loadProduct]);
-
   useEffect(() => {
-    window.addEventListener('products-updated', loadProduct);
-    return () => window.removeEventListener('products-updated', loadProduct);
-  }, [loadProduct]);
-
-  useEffect(() => {
-    if (!product || !id) return;
+    if (!product || !id || productRouteId !== id) return;
     const canonicalSlug = getProductSlug(product);
     if (!canonicalSlug || id === canonicalSlug) return;
     navigate(`/product/${canonicalSlug}${window.location.search}`, { replace: true });
-  }, [id, navigate, product]);
+  }, [id, navigate, product, productRouteId]);
 
   useEffect(() => {
-    if (!product) return;
+    if (loading || !product || productRouteId !== id) return;
+    const productKey = getProductSlug(product);
+    if (initialEmiProductRef.current === productKey) return;
+    initialEmiProductRef.current = productKey;
     setShowEmiModal(!isQ8ProProduct || !window.matchMedia('(max-width: 767px)').matches);
-  }, [product, isQ8ProProduct]);
+  }, [id, isQ8ProProduct, loading, product, productRouteId]);
 
   useEffect(() => {
     if (!product) return;
@@ -1810,9 +1901,25 @@ export const ProductDetail: React.FC = () => {
     // per-family policy (fans = 1 year, everything else = 6 months) — never read from
     // product.warranty, product.specs.Warranty, or any hardcoded per-product profile,
     // so a stray backend value or an old profile constant can never override it.
-    const baseMergedSpecs: Record<string, string> = { ...bandSpecs, ...ringSpecs, ...fanSpecs, ...monitoringSpecs, ...(product?.specs || {}) };
     const detailedProductContent = getProductDetailContent(product);
-    if (detailedProductContent) Object.assign(baseMergedSpecs, detailedProductContent.specs);
+    const catalogSpecs = product?.specs || {};
+    const listingSpecs = supplementalSpecs || isQg830Listing
+      ? {
+          ...detailedProductContent?.specs,
+          ...Object.fromEntries(Object.entries(catalogSpecs).filter(([, value]) => {
+            const text = String(value ?? '').trim();
+            return text && !/^not (?:provided|specified)$/i.test(text);
+          })),
+        }
+      : { ...catalogSpecs, ...detailedProductContent?.specs };
+    const baseMergedSpecs: Record<string, string> = {
+      ...supplementalSpecs,
+      ...bandSpecs,
+      ...ringSpecs,
+      ...fanSpecs,
+      ...monitoringSpecs,
+      ...listingSpecs,
+    };
     const warrantySpecs = product ? getWarrantySpecEntries(warrantyFamily) : {};
     const mergedSpecs = { ...baseMergedSpecs, ...warrantySpecs };
     const hasModelSpec = Object.keys(mergedSpecs).some((key) => /model|sku|serial|code|item\s*no|product\s*id|pid/i.test(key));
@@ -1822,8 +1929,9 @@ export const ProductDetail: React.FC = () => {
 
     return Object.entries(specsWithModel)
       .filter(([, value]) => String(value || '').trim().length > 0)
+      .filter(([key, value]) => !isTp09ProListing || !/\b(?:hepa|filter\w*|purif\w*|air quality|ion\w*|plasma|disinfect\w*|sterili[sz]\w*)\b/i.test(`${key} ${value}`))
       .filter((entry) => !isV5BandProduct || !isInvalidTfx5BandSpec(entry));
-  }, [primaryProductModel, product?.category, product?.name, product?.specs]);
+  }, [isQg830Listing, isTp09ProListing, primaryProductModel, product?.category, product?.name, product?.specs, supplementalSpecs]);
   const topSpecEntries = useMemo(() => specEntries.slice(0, 6), [specEntries]);
   const selectedColorStock = selectedColor
     ? Math.max(0, Number(selectedColor.stock || 0) - Number(selectedColor.reservedStock || 0))
@@ -1910,7 +2018,7 @@ export const ProductDetail: React.FC = () => {
     const categoryUrl = absoluteUrl(categoryPath);
     const productUrl = absoluteUrl(productPath);
     setSeoMetadata({
-      title: seoRecord?.seoTitle || `${product.name} - TheFutureX`,
+      title: suppliedProductTitle || seoRecord?.seoTitle || `${product.name} - TheFutureX`,
       description: metaDescription,
       path: productPath,
       image,
@@ -1927,7 +2035,7 @@ export const ProductDetail: React.FC = () => {
       '@context': 'https://schema.org',
       '@type': 'Product',
       '@id': `${productUrl}#product`,
-      name: product.name,
+      name: suppliedProductTitle || product.name,
       description: metaDescription,
       ...(product.searchKeywords?.length ? { keywords: product.searchKeywords.join(', ') } : {}),
       image: productImages.map((item) => absoluteUrl(item)),
@@ -1978,7 +2086,7 @@ export const ProductDetail: React.FC = () => {
         {
           '@type': 'ListItem',
           position: 3,
-          name: product.name,
+          name: suppliedProductTitle || product.name,
           item: productUrl,
         },
       ],
@@ -1991,7 +2099,7 @@ export const ProductDetail: React.FC = () => {
       removeJsonLd('product-breadcrumb-json-ld');
       removeJsonLd('product-faq-json-ld');
     };
-  }, [canAdd, primaryProductModel, product]);
+  }, [canAdd, primaryProductModel, product, suppliedProductTitle]);
 
   useEffect(() => {
     if (user?.name && !reviewName) {
@@ -2258,17 +2366,16 @@ export const ProductDetail: React.FC = () => {
         10
       ) || 80;
       const offset = headerHeight + detailTabsHeight + 16;
-      const currentPosition = window.scrollY + offset;
       let currentTab: ProductDetailTabKey = 'more-information';
 
       for (const id of sectionIds) {
         const element = document.getElementById(id);
-        if (element && element.offsetTop <= currentPosition) {
+        if (element && element.getBoundingClientRect().top <= offset) {
           currentTab = id;
         }
       }
 
-      setActiveDetailTab((previous) => (previous === currentTab ? previous : currentTab));
+      setActiveDesktopDetailTab(currentTab);
     };
 
     updateActiveTabFromScroll();
@@ -2346,23 +2453,21 @@ export const ProductDetail: React.FC = () => {
         Object.entries(product.videoByColor).find(([key]) => normalizeOptionKey(key) === selectedColorKeyForVideo)?.[1] ||
         ''
       : '';
-  const isDisplayProProduct =
-    getProductSlug(product) === DISPLAY_PRO_PRODUCT_SLUG ||
-    toProductSlug(product.name) === DISPLAY_PRO_PRODUCT_SLUG;
   const productVideoUrl =
     selectedVariantVideoUrl ||
     selectedColorVideoUrl ||
     product.videoUrl ||
     (isDisplayProProduct ? DISPLAY_PRO_YOUTUBE_URL : '');
+  const galleryVideoUrl = getYouTubeEmbedUrl(productVideoUrl) ? '' : productVideoUrl;
   const productVideoIndex = displayedImages.length;
-  const displayedMediaCount = displayedImages.length + (productVideoUrl ? 1 : 0);
+  const displayedMediaCount = displayedImages.length + (galleryVideoUrl ? 1 : 0);
   const detailedProductContent = getProductDetailContent(product);
   const detailedProductSpecs: Record<string, string> = detailedProductContent?.specs || {};
-  const displayProductName = detailedProductSpecs['Model Number'] === 'TP-02 (3IN1)'
+  const displayProductName = suppliedProductTitle || (detailedProductSpecs['Model Number'] === 'TP-02 (3IN1)'
     ? product.name.replace(/LED\s+Light\b/gi, 'LED Display')
     : ['Q11', 'Q10'].includes(detailedProductSpecs['Model Number'])
       ? product.name.replace(/wireless\s+charging/gi, 'Magnetic Charging')
-    : product.name;
+    : product.name);
   const shortDescription = detailedProductContent?.description || stripHtml(product.description);
   const productSubtitle = detailedProductContent ? detailedProductContent.description : stripHtml(product.seoDescription || product.shortDescription || '');
   const productFamilyText = `${normalizedCategory} ${product.name}`.toLowerCase();
@@ -2730,12 +2835,22 @@ export const ProductDetail: React.FC = () => {
       : []),
   ];
   const existingSpecKeys = new Set(specEntries.map(([key]) => key.trim().toLowerCase()));
-  const productInformationSpecEntries = [
+  const existingProductInformationSpecEntries = [
     ...styleSpecEntries.filter(([key]) => !existingSpecKeys.has(key.trim().toLowerCase())),
     ...specEntries,
   ].filter(([key]) => !detailedProductContent || (!WARRANTY_SPEC_LABELS.has(key) && key !== 'Warranty'));
-  const warrantySpecEntries = productInformationSpecEntries.filter(([key]) => WARRANTY_SPEC_LABELS.has(key));
-  const specGroups = buildSpecGroups(productInformationSpecEntries);
+  const warrantySpecEntries = existingProductInformationSpecEntries.filter(([key]) => WARRANTY_SPEC_LABELS.has(key));
+  const suppliedSpecs = isQ8ProProduct ? Q8_PRO_SPECS
+    : isTp09ProListing ? TP09_PRO_LISTING_SPECS
+    : isWallMount4319bListing ? WALL_MOUNT_4319B_SPECS
+    : isStandardBand ? SMART_BAND_2208A_SPECS
+    : isSmartSleepMonitor ? SMART_SLEEP_MONITOR_SPECS : null;
+  const specGroups = buildSpecGroups(suppliedSpecs
+    ? Object.entries({
+        ...Object.fromEntries(existingProductInformationSpecEntries),
+        ...suppliedSpecs,
+      })
+    : existingProductInformationSpecEntries);
   const whyBuyCopy = shortDescription || (isSmartGlassesProduct
     ? `${product.name} is designed for hands-free capture, Bluetooth calling, music, voice assistant support, and everyday smart eyewear convenience in one modern frame.`
     : isTfxV5Band
@@ -2749,7 +2864,7 @@ export const ProductDetail: React.FC = () => {
       : monitoringProfile
         ? monitoringProfile.description
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`);
-  const productDescriptionHtml = detailedProductContent
+  const existingProductDescriptionHtml = detailedProductContent
     ? sanitizeProductDescriptionHtml([detailedProductContent.html, detailedProductContent.careHtml].join('\n'))
     : isTfxV5Band
     ? sanitizeProductDescriptionHtml(TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
@@ -2758,6 +2873,20 @@ export const ProductDetail: React.FC = () => {
       : isPremiumSmartBand
         ? sanitizeProductDescriptionHtml(TFX_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
         : '';
+  const suppliedDescriptionHtml = isDisplayProProduct ? DISPLAY_PRO_RING_DESCRIPTION_HTML
+    : isTouchSmartRingListing ? TOUCH_SMART_RING_DESCRIPTION_HTML
+    : isQ8ProProduct ? Q8_PRO_DESCRIPTION_HTML
+    : isQg830Listing ? QG830_DESCRIPTION_HTML
+    : isTp09ProListing ? TP09_PRO_LISTING_DESCRIPTION_HTML
+    : isTp02PlusListing ? TP02_PLUS_LISTING_DESCRIPTION_HTML
+    : isTp12Listing ? TP12_LISTING_DESCRIPTION_HTML
+    : isTp02ThreeInOneListing ? TP02_THREE_IN_ONE_LISTING_DESCRIPTION_HTML
+    : isWallMount4319bListing ? WALL_MOUNT_4319B_DESCRIPTION_HTML
+    : isStandardBand ? SMART_BAND_2208A_DESCRIPTION_HTML
+    : isSmartSleepMonitor ? SMART_SLEEP_MONITOR_DESCRIPTION_HTML : '';
+  const productDescriptionHtml = suppliedDescriptionHtml
+    ? sanitizeProductDescriptionHtml(suppliedDescriptionHtml) + (isSmartSleepMonitor ? '' : existingProductDescriptionHtml)
+    : existingProductDescriptionHtml;
   const ringOverviewSections = [
     {
       title: 'Smart Ring',
@@ -2953,6 +3082,9 @@ export const ProductDetail: React.FC = () => {
       image: premiumBandLifestyleHiking,
     },
   ];
+  const lifestyleOverviewSections = isTp09ProListing
+    ? TP09_PRO_FEATURES.slice(3, 9).map((feature) => feature.split(': ', 2))
+    : familyProfile.sections;
   const overviewSections: Array<{ title: string; copy: string; image?: string; imageWidth?: number; imageHeight?: number; video?: string; cleanBanner?: boolean; overlayText?: string }> = [
     {
       title: 'Product Overview',
@@ -2976,7 +3108,7 @@ export const ProductDetail: React.FC = () => {
           : isRingProProduct
             ? [...ringProBannerSections, ...ringOverviewSections]
             : ringOverviewSections
-        : familyProfile.sections.map(([title, copy], index) => ({
+        : lifestyleOverviewSections.map(([title, copy], index) => ({
             title,
             copy,
             image: storyImages[index + 1] || storyImages[0],
@@ -3036,12 +3168,22 @@ export const ProductDetail: React.FC = () => {
       { q: 'Does this product support app connectivity?', a: 'Compatible The FutureX products support app or Bluetooth connectivity for setup, summaries or connected features depending on the model.' },
     ],
   };
-  const productFaqs = [
+  const suppliedFaqs = isQ8ProProduct ? Q8_PRO_FAQS
+    : isTp09ProListing ? TP09_PRO_LISTING_FAQS
+    : isTp02PlusListing ? TP02_PLUS_LISTING_FAQS
+    : isTp12Listing ? TP12_LISTING_FAQS
+    : isTp02ThreeInOneListing ? TP02_THREE_IN_ONE_LISTING_FAQS
+    : isWallMount4319bListing ? WALL_MOUNT_4319B_FAQS
+    : isStandardBand ? SMART_BAND_2208A_FAQS
+    : isSmartSleepMonitor ? SMART_SLEEP_MONITOR_FAQS : [];
+  const suppliedFaqQuestions = new Set(suppliedFaqs.map(({ q }) => q));
+  const existingFaqs = [
     ...(detailedProductContent ? detailedProductContent.faqs : familyProductFaqs[productFamily] || familyProductFaqs.wearable),
     { q: 'What is the delivery timeline?', a: 'Orders are typically delivered within 3 to 7 business days.' },
     { q: 'Is there a return or refund policy?', a: 'TheFutureX follows a no-return, no-refund policy. If the product has a verified manufacturing defect at delivery, you can request an exchange within 7 days.' },
     { q: 'How do I claim warranty?', a: 'Register the product from the warranty registration page, then share feedback with your order ID, product name, issue description, and photo/video proof.' },
   ];
+  const productFaqs = [...suppliedFaqs, ...existingFaqs.filter(({ q }) => !suppliedFaqQuestions.has(q))];
   const fanMarketplaceDescription =
     shortDescription ||
     fanProfile?.description ||
@@ -3056,7 +3198,7 @@ export const ProductDetail: React.FC = () => {
     <ProductPaymentOfferOptions product={product} price={displayedPrice || salePrice} dark />
   ) : null;
   const scrollToDetailSection = (key: ProductDetailTabKey) => {
-    setActiveDetailTab(key);
+    if (window.innerWidth >= 640) setActiveDesktopDetailTab(key);
     window.setTimeout(() => {
       const element = document.getElementById(key);
       if (!element) return;
@@ -3070,7 +3212,7 @@ export const ProductDetail: React.FC = () => {
     }, 0);
   };
   const selectMobileDetailTab = (key: ProductDetailTabKey) => {
-    if (detailTabsFixed && key !== activeDetailTab) {
+    if (detailTabsFixed && key !== activeMobileDetailTab) {
       const anchor = detailTabsAnchorRef.current;
       const tabs = detailTabsBarRef.current;
       if (anchor && tabs) {
@@ -3078,7 +3220,7 @@ export const ProductDetail: React.FC = () => {
         window.scrollTo({ top, behavior: 'instant' });
       }
     }
-    setActiveDetailTab(key);
+    setActiveMobileDetailTab(key);
   };
   const tfx5Showcase = (
     <img
@@ -3110,7 +3252,7 @@ export const ProductDetail: React.FC = () => {
           </button>
         ))}
       </div>
-      <div role="tabpanel" aria-labelledby={`tfx5-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-8">
+      <div role="tabpanel" aria-labelledby={`tfx5-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-6">
         {activeTfx5DescriptionTab === 'description' && (
           <div>
             {productDescriptionHtml ? (
@@ -3133,7 +3275,7 @@ export const ProductDetail: React.FC = () => {
             <section>
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Product specifications</h3>
               <div className="overflow-hidden rounded-xl border border-slate-200">
-                {productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).map(([key, value], index) => (
+            {existingProductInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).map(([key, value], index) => (
                   <div key={key} className={`grid grid-cols-[0.38fr_0.62fr] gap-3 px-3 py-3 text-xs sm:px-4 sm:text-sm ${index % 2 ? 'bg-slate-50' : 'bg-white'}`}>
                     <span className="font-medium text-slate-500">{formatSpecLabel(key)}</span>
                     <span className="leading-5 text-slate-800">{String(value ?? '')}</span>
@@ -3190,7 +3332,7 @@ export const ProductDetail: React.FC = () => {
           </button>
         ))}
       </div>
-      <div role="tabpanel" aria-labelledby={`product-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-8">
+      <div role="tabpanel" aria-labelledby={`product-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-6">
         {activeTfx5DescriptionTab === 'description' && (
           <div>
             {productDescriptionHtml ? (
@@ -3203,7 +3345,7 @@ export const ProductDetail: React.FC = () => {
                 {overviewSections[0]?.copy || whyBuyCopy}
               </p>
             )}
-            {(shortDescription || overviewSections[0]?.copy || whyBuyCopy).length > 240 && (
+            {(suppliedDescriptionHtml || (shortDescription || overviewSections[0]?.copy || whyBuyCopy).length > 240) && (
               <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-3 text-sm font-bold text-[#8f2428]">
                 {isTfx5DescriptionExpanded ? 'Read Less' : 'Read More'}
               </button>
@@ -3212,11 +3354,11 @@ export const ProductDetail: React.FC = () => {
         )}
         {activeTfx5DescriptionTab === 'additional' && (
           <div className="space-y-5">
-            {productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).length > 0 && (
+            {existingProductInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).length > 0 && (
               <section>
                 <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Product specifications</h3>
                 <div className="overflow-hidden rounded-xl border border-slate-200">
-                  {productInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).map(([key, value], index) => (
+                  {existingProductInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).map(([key, value], index) => (
                     <div key={key} className={`grid grid-cols-[0.38fr_0.62fr] gap-3 px-3 py-3 text-xs sm:px-4 sm:text-sm ${index % 2 ? 'bg-slate-50' : 'bg-white'}`}>
                       <span className="font-medium text-slate-500">{formatSpecLabel(key)}</span>
                       <span className="leading-5 text-slate-800">{String(value ?? '')}</span>
@@ -3457,7 +3599,7 @@ export const ProductDetail: React.FC = () => {
             <ProductImageCarousel
               images={displayedImages}
               fallbackImage={getProductFallbackImage(product)}
-              videoUrl={productVideoUrl}
+              videoUrl={galleryVideoUrl}
               alt={product.name}
               selectedIndex={selectedImageIndex}
               onSelectIndex={setSelectedImageIndex}
@@ -3484,7 +3626,7 @@ export const ProductDetail: React.FC = () => {
                     }} />
                   </button>
                 ))}
-                  {productVideoUrl && (
+                  {galleryVideoUrl && (
                   <button
                     type="button"
                     onClick={() => setSelectedImageIndex(productVideoIndex)}
@@ -3584,8 +3726,8 @@ export const ProductDetail: React.FC = () => {
                 {isMegaPriceDropBand ? 'Mega Price Drop' : 'Limited Time Offer'}
               </div>
             )}
-            <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
-              {displayProductName}
+            <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] break-words text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
+              {suppliedFanHeading || displayProductName}
             </h1>
             <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]">
               Overview
@@ -3750,18 +3892,6 @@ export const ProductDetail: React.FC = () => {
                 </div>
               )}
 
-              <div className="mt-5 flex items-center gap-2">
-                <span className="relative flex h-2 w-2">
-                  {canAdd && (
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-                  )}
-                  <span className={`relative inline-flex h-2 w-2 rounded-full ${canAdd ? 'bg-emerald-600' : 'bg-red-500'}`} />
-                </span>
-                <p className={`text-xs font-semibold uppercase tracking-[0.08em] ${canAdd ? 'text-emerald-700' : 'text-red-600'}`}>
-                  {canAdd ? 'In stock' : 'Out of stock'}
-                </p>
-              </div>
-
               <ProductCheckoutTrustBlock product={product} productFamily={productFamily} mobileDetails={isQ8ProProduct} />
 
               <div ref={mobileCtaAnchorRef} className={`product-purchase-actions mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2 ${canAdd ? 'product-purchase-actions--in-stock' : ''}`}>
@@ -3857,9 +3987,9 @@ export const ProductDetail: React.FC = () => {
                 }
                 selectMobileDetailTab(tab.key);
               }}
-              aria-pressed={activeDetailTab === tab.key}
+              aria-pressed={activeMobileDetailTab === tab.key}
               className={`product-detail-sticky-tab snap-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold tracking-wide transition ${
-                activeDetailTab === tab.key ? 'is-active border-[#a9812f]' : 'border-transparent'
+                activeMobileDetailTab === tab.key ? 'is-active border-[#a9812f]' : 'border-transparent'
               }`}
             >
               {tab.label}
@@ -3871,13 +4001,13 @@ export const ProductDetail: React.FC = () => {
             <a
               key={tab.key}
               href={`#${tab.key}`}
-              aria-current={activeDetailTab === tab.key ? 'location' : undefined}
+              aria-current={activeDesktopDetailTab === tab.key ? 'location' : undefined}
               onClick={(event) => {
                 event.preventDefault();
                 scrollToDetailSection(tab.key);
               }}
               className={`product-detail-sticky-tab snap-center whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold tracking-wide transition sm:px-5 sm:text-base ${
-                activeDetailTab === tab.key ? 'is-active border-[#a9812f]' : 'border-transparent'
+                activeDesktopDetailTab === tab.key ? 'is-active border-[#a9812f]' : 'border-transparent'
               }`}
             >
               {getDetailTabLabel(tab)}
@@ -3886,7 +4016,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </nav>
 
-      {activeDetailTab === 'more-information' && mobileProductBannerSections.length > 0 && (
+      {activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length > 0 && (
         <section className={`product-mobile-banners ${productFamily === 'ring' && isDisplayProduct ? 'product-mobile-banners--display' : ''} bg-white px-4 py-4 sm:hidden`}>
           <div className="space-y-3">
             {(showAllProductBannersOnMobile || showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section, index) => (
@@ -3955,12 +4085,12 @@ export const ProductDetail: React.FC = () => {
         </section>
       )}
 
-      {!isQ8ProProduct && activeDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
+      {!isQ8ProProduct && activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
         <section className="bg-white px-4 py-5 sm:hidden">{overviewFallback}</section>
       )}
 
-      <section className={`product-mobile-details product-scroll-section bg-white px-4 py-5 sm:hidden ${activeDetailTab === 'more-information' || (isQ8ProProduct && activeDetailTab === 'description') ? 'hidden' : ''}`}>
-        {!isQ8ProProduct && activeDetailTab === 'description' && (detailedProductContent ? generalArrangedDescription : (
+      <section className={`product-mobile-details product-scroll-section bg-white px-4 py-5 sm:hidden ${activeMobileDetailTab === 'more-information' || (isQ8ProProduct && activeMobileDetailTab === 'description') ? 'hidden' : ''}`}>
+        {!isQ8ProProduct && activeMobileDetailTab === 'description' && (detailedProductContent ? generalArrangedDescription : (
           <div className="space-y-4">
             <div className={isTfxV5Band ? '' : 'rounded border border-slate-200'}>
               {!isTfxV5Band && <p className="border-b border-slate-200 px-3 py-2.5 text-sm font-bold text-slate-900">
@@ -3976,7 +4106,7 @@ export const ProductDetail: React.FC = () => {
                   {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
                 </p>
               ))}
-              {!isTfxV5Band && (shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260 && (
+              {!isTfxV5Band && (isStandardBand || (shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260) && (
                 <button
                   type="button"
                   onClick={() => setIsDescriptionExpanded((prev) => !prev)}
@@ -3993,7 +4123,7 @@ export const ProductDetail: React.FC = () => {
           </div>
         ))}
 
-        {activeDetailTab === 'features' && (
+        {activeMobileDetailTab === 'features' && (
           <div>
             <h2 className="store-section-heading">Key features</h2>
             <p className="store-section-description">The product highlights at a glance.</p>
@@ -4003,11 +4133,11 @@ export const ProductDetail: React.FC = () => {
           </div>
         )}
 
-        {activeDetailTab === 'specs' && (
+        {activeMobileDetailTab === 'specs' && (
           <ProductSpecifications groups={specGroups} formatLabel={formatSpecLabel} renderIcon={title => <SpecGroupIcon title={title} />} />
         )}
 
-        {activeDetailTab === 'battery' && (
+        {activeMobileDetailTab === 'battery' && (
           <div>
             <h2 className="store-section-heading">Battery &amp; power</h2>
             {(mobileBatterySpecEntries.length > 0 || batteryFeatureEntries.length > 0) ? (
@@ -4030,7 +4160,7 @@ export const ProductDetail: React.FC = () => {
           </div>
         )}
 
-        {activeDetailTab === 'faq' && (
+        {activeMobileDetailTab === 'faq' && (
           <div>
             <h2 className="store-section-heading">Frequently asked questions</h2>
             <div className="store-product-faq mt-4 space-y-3">
@@ -4062,7 +4192,7 @@ export const ProductDetail: React.FC = () => {
         <section
           id="more-information"
           aria-labelledby="q8-pro-overview-title"
-          className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 ${activeDetailTab === 'more-information' ? '' : 'hidden'}`}
+          className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 ${activeMobileDetailTab === 'more-information' ? '' : 'hidden'}`}
         >
           <div className="mx-auto max-w-[1200px]">
             <h2 id="q8-pro-overview-title" className="store-section-heading mb-4">Product Overview</h2>
@@ -4152,9 +4282,9 @@ export const ProductDetail: React.FC = () => {
 
       <section
         id="description"
-        className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 lg:px-8 lg:py-14 ${isQ8ProProduct && activeDetailTab === 'description' ? '' : 'hidden'}`}
+        className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 lg:px-8 lg:py-14 ${isQ8ProProduct && activeMobileDetailTab === 'description' ? '' : 'hidden'}`}
       >
-        <div className={`mx-auto ${showProductOverview ? 'max-w-7xl' : 'max-w-5xl'} ${isTfxV5Band ? '' : 'rounded border border-slate-200 p-3 sm:p-4'}`}>
+        <div className={`mx-auto ${isQ8ProProduct || showProductOverview ? 'max-w-7xl' : 'max-w-5xl'}`}>
           {arrangedProductInformation}
         </div>
       </section>

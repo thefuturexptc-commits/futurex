@@ -172,3 +172,172 @@ export const getDisplayProRingContent = (product?: Pick<Product, 'name' | 'slug'
   const identifiers = [product.name, product.specs?.Model, product.specs?.['Model Number'], product.specs?.['Model Name'], product.slug?.replace(/-/g, ' ')].filter(Boolean).join(' ');
   return /\bdisplay\s+pro\s+smart\s+ring\b|\bq\s*-?\s*11\b/i.test(identifiers) || product.slug === 'tfx-display-pro-smart-ring' || product.slug === 'tfx-display-pro-smart-ring-premium-tracking-with-display-and-wireless-charging' ? DISPLAY_PRO_RING_CONTENT : null;
 };
+
+export const DISPLAY_PRO_RING_TITLE = "The FutureX TFX Display Pro Smart Ring – OLED Touch Display, Heart Rate, SpO2, Sleep & Fitness Tracking";
+
+export const DISPLAY_PRO_RING_DESCRIPTION_HTML = `
+  <h2>Display Pro at a glance</h2>
+  <p><strong>Smarter Wellness. Right at Your Fingertips.</strong></p>
+  <p>Experience a new way of tracking your everyday wellness with the <strong>FutureX TFX Display Pro Smart Ring</strong>, a premium fitness tracking ring featuring an integrated <strong>OLED touch display</strong>, heart rate monitoring, blood oxygen (SpO2) tracking, sleep monitoring and Bluetooth app connectivity.</p>
+  <p>Unlike traditional screenless smart rings, the FutureX Display Pro lets you view supported information directly on your finger, including time, heart rate, SpO2, steps, calories and battery status.</p>
+  <p>Its lightweight steel construction, compact design, Qring app support and convenient magnetic charging make it a practical wearable for work, fitness, travel and everyday living.</p>
+  <p>Whether you're searching for a <strong>smart ring with display in India</strong>, an OLED fitness ring or a compact alternative to a traditional smartwatch, the FutureX Display Pro brings essential fitness insights and modern wearable technology together.</p>
+  <h2>Key Features</h2>
+  <ul>
+    <li><strong>OLED Touch Display</strong> – View supported wellness information directly on the ring.</li>
+    <li><strong>Touch Control Navigation</strong> – Navigate available screens using the integrated touch area.</li>
+    <li><strong>Heart Rate Monitoring</strong> – Check heart rate readings and review trends.</li>
+    <li><strong>SpO2 Blood Oxygen Tracking</strong> – Access supported blood oxygen measurements.</li>
+    <li><strong>Sleep Monitoring</strong> – Review sleep-related information and daily resting patterns.</li>
+    <li><strong>Daily Activity Tracking</strong> – Monitor steps, estimated calories and movement.</li>
+    <li><strong>HRV &amp; Wellness Insights</strong> – Review supported heart rate variability and wellness trends.</li>
+    <li><strong>Temperature Monitoring</strong> – Access supported temperature-related readings.</li>
+    <li><strong>Qring App Connectivity</strong> – Connect the smart ring to a compatible smartphone.</li>
+    <li><strong>Bluetooth Connectivity</strong> – Synchronize available health and activity information.</li>
+    <li><strong>Magnetic Charging Dock</strong> – Recharge using the supplied charging dock and USB cable.</li>
+    <li><strong>4–5 Day Battery Life</strong> – Designed for several days of typical use, depending on settings.</li>
+  </ul>
+  <h2>The FutureX Display Pro Smart Ring</h2>
+  <h3>Smart Technology. Premium Design.</h3>
+  <p><strong>A Smarter Way to Stay Connected to Your Wellness.</strong></p>
+  <p>Meet the FutureX TFX Display Pro Smart Ring, a modern wearable combining everyday fitness monitoring with the convenience of a built-in OLED touch display.</p>
+  <p>Its compact ring-style construction offers an alternative to larger smartwatches while keeping supported health and activity information easily accessible.</p>
+  <p>Designed for modern lifestyles, this smart ring can accompany you throughout your working day, during exercise, while travelling and overnight.</p>
+  <p><strong>Why You'll Love It:</strong> Enjoy a compact fitness tracker that combines modern styling with convenient on-ring information.</p>
+  <h2>OLED Touch Display</h2>
+  <h3>Your Fitness Information at a Touch</h3>
+  <p><strong>See More. Without Reaching for Your Phone.</strong></p>
+  <p>The FutureX Display Pro features an integrated OLED touch display that provides quick access to supported information directly from the ring.</p>
+  <p>Depending on the selected screen, you can view:</p>
+  <ul>
+    <li>Time</li>
+    <li>Heart rate</li>
+    <li>Blood oxygen (SpO2)</li>
+    <li>Step count</li>
+    <li>Estimated calories</li>
+    <li>Battery status</li>
+    <li>Supported sports screens</li>
+  </ul>
+  <p>Navigate through available information using the touch-sensitive area.</p>
+  <p><strong>Why It Matters:</strong> Check essential information from your finger without opening the smartphone app for every supported reading.</p>
+  <h2>Daily Health &amp; Fitness Tracking</h2>
+  <h3>Understand Your Wellness Better</h3>
+  <p><strong>One Smart Ring. Multiple Fitness Insights.</strong></p>
+  <p>The FutureX Display Pro Smart Ring supports everyday wellness tracking through integrated sensors and its connected smartphone application.</p>
+  <p>Monitor heart rate, SpO2, sleep patterns, activity information and supported temperature and HRV trends.</p>
+  <p>Review daily movement, steps and estimated calories to understand your activity habits.</p>
+  <p><strong>Why It Matters:</strong> Keep useful wellness and activity information together in a wearable designed for everyday use.</p>
+  <h2>Qring App Connectivity</h2>
+  <h3>Your Wellness Data in One Place</h3>
+  <p><strong>Connect. Synchronize. Review.</strong></p>
+  <p>Connect the FutureX Display Pro Smart Ring to the <strong>Qring app</strong> using Bluetooth.</p>
+  <p>The companion application helps you access supported health measurements, activity history, sleep information and device settings.</p>
+  <p>Keep the ring near your smartphone during initial pairing and enable the required permissions.</p>
+  <p><strong>Why It Matters:</strong> Review supported wellness information and tracking history through one connected application.</p>
+  <h2>Magnetic Charging</h2>
+  <h3>Convenient Charging for Everyday Use</h3>
+  <p><strong>Charge Simply. Stay Connected.</strong></p>
+  <p>The FutureX Display Pro Smart Ring includes a magnetic charging dock and compatible USB charging cable.</p>
+  <p>Place the ring on the charging dock, align it correctly and connect the dock to a suitable USB power source.</p>
+  <p>The rechargeable battery is designed to provide approximately 4–5 days of use depending on usage patterns and enabled functions.</p>
+  <p><strong>Why It Matters:</strong> A dedicated charging dock makes recharging straightforward and convenient.</p>
+  <h2>The FutureX Display Pro Smart Ring – Smart Fitness Tracking with an OLED Display</h2>
+  <p>Looking for a <strong>smart ring with a display, heart rate monitoring and sleep tracking</strong>?</p>
+  <p>The FutureX TFX Display Pro Smart Ring brings together modern wearable design and everyday fitness technology in a compact ring.</p>
+  <p>Featuring an integrated OLED touch display, supported health monitoring functions, Bluetooth connectivity and magnetic charging, this smart ring helps you access important wellness information without relying entirely on a conventional smartwatch.</p>
+  <h3>Built-In OLED Touch Display</h3>
+  <p>The integrated OLED screen is one of the FutureX Display Pro's defining features.</p>
+  <p>View supported information such as time, heart rate, SpO2, steps, estimated calories, battery status and sports screens directly on the ring.</p>
+  <h3>Heart Rate &amp; SpO2 Monitoring</h3>
+  <p>Monitor supported heart rate and blood oxygen readings using the ring's sensors and compatible application.</p>
+  <p>Keep the ring comfortably fitted and your hand relatively still when taking measurements.</p>
+  <h3>Sleep &amp; Activity Tracking</h3>
+  <p>Wear the smart ring during sleep to record available sleep-related information.</p>
+  <p>Throughout the day, monitor steps, estimated calories and activity data to build awareness of your daily movement.</p>
+  <h3>HRV &amp; Temperature Insights</h3>
+  <p>The FutureX Display Pro also supports HRV-related trends and temperature monitoring features.</p>
+  <p>Review available measurements through the compatible app for general wellness awareness.</p>
+  <h3>Qring App Support</h3>
+  <p>Connect your smart ring to the Qring application through Bluetooth.</p>
+  <p>Synchronize supported measurements, review activity information and manage available device settings from your smartphone.</p>
+  <h3>Comfortable Everyday Design</h3>
+  <p>With its compact steel construction and lightweight ring-style design, the FutureX Display Pro is intended for comfortable everyday wear.</p>
+  <p>Choose the correct ring size to maintain a secure fit and consistent sensor contact.</p>
+  <h3>Rechargeable Battery &amp; Magnetic Charging</h3>
+  <p>Enjoy approximately 4–5 days of typical battery life, depending on usage.</p>
+  <p>Recharge using the supplied magnetic charging dock and compatible USB cable.</p>
+  <h3>Why Choose the FutureX Display Pro Smart Ring?</h3>
+  <p>If you're looking for a <strong>fitness tracking smart ring with an OLED touch display</strong>, the FutureX Display Pro offers a combination of convenient on-ring viewing, everyday wellness monitoring, app connectivity and premium styling.</p>
+  <p><strong>Discover Smart Fitness Tracking at Your Fingertips with The FutureX.</strong></p>
+  <p><em>Important: The smart ring is intended for general fitness and wellness monitoring. It is not a medical device and should not be used for medical diagnosis, treatment or emergency decisions.</em></p>
+  <h2>How to Use the FutureX Display Pro Smart Ring</h2>
+  <h3>Step 1. Choose the Correct Ring Size</h3>
+  <p>Select a ring size that fits securely and comfortably.</p>
+  <p>The ring should not be excessively tight or loose. A suitable fit helps maintain consistent sensor contact with your skin.</p>
+  <h3>Step 2. Wear the Ring Correctly</h3>
+  <p>Wear the smart ring on a comfortable finger, keeping its sensor area in contact with your skin.</p>
+  <p>Remove the ring if you experience irritation, swelling or discomfort.</p>
+  <h3>Step 3. Charge the Smart Ring</h3>
+  <ol>
+    <li>Place the ring on the supplied magnetic charging dock.</li>
+    <li>Align the ring correctly with the charging area.</li>
+    <li>Connect the charging dock to a suitable USB power source.</li>
+    <li>Allow the ring to charge before initial use.</li>
+    <li>Disconnect the charging accessory when charging is complete.</li>
+  </ol>
+  <h3>Step 4. Download the Qring App</h3>
+  <ol>
+    <li>Open the Apple App Store or Google Play Store.</li>
+    <li>Search for the Qring app or use the QR code provided in the manual.</li>
+    <li>Download and install the application.</li>
+    <li>Enable Bluetooth on your smartphone.</li>
+    <li>Grant the permissions required for your chosen functions.</li>
+  </ol>
+  <h3>Step 5. Connect the Smart Ring</h3>
+  <p>Open Qring and select the device pairing option.</p>
+  <p>Choose the compatible smart ring from the available devices and complete the connection process.</p>
+  <p>Keep the ring close to your smartphone during pairing.</p>
+  <h3>Step 6. Use the OLED Touch Display</h3>
+  <p>Activate the display using the touch-sensitive area.</p>
+  <p>Navigate between supported screens to view available information, including time, heart rate, SpO2, steps, calories and battery status.</p>
+  <h3>Step 7. Monitor Heart Rate &amp; SpO2</h3>
+  <p>Wear the ring securely with the sensors touching your skin.</p>
+  <p>Select the supported measurement function, remain relatively still and allow the measurement to complete.</p>
+  <p>Review the available results on the ring or in the connected app.</p>
+  <h3>Step 8. Track Sleep &amp; Daily Activity</h3>
+  <p>Wear the ring comfortably during sleep and daily activities.</p>
+  <p>Open Qring to review available sleep information, activity records, steps and estimated calories.</p>
+  <h3>Step 9. Synchronize Your Data</h3>
+  <p>Enable Bluetooth, open Qring and keep the ring within connection range.</p>
+  <p>Allow the application to synchronize supported measurements and activity history.</p>
+  <h3>Step 10. Clean &amp; Store the Ring</h3>
+  <p>Clean the ring using a soft, dry or slightly damp cloth.</p>
+  <p>Keep the sensors and charging contacts clean and dry. Store the ring in a suitable location when not in use.</p>
+  <h2>Safety &amp; Care</h2>
+  <ul>
+    <li>Use the smart ring for general fitness and wellness tracking only.</li>
+    <li>Do not rely on measurements for medical diagnosis or treatment.</li>
+    <li>Avoid exposing the ring to extreme temperatures and harsh chemicals.</li>
+    <li>Remove the ring if it causes discomfort or irritation.</li>
+    <li>Do not charge the ring while wet.</li>
+    <li>Keep the magnetic charging dock away from water.</li>
+    <li>Avoid dropping, crushing or modifying the device.</li>
+    <li>Do not expose the OLED display to sharp objects or excessive pressure.</li>
+    <li>Clean and dry the charging contacts before recharging.</li>
+    <li>Avoid hot water, steam rooms and high-pressure water activities.</li>
+    <li>Do not assume the ring is suitable for swimming or diving until its water-resistance specification is confirmed.</li>
+  </ul>
+  <h2>Warranty &amp; Support</h2>
+  <p><strong>6-Month Limited Warranty</strong></p>
+  <p>The FutureX Display Pro Smart Ring is covered by the website-listed 6-month limited warranty, subject to the applicable terms.</p>
+  <p><strong>Free Shipping Across India</strong></p>
+  <p>Available as listed on the FutureX website.</p>
+  <p><strong>Secure Checkout</strong></p>
+  <p>Supported payment methods include UPI, cards and wallets.</p>
+  <p><strong>7-Day Exchange Review</strong></p>
+  <p>For verified delivery defects, subject to the applicable exchange policy.</p>
+  <p><strong>Customer Support</strong></p>
+  <p>Email: <a href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a></p>
+  <p>Phone: <a href="tel:+918530340676">8530340676</a></p>
+  <p><strong>The FutureX – Smart Technology for Everyday Living.</strong></p>
+`;

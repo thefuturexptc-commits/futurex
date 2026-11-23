@@ -142,3 +142,363 @@ export const getTp09Content = (product?: Pick<Product, 'name' | 'slug' | 'specs'
     faqs: TP09_PRO_FAQS.map(({ q, a }) => ({ q: label(q), a: label(a) })),
   };
 };
+
+export const TP09_PRO_LISTING_TITLE = "The FutureX TP09 PRO Bladeless Hot & Cool Tower Fan with PTC Ceramic Heating, Remote Control, 180° Oscillation & ABS Body";
+
+export const TP09_PRO_LISTING_DESCRIPTION_HTML = `
+  <h2>TP09 Pro at a glance</h2>
+  <p>Experience year-round comfort with the <strong>FutureX TP09 PRO Bladeless Hot &amp; Cool Tower Fan</strong>, a modern 2-in-1 cooling fan and heater designed for convenient indoor use.</p>
+  <p>Combining bladeless airflow technology with PTC ceramic heating, the TP09 PRO offers comfortable air circulation during warmer weather and heated airflow when temperatures drop.</p>
+  <p>Featuring <strong>10 adjustable airflow speeds, 180° automatic oscillation, a 9-hour timer, remote control and touch controls</strong>, this tower fan makes it easy to customise your everyday comfort.</p>
+  <p>Its contemporary bladeless design and ABS body make it a practical choice for modern bedrooms, living rooms, offices and study spaces.</p>
+  <h2>Key Features</h2>
+  <ul>
+    <li><strong>2-in-1 Hot &amp; Cool Modes</strong> – Cooling airflow and PTC ceramic heating in one appliance.</li>
+    <li><strong>Bladeless Airflow Technology</strong> – Modern airflow outlet without exposed conventional fan blades.</li>
+    <li><strong>10 Adjustable Airflow Speeds</strong> – Customise cooling airflow intensity to suit your comfort.</li>
+    <li><strong>PTC Ceramic Heating</strong> – Integrated heating technology for comfortable warm airflow.</li>
+    <li><strong>180° Automatic Oscillation</strong> – Wider airflow distribution across your room.</li>
+    <li><strong>9-Hour Timer</strong> – Schedule operation according to your daily routine.</li>
+    <li><strong>Remote Control Operation</strong> – Conveniently control fan functions from a distance.</li>
+    <li><strong>Touch Control Panel</strong> – Easy access to essential operating functions.</li>
+    <li><strong>ABS Body</strong> – Contemporary exterior designed for everyday indoor use.</li>
+    <li><strong>Easy Cleaning</strong> – Accessible exterior surfaces and air inlet openings.</li>
+    <li><strong>Space-Saving Tower Design</strong> – Modern vertical design suitable for different indoor arrangements.</li>
+  </ul>
+  <h2>The FutureX TP09 PRO Bladeless Tower Fan</h2>
+  <h3>Smart Cooling. Comfortable Heating. One Modern Design.</h3>
+  <p>Bring convenience and contemporary comfort into your home with the FutureX TP09 PRO.</p>
+  <p>Designed for year-round use, this bladeless hot and cool tower fan combines adjustable cooling airflow and PTC ceramic heating in a single appliance.</p>
+  <p>Enjoy refreshing air circulation during warmer months and comfortable heated airflow during colder weather.</p>
+  <p>Its modern tower design complements bedrooms, living rooms, offices and other indoor spaces.</p>
+  <h2>Hot &amp; Cool Technology</h2>
+  <h3>Stay Comfortable Through Every Season.</h3>
+  <p>Why choose separate appliances when one fan can provide both cooling airflow and heating?</p>
+  <p>The TP09 PRO features two operating modes.</p>
+  <p><strong>Cool Mode</strong></p>
+  <p>Circulates room-temperature air to create a refreshing breeze.</p>
+  <p><strong>Hot Mode</strong></p>
+  <p>Uses PTC ceramic heating technology to provide warm airflow.</p>
+  <p>Switch between operating modes according to the season and your comfort preferences.</p>
+  <p><em>Cooling mode circulates ambient air and does not provide refrigerated cooling like an air conditioner.</em></p>
+  <h2>10-Speed Airflow Control</h2>
+  <h3>From Gentle Breeze to Stronger Airflow.</h3>
+  <p>Choose from 10 airflow speeds to personalise your cooling experience.</p>
+  <p>Select a lower setting when you prefer gentle airflow or increase the speed for stronger air circulation.</p>
+  <p>Whether you're working, relaxing or spending time indoors, adjustable speed control allows you to choose the airflow intensity that suits your needs.</p>
+  <h2>PTC Ceramic Heating</h2>
+  <h3>Warm Air When You Need It.</h3>
+  <p>The integrated PTC ceramic heating system provides heated airflow during colder weather.</p>
+  <p>Air enters through the inlet, passes through the heating system and exits through the bladeless outlet.</p>
+  <p>This combination of heating and airflow makes the TP09 PRO a practical appliance for seasonal indoor comfort.</p>
+  <h2>180° Automatic Oscillation</h2>
+  <h3>Wider Airflow. Greater Flexibility.</h3>
+  <p>Enjoy broader airflow distribution with the 180° automatic oscillation function.</p>
+  <p>Activate the Sway control to move the airflow across a wider area.</p>
+  <p>Turn oscillation off when you prefer more focused airflow.</p>
+  <h2>Remote &amp; Touch Control</h2>
+  <h3>Everyday Comfort at Your Fingertips.</h3>
+  <p>Manage your fan settings using the integrated control panel or supplied remote control.</p>
+  <p>The manual illustrates the following remote functions:</p>
+  <ul>
+    <li>Power On/Off</li>
+    <li>Speed Control +</li>
+    <li>Speed Control −</li>
+    <li>Timer +</li>
+    <li>Timer −</li>
+    <li>Sway/Cancel</li>
+  </ul>
+  <h2>9-Hour Timer</h2>
+  <h3>Convenient Operation for Your Daily Routine.</h3>
+  <p>Set the fan's operating duration using the adjustable timer.</p>
+  <p>The TP09 PRO supports timer settings of up to 9 hours, allowing you to customise operation without repeatedly adjusting the appliance.</p>
+  <h2>Bladeless Airflow Technology</h2>
+  <h3>Modern Design. Smooth Air Circulation.</h3>
+  <p>Unlike traditional fans with exposed rotating blades, the TP09 PRO uses an internal motor and a specially shaped bladeless outlet.</p>
+  <p>Air is drawn through the inlet openings in the main body and directed through the upper air outlet.</p>
+  <p>This produces a continuous airflow stream while maintaining a contemporary appearance.</p>
+  <h3>The FutureX TP09 PRO – Bladeless Hot &amp; Cool Tower Fan for Modern Homes</h3>
+  <p>The FutureX TP09 PRO Bladeless Tower Fan combines modern airflow technology, convenient controls and integrated PTC ceramic heating in one versatile appliance.</p>
+  <p>Designed for indoor comfort, it provides adjustable cooling airflow during warm weather and heated airflow when temperatures fall.</p>
+  <h3>Bladeless Design</h3>
+  <p>The enclosed airflow outlet creates a contemporary appearance without exposed conventional fan blades.</p>
+  <h3>10-Speed Cooling Control</h3>
+  <p>Choose from 10 airflow settings to customise air circulation.</p>
+  <h3>PTC Ceramic Heating</h3>
+  <p>Switch to heating mode for warm airflow during colder weather.</p>
+  <h3>180° Oscillation</h3>
+  <p>Distribute airflow across a wider area with automatic oscillation.</p>
+  <h3>Remote Control Convenience</h3>
+  <p>Adjust operating settings without accessing the appliance directly.</p>
+  <h3>9-Hour Timer</h3>
+  <p>Select the desired operating duration to suit your routine.</p>
+  <h3>ABS Body</h3>
+  <p>The ABS exterior provides a modern appearance suited to indoor household use.</p>
+  <h3>Easy Maintenance</h3>
+  <p>Regular exterior cleaning and dust removal from accessible air inlet openings help maintain proper airflow.</p>
+  <h2>Product Structure</h2>
+  <p>The shared manual identifies the following components.</p>
+  <ul>
+    <li><strong>Output Channels:</strong> Direct airflow from the bladeless loop</li>
+    <li><strong>Outlet Circle:</strong> Main upper airflow outlet</li>
+    <li><strong>Main Body:</strong> Houses internal operating components</li>
+    <li><strong>Input Channels:</strong> Draw air into the appliance</li>
+    <li><strong>View Screen:</strong> Displays operating information</li>
+    <li><strong>ON/OFF:</strong> Power control</li>
+    <li><strong>Speed Regulation:</strong> Adjusts airflow intensity</li>
+    <li><strong>Speed:</strong> Airflow control function</li>
+    <li><strong>Timing:</strong> Timer control</li>
+  </ul>
+  <h2>How to Use the FutureX TP09 PRO</h2>
+  <h3>Step 1: Proper Placement</h3>
+  <ol>
+    <li>Place the appliance on a flat, stable and level surface.</li>
+    <li>Keep it away from curtains, furniture and objects that could obstruct airflow.</li>
+    <li>Ensure the air inlet and outlet remain unobstructed.</li>
+    <li>Position the appliance in a dry indoor location.</li>
+  </ol>
+  <h3>Step 2: Connect the Power Supply</h3>
+  <ol>
+    <li>Check the voltage specified on the product rating label.</li>
+    <li>Connect the power cord to a suitable electrical socket.</li>
+    <li>Ensure your hands and the electrical connection are dry.</li>
+    <li>Switch on the power supply.</li>
+  </ol>
+  <h3>Step 3: Switch On</h3>
+  <p>Press the ON/OFF button on the appliance or remote control.</p>
+  <p>Select the desired operating mode.</p>
+  <h3>Step 4: Cooling Mode</h3>
+  <ol>
+    <li>Select Cool Mode.</li>
+    <li>Adjust airflow using the speed controls.</li>
+    <li>Choose from 10 available airflow speeds.</li>
+  </ol>
+  <h3>Step 5: Heating Mode</h3>
+  <ol>
+    <li>Select the heating function.</li>
+    <li>Choose the available heating setting using the appliance controls.</li>
+    <li>Keep the appliance clear of combustible materials.</li>
+  </ol>
+  <h3>Step 6: Oscillation</h3>
+  <p>Press Sway/Cancel to activate automatic oscillation.</p>
+  <p>Press again to stop oscillation.</p>
+  <h3>Step 7: Timer</h3>
+  <p>Use the timer controls to select the desired operating duration.</p>
+  <p>The TP09 PRO supports up to 9 hours.</p>
+  <h3>Step 8: Switch Off</h3>
+  <ol>
+    <li>Press ON/OFF.</li>
+    <li>Switch off the main power supply.</li>
+    <li>Unplug the appliance when not in use.</li>
+    <li>Allow heating components to cool before cleaning or handling.</li>
+  </ol>
+  <h2>Remote Control Operation</h2>
+  <ul>
+    <li><strong>ON/OFF:</strong> Switches the appliance on or off</li>
+    <li><strong>Sway/Cancel:</strong> Activates or stops oscillation</li>
+    <li><strong>Speed Control +:</strong> Increases airflow speed</li>
+    <li><strong>Speed Control −:</strong> Decreases airflow speed</li>
+    <li><strong>Timing +:</strong> Increases timer duration</li>
+    <li><strong>Timing −:</strong> Decreases timer duration</li>
+  </ul>
+  <h3>Remote Battery Replacement</h3>
+  <ol>
+    <li>Open the battery compartment on the rear of the remote control.</li>
+    <li>Remove the used batteries.</li>
+    <li>Insert replacement AAA batteries following the polarity markings.</li>
+    <li>Close the compartment securely.</li>
+  </ol>
+  <h2>Airflow Working Principle</h2>
+  <p>The manual describes a bladeless airflow mechanism that differs from a conventional exposed-blade fan.</p>
+  <ol>
+    <li>Air enters through the inlet openings in the main body.</li>
+    <li>The internal motor draws air into the appliance.</li>
+    <li>Air travels through the internal airflow channels.</li>
+    <li>The upper bladeless outlet directs the air outward.</li>
+    <li>The shaped outlet helps produce a continuous airflow stream.</li>
+  </ol>
+  <h2>Cleaning &amp; Maintenance</h2>
+  <h3>Exterior Cleaning</h3>
+  <ol>
+    <li>Switch off the appliance.</li>
+    <li>Disconnect the power plug.</li>
+    <li>Allow heated components to cool completely.</li>
+    <li>Wipe the exterior with a soft, clean cloth.</li>
+    <li>Do not use detergents, polishing agents or harsh chemicals.</li>
+  </ol>
+  <h3>Air Inlet &amp; Outlet Cleaning</h3>
+  <ol>
+    <li>Disconnect the appliance from the power supply.</li>
+    <li>Inspect the air inlet and outlet for dust.</li>
+    <li>Use a soft brush to remove accessible dust and debris.</li>
+    <li>Keep the ventilation openings clear.</li>
+    <li>Do not insert cleaning tools deeply into internal components.</li>
+  </ol>
+  <h3>Maintenance Precautions</h3>
+  <ul>
+    <li>Never wash the appliance under running water.</li>
+    <li>Do not immerse the fan in water.</li>
+    <li>Do not spray liquid into the air outlet.</li>
+    <li>Do not use abrasive cleaning products.</li>
+    <li>Do not attempt unauthorised internal repairs.</li>
+    <li>Ensure the appliance is dry before restarting.</li>
+  </ul>
+  <h2>Safety Instructions &amp; Warnings</h2>
+  <ul>
+    <li>Use only the electrical supply specified on the rating label.</li>
+    <li>Keep the appliance on a stable and level surface.</li>
+    <li>Do not operate near water or in wet environments.</li>
+    <li>Never touch the plug with wet hands.</li>
+    <li>Keep the air inlet and outlet unobstructed.</li>
+    <li>Do not insert fingers or objects into airflow openings.</li>
+    <li>Keep children and pets supervised during operation.</li>
+    <li>Avoid touching hot surfaces during heating operation.</li>
+    <li>Keep combustible materials away from the heating outlet.</li>
+    <li>Do not operate the appliance with a damaged power cord or plug.</li>
+    <li>Never disconnect the appliance by pulling its cable.</li>
+    <li>Avoid overloaded electrical sockets.</li>
+    <li>Do not operate near flammable gases or chemicals.</li>
+    <li>Switch off and unplug before cleaning.</li>
+    <li>Do not attempt to dismantle or modify internal components.</li>
+    <li>Do not leave heating operation unattended.</li>
+    <li>Stop operation immediately if unusual sounds, smoke or burning smells occur.</li>
+    <li>Keep the appliance away from excessive moisture and outdoor weather.</li>
+    <li>Allow heated components to cool before handling.</li>
+  </ul>
+  <p>Cooling mode circulates room-temperature air.</p>
+  <h2>Warranty &amp; Support</h2>
+  <p><strong>Warranty:</strong> 1-Year Limited Motor Warranty</p>
+  <p><strong>Customer Support Email:</strong> <a href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a></p>
+  <p><strong>Customer Support Phone:</strong> <a href="tel:+918530340676">8530340676</a></p>
+  <p><strong>Shipping:</strong> Free Shipping Across India, subject to serviceability.</p>
+  <p><strong>Exchange Review:</strong> 7 Days for Verified Delivery Defects, subject to the applicable policy.</p>
+  <h2>Hot and cool airflow for everyday use</h2>
+  <h3>The FutureX TP09 PRO – One Fan. Two Seasons. Everyday Comfort.</h3>
+  <p>Experience convenient indoor comfort with the FutureX TP09 PRO Bladeless Hot &amp; Cool Tower Fan.</p>
+  <p>With <strong>10 adjustable airflow speeds, PTC ceramic heating, 180° oscillation, a 9-hour timer, remote control and a modern ABS body</strong>, the TP09 PRO combines versatile functionality with contemporary design.</p>
+  <p><strong>Designed for Summer Breezes. Ready for Winter Warmth.</strong></p>
+`;
+
+export const TP09_PRO_LISTING_SPECS = {
+  "Brand": "The FutureX",
+  "Model": "TP09 PRO",
+  "Product Name": "Bladeless Hot & Cool Tower Fan",
+  "Product Type": "Tower Fan with Heater",
+  "Heating Technology": "PTC Ceramic Heating",
+  "Body Material": "ABS",
+  "Operating Modes": "Hot & Cool",
+  "Application": "Indoor Household & Office Use",
+  "Design": "Modern Bladeless Tower",
+  "Fan Structure": "Enclosed Airflow Outlet",
+  "Main Body": "ABS Exterior",
+  "Air Inlet": "Main Body Ventilation Openings",
+  "Air Outlet": "Upper Bladeless Loop",
+  "Base": "Integrated Tower Base",
+  "Cooling Airflow Speeds": "10",
+  "Heating": "PTC Ceramic Heating",
+  "Oscillation": "180° Automatic",
+  "Timer": "Up to 9 Hours",
+  "Remote Control": "Yes",
+  "Touch Controls": "Yes",
+  "Power On/Off": "Supported",
+  "Speed Increase/Decrease": "Supported",
+  "Timer Increase/Decrease": "Supported",
+  "Oscillation Control": "Sway/Cancel",
+  "Remote Battery Type": "AAA",
+  "Motor Warranty": "1-Year Limited Motor Warranty",
+  "Shipping": "Free Shipping Across India",
+  "Exchange Review": "7 Days for Verified Delivery Defects",
+  "Support Email": "thefuturex.ptc@gmail.com",
+  "Support Phone": "8530340676",
+};
+
+export const TP09_PRO_LISTING_FAQS = [
+  {
+    q: "What is the FutureX TP09 PRO Bladeless Tower Fan?",
+    a: "The TP09 PRO is a hot and cool bladeless tower fan featuring PTC ceramic heating, adjustable airflow, remote control, oscillation and timer functions.",
+  },
+  {
+    q: "Does the TP09 PRO provide hot and cool air?",
+    a: "Yes. It supports natural air circulation and heated airflow.",
+  },
+  {
+    q: "How many cooling speeds are available?",
+    a: "The TP09 PRO offers 10 adjustable airflow speeds.",
+  },
+  {
+    q: "Does the fan support automatic oscillation?",
+    a: "Yes. The product listing specifies 180° automatic oscillation.",
+  },
+  {
+    q: "Does it have a remote control?",
+    a: "Yes. The TP09 PRO includes remote control operation.",
+  },
+  {
+    q: "Does the fan have touch controls?",
+    a: "Yes. The product includes an integrated touch control panel.",
+  },
+  {
+    q: "Does the TP09 PRO have a timer?",
+    a: "Yes. It supports a timer of up to 9 hours.",
+  },
+  {
+    q: "What heating technology does it use?",
+    a: "The TP09 PRO uses PTC ceramic heating technology.",
+  },
+  {
+    q: "Is it suitable for summer?",
+    a: "Yes. Cooling mode provides room-temperature airflow.",
+  },
+  {
+    q: "Is it suitable for winter?",
+    a: "Yes. The integrated heating function provides warm airflow.",
+  },
+  {
+    q: "Is the TP09 PRO an air conditioner?",
+    a: "No. It circulates ambient air without refrigerated cooling.",
+  },
+  {
+    q: "Does it have exposed fan blades?",
+    a: "No. The product features a bladeless-style outlet without exposed conventional rotating fan blades.",
+  },
+  {
+    q: "What material is used for the body?",
+    a: "The product listing specifies an ABS body.",
+  },
+  {
+    q: "How do I clean the fan?",
+    a: "Switch it off, unplug it, allow it to cool and wipe the exterior with a soft cloth. Remove accessible dust using a soft brush.",
+  },
+  {
+    q: "What batteries does the remote require?",
+    a: "The shared manual specifies AAA batteries.",
+  },
+  {
+    q: "Can the fan be used in bedrooms?",
+    a: "Yes, when installed and operated in a suitable indoor location with the required safety clearances.",
+  },
+  {
+    q: "Is the TP09 PRO suitable for offices?",
+    a: "Yes. Its tower design and adjustable airflow make it suitable for appropriate indoor office environments.",
+  },
+  {
+    q: "What is the warranty period?",
+    a: "The product listing specifies a 1-year limited motor warranty, subject to the applicable terms.",
+  },
+  {
+    q: "Is shipping available across India?",
+    a: "The website lists free shipping across India, subject to delivery availability.",
+  },
+  {
+    q: "Is cash on delivery available?",
+    a: "Cash on delivery is available for eligible orders and serviceable locations.",
+  },
+  {
+    q: "What is the exchange policy?",
+    a: "The website lists a 7-day exchange review for verified delivery defects, subject to the applicable policy.",
+  },
+  {
+    q: "How do I contact FutureX support?",
+    a: "Email thefuturex.ptc@gmail.com or call 8530340676.",
+  },
+];

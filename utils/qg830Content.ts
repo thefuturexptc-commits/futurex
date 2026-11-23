@@ -98,6 +98,18 @@ const QG830_CONTENT = {
     {
       "q": "Does Cool Mode work like an air conditioner?",
       "a": "No. Cool Mode circulates ambient room air rather than actively refrigerating it like an air conditioner."
+    },
+    {
+      "q": "Do the 10 speed settings apply to both operating modes?",
+      "a": "The 10 speed settings are for cooling airflow. Use the controls on your unit to select the available settings in Hot Mode."
+    },
+    {
+      "q": "Can I control the QG830 from the fan itself?",
+      "a": "Yes. The digital panel lets you adjust supported functions directly on the fan. You can also use the supplied remote."
+    },
+    {
+      "q": "Where can I find the electrical ratings for my QG830?",
+      "a": "Check the rating label on your unit and make sure the electrical supply matches before connecting the fan."
     }
   ],
   "highlights": [
@@ -117,3 +129,21 @@ export const getQg830Content = (product?: Pick<Product, 'name' | 'slug' | 'specs
   const identifiers = [product.name, product.specs?.Model, product.specs?.['Model Number'], product.slug?.replace(/-/g, ' ')].filter(Boolean).join(' ');
   return /\bqg\s*-?\s*830\b/i.test(identifiers) || product.slug === 'tfx-smart-10x-air' ? QG830_CONTENT : null;
 };
+
+export const QG830_TITLE = 'The FutureX QG830 Bladeless Tower Fan with Hot & Cool Modes, 10 Cooling Speeds, PTC Ceramic Heating & Remote Control';
+
+export const QG830_DESCRIPTION_HTML = `
+  <h2>QG830 at a glance</h2>
+  <p>The FutureX QG830 is a bladeless tower fan for indoor air circulation and heating. Use Cool Mode to circulate room-temperature air at one of 10 cooling speeds, or switch to Hot Mode for warm airflow from its PTC ceramic heating elements.</p>
+  <h2>Airflow and heating</h2>
+  <h3>10 cooling speeds</h3>
+  <p>Start at a lower speed for gentle airflow and increase it when you want stronger circulation. The 10 settings apply to Cool Mode, which moves room-temperature air.</p>
+  <h3>PTC ceramic heating</h3>
+  <p>Switch to Hot Mode when you want warm airflow. Follow the clearances in the manual and keep the heating outlet clear while the fan is running.</p>
+  <h3>Oscillation</h3>
+  <p>Enable oscillation to spread airflow over a wider part of the room. Switch it off when you want the fan to direct airflow toward one area.</p>
+  <h2>Brushless motor and tower design</h2>
+  <p>A brushless motor drives airflow through the enclosed tower outlet. The housing uses flame-resistant PC and ABS plastic. The upright design takes up little floor space and can be placed on a stable, level surface with room around the air openings.</p>
+  <h2>Remote and digital controls</h2>
+  <p>Use the digital panel when you are next to the fan, or point the remote at the receiver to adjust supported settings from your seat. Select the operating mode first, then choose the airflow setting available in that mode.</p>
+`;

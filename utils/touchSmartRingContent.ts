@@ -170,3 +170,104 @@ export const getTouchSmartRingContent = (product?: Pick<Product, 'name' | 'slug'
   const identifiers = [product.name, product.specs?.Model, product.specs?.['Model Number'], product.slug?.replace(/-/g, ' ')].filter(Boolean).join(' ');
   return /\btouch\s+smart\s+ring\b|\br\s*-?\s*08\b/i.test(identifiers) || product.slug === 'tfx-touch-smart-ring' ? TOUCH_SMART_RING_CONTENT : null;
 };
+
+export const TOUCH_SMART_RING_TITLE = "The FutureX TFX Touch Smart Ring – Fitness Tracker with Touch Control, Heart Rate, SpO2 & Sleep Monitoring";
+
+export const TOUCH_SMART_RING_DESCRIPTION_HTML = `
+  <h2>Touch Smart Ring at a glance</h2>
+  <p><strong>Smart Wellness. One Simple Touch.</strong></p>
+  <p>Experience everyday fitness monitoring with the <strong>FutureX TFX Touch Smart Ring</strong>, a compact, lightweight wearable designed to combine health tracking, smart touch controls and Bluetooth connectivity in one stylish ring.</p>
+  <p>Track important wellness indicators including <strong>heart rate, blood oxygen (SpO2), sleep, HRV trends, steps and estimated calories</strong>, while reviewing supported measurements and activity information through the Qring companion app.</p>
+  <p>Featuring a touch-sensitive control area, stainless steel construction, IP68 water resistance and convenient charging accessories, this smart fitness ring offers an alternative to traditional wrist-worn fitness trackers.</p>
+  <p>Whether you're working, exercising, travelling or relaxing, the FutureX Touch Smart Ring makes everyday wellness tracking more convenient.</p>
+  <h2>Key Features</h2>
+  <ul>
+    <li><strong>Smart Touch Control</strong> – Interact with supported ring functions through simple touch gestures.</li>
+    <li><strong>Heart Rate Monitoring</strong> – Check heart rate measurements and review trends.</li>
+    <li><strong>SpO2 Blood Oxygen Tracking</strong> – Monitor supported blood oxygen readings.</li>
+    <li><strong>Sleep Monitoring</strong> – Review available sleep information and resting patterns.</li>
+    <li><strong>HRV &amp; Wellness Insights</strong> – Access supported heart rate variability trends.</li>
+    <li><strong>Daily Activity Tracking</strong> – Monitor steps, movement and estimated calories burned.</li>
+    <li><strong>Qring App Connectivity</strong> – Connect to a compatible smartphone for wellness and activity information.</li>
+    <li><strong>Bluetooth BLE 5.0</strong> – Wireless connectivity for supported data synchronization.</li>
+    <li><strong>IP68 Water Resistance</strong> – Protection against everyday splashes, sweat and light rain.</li>
+    <li><strong>Magnetic Charging</strong> – Recharge using the supplied compatible charging accessory.</li>
+    <li><strong>Compact Stainless Steel Design</strong> – A modern ring-style wearable suitable for everyday use.</li>
+  </ul>
+  <h2>The FutureX TFX Touch Smart Ring</h2>
+  <h3>Smart Fitness Tracking. Effortless Touch Control.</h3>
+  <p><strong>Your Wellness. Right at Your Fingertips.</strong></p>
+  <p>Discover a modern way to monitor everyday wellness with the FutureX TFX Touch Smart Ring.</p>
+  <p>Designed for people who prefer a compact alternative to traditional smartwatches, this fitness tracking ring combines supported health measurements with convenient touch interaction.</p>
+  <p>Its lightweight construction and minimalist appearance make it suitable for work, travel, walking, fitness routines and overnight wear.</p>
+  <p><strong>Why You'll Love It:</strong> Essential wellness tracking in a stylish, compact wearable with convenient touch controls.</p>
+  <h2>Smart Touch Control</h2>
+  <h3>A Smarter Way to Interact</h3>
+  <p><strong>Simple Touch. Convenient Control.</strong></p>
+  <p>The FutureX Touch Smart Ring features a touch-sensitive control area that allows users to interact with supported functions through touch gestures.</p>
+  <p>This feature makes the ring different from conventional fitness rings that rely entirely on smartphone interaction.</p>
+  <p>Use the touch area to activate supported functions according to the device's operating instructions.</p>
+  <p><strong>Why It Matters:</strong> Convenient touch interaction adds functionality without requiring a traditional smartwatch design.</p>
+  <h2>Daily Health &amp; Fitness Monitoring</h2>
+  <h3>Understand Your Everyday Wellness</h3>
+  <p><strong>One Ring. Multiple Wellness Insights.</strong></p>
+  <p>The FutureX Touch Smart Ring supports essential fitness and wellness monitoring functions.</p>
+  <p>Track:</p>
+  <ul>
+    <li>Heart rate measurements</li>
+    <li>Blood oxygen (SpO2)</li>
+    <li>Sleep patterns</li>
+    <li>HRV-related trends</li>
+    <li>Daily steps</li>
+    <li>Estimated calories burned</li>
+    <li>General activity information</li>
+  </ul>
+  <p>Review available information through the Qring app and use your activity records to understand your daily habits.</p>
+  <p><strong>Why It Matters:</strong> Stay informed about your activity and wellness trends through one compact wearable.</p>
+  <h2>Qring App Connectivity</h2>
+  <h3>Your Wellness Information in One Place</h3>
+  <p><strong>Connect. Track. Review.</strong></p>
+  <p>Connect the FutureX Touch Smart Ring to the Qring application through Bluetooth.</p>
+  <p>The app provides access to supported wellness measurements, sleep information, activity records and device settings.</p>
+  <p>Simply download the application, enable Bluetooth and follow the pairing instructions.</p>
+  <p><strong>Why It Matters:</strong> Access supported tracking information and review daily wellness trends from your smartphone.</p>
+  <h2>Designed for Everyday Comfort</h2>
+  <h3>Minimal Design. Everyday Convenience.</h3>
+  <p>The FutureX Touch Smart Ring combines a compact stainless steel body with a comfortable ring-style design.</p>
+  <p>Its minimalist appearance makes it suitable for different everyday settings, including office wear, exercise, travel and sleep.</p>
+  <p>Select the correct ring size to maintain a comfortable fit and consistent sensor contact.</p>
+  <p><strong>Why It Matters:</strong> A lightweight fitness tracker that fits naturally into your everyday lifestyle.</p>
+  <h2>The FutureX TFX Touch Smart Ring – Smart Fitness Tracking with Touch Control</h2>
+  <p>Looking for a <strong>smart ring with touch control, heart rate monitoring and sleep tracking</strong>?</p>
+  <p>The FutureX TFX Touch Smart Ring combines modern wearable design with essential fitness tracking technology.</p>
+  <p>Featuring integrated sensors, touch-sensitive controls, Bluetooth connectivity and Qring app support, this smart ring provides a convenient way to monitor everyday wellness information.</p>
+  <h3>Smart Touch Control</h3>
+  <p>Interact with supported ring functions using the integrated touch-sensitive area.</p>
+  <p>The touch-control design offers an additional way to operate supported functions without depending entirely on your smartphone.</p>
+  <h3>Heart Rate &amp; SpO2 Monitoring</h3>
+  <p>Monitor supported heart rate and blood oxygen measurements through the ring's sensors and connected application.</p>
+  <p>Wear the ring correctly and remain relatively still during measurements to help improve reading consistency.</p>
+  <h3>Sleep Monitoring</h3>
+  <p>Wear the smart ring comfortably during sleep to record supported sleep-related information.</p>
+  <p>Review available sleep patterns and records through the Qring app.</p>
+  <h3>HRV &amp; Wellness Insights</h3>
+  <p>Access supported HRV-related measurements and wellness trends through the connected application.</p>
+  <p>These measurements are intended for general wellness awareness.</p>
+  <h3>Daily Activity Tracking</h3>
+  <p>Monitor daily steps, estimated calories and general activity information.</p>
+  <p>Review your movement records to understand your daily routine and fitness habits.</p>
+  <h3>Bluetooth 5.0 &amp; Qring App</h3>
+  <p>Connect the smart ring to your smartphone using Bluetooth BLE 5.0.</p>
+  <p>Use Qring to synchronize supported measurements, review activity history and manage available device functions.</p>
+  <h3>IP68 Water Resistance</h3>
+  <p>The FutureX Touch Smart Ring is listed with IP68 water resistance.</p>
+  <p>It is intended to withstand everyday splashes and sweat under the applicable test conditions.</p>
+  <p>Avoid swimming, diving, hot water, chemicals and prolonged immersion unless the manufacturer confirms suitability.</p>
+  <h3>Magnetic Charging</h3>
+  <p>Recharge the smart ring using its supplied compatible charging accessory.</p>
+  <p>Keep charging contacts clean and dry before charging.</p>
+  <h3>Why Choose the FutureX TFX Touch Smart Ring?</h3>
+  <p>If you're looking for a <strong>touch control smart ring in India</strong>, the FutureX TFX Touch combines convenient interaction, everyday fitness monitoring and compact wearable styling.</p>
+  <p><strong>Discover Smarter Everyday Fitness Tracking with The FutureX.</strong></p>
+  <p><em>Important: The smart ring is intended for general fitness and wellness tracking only. It is not a medical device and should not be used for medical diagnosis or treatment.</em></p>
+`;

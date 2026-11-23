@@ -113,3 +113,312 @@ export const getTp02PlusContent = (product?: Pick<Product, 'name' | 'slug' | 'sp
   const identifiers = [product.name, product.specs?.Model, product.specs?.['Model Number'], product.slug?.replace(/-/g, ' ')].filter(Boolean).join(' ');
   return /\btp\s*-?\s*02\s*-?\s*plus\b/i.test(identifiers) || product.slug === 'tfx-breeze-pro' ? TP02_PLUS_CONTENT : null;
 };
+
+export const TP02_PLUS_LISTING_TITLE = "The FutureX TP02 PLUS Bladeless Tower Fan with BLDC Motor & Remote Control";
+
+export const TP02_PLUS_LISTING_DESCRIPTION_HTML = `
+  <h2>TP02 Plus at a glance</h2>
+  <p>Experience refreshing everyday comfort with the <strong>FutureX TP02 PLUS Bladeless Tower Fan</strong>, a modern cooling appliance designed to deliver smooth airflow, quiet operation and convenient air circulation.</p>
+  <p>Powered by an upgraded <strong>BLDC motor</strong>, the TP02 PLUS combines modern bladeless airflow technology with adjustable speed settings, remote control functionality and oscillation support.</p>
+  <p>Its elegant, space-saving tower design makes it a practical addition to bedrooms, living rooms, study areas and offices.</p>
+  <p>Designed for modern Indian homes, the FutureX TP02 PLUS offers comfortable everyday cooling airflow without exposed conventional fan blades.</p>
+  <h3>Key Features</h3>
+  <ul>
+    <li><strong>Bladeless Airflow Technology</strong> – Modern airflow outlet without exposed conventional rotating fan blades.</li>
+    <li><strong>Advanced BLDC Motor</strong> – Designed for smooth, efficient and low-noise performance.</li>
+    <li><strong>Adjustable Airflow Speeds</strong> – Customise the airflow intensity to suit your comfort.</li>
+    <li><strong>Remote Control Operation</strong> – Conveniently adjust supported settings from a distance.</li>
+    <li><strong>Oscillation Support</strong> – Distributes airflow across a wider area.</li>
+    <li><strong>Quiet Cooling Performance</strong> – Designed for comfortable operation in bedrooms, offices and living spaces.</li>
+    <li><strong>Modern Tower Design</strong> – Contemporary styling that complements different interiors.</li>
+    <li><strong>Space-Saving Structure</strong> – Vertical construction suitable for modern indoor environments.</li>
+    <li><strong>Easy Maintenance</strong> – Accessible exterior surfaces and air openings for routine cleaning.</li>
+    <li><strong>Indoor Air Circulation</strong> – Suitable for everyday household and office use.</li>
+  </ul>
+  <h2>Advanced Bladeless Airflow Technology</h2>
+  <h3>Smooth Airflow. Modern Comfort.</h3>
+  <p>The FutureX TP02 PLUS uses bladeless airflow technology to deliver comfortable air circulation through a specially designed outlet.</p>
+  <p>Unlike traditional fans with exposed rotating blades, the TP02 PLUS features a modern enclosed airflow structure.</p>
+  <p>Air is drawn through the appliance and directed through the bladeless outlet to produce a continuous airflow stream.</p>
+  <p>Its streamlined construction offers a contemporary appearance suitable for modern interiors.</p>
+  <h2>Upgraded BLDC Motor</h2>
+  <h3>Engineered for Smooth and Quiet Performance.</h3>
+  <p>At the heart of the FutureX TP02 PLUS is an upgraded Brushless Direct Current (BLDC) motor.</p>
+  <p>The motor is designed to support efficient operation, smooth airflow and reduced operating noise.</p>
+  <p>Compared with conventional brushed motor designs, BLDC technology avoids mechanical brush contact, supporting efficient motor operation.</p>
+  <p>This makes the TP02 PLUS a practical choice for bedrooms, offices, living rooms and study spaces.</p>
+  <h2>Adjustable Airflow Speeds</h2>
+  <h3>Personalised Cooling for Everyday Comfort.</h3>
+  <p>Adjust the airflow intensity according to your comfort preferences.</p>
+  <p>Choose a gentle breeze for relaxed indoor use or increase the speed when stronger air circulation is required.</p>
+  <p>The TP02 PLUS provides adjustable airflow settings through its available controls.</p>
+  <h2>Remote Control Convenience</h2>
+  <h3>Control Your Comfort from a Distance.</h3>
+  <p>Enjoy convenient operation with the supplied remote control.</p>
+  <p>Adjust supported fan settings without needing to access the appliance directly.</p>
+  <p>The remote control provides an easy way to manage everyday cooling comfort from your sofa, desk or bedside.</p>
+  <h2>Oscillation Support</h2>
+  <h3>Wider Air Circulation Across Your Room.</h3>
+  <p>The FutureX TP02 PLUS supports oscillation to help distribute airflow across a wider area.</p>
+  <p>Activate the oscillation function when broader air circulation is preferred.</p>
+  <p>Switch it off when you want airflow directed toward a particular area.</p>
+  <h2>Quiet Cooling Performance</h2>
+  <h3>Comfortable Airflow for Everyday Living.</h3>
+  <p>The upgraded BLDC motor is designed for smooth, low-noise operation.</p>
+  <p>Whether you are reading, working or relaxing, the TP02 PLUS provides adjustable airflow for indoor comfort.</p>
+  <p>Actual operating noise varies with airflow speed and room conditions.</p>
+  <h2>Modern Space-Saving Tower Design</h2>
+  <h3>Contemporary Styling Meets Everyday Functionality.</h3>
+  <p>The FutureX TP02 PLUS combines a vertical tower structure with a sleek bladeless airflow outlet.</p>
+  <p>Its modern design complements different interior arrangements while providing practical air circulation.</p>
+  <p>Suitable for bedrooms, living rooms, offices and study areas.</p>
+  <h2>Easy Cleaning &amp; Maintenance</h2>
+  <h3>Designed for Simple Everyday Care.</h3>
+  <p>The TP02 PLUS features an exterior that can be maintained through regular cleaning.</p>
+  <p>Dust and debris should be removed from accessible air inlet and outlet openings to support proper airflow.</p>
+  <p>Always disconnect the appliance from the power supply before cleaning.</p>
+  <h3>The FutureX TP02 PLUS – Advanced Bladeless Cooling for Modern Homes</h3>
+  <p>Bring modern airflow technology into your everyday routine with the FutureX TP02 PLUS Bladeless Tower Fan.</p>
+  <p>Featuring an upgraded BLDC motor, this contemporary tower fan is designed to provide smooth airflow, low-noise operation and convenient air circulation.</p>
+  <p>Its bladeless-style outlet offers a streamlined appearance without exposed conventional rotating blades.</p>
+  <p>The TP02 PLUS includes adjustable airflow settings, remote control operation and oscillation support, allowing you to customise your indoor comfort.</p>
+  <p>Whether placed in a bedroom, living room, office or study area, the FutureX TP02 PLUS combines practical functionality with modern design.</p>
+  <h2>How to Use the FutureX TP02 PLUS</h2>
+  <h3>Step 1: Proper Placement</h3>
+  <ol>
+    <li>Place the appliance on a flat, stable and level surface.</li>
+    <li>Position it in a dry indoor location.</li>
+    <li>Keep curtains, furniture and other objects away from the airflow openings.</li>
+    <li>Ensure the air inlet and outlet are unobstructed.</li>
+  </ol>
+  <h3>Step 2: Connect the Power Supply</h3>
+  <ol>
+    <li>Check the voltage specified on the product rating label.</li>
+    <li>Connect the power cord to a suitable electrical socket.</li>
+    <li>Ensure your hands and the electrical connection are dry.</li>
+    <li>Switch on the main power supply.</li>
+  </ol>
+  <h3>Step 3: Switch On the Appliance</h3>
+  <ol>
+    <li>Turn on the main electrical supply.</li>
+    <li>Press the power button on the appliance, where fitted, or use the supplied remote control.</li>
+    <li>Allow the appliance to begin operation.</li>
+  </ol>
+  <h3>Step 4: Adjust Airflow Speed</h3>
+  <ol>
+    <li>Use the available speed controls.</li>
+    <li>Select a lower setting for gentle airflow.</li>
+    <li>Increase the speed for stronger air circulation.</li>
+    <li>Adjust according to your comfort preferences.</li>
+  </ol>
+  <h3>Step 5: Activate Oscillation</h3>
+  <ol>
+    <li>Select the oscillation function using the available control.</li>
+    <li>Allow the fan to distribute airflow across a wider area.</li>
+    <li>Turn oscillation off when focused airflow is preferred.</li>
+  </ol>
+  <h3>Step 6: Remote Control Operation</h3>
+  <ol>
+    <li>Point the remote control toward the appliance's receiver.</li>
+    <li>Select the desired supported function.</li>
+    <li>Adjust airflow settings as required.</li>
+    <li>Replace the remote batteries when necessary, following the correct polarity markings.</li>
+  </ol>
+  <h3>Step 7: Switch Off</h3>
+  <ol>
+    <li>Press the power button to stop operation.</li>
+    <li>Switch off the main power supply.</li>
+    <li>Unplug the appliance when it is not in use for an extended period.</li>
+    <li>Disconnect the power supply before cleaning or maintenance.</li>
+  </ol>
+  <h2>Working Principle of Bladeless Airflow</h2>
+  <p>The FutureX TP02 PLUS uses an internal motor to generate airflow through its bladeless outlet.</p>
+  <h3>Step 1: Air Intake</h3>
+  <p>Air enters the appliance through the air inlet openings.</p>
+  <h3>Step 2: Motor Operation</h3>
+  <p>The BLDC motor drives the internal airflow mechanism.</p>
+  <h3>Step 3: Airflow Movement</h3>
+  <p>Air travels through the internal airflow channels.</p>
+  <h3>Step 4: Air Outlet</h3>
+  <p>The air is directed through the bladeless-style outlet.</p>
+  <h3>Step 5: Room Air Circulation</h3>
+  <p>The outgoing airflow helps circulate air throughout the surrounding indoor space.</p>
+  <h2>Remote Control Operation</h2>
+  <p>The FutureX TP02 PLUS includes a remote control for convenient everyday use.</p>
+  <ul>
+    <li><strong>Power:</strong> Switches the appliance on or off</li>
+    <li><strong>Airflow Adjustment:</strong> Changes the available airflow speed</li>
+    <li><strong>Oscillation:</strong> Activates or stops the oscillation function</li>
+  </ul>
+  <h2>Cleaning &amp; Maintenance</h2>
+  <p>Regular maintenance helps preserve the appliance's appearance and supports proper airflow.</p>
+  <h3>Exterior Cleaning</h3>
+  <ol>
+    <li>Switch off the appliance.</li>
+    <li>Disconnect the power plug.</li>
+    <li>Wipe the exterior with a soft, dry or slightly damp cloth.</li>
+    <li>Avoid abrasive cleaning products.</li>
+    <li>Ensure the appliance is dry before reconnecting it.</li>
+  </ol>
+  <h3>Air Inlet &amp; Outlet Cleaning</h3>
+  <ol>
+    <li>Disconnect the appliance from the power supply.</li>
+    <li>Inspect accessible inlet and outlet openings.</li>
+    <li>Remove visible dust using a soft brush.</li>
+    <li>Avoid inserting objects deeply into the appliance.</li>
+    <li>Keep all ventilation openings unobstructed.</li>
+  </ol>
+  <h3>Remote Control Maintenance</h3>
+  <ol>
+    <li>Keep the remote clean and dry.</li>
+    <li>Replace batteries when required.</li>
+    <li>Follow the polarity markings inside the battery compartment.</li>
+    <li>Remove the batteries if the remote will not be used for an extended period.</li>
+  </ol>
+  <h2>Safety Instructions &amp; Warnings</h2>
+  <ul>
+    <li>Use the appliance only with the voltage specified on its rating label.</li>
+    <li>Place the fan on a flat, stable and level surface.</li>
+    <li>Keep the appliance away from water, bathrooms, showers and swimming pools.</li>
+    <li>Never operate the appliance with wet hands.</li>
+    <li>Do not insert fingers or objects into the air inlet or outlet.</li>
+    <li>Keep curtains, paper, clothing and other materials away from airflow openings.</li>
+    <li>Do not cover or block the air inlet or outlet during operation.</li>
+    <li>Supervise children and pets around the appliance.</li>
+    <li>Do not operate the fan if its power cord, plug or body is damaged.</li>
+    <li>Always hold the plug when disconnecting the appliance.</li>
+    <li>Avoid overloaded electrical sockets and unsuitable extension cords.</li>
+    <li>Do not use the appliance near flammable gases, paints or chemical vapours.</li>
+    <li>Always switch off and unplug before cleaning or maintenance.</li>
+    <li>Do not attempt to dismantle, repair or modify internal electrical components.</li>
+    <li>Avoid placing the fan on unstable or uneven surfaces.</li>
+    <li>Stop operation immediately if unusual noise, a burning smell or an electrical malfunction occurs.</li>
+    <li>Keep the appliance away from excessive moisture and outdoor weather conditions.</li>
+    <li>Do not move or reposition the appliance while it is operating.</li>
+    <li>Maintain adequate clearance around the appliance.</li>
+  </ul>
+  <p><strong>Important:</strong> The TP02 PLUS is an air circulation fan. It does not provide refrigerated cooling like an air conditioner. Heating functionality is not specified for this model.</p>
+  <h2>Warranty &amp; Support</h2>
+  <p><strong>Warranty:</strong> 1-Year Limited Motor Warranty</p>
+  <p><strong>Support Email:</strong> <a href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a></p>
+  <p><strong>Support Phone:</strong> <a href="tel:+918530340676">8530340676</a></p>
+  <p><strong>Shipping:</strong> Free Shipping Across India, subject to serviceability.</p>
+  <p><strong>Exchange Review:</strong> 7 Days for Verified Delivery Defects, subject to policy terms.</p>
+  <h2>Airflow for everyday use</h2>
+  <h3>The FutureX TP02 PLUS – Modern Airflow. Everyday Comfort.</h3>
+  <p>Upgrade your indoor cooling experience with the FutureX TP02 PLUS Bladeless Tower Fan.</p>
+  <p>Featuring an <strong>upgraded BLDC motor, adjustable airflow, oscillation support, remote control and contemporary tower design</strong>, the TP02 PLUS brings convenience and modern styling to your everyday routine.</p>
+  <p><strong>Smooth Airflow. Quiet Performance. Smart Everyday Cooling.</strong></p>
+`;
+
+export const TP02_PLUS_LISTING_SPECS = {
+  "Brand": "The FutureX",
+  "Model": "TP02 PLUS",
+  "Product Type": "Bladeless Tower Fan",
+  "Motor Technology": "BLDC Motor",
+  "Primary Function": "Cooling Airflow",
+  "Design": "Modern Tower Fan",
+  "Remote Control": "Yes",
+  "Oscillation": "Supported",
+  "Speed Adjustment": "Supported",
+  "Recommended Application": "Indoor Household & Office Use",
+  "Fan Structure": "Bladeless-Style Airflow Outlet",
+  "Motor": "Upgraded BLDC Motor",
+  "Airflow": "Adjustable",
+  "Noise Performance": "Designed for Low-Noise Operation",
+  "Air Circulation": "Oscillation Supported",
+  "Control Method": "Remote Control",
+  "Maintenance": "Routine Exterior and Vent Cleaning",
+  "Installation": "Freestanding Indoor Placement",
+};
+
+export const TP02_PLUS_LISTING_FAQS = [
+  {
+    q: "What is the FutureX TP02 PLUS?",
+    a: "The TP02 PLUS is a bladeless tower fan featuring an upgraded BLDC motor, adjustable airflow, remote control and oscillation support.",
+  },
+  {
+    q: "What is the benefit of a BLDC motor?",
+    a: "BLDC motors use brushless technology designed to support efficient, smooth and low-noise operation.",
+  },
+  {
+    q: "Does the TP02 PLUS have exposed fan blades?",
+    a: "No. It features a bladeless-style airflow outlet without exposed conventional rotating fan blades.",
+  },
+  {
+    q: "Can I control the TP02 PLUS remotely?",
+    a: "Yes. The product includes remote control functionality.",
+  },
+  {
+    q: "Can I adjust the airflow speed?",
+    a: "Yes. The TP02 PLUS supports adjustable airflow settings.",
+  },
+  {
+    q: "Does the TP02 PLUS support oscillation?",
+    a: "Yes. It includes oscillation support for broader air circulation.",
+  },
+  {
+    q: "Is the TP02 PLUS suitable for bedrooms?",
+    a: "Yes. Its modern design and low-noise operating characteristics make it suitable for appropriate indoor bedroom use.",
+  },
+  {
+    q: "Is the TP02 PLUS suitable for offices?",
+    a: "Yes. It is designed for modern homes and workplaces.",
+  },
+  {
+    q: "Does the TP02 PLUS provide heating?",
+    a: "Heating functionality is not specified for this model.",
+  },
+  {
+    q: "Is the TP02 PLUS an air conditioner?",
+    a: "No. It circulates ambient air and does not provide refrigerated cooling.",
+  },
+  {
+    q: "Does the TP02 PLUS have a HEPA filter?",
+    a: "HEPA filtration is not listed among the supplied product features.",
+  },
+  {
+    q: "Is the TP02 PLUS energy-efficient?",
+    a: "The upgraded BLDC motor is designed for efficient operation. Exact energy consumption depends on the product's rated power and operating settings.",
+  },
+  {
+    q: "Is the fan quiet?",
+    a: "The product is designed for low-noise airflow, although actual noise depends on the selected speed and environment.",
+  },
+  {
+    q: "How do I clean the fan?",
+    a: "Switch off and unplug the appliance. Wipe the exterior with a soft cloth and remove accessible dust using a soft brush.",
+  },
+  {
+    q: "Can I use the fan throughout the day?",
+    a: "The appliance is designed for everyday indoor use. Follow its operating instructions and avoid unattended operation where safety conditions are uncertain.",
+  },
+  {
+    q: "Does the TP02 PLUS require maintenance?",
+    a: "Routine exterior cleaning and keeping the air openings clear are recommended.",
+  },
+  {
+    q: "Does the TP02 PLUS save space?",
+    a: "Its vertical tower structure is designed for convenient placement in modern indoor environments.",
+  },
+  {
+    q: "What is the warranty period?",
+    a: "The website lists a 1-year limited motor warranty, subject to the applicable warranty terms.",
+  },
+  {
+    q: "Is shipping available across India?",
+    a: "The website lists free shipping across India, subject to delivery serviceability.",
+  },
+  {
+    q: "Is cash on delivery available?",
+    a: "Cash on delivery is available on eligible orders and serviceable locations.",
+  },
+  {
+    q: "What is the exchange policy?",
+    a: "The website lists a 7-day exchange review for verified delivery defects, subject to the applicable policy.",
+  },
+  {
+    q: "How do I contact FutureX support?",
+    a: "Contact thefuturex.ptc@gmail.com or call 8530340676.",
+  },
+];

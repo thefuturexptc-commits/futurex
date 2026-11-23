@@ -123,3 +123,350 @@ export const getTp12Content = (product?: Pick<Product, 'name' | 'slug' | 'specs'
   const identifiers = [product.name, product.specs?.Model, product.specs?.['Model Number'], product.slug?.replace(/-/g, ' ')].filter(Boolean).join(' ');
   return /\btp\s*-?\s*12\b/i.test(identifiers) || product.slug === 'tfx-luxair-pro' ? TP12_CONTENT : null;
 };
+
+export const TP12_LISTING_TITLE = "The FutureX TP12 3-in-1 Bladeless Tower Fan with HEPA Air Purifier & Plasma Purification";
+
+export const TP12_LISTING_DESCRIPTION_HTML = `
+  <h2>TP12 at a glance</h2>
+  <p>Experience a new level of everyday indoor comfort with the <strong>FutureX TP12 3-in-1 Bladeless Tower Fan</strong>, designed to combine powerful air circulation, HEPA air filtration and plasma purification technology in one modern appliance.</p>
+  <p>Featuring advanced bladeless airflow technology, multiple airflow speed settings, remote and touch controls, and an elegant ABS plastic body, the TP12 offers a practical solution for modern Indian homes and workplaces.</p>
+  <p>The integrated HEPA filtration system helps capture airborne particles as air passes through the filter, while plasma purification technology provides an additional air-treatment function.</p>
+  <p>Whether you're relaxing in your bedroom, working in your office or spending time with family, the FutureX TP12 brings together <strong>modern cooling airflow, air purification and convenient everyday control</strong>.</p>
+  <h2>Key Features</h2>
+  <ul>
+    <li><strong>3-in-1 Functionality</strong> – Combines bladeless airflow, HEPA filtration and plasma purification.</li>
+    <li><strong>Bladeless Airflow Technology</strong> – Smooth air circulation without exposed conventional rotating fan blades.</li>
+    <li><strong>HEPA Air Filtration</strong> – Designed to capture airborne particles passing through the filtration system.</li>
+    <li><strong>Plasma Purification Technology</strong> – Integrated plasma-based air-treatment functionality.</li>
+    <li><strong>Multiple Airflow Speeds</strong> – Adjust airflow intensity according to your comfort.</li>
+    <li><strong>Remote Control Operation</strong> – Convenient control of supported fan functions.</li>
+    <li><strong>Touch Control Panel</strong> – Operate available functions directly from the appliance.</li>
+    <li><strong>Quiet Operation</strong> – Designed for comfortable indoor use.</li>
+    <li><strong>ABS Plastic Body</strong> – Modern, lightweight-style construction.</li>
+    <li><strong>Space-Saving Tower Design</strong> – Suitable for bedrooms, living rooms, apartments and offices.</li>
+  </ul>
+  <h2>Advanced 3-in-1 Technology</h2>
+  <h3>One Appliance. Three Everyday Functions.</h3>
+  <p>The FutureX TP12 combines three essential functions in one appliance.</p>
+  <h3>Bladeless Air Circulation</h3>
+  <p>Enjoy smooth, adjustable airflow through a modern bladeless outlet.</p>
+  <h3>HEPA Air Purification</h3>
+  <p>The integrated filtration system helps capture airborne particles as air passes through the filter.</p>
+  <h3>Plasma Purification</h3>
+  <p>The plasma purification system provides an additional air-treatment function designed to complement the appliance's filtration system.</p>
+  <p>Together, these features make the TP12 a multifunctional fan and air purification appliance.</p>
+  <h2>Modern Bladeless Airflow</h2>
+  <h3>Smooth Airflow. Contemporary Design.</h3>
+  <p>The FutureX TP12 features an enclosed airflow system that draws air through the appliance and directs it toward the bladeless outlet.</p>
+  <p>Unlike conventional fans with exposed rotating blades, its modern tower structure provides a streamlined appearance.</p>
+  <p>Adjust the airflow to suit your comfort while enjoying the convenience of an integrated air purification system.</p>
+  <h2>HEPA Air Filtration</h2>
+  <h3>Supporting Cleaner Indoor Air.</h3>
+  <p>The FutureX TP12 includes an integrated HEPA filtration system designed to capture airborne particles passing through the filter.</p>
+  <p>The filtration system helps reduce airborne particulate matter that reaches the filter, making it a useful addition to everyday indoor air management.</p>
+  <h3>HEPA Filtration Benefits</h3>
+  <ul>
+    <li>Captures airborne particles passing through the filter.</li>
+    <li>Supports indoor air filtration.</li>
+    <li>Works alongside the appliance's airflow system.</li>
+    <li>Provides an additional function beyond conventional fan circulation.</li>
+  </ul>
+  <p><strong>Important:</strong> Exact filtration efficiency, HEPA grade and particle-removal performance depend on the installed filter specification and have not been provided in the available product information.</p>
+  <h2>Plasma Purification Technology</h2>
+  <h3>An Additional Layer of Air Treatment.</h3>
+  <p>The FutureX TP12 incorporates plasma purification technology as part of its integrated air-treatment system.</p>
+  <h2>Multiple Airflow Speed Settings</h2>
+  <h3>Personalised Airflow for Your Comfort.</h3>
+  <p>The FutureX TP12 allows users to adjust airflow intensity through its supported speed controls.</p>
+  <p>Choose a gentler airflow setting for relaxed indoor use or increase the airflow when stronger circulation is preferred.</p>
+  <h2>Remote &amp; Touch Control</h2>
+  <h3>Convenient Control, Wherever You Relax.</h3>
+  <p>Operate the FutureX TP12 through its integrated touch control panel or supplied remote control.</p>
+  <h2>Quiet Operation</h2>
+  <h3>Designed for Everyday Indoor Comfort.</h3>
+  <p>The TP12 is designed to deliver comfortable airflow with reduced operating disturbance.</p>
+  <p>Its airflow settings make it suitable for bedrooms, living rooms, study spaces and offices.</p>
+  <p>Actual operating noise depends on the selected speed and room conditions.</p>
+  <h2>Modern ABS Plastic Body</h2>
+  <h3>Contemporary Styling for Modern Interiors.</h3>
+  <p>The FutureX TP12 features an ABS plastic body and a space-saving tower structure.</p>
+  <p>Its streamlined design combines airflow functionality and filtration components within one appliance.</p>
+  <p>Suitable for contemporary bedrooms, apartments, offices and living spaces.</p>
+  <h3>The FutureX TP12 – Bladeless Cooling Meets HEPA Air Purification</h3>
+  <p>Upgrade your indoor comfort with the FutureX TP12 3-in-1 Bladeless Tower Fan, a multifunctional appliance designed for modern Indian homes.</p>
+  <p>Combining bladeless air circulation, HEPA filtration and plasma purification technology, the TP12 brings multiple indoor comfort functions together in a single tower design.</p>
+  <p>The integrated filtration system helps capture airborne particles passing through the filter, while plasma purification adds another air-treatment feature.</p>
+  <p>With multiple airflow speeds, remote and touch controls, quiet operation and an ABS plastic body, the TP12 is designed for convenient everyday use.</p>
+  <p>Whether you are looking for a <strong>bladeless fan with HEPA air purifier, 3-in-1 tower fan, plasma air purifier fan or premium air purifier tower fan in India</strong>, the FutureX TP12 offers a practical combination of airflow, filtration and modern styling.</p>
+  <h2>How to Use the FutureX TP12</h2>
+  <h3>Step 1: Proper Placement</h3>
+  <ol>
+    <li>Place the appliance on a stable, level and dry surface.</li>
+    <li>Keep the appliance away from curtains, furniture and other obstructions.</li>
+    <li>Ensure the air inlet and outlet remain clear.</li>
+    <li>Position the appliance in a suitable indoor location.</li>
+  </ol>
+  <h3>Step 2: Connect the Power Supply</h3>
+  <ol>
+    <li>Verify that the electrical supply matches the product rating label.</li>
+    <li>Connect the power cord to a suitable socket.</li>
+    <li>Ensure the plug and your hands are dry.</li>
+    <li>Switch on the main power supply.</li>
+  </ol>
+  <h3>Step 3: Switch On</h3>
+  <ol>
+    <li>Press the power button on the appliance or remote.</li>
+    <li>Allow the appliance to begin operation.</li>
+    <li>Select the required airflow setting.</li>
+  </ol>
+  <h3>Step 4: Adjust Airflow</h3>
+  <ol>
+    <li>Use the speed adjustment controls.</li>
+    <li>Select the preferred airflow intensity.</li>
+    <li>Increase or decrease airflow according to your comfort.</li>
+  </ol>
+  <h3>Step 5: HEPA Filtration</h3>
+  <ol>
+    <li>Ensure the filter is correctly installed.</li>
+    <li>Operate the appliance normally according to its supported controls.</li>
+    <li>Keep the air inlet and outlet unobstructed.</li>
+    <li>Inspect the filter regularly.</li>
+  </ol>
+  <h3>Step 6: Plasma Purification</h3>
+  <ol>
+    <li>Use the supported plasma function control, where independently selectable.</li>
+    <li>Follow the model-specific operating instructions.</li>
+    <li>Do not open or modify the internal ion-generation components.</li>
+  </ol>
+  <h3>Step 7: Remote Control</h3>
+  <ol>
+    <li>Point the remote toward the appliance receiver.</li>
+    <li>Select the desired supported function.</li>
+    <li>Adjust the airflow or other settings supported by your unit.</li>
+  </ol>
+  <h3>Step 8: Switch Off</h3>
+  <ol>
+    <li>Press the power button.</li>
+    <li>Switch off the main electrical supply.</li>
+    <li>Unplug when not in use for an extended period.</li>
+    <li>Disconnect before cleaning or maintenance.</li>
+  </ol>
+  <h2>HEPA Filter Removal &amp; Replacement</h2>
+  <h3>Step 1: Switch Off</h3>
+  <p>Turn off the appliance and disconnect the power plug.</p>
+  <h3>Step 2: Remove the Filter</h3>
+  <p>Access the filter compartment and carefully remove the filter assembly using its designated release points.</p>
+  <h3>Step 3: Inspect the Filter</h3>
+  <p>Check for accumulated dust, damage or signs that replacement is required.</p>
+  <h3>Step 4: Replace When Necessary</h3>
+  <p>Install a compatible replacement filter according to the manufacturer's instructions.</p>
+  <h3>Step 5: Reinstall</h3>
+  <p>Align the filter assembly with the designated grooves and press it securely into position.</p>
+  <h3>Important Filter Care</h3>
+  <ul>
+    <li>Do not wash the HEPA filter unless it is specifically labelled washable.</li>
+    <li>Do not operate the appliance with an incorrectly installed filter.</li>
+    <li>Use compatible replacement filtration components.</li>
+    <li>Do not touch or dismantle internal electrical purification components.</li>
+  </ul>
+  <h2>Cleaning &amp; Maintenance</h2>
+  <p>Regular maintenance helps maintain airflow and filtration performance.</p>
+  <h3>Exterior Cleaning</h3>
+  <ol>
+    <li>Switch off and unplug the appliance.</li>
+    <li>Wipe the outer body with a soft, dry or slightly damp cloth.</li>
+    <li>Avoid harsh chemicals, detergents and abrasive cleaners.</li>
+    <li>Do not spray water directly onto the appliance.</li>
+  </ol>
+  <h3>Air Inlet &amp; Outlet Cleaning</h3>
+  <ol>
+    <li>Inspect accessible openings for dust.</li>
+    <li>Use a soft brush to remove loose debris.</li>
+    <li>Keep the airflow passages unobstructed.</li>
+    <li>Avoid inserting objects into internal components.</li>
+  </ol>
+  <h3>Filter Maintenance</h3>
+  <ol>
+    <li>Inspect the HEPA filter periodically.</li>
+    <li>Replace it according to the manufacturer's recommendations.</li>
+    <li>Ensure the replacement filter is fitted correctly.</li>
+    <li>Do not operate the fan with a damaged or incorrectly installed filter.</li>
+  </ol>
+  <h3>Remote Control Maintenance</h3>
+  <ol>
+    <li>Keep the remote control dry.</li>
+    <li>Replace batteries when necessary.</li>
+    <li>Follow the battery polarity markings.</li>
+    <li>Remove batteries during extended periods of non-use.</li>
+  </ol>
+  <h2>Safety Instructions &amp; Warnings</h2>
+  <ul>
+    <li>Use only the voltage specified on the product rating label.</li>
+    <li>Place the appliance on a flat, stable and dry surface.</li>
+    <li>Keep away from water, bathrooms, showers and swimming pools.</li>
+    <li>Never operate with wet hands.</li>
+    <li>Do not insert fingers or objects into the air inlet or outlet.</li>
+    <li>Do not block ventilation openings.</li>
+    <li>Keep curtains, paper and clothing away from the airflow openings.</li>
+    <li>Supervise children and pets around the appliance.</li>
+    <li>Do not use a damaged power cord or plug.</li>
+    <li>Always hold the plug when disconnecting the appliance.</li>
+    <li>Avoid overloaded sockets and unsuitable extension cords.</li>
+    <li>Do not operate near flammable chemicals, gases or vapours.</li>
+    <li>Switch off and unplug before cleaning.</li>
+    <li>Never immerse the appliance in water.</li>
+    <li>Do not dismantle internal electrical components.</li>
+    <li>Do not attempt to repair the plasma purification system yourself.</li>
+    <li>Do not use the appliance with an incorrectly installed filter.</li>
+    <li>Stop operation if unusual noises, burning smells or electrical faults occur.</li>
+    <li>Keep the appliance away from excessive moisture and outdoor conditions.</li>
+    <li>Do not move the appliance during operation.</li>
+    <li>Ensure adequate ventilation and clearance around the appliance.</li>
+  </ul>
+  <p><strong>Important:</strong> The TP12 is an indoor air circulation and purification appliance, not an air conditioner. HEPA filtration effectiveness depends on filter performance and maintenance. Plasma purification performance and emissions depend on the installed system.</p>
+  <h2>Warranty &amp; Support</h2>
+  <p><strong>Warranty:</strong> 1-Year Limited Motor Warranty</p>
+  <p><strong>Email:</strong> <a href="mailto:thefuturex.ptc@gmail.com">thefuturex.ptc@gmail.com</a></p>
+  <p><strong>Phone:</strong> <a href="tel:+918530340676">8530340676</a></p>
+  <p><strong>Shipping:</strong> Free Shipping Across India, subject to serviceability.</p>
+  <p><strong>Exchange Review:</strong> 7 Days for Verified Delivery Defects, subject to applicable terms.</p>
+  <h2>Air circulation and filtration</h2>
+  <h3>The FutureX TP12 – More Than Just a Fan.</h3>
+  <p>Experience modern indoor comfort with a single appliance designed to combine <strong>bladeless airflow, HEPA air filtration and plasma purification</strong>.</p>
+  <p>With convenient remote and touch controls, adjustable airflow and a contemporary ABS body, the TP12 brings together practical air circulation and filtration functionality.</p>
+  <p><strong>Modern Airflow. Integrated Purification. Everyday Comfort.</strong></p>
+`;
+
+export const TP12_LISTING_SPECS = {
+  "Brand": "The FutureX",
+  "Model": "TP12",
+  "Product Name": "TP12 3-in-1 Bladeless Tower Fan",
+  "Product Type": "Bladeless Tower Fan with Air Purification",
+  "Primary Functions": "Air Circulation, HEPA Filtration, Plasma Purification",
+  "HEPA Filtration": "Yes",
+  "Plasma Purification": "Integrated",
+  "Body Material": "ABS Plastic",
+  "Airflow Type": "Bladeless",
+  "Remote Control": "Yes",
+  "Touch Control": "Supported",
+  "Design": "Modern Tower",
+  "Fan Structure": "Bladeless Airflow Outlet",
+  "Body Construction": "ABS Plastic",
+  "Placement": "Freestanding Indoor Use",
+  "Recommended Locations": "Bedroom, Living Room, Study, Office",
+  "Space-Saving Design": "Yes",
+  "Air Circulation": "Supported",
+  "Airflow Adjustment": "Multiple Speeds",
+  "HEPA Air Filter": "Integrated",
+  "Quiet Operation": "Designed for Low-Noise Use",
+  "Touch Control Panel": "Yes",
+  "Appliance Power": "Mains Electricity",
+  "Remote Battery": "Battery Operated",
+  "Refrigerated Cooling": "No",
+  "Filter Replacement": "Required as Recommended",
+  "Rated Voltage": "Check Product Rating Label",
+  "Rated Frequency": "Check Product Rating Label",
+};
+
+export const TP12_LISTING_FAQS = [
+  {
+    q: "What is the FutureX TP12?",
+    a: "The FutureX TP12 is a 3-in-1 bladeless tower fan combining air circulation, HEPA filtration and plasma purification.",
+  },
+  {
+    q: "What are its three main functions?",
+    a: "Its three primary functions are bladeless airflow, HEPA air filtration and plasma purification.",
+  },
+  {
+    q: "Does the TP12 include a HEPA filter?",
+    a: "Yes. The product includes an integrated HEPA filtration system.",
+  },
+  {
+    q: "What does the HEPA filter do?",
+    a: "It helps capture airborne particles as air passes through the filtration system.",
+  },
+  {
+    q: "What is plasma purification?",
+    a: "Plasma purification is an air-treatment technology that uses an electrical process to generate reactive species or charged particles. Performance depends on the specific technology.",
+  },
+  {
+    q: "Does the TP12 help with airborne dust?",
+    a: "The filtration system is designed to capture airborne particles that pass through its filter, including some dust particles.",
+  },
+  {
+    q: "Does the TP12 have exposed fan blades?",
+    a: "No. It uses a modern bladeless-style airflow outlet.",
+  },
+  {
+    q: "Does it support remote control?",
+    a: "Yes. The TP12 supports remote control operation.",
+  },
+  {
+    q: "Does it have touch controls?",
+    a: "Yes. It includes integrated touch controls.",
+  },
+  {
+    q: "Can I adjust the airflow?",
+    a: "Yes. Multiple airflow speed settings are supported.",
+  },
+  {
+    q: "Does it have an air quality indicator?",
+    a: "Check the controls and manual supplied with your TP12 to see whether your unit includes an air-quality indicator.",
+  },
+  {
+    q: "What do the air quality indicator colours mean?",
+    a: "If your unit has an air-quality indicator, use the colour guide in the manual supplied with that unit.",
+  },
+  {
+    q: "Does the TP12 support ion generation?",
+    a: "The TP12 includes plasma purification. Check the manual supplied with your unit for instructions on any separate ion control.",
+  },
+  {
+    q: "Is the TP12 suitable for bedrooms?",
+    a: "Yes. It is designed for indoor use, including bedrooms and living spaces.",
+  },
+  {
+    q: "Is it suitable for offices?",
+    a: "Yes. Its tower design and adjustable airflow make it suitable for office environments.",
+  },
+  {
+    q: "Does the TP12 provide heating?",
+    a: "Heating functionality is not specified for the TP12 product listing.",
+  },
+  {
+    q: "Is the TP12 an air conditioner?",
+    a: "No. It circulates air and provides filtration, but does not offer refrigerated cooling.",
+  },
+  {
+    q: "Does the HEPA filter need replacement?",
+    a: "Yes. Replace the filter according to the manufacturer's maintenance recommendations.",
+  },
+  {
+    q: "Can I wash the HEPA filter?",
+    a: "Do not wash it unless the manufacturer specifically confirms that the installed filter is washable.",
+  },
+  {
+    q: "How do I clean the TP12?",
+    a: "Switch off and unplug the appliance. Clean its exterior with a soft cloth, keep the vents free from dust and maintain the filter as directed.",
+  },
+  {
+    q: "What is the warranty?",
+    a: "The website lists a 1-year limited motor warranty, subject to applicable terms.",
+  },
+  {
+    q: "Is delivery available across India?",
+    a: "The website lists free shipping across India, subject to serviceability.",
+  },
+  {
+    q: "Is cash on delivery available?",
+    a: "Cash on delivery is available on eligible orders.",
+  },
+  {
+    q: "What is the exchange policy?",
+    a: "The website lists a 7-day exchange review for verified delivery defects, subject to its policy.",
+  },
+  {
+    q: "How do I contact customer support?",
+    a: "Email thefuturex.ptc@gmail.com or call 8530340676.",
+  },
+];

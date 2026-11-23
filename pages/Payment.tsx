@@ -83,21 +83,6 @@ const RazorpayAutoOpen: React.FC<{ enabled: boolean; onOpen: () => void }> = ({ 
   return null;
 };
 
-const sendCompanyOrderEmail = async (order: unknown) => {
-  try {
-    await fetch('/api/order-email', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ order }),
-      keepalive: true,
-    });
-  } catch (emailError) {
-    if (import.meta.env.DEV) {
-      console.warn('Order email notification failed:', emailError);
-    }
-  }
-};
-
 export const Payment: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -203,8 +188,6 @@ export const Payment: React.FC = () => {
     );
 
     // ✅ META PIXEL: Purchase — fires after order is successfully created
-    void sendCompanyOrderEmail(order);
-
     const purchaseEvent = {
       ecommerce: {
         transaction_id: order.id,

@@ -95,5 +95,11 @@
 }
 
 @media (max-width: 359px) {
+  #root .product-detail-page .product-feature-list { grid-template-columns: minmax(0, 1fr); }
+  #root .product-detail-page .product-detail-sticky-tab { padding-inline: 12px; font-size: 13px; }
+}
+
+@media (max-width: 479px) {
   #root .product-detail-page .product-specifications-row { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+  #root .product-detail-page .product-rich-description :is(p, li, a) { overflow-wrap: anywhere; }
 }
