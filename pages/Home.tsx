@@ -421,7 +421,7 @@ const InfluencerVideos: React.FC = () => {
   useEffect(() => stopAutoScroll, [stopAutoScroll]);
 
   return (
-  <section className="bg-[#f8fafc] py-10 sm:py-14" aria-labelledby="creator-videos-title">
+  <section className="bg-[#f1f5f9] py-10 sm:py-14" aria-labelledby="creator-videos-title">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
       <div className="mb-5 flex items-end justify-between gap-4">
         <div>
@@ -437,8 +437,8 @@ const InfluencerVideos: React.FC = () => {
           <InfluencerVideoCard key={videoId} videoId={videoId} index={index} />
         ))}
         </div>
-        <div aria-hidden="true" onMouseEnter={() => startAutoScroll(-1)} onMouseLeave={stopAutoScroll} className="creator-rail-edge absolute inset-y-0 left-0 z-10 w-12 cursor-w-resize bg-gradient-to-r from-[#f8fafc] via-[#f8fafc]/75 to-transparent opacity-0 transition group-hover/creator:opacity-100" />
-        <div aria-hidden="true" onMouseEnter={() => startAutoScroll(1)} onMouseLeave={stopAutoScroll} className="creator-rail-edge absolute inset-y-0 right-0 z-10 w-16 cursor-e-resize bg-gradient-to-l from-[#f8fafc] via-[#f8fafc]/75 to-transparent opacity-0 transition group-hover/creator:opacity-100" />
+        <div aria-hidden="true" onMouseEnter={() => startAutoScroll(-1)} onMouseLeave={stopAutoScroll} className="creator-rail-edge absolute inset-y-0 left-0 z-10 w-12 cursor-w-resize bg-gradient-to-r from-[#f1f5f9] via-[#f1f5f9]/75 to-transparent opacity-0 transition group-hover/creator:opacity-100" />
+        <div aria-hidden="true" onMouseEnter={() => startAutoScroll(1)} onMouseLeave={stopAutoScroll} className="creator-rail-edge absolute inset-y-0 right-0 z-10 w-16 cursor-e-resize bg-gradient-to-l from-[#f1f5f9] via-[#f1f5f9]/75 to-transparent opacity-0 transition group-hover/creator:opacity-100" />
       </div>
     </div>
   </section>
