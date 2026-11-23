@@ -3777,6 +3777,36 @@ export const ProductDetail: React.FC = () => {
             <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? (isTfxV5Band ? 'mt-2' : 'mt-3') : 'mt-4'} product-detail-title max-w-[560px] break-words text-left ${isTfxV5Band ? 'text-[1.12rem] leading-[1.16]' : 'text-[1.3rem] leading-[1.22]'} font-semibold tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
               {suppliedFanHeading || displayProductName}
             </h1>
+            {isQg830Listing && (
+              <p className="mt-3 max-w-[680px] text-left text-sm leading-6 text-slate-700 sm:text-base sm:leading-7">
+                Experience year-round comfort with <strong>The FutureX QG830 Bladeless Tower Fan</strong>, a premium <strong>Hot &amp; Cool Fan for Home</strong> featuring 10 cooling speeds, PTC ceramic heating and remote control. Enjoy smooth, quiet airflow with a modern bladeless design, ideal for bedrooms, living rooms and offices.
+              </p>
+            )}
+            {isQ8ProProduct && (
+              <p className="mt-3 max-w-[680px] text-left text-sm leading-6 text-slate-700 sm:text-base sm:leading-7">
+                <strong>One Premium Fan. Comfort for Every Season.</strong> Upgrade your home with <strong>The FutureX Q8 PRO Bladeless Tower Fan</strong>, combining refreshing cooling airflow and powerful PTC ceramic heating in one stylish <strong>Hot &amp; Cool Fan</strong>. Enjoy effortless remote control, 71° oscillation and 180° adjustable head positioning for personalised comfort. A smart, space-saving alternative to separate fans and heaters, perfect for modern bedrooms, living rooms and offices.
+              </p>
+            )}
+            {isWallMount4319bListing && (
+              <p className="mt-3 max-w-[680px] text-left text-sm leading-6 text-slate-700 sm:text-base sm:leading-7">
+                <strong>Save Space. Enjoy Comfort in Every Season.</strong> Upgrade your home with <strong>The FutureX 4319B Bladeless Wall Mount Fan</strong>, a premium <strong>Hot &amp; Cool Wall Mount Fan</strong> that combines refreshing airflow and PTC ceramic heating in one sleek design. Featuring remote control, a 9-hour timer and an anti-fire ABS body, this <strong>Wall Mount Fan with Remote</strong> offers convenient year-round comfort without occupying floor space. Ideal for bedrooms, living rooms and offices, it&apos;s a smart alternative to separate fans and room heaters.
+              </p>
+            )}
+            {isTp02ThreeInOneListing && (
+              <p className="mt-3 max-w-[680px] text-left text-sm leading-6 text-slate-700 sm:text-base sm:leading-7">
+                <strong>Cooler Comfort. Fresher Air. Smarter Living.</strong> Upgrade your home with <strong>The FutureX TFX-TP02 3-in-1 Bladeless Tower Fan with Air Purifier</strong>, combining refreshing airflow, air filtration and a smart LED display in one premium design. Featuring adjustable cooling speeds, remote control and oscillation, this <strong>Bladeless Air Purifier Fan</strong> delivers convenient everyday comfort. A stylish, space-saving alternative to separate fans and air purifiers, perfect for bedrooms, living rooms and offices.
+              </p>
+            )}
+            {isTp12Listing && (
+              <p className="mt-3 max-w-[680px] text-left text-sm leading-6 text-slate-700 sm:text-base sm:leading-7">
+                <strong>Powerful Airflow. Cleaner Air. Smarter Living.</strong> Upgrade your home with <strong>The FutureX TP12 3-in-1 Bladeless Tower Fan with HEPA Air Purifier</strong>, combining smooth cooling airflow, HEPA filtration and advanced plasma purification in one premium appliance. Featuring convenient remote and touch controls, this <strong>Bladeless Fan with HEPA Filter</strong> helps reduce airborne particles while delivering comfortable airflow. A smart, space-saving alternative to separate fans and air purifiers, ideal for bedrooms, living rooms and offices.
+              </p>
+            )}
+            {isTp02PlusListing && (
+              <p className="mt-3 max-w-[680px] text-left text-sm leading-6 text-slate-700 sm:text-base sm:leading-7">
+                <strong>Powerful Airflow. Whisper-Quiet Comfort. Smarter Cooling.</strong> Upgrade your everyday comfort with <strong>The FutureX TP02 PLUS Bladeless Tower Fan</strong>, featuring an advanced <strong>BLDC Motor</strong> for energy-efficient, low-noise airflow. With adjustable cooling speeds, convenient remote control and oscillation, this <strong>Bladeless Cooling Fan</strong> offers effortless comfort in a sleek, space-saving design. A premium <strong>Tower Fan for Home and Office</strong>, perfect for bedrooms, living rooms and modern workspaces.
+              </p>
+            )}
             <span className={`${isTfxV5Band ? 'mt-2' : 'mt-3'} inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]`}>
               Overview
             </span>
