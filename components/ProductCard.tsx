@@ -292,7 +292,7 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
           </div>
         )}
         {isMegaPriceDropProduct(product) && (
-          <div className="absolute left-3 top-3 z-20 rounded-full border border-red-700 bg-gradient-to-r from-red-600 to-rose-700 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-white shadow-[0_4px_14px_rgba(220,38,38,0.3)] sm:px-3 sm:text-[10px]">
+          <div className="absolute left-3 top-3 z-20 rounded-full border border-[#540000] bg-[#540000] px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-[0.12em] text-white shadow-[0_4px_14px_rgba(84,0,0,0.3)] sm:px-3 sm:text-[10px]">
             <span aria-hidden="true">⚡ </span>Mega Price Drop
           </div>
         )}

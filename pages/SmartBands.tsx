@@ -285,7 +285,7 @@ export const SmartBands: React.FC = () => {
                     className="group relative flex min-h-[394px] w-[min(82vw,286px)] shrink-0 snap-start flex-col overflow-hidden rounded-lg border border-slate-100 bg-white p-2.5 shadow-[0_10px_26px_rgba(15,63,70,0.09)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_14px_34px_rgba(15,63,70,0.13)] min-[420px]:w-[280px] sm:min-h-[420px] sm:w-[292px]"
                   >
                     {showMegaPriceDrop && (
-                      <div className="absolute left-2.5 top-2.5 z-10 rounded-r-full bg-[#df0b16] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_8px_18px_rgba(223,11,22,0.18)]">
+                      <div className="absolute left-2.5 top-2.5 z-10 rounded-r-full bg-[#540000] px-3 py-1 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_8px_18px_rgba(84,0,0,0.22)]">
                         ⚡ Mega Price Drop
                       </div>
                     )}

@@ -1206,7 +1206,7 @@ export const Home: React.FC = () => {
 
                 // Give the strongest promotion priority over launch and featured tags.
                 const topLeftTag = showMegaPriceDrop
-                  ? { label: 'MEGA PRICE DROP', className: 'tfx-badge-pulse bg-gradient-to-r from-red-600 to-rose-700 shadow-[0_4px_14px_rgba(220,38,38,0.3)]' }
+                  ? { label: 'MEGA PRICE DROP', className: 'tfx-badge-pulse bg-[#540000] shadow-[0_4px_14px_rgba(84,0,0,0.3)]' }
                   : hasDiscount && discountLabel
                     ? { label: `Extra ${discountLabel} Off`, className: 'bg-emerald-600' }
                     : product.isNewArrival

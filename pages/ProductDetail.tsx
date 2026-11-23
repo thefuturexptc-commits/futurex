@@ -3721,7 +3721,7 @@ export const ProductDetail: React.FC = () => {
               )}
             </div>
             {(isFeaturedBandProduct || isMegaPriceDropBand) && (
-              <div className={`product-offer-badge ${isMegaPriceDropBand ? 'product-offer-badge--mega border-red-700 bg-gradient-to-r from-red-600 to-rose-700 text-white shadow-lg' : 'border-[#a9812f]/30 bg-[#fbf6ea] text-[#8a6a20] shadow-[0_1px_6px_rgba(169,129,47,0.18)]'} mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.2em] sm:px-4 sm:py-2 sm:text-xs`}>
+              <div className={`product-offer-badge ${isMegaPriceDropBand ? 'product-offer-badge--mega border-[#540000] bg-[#540000] text-white shadow-[0_8px_18px_rgba(84,0,0,0.22)]' : 'border-[#a9812f]/30 bg-[#fbf6ea] text-[#8a6a20] shadow-[0_1px_6px_rgba(169,129,47,0.18)]'} mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.2em] sm:px-4 sm:py-2 sm:text-xs`}>
                 {isMegaPriceDropBand ? <span aria-hidden="true">⚡</span> : <span className="h-1 w-1 rounded-full bg-[#a9812f]" />}
                 {isMegaPriceDropBand ? 'Mega Price Drop' : 'Limited Time Offer'}
               </div>

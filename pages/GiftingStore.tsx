@@ -312,7 +312,7 @@ const GiftProductCard: React.FC<{ product: Product; badge?: string; imageTerms?:
   <article className="group overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(15,23,42,0.12)]">
     <Link to={getProductPath(product, imageTerms)} className="relative flex aspect-[4/3] items-center justify-center bg-[#f8fafc] p-4">
       {(isMegaPriceDropProduct(product) || badge) && (
-        <span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white ${isMegaPriceDropProduct(product) ? 'bg-gradient-to-r from-red-600 to-rose-700 shadow-[0_4px_14px_rgba(220,38,38,0.3)]' : 'bg-[#b20c16]'}`}>
+        <span className={`absolute left-3 top-3 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.12em] text-white ${isMegaPriceDropProduct(product) ? 'bg-[#540000] shadow-[0_4px_14px_rgba(84,0,0,0.3)]' : 'bg-[#b20c16]'}`}>
           {isMegaPriceDropProduct(product) ? '⚡ Mega Price Drop' : badge}
         </span>
       )}
