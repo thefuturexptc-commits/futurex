@@ -638,6 +638,53 @@ const isInvalidTfx5BandSpec = ([key, value]: [string, unknown]): boolean => {
   return false;
 };
 
+const TFX5_SUPPLIED_DESCRIPTION_HTML = `
+  <h2>The FutureX AI Smart Band TFX5</h2>
+  <p><strong>Track smarter. Understand better. Live healthier.</strong> The FutureX AI Smart Band TFX5 is a screenless fitness tracker that brings supported activity, sleep and wellness information together in the TFX Vital App.</p>
+  <p>Review supported heart rate, SpO2, HRV, stress, sleep, steps, calories, distance and workout activity, with app-based wellness summaries, recovery insights and nutrition tools.</p>
+  <h3>Fitness, Activity and Sleep Tracking</h3>
+  <ul><li><strong>Heart rate and SpO2:</strong> Review supported readings and trends in the app.</li><li><strong>HRV, stress and recovery:</strong> Explore general wellness and recovery-related information.</li><li><strong>Sleep:</strong> Wear the band overnight to review available sleep duration and pattern insights.</li><li><strong>Daily movement:</strong> Follow steps, calories, distance and workout activity.</li></ul>
+  <h3>AI Guidance and Nutrition</h3>
+  <p>The TFX Vital App can turn available profile details and synchronised activity into general wellness summaries and guidance for exercise, walking, recovery, sleep and daily fitness. It also supports calorie goals, meals and estimated meal-photo calorie values. Estimates can vary with portion size, ingredients, preparation and image quality.</p>
+  <h3>Setup and Charging</h3>
+  <ol><li>Wear the band 2â€“3 cm above the wrist bone, with the sensor against clean skin.</li><li>Before first use, remove the battery pack, place it in the charging dock and connect the Type-C cable to a compatible power source.</li><li>Download the TFX Vital App, enable Bluetooth and pair the detected TFX5 band.</li><li>Allow the band to synchronise, then review supported wellness information in the app.</li></ol>
+  <h3>Everyday Wear, Water Resistance and Battery</h3>
+  <p>The lightweight, screenless design supports comfortable daily activities, workouts and overnight wear. It is available in Black, Pink, Blue, White and Silver variants. IP68 water and dust resistance is designed for sweat and light rain. Avoid hot water, steam, high-pressure water and prolonged immersion.</p>
+  <p>Battery life is approximately 7â€“10 days depending on use, settings and synchronisation. Recharge using the included charging dock and Type-C cable. Keep the sensor and charging contacts clean and dry, and do not charge when wet.</p>
+  <p><strong>For general wellness only.</strong> Measurements, AI guidance, nutrition information and calorie estimates are informational and are not intended for medical diagnosis, treatment or emergency decisions.</p>
+`;
+
+const TFX5_SUPPLIED_SPECS: Record<string, string> = {
+  Brand: 'The FutureX',
+  'Product Name': 'AI Smart Band TFX5',
+  'Manual Product Name': 'Smart Health Band V5',
+  'Device Type': 'Screenless smart fitness band',
+  'Heart Rate Monitoring': 'Supported',
+  'SpO2 Monitoring': 'Supported',
+  'HRV Monitoring': 'Supported',
+  'Sleep and Stress Monitoring': 'Supported',
+  'Activity Tracking': 'Steps, distance, calories and workouts',
+  'AI Wellness Guidance': 'Through the TFX Vital App',
+  'Nutrition and Meal Estimates': 'Through the TFX Vital App',
+  Bluetooth: 'BLE 5.0',
+  'Battery Capacity': '120mAh',
+  Charging: 'Charging dock with Type-C charging cable',
+  'Advertised Battery Life': 'Approximately 7â€“10 days',
+  'Water and Dust Resistance': 'IP68',
+  'Strap Size': '29 Ã— 16 mm (manual listing)',
+  'Battery Pack Weight': '20 g (manual listing)',
+  'Available Colours': 'Black, Pink, Blue, White and Silver',
+  Warranty: '6-month limited warranty',
+};
+
+const TFX5_SUPPLIED_FAQS = [
+  { q: 'What does The FutureX AI Smart Band TFX5 track?', a: 'It supports heart rate, SpO2, HRV, sleep, stress, steps, distance, calories and activity-related monitoring through the connected app.' },
+  { q: 'Does the TFX5 have a screen?', a: 'No. The TFX5 is a screenless fitness tracker. Supported information is available through the TFX Vital App.' },
+  { q: 'How do I charge the TFX5?', a: 'Remove the battery pack, place it in the charging dock and connect the Type-C charging cable to a compatible power source.' },
+  { q: 'How long does the battery last?', a: 'The advertised battery life is approximately 7â€“10 days, depending on usage and settings.' },
+  { q: 'Is the TFX5 a medical device?', a: 'No. It is intended for general fitness and wellness monitoring, not medical diagnosis or treatment.' },
+];
+
 const TFX_DISPLAY_PRO_RING_DESCRIPTION =
  'The FutureX Display Pro Smart Ring combines wearable technology with a compact ring design, offering convenient access to essential and activity information directly from the ring. Featuring an integrated display, this smart ring allows users to view selected data while maintaining a lightweight and comfortable form factor suitable for everyday wear. Designed for fitness tracking, activity monitoring and wellness insights, the FutureX Display Pro Smart Ring helps users stay connected to their daily metrics throughout work, exercise, travel and daily activities.';
 
@@ -1874,7 +1921,7 @@ export const ProductDetail: React.FC = () => {
     const isRingProForSpecs = isRingProductForSpecs && /\bring\s*pro\b/.test(productText);
     const isTouchRingForSpecs = isSuppliedTouchRing || (isRingProductForSpecs && !isDisplayRingForSpecs && !isRingProForSpecs && /\b(touch|ip68)\b/.test(productText));
     const bandSpecs = isV5BandProduct
-      ? TFX5_SMART_BAND_SPECS
+      ? TFX5_SUPPLIED_SPECS
       : isBandProduct
         ? TFX_SMART_BAND_SPECS
         : {};
@@ -2867,7 +2914,7 @@ export const ProductDetail: React.FC = () => {
   const existingProductDescriptionHtml = detailedProductContent
     ? sanitizeProductDescriptionHtml([detailedProductContent.html, detailedProductContent.careHtml].join('\n'))
     : isTfxV5Band
-    ? sanitizeProductDescriptionHtml(TFX5_SMART_BAND_PRODUCT_DESCRIPTION_HTML)
+    ? sanitizeProductDescriptionHtml(TFX5_SUPPLIED_DESCRIPTION_HTML)
     : product.description?.trim()
       ? sanitizeProductDescriptionHtml(product.description)
       : isPremiumSmartBand
@@ -3168,7 +3215,8 @@ export const ProductDetail: React.FC = () => {
       { q: 'Does this product support app connectivity?', a: 'Compatible The FutureX products support app or Bluetooth connectivity for setup, summaries or connected features depending on the model.' },
     ],
   };
-  const suppliedFaqs = isQ8ProProduct ? Q8_PRO_FAQS
+  const suppliedFaqs = isTfxV5Band ? TFX5_SUPPLIED_FAQS
+    : isQ8ProProduct ? Q8_PRO_FAQS
     : isTp09ProListing ? TP09_PRO_LISTING_FAQS
     : isTp02PlusListing ? TP02_PLUS_LISTING_FAQS
     : isTp12Listing ? TP12_LISTING_FAQS
