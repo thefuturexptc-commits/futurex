@@ -3637,7 +3637,7 @@ export const ProductDetail: React.FC = () => {
 
       <section data-product-hero className="product-scroll-section overflow-hidden bg-[#faf9f6] px-3 py-6 sm:px-6 lg:overflow-visible lg:px-8 lg:py-12">
         <div
-          className={`mx-auto grid w-full max-w-[calc(100vw-1.5rem)] min-w-0 gap-7 sm:max-w-2xl lg:max-w-7xl lg:items-start ${
+          className={`mx-auto grid w-full max-w-[calc(100vw-1.5rem)] min-w-0 ${isTfxV5Band ? 'gap-4' : 'gap-7'} sm:max-w-2xl lg:max-w-7xl lg:items-start ${
             useMarketplaceArrangement
               ? 'lg:grid-cols-[minmax(0,1.08fr)_minmax(420px,0.92fr)] lg:gap-x-16 lg:gap-y-6'
               : 'lg:grid-cols-[minmax(0,1.14fr)_minmax(0,0.86fr)] lg:gap-14'
@@ -3706,7 +3706,7 @@ export const ProductDetail: React.FC = () => {
             )}
           </div>
 
-          <div className="product-panel-in order-2 min-w-0 rounded-[1.5rem] border border-[#ebe7df] bg-white p-5 text-center shadow-[0_16px_44px_rgba(28,32,38,0.055)] sm:p-7 lg:order-none lg:p-8 lg:text-left">
+          <div className={`product-panel-in order-2 min-w-0 rounded-[1.5rem] border border-[#ebe7df] bg-white text-center shadow-[0_16px_44px_rgba(28,32,38,0.055)] sm:p-7 lg:order-none lg:p-8 lg:text-left ${isTfxV5Band ? 'p-4' : 'p-5'}`}>
             <div className="hidden">
               {product.colors && product.colors.length > 0 && (
                 <div className="rounded-xl bg-[#f5fbfb] p-3 text-left sm:p-4">
@@ -3769,19 +3769,19 @@ export const ProductDetail: React.FC = () => {
               )}
             </div>
             {(isFeaturedBandProduct || isMegaPriceDropBand) && (
-              <div className={`product-offer-badge ${isMegaPriceDropBand ? 'product-offer-badge--mega border-[#540000] bg-[#540000] text-white shadow-[0_8px_18px_rgba(84,0,0,0.22)]' : 'border-[#a9812f]/30 bg-[#fbf6ea] text-[#8a6a20] shadow-[0_1px_6px_rgba(169,129,47,0.18)]'} mt-4 inline-flex w-fit items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.2em] sm:px-4 sm:py-2 sm:text-xs`}>
+              <div className={`product-offer-badge ${isMegaPriceDropBand ? 'product-offer-badge--mega border-[#540000] bg-[#540000] text-white shadow-[0_8px_18px_rgba(84,0,0,0.22)]' : 'border-[#a9812f]/30 bg-[#fbf6ea] text-[#8a6a20] shadow-[0_1px_6px_rgba(169,129,47,0.18)]'} ${isTfxV5Band ? 'mt-2 px-3 py-1 text-[9px] tracking-[0.16em]' : 'mt-4 px-3.5 py-1.5 text-[10px] tracking-[0.2em]'} inline-flex w-fit items-center gap-1.5 rounded-full border font-extrabold uppercase sm:px-4 sm:py-2 sm:text-xs`}>
                 {isMegaPriceDropBand ? <span aria-hidden="true">⚡</span> : <span className="h-1 w-1 rounded-full bg-[#a9812f]" />}
                 {isMegaPriceDropBand ? 'Mega Price Drop' : 'Limited Time Offer'}
               </div>
             )}
-            <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? 'mt-3' : 'mt-4'} product-detail-title max-w-[560px] break-words text-left text-[1.3rem] font-semibold leading-[1.22] tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
+            <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? (isTfxV5Band ? 'mt-2' : 'mt-3') : 'mt-4'} product-detail-title max-w-[560px] break-words text-left ${isTfxV5Band ? 'text-[1.12rem] leading-[1.16]' : 'text-[1.3rem] leading-[1.22]'} font-semibold tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
               {suppliedFanHeading || displayProductName}
             </h1>
-            <span className="mt-3 inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]">
+            <span className={`${isTfxV5Band ? 'mt-2' : 'mt-3'} inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]`}>
               Overview
             </span>
-            <div className="relative mt-1.5 max-w-none">
-              <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? 'line-clamp-3' : ''}`}>
+            <div className={`relative max-w-none ${isTfxV5Band ? 'mt-1' : 'mt-1.5'}`}>
+              <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? (isTfxV5Band ? 'line-clamp-2' : 'line-clamp-3') : ''}`}>
                 {productSubtitle || shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
               </p>
               {!isHeroDescriptionExpanded && (
@@ -3791,12 +3791,12 @@ export const ProductDetail: React.FC = () => {
             <button
               type="button"
               onClick={() => setIsHeroDescriptionExpanded((prev) => !prev)}
-              className="mt-1.5 w-fit text-xs font-bold text-[#8a6a20] transition hover:text-slate-950 sm:text-sm"
+              className={`${isTfxV5Band ? 'mt-1' : 'mt-1.5'} w-fit text-xs font-bold text-[#8a6a20] transition hover:text-slate-950 sm:text-sm`}
             >
               {isHeroDescriptionExpanded ? 'Read Less' : 'Read More'}
             </button>
-            <div className="mt-4 flex flex-wrap items-center justify-start gap-3">
-              <div className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]">
+            <div className={`${isTfxV5Band ? 'mt-2 gap-2' : 'mt-4 gap-3'} flex flex-wrap items-center justify-start`}>
+              <div className={`flex items-center gap-2 rounded-full border border-slate-200 bg-white ${isTfxV5Band ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]`}>
                 <span className="tracking-tight text-[#a9812f]">
                   {Array.from({ length: 5 }).map((_, index) => (
                     <span key={index}>{index < Math.round(Number(product.rating || 0)) ? '\u2605' : '\u2606'}</span>
@@ -3811,7 +3811,7 @@ export const ProductDetail: React.FC = () => {
                   event.preventDefault();
                   scrollToDetailSection('reviews');
                 }}
-                className="product-detail-review-link inline-flex h-9 items-center justify-center rounded-full border border-slate-950 bg-slate-950 px-4 text-xs font-semibold uppercase tracking-[0.06em] text-white transition duration-300 hover:-translate-y-0.5 hover:border-teal-700 hover:bg-teal-700 hover:text-white hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]"
+                className={`product-detail-review-link inline-flex ${isTfxV5Band ? 'h-8 px-3 text-[10px]' : 'h-9 px-4 text-xs'} items-center justify-center rounded-full border border-slate-950 bg-slate-950 font-semibold uppercase tracking-[0.06em] text-white transition duration-300 hover:-translate-y-0.5 hover:border-teal-700 hover:bg-teal-700 hover:text-white hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]`}
               >
                 Write Review
               </a>
