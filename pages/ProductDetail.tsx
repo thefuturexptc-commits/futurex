@@ -2458,7 +2458,7 @@ export const ProductDetail: React.FC = () => {
     selectedColorVideoUrl ||
     product.videoUrl ||
     (isDisplayProProduct ? DISPLAY_PRO_YOUTUBE_URL : '');
-  const galleryVideoUrl = getYouTubeEmbedUrl(productVideoUrl) ? '' : productVideoUrl;
+  const galleryVideoUrl = productVideoUrl;
   const productVideoIndex = displayedImages.length;
   const displayedMediaCount = displayedImages.length + (galleryVideoUrl ? 1 : 0);
   const detailedProductContent = getProductDetailContent(product);
