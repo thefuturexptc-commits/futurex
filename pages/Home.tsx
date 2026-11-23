@@ -17,10 +17,6 @@ import homeDiwaliSmartRingsBanner from '../assets/images/home-diwali-smart-rings
 import homeDiwaliAirCleanerBanner from '../assets/images/home-diwali-air-cleaner.webp';
 import homeDesktopDiwaliRingsBanner from '../assets/images/home-desktop-diwali-rings.webp';
 import homeDesktopDiwaliAirCleanerBanner from '../assets/images/home-desktop-diwali-air-cleaner.webp';
-import homeScrollBannerOne from '../assets/images/home-scroll-banner-01.webp';
-import homeScrollBannerTwo from '../assets/images/home-scroll-banner-02.webp';
-import homeScrollBannerThree from '../assets/images/home-scroll-banner-03.webp';
-import homeScrollBannerFour from '../assets/images/home-scroll-banner-04.webp';
 import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
 import { homepageFaqs } from '../services/seo';
@@ -361,159 +357,91 @@ const HOME_COLLECTION_CARDS = [
   },
 ];
 
-const HOME_SCROLL_BANNERS = [
-  { label: 'Smart Band', href: '/smart-bands', image: homeScrollBannerOne, alt: 'TFX smart band banner' },
-  { label: 'Smart Fans', href: '/bladeless-fan', image: homeScrollBannerTwo, alt: 'TFX bladeless fan banner' },
-  { label: 'Smart Monitoring', href: '/smart-monitoring', image: homeScrollBannerThree, alt: 'TFX heart rate monitor banner' },
-  { label: 'Smart Rings', href: '/smart-rings', image: homeScrollBannerFour, alt: 'TFX smart ring banner' },
-];
+const INFLUENCER_SHORT_IDS = ['dr17QaEDStQ', 'sbPYLBEs8U0', 'lA7SflWKLZ4', 'FRBg0PLIpPw', 'xvDZla1QJn4', 'kySkO8x-prM', '36BQ2gCuiiE', 'Iezur6rF2j4', 'QA3INBbj52Y', 'OvUfkHbIDN0', '6YTVSq_zM6E'];
 
-const ScrollLinkedBanners: React.FC = () => {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [viewportVersion, setViewportVersion] = useState(0);
-  const [isMobileViewport, setIsMobileViewport] = useState(() => typeof window !== 'undefined' && window.innerWidth < 640);
-  const [pillStyle, setPillStyle] = useState<React.CSSProperties>({ opacity: 0 });
-  const sectionRef = useRef<HTMLElement | null>(null);
-  const sceneRef = useRef<HTMLDivElement | null>(null);
-  const tabListRef = React.useRef<HTMLDivElement | null>(null);
-  const tabRefs = React.useRef<Array<HTMLAnchorElement | null>>([]);
-  const panelRefs = React.useRef<Array<HTMLElement | null>>([]);
-
-  const updatePill = useCallback(() => {
-    const list = tabListRef.current;
-    const tab = tabRefs.current[activeIndex];
-    if (!list || !tab) return;
-    const listBox = list.getBoundingClientRect();
-    const tabBox = tab.getBoundingClientRect();
-    setPillStyle({ left: `${tabBox.left - listBox.left}px`, width: `${tabBox.width}px`, opacity: 1 });
-  }, [activeIndex]);
-
-  useEffect(() => {
-    updatePill();
-    const observer = new ResizeObserver(updatePill);
-    if (tabListRef.current) observer.observe(tabListRef.current);
-    return () => observer.disconnect();
-  }, [updatePill]);
-
-  useEffect(() => {
-    const updateViewport = () => {
-      setIsMobileViewport(window.innerWidth < 640);
-      setViewportVersion((current) => current + 1);
-    };
-    updateViewport();
-    window.addEventListener('resize', updateViewport);
-    return () => window.removeEventListener('resize', updateViewport);
-  }, []);
-
-  // Give each product an equal scroll segment. React selects one opaque panel
-  // so stopping midway through a scroll never leaves two artworks blended.
-  useEffect(() => {
-    // A pinned desktop scene creates a large pin-spacer on a short mobile
-    // banner. Phones keep the category links and an unpinned banner.
-    if (isMobileViewport) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    let cancelled = false;
-    let revertContext: (() => void) | null = null;
-
-    void Promise.all([import('gsap'), import('gsap/ScrollTrigger')]).then(([gsapModule, triggerModule]) => {
-      if (cancelled) return;
-      const gsap = gsapModule.default;
-      const { ScrollTrigger } = triggerModule;
-      gsap.registerPlugin(ScrollTrigger);
-
-      const context = gsap.context(() => {
-        const panels = gsap.utils.toArray<HTMLElement>('.home-scroll-banner-panel');
-        if (!panels.length || !sectionRef.current || !sceneRef.current) return;
-
-        sceneRef.current.classList.add('home-scroll-banner-scene--scrolling');
-        sceneRef.current.style.setProperty('--banner-pan', '0%');
-
-        ScrollTrigger.create({
-          trigger: sectionRef.current,
-          start: () => 'top top+=' + (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tfx-sticky-header-height')) || 110),
-          end: () => `+=${Math.max(window.innerHeight * panels.length, 2000)}`,
-          pin: sceneRef.current,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate: (trigger) => {
-            const nextIndex = Math.min(panels.length - 1, Math.floor(trigger.progress * panels.length));
-            const segmentProgress = trigger.progress * panels.length - nextIndex;
-            // Hold the top and bottom briefly; scroll through taller artwork in between.
-            const pan = Math.max(0, Math.min(1, (segmentProgress - 0.15) / 0.7));
-            sceneRef.current?.style.setProperty('--banner-pan', `${pan * 100}%`);
-            setActiveIndex((current) => current === nextIndex ? current : nextIndex);
-          },
-        });
-      }, sectionRef);
-
-      revertContext = () => {
-        context.revert();
-        sceneRef.current?.classList.remove('home-scroll-banner-scene--scrolling');
-        sceneRef.current?.style.removeProperty('--banner-pan');
-      };
-    }).catch(() => undefined);
-
-    return () => {
-      cancelled = true;
-      revertContext?.();
-    };
-  }, [isMobileViewport, viewportVersion]);
+const InfluencerVideoCard: React.FC<{ videoId: string; index: number }> = ({ videoId, index }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isSoundOn, setIsSoundOn] = useState(false);
+  const shouldAutoplay = index === 0 || isHovered || isSoundOn;
+  const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?${shouldAutoplay ? `autoplay=1&mute=${isSoundOn ? 0 : 1}&loop=1&playlist=${videoId}&` : ''}playsinline=1&controls=1&rel=0&modestbranding=1`;
 
   return (
-    <section ref={sectionRef} className="home-scroll-banner-section bg-white px-0 py-0" aria-label="Featured product banners">
-      <h2 className="sr-only">TheFutureX featured product banners</h2>
-      <div ref={sceneRef} className="home-scroll-banner-scene mx-auto max-w-[1440px] px-3 sm:px-4">
-        <div className="home-scroll-banner-tabs sticky z-30 mx-auto max-w-6xl" role="navigation" aria-label="Featured product categories" ref={tabListRef}>
-          <span className="home-scroll-banner-pill" style={pillStyle} aria-hidden="true" />
-          {HOME_SCROLL_BANNERS.map((banner, index) => (
-            <Link
-              key={banner.label}
-              id={`home-scroll-tab-${index}`}
-              ref={(node) => { tabRefs.current[index] = node; }}
-              to={banner.href}
-              onPointerEnter={(event) => {
-                if (event.pointerType === 'mouse') {
-                  setActiveIndex(index);
-                  sceneRef.current?.style.setProperty('--banner-pan', '50%');
-                }
-              }}
-              onFocus={() => setActiveIndex(index)}
-              className="home-scroll-banner-tab text-white"
-            >
-              {banner.label}
-            </Link>
-          ))}
+    <article
+      className="group w-[72vw] max-w-[280px] shrink-0 snap-start overflow-hidden rounded-2xl bg-slate-950 shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition duration-300 hover:-translate-y-2 hover:shadow-[0_20px_42px_rgba(15,23,42,0.24)] sm:w-[240px]"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onFocus={() => setIsHovered(true)}
+      onBlur={() => setIsHovered(false)}
+    >
+      <iframe
+        className="block aspect-[9/16] w-full border-0 bg-slate-950"
+        src={embedUrl}
+        title={`TheFutureX creator video ${index + 1}`}
+        loading={index < 2 ? 'eager' : 'lazy'}
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+      />
+      <button type="button" onClick={() => setIsSoundOn((enabled) => !enabled)} className="flex min-h-10 w-full items-center justify-center border-t border-white/10 px-3 text-xs font-bold text-white transition hover:bg-white/10">
+        <span className="mr-1.5" aria-hidden="true">{isSoundOn ? '🔊' : '🔇'}</span>{isSoundOn ? 'Sound on' : 'Play with sound'}
+      </button>
+      <a href={`https://www.youtube.com/shorts/${videoId}`} target="_blank" rel="noopener noreferrer" className="flex min-h-10 items-center justify-center px-3 text-xs font-bold text-white transition hover:bg-white/10">Watch on YouTube <span className="ml-1" aria-hidden="true">↗</span></a>
+    </article>
+  );
+};
+
+const InfluencerVideos: React.FC = () => {
+  const railRef = useRef<HTMLDivElement | null>(null);
+  const autoScrollTimerRef = useRef<number | null>(null);
+  const autoScrollDirectionRef = useRef<-1 | 1 | null>(null);
+  const stopAutoScroll = useCallback(() => {
+    autoScrollDirectionRef.current = null;
+    if (autoScrollTimerRef.current !== null) window.clearInterval(autoScrollTimerRef.current);
+    autoScrollTimerRef.current = null;
+  }, []);
+  const startAutoScroll = useCallback((direction: -1 | 1) => {
+    if (autoScrollDirectionRef.current === direction) return;
+    stopAutoScroll();
+    autoScrollDirectionRef.current = direction;
+    const crawl = () => {
+      const rail = railRef.current;
+      const activeDirection = autoScrollDirectionRef.current;
+      if (!rail || !activeDirection) return;
+      const maxScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+      const remaining = activeDirection > 0 ? maxScroll - rail.scrollLeft : rail.scrollLeft;
+      if (remaining <= 2) {
+        stopAutoScroll();
+        return;
+      }
+      rail.scrollBy({ left: activeDirection * Math.min(220, remaining), behavior: 'smooth' });
+    };
+    crawl();
+    autoScrollTimerRef.current = window.setInterval(crawl, 650);
+  }, [stopAutoScroll]);
+  useEffect(() => stopAutoScroll, [stopAutoScroll]);
+
+  return (
+  <section className="bg-[#f8fafc] py-10 sm:py-14" aria-labelledby="creator-videos-title">
+    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div className="mb-5 flex items-end justify-between gap-4">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087481]">Featured by creators</p>
+          <h2 id="creator-videos-title" className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">See TheFutureX in action</h2>
         </div>
-        <div className="home-scroll-banner-stage mt-3 sm:mt-4">
-          {HOME_SCROLL_BANNERS.map((banner, index) => (
-            <article
-              key={banner.image}
-              id={`home-scroll-panel-${index}`}
-              ref={(node) => { panelRefs.current[index] = node; }}
-              data-banner-index={index}
-              hidden={activeIndex !== index}
-              aria-hidden={activeIndex !== index}
-              aria-labelledby={`home-scroll-tab-${index}`}
-              className={`home-scroll-banner-panel${activeIndex === index ? ' home-scroll-banner-panel--active' : ''}`}
-            >
-              <Link to={banner.href} className="block h-full w-full" aria-label={`Explore ${banner.label}`}>
-                <img
-                  src={banner.image}
-                  alt={banner.alt}
-                  width={1600}
-                  height={700}
-                  className="block h-auto w-full"
-                  loading={index === 0 ? 'eager' : 'lazy'}
-                  fetchPriority={index === 0 ? 'high' : 'auto'}
-                  decoding="async"
-                />
-              </Link>
-            </article>
-          ))}
-        </div>
+        <a href="https://www.youtube.com/@TheFutureXdotin" target="_blank" rel="noopener noreferrer" className="hidden rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-[#087481] hover:text-[#087481] sm:inline-flex">Visit our YouTube channel <span className="ml-1" aria-hidden="true">↗</span></a>
       </div>
-    </section>
+      <p className="mb-3 text-sm font-medium text-slate-600 sm:hidden">Swipe sideways to watch more creator videos.</p>
+      <div className="group/creator relative">
+        <div ref={railRef} className="flex snap-x gap-4 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {INFLUENCER_SHORT_IDS.map((videoId, index) => (
+          <InfluencerVideoCard key={videoId} videoId={videoId} index={index} />
+        ))}
+        </div>
+        <div aria-hidden="true" onMouseEnter={() => startAutoScroll(-1)} onMouseLeave={stopAutoScroll} className="creator-rail-edge absolute inset-y-0 left-0 z-10 w-12 cursor-w-resize bg-gradient-to-r from-[#f8fafc] via-[#f8fafc]/75 to-transparent opacity-0 transition group-hover/creator:opacity-100" />
+        <div aria-hidden="true" onMouseEnter={() => startAutoScroll(1)} onMouseLeave={stopAutoScroll} className="creator-rail-edge absolute inset-y-0 right-0 z-10 w-16 cursor-e-resize bg-gradient-to-l from-[#f8fafc] via-[#f8fafc]/75 to-transparent opacity-0 transition group-hover/creator:opacity-100" />
+      </div>
+    </div>
+  </section>
   );
 };
 
@@ -1385,7 +1313,7 @@ export const Home: React.FC = () => {
         </div>
       </section>
 
-      <ScrollLinkedBanners />
+      <InfluencerVideos />
 
       <WearableFinder />
       <section className="store-guides-section px-4 text-slate-950" aria-labelledby="home-guides-heading">

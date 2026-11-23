@@ -297,3 +297,9 @@
           }
           .tfx-shine::after { display: none; }
         }
+/* Desktop pointers reveal edge zones that advance the creator-video rail.
+   Touch screens keep a clean swipeable rail and uninterrupted video controls. */
+.creator-rail-edge { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .creator-rail-edge { display: block; }
+}
