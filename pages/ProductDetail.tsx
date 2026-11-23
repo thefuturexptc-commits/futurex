@@ -3892,7 +3892,7 @@ export const ProductDetail: React.FC = () => {
                 </div>
               )}
 
-              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} mobileDetails={isQ8ProProduct} />
+              <ProductCheckoutTrustBlock product={product} productFamily={productFamily} mobileDetails />
 
               <div ref={mobileCtaAnchorRef} className={`product-purchase-actions mt-5 grid min-w-0 gap-2.5 sm:grid-cols-2 ${canAdd ? 'product-purchase-actions--in-stock' : ''}`}>
                 <button
@@ -4106,7 +4106,7 @@ export const ProductDetail: React.FC = () => {
                   {isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy}
                 </p>
               ))}
-              {!isTfxV5Band && (isStandardBand || (shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260) && (
+              {!isTfxV5Band && (Boolean(suppliedDescriptionHtml) || isStandardBand || (shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : (overviewSections[0]?.copy || whyBuyCopy || ''))).length > 260) && (
                 <button
                   type="button"
                   onClick={() => setIsDescriptionExpanded((prev) => !prev)}

@@ -38,6 +38,7 @@
 #root .site-main-content .product-detail-page > .product-scroll-section:not(.product-mobile-details):not(#more-information) > div { max-width: 1152px; }
 #root .site-main-content .product-detail-page > :is(#features, #specs, #faq, #reviews) { border-top: 1px solid #e4ecef !important; }
 #root .site-main-content .product-detail-page .product-mobile-details { padding-top: 24px; padding-bottom: 32px; min-height: 0; }
+#root .site-main-content .product-detail-page .product-mobile-detail { display: none; }
 #root .site-main-content .product-detail-page .product-battery-grid > div { border: 1px solid #dce7e9 !important; border-radius: 12px; padding: 16px; box-shadow: none !important; }
 #root .site-main-content .product-detail-page .store-product-faq details { padding: 0; border: 1px solid #dce7e9 !important; border-radius: 12px; background: #f8fbfc !important; box-shadow: none !important; }
 #root .site-main-content .product-detail-page .store-product-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 18px; min-height: 60px; padding: 18px 20px; color: #1a3c49 !important; font-size: 15px; font-weight: 600; line-height: 1.65; list-style: none; }
@@ -56,4 +57,14 @@
   #root .site-main-content .product-detail-page > .product-scroll-section:not(.product-mobile-details) { padding-top: 32px; padding-bottom: 32px; }
   #root .site-main-content .product-detail-page .store-product-faq summary { padding: 16px; font-size: 14px; }
   #root .site-main-content .product-detail-page .store-product-faq details > p { padding: 0 16px 16px; font-size: 13px; }
+  #root .site-main-content .product-detail-page .product-desktop-detail { display: none; }
+  #root .site-main-content .product-detail-page .product-mobile-detail { display: block; margin-top: 10px; overflow: hidden; border: 1px solid #dce7e9; border-radius: 12px; background: #f8fbfc; }
+  #root .site-main-content .product-detail-page .product-mobile-detail > summary { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 10px 12px; color: #153846; font-size: 13px; font-weight: 700; line-height: 1.35; list-style: none; cursor: pointer; }
+  #root .site-main-content .product-detail-page .product-mobile-detail > summary::-webkit-details-marker { display: none; }
+  #root .site-main-content .product-detail-page .product-mobile-detail > summary::after { content: ''; width: 7px; height: 7px; margin-left: auto; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor; transform: translateY(-2px) rotate(45deg); transition: transform .2s ease; }
+  #root .site-main-content .product-detail-page .product-mobile-detail[open] > summary::after { transform: translateY(2px) rotate(225deg); }
+  #root .site-main-content .product-detail-page .product-mobile-detail-body { padding: 0 12px 12px; color: #526875; font-size: 13px; line-height: 1.65; overflow-wrap: anywhere; }
+  #root .site-main-content .product-detail-page .product-mobile-detail-body :is(a, p) { color: inherit; }
+  #root .site-main-content .product-detail-page .product-mobile-details .product-rich-description { border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; }
+  #root .site-main-content .product-detail-page .product-mobile-details .product-rich-description :is(h1, h2) { font-size: 1.1rem; line-height: 1.35; }
 }
