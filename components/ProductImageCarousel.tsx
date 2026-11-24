@@ -4,6 +4,7 @@ import useEmblaCarousel from 'embla-carousel-react';
 import Fade from 'embla-carousel-fade';
 
 interface ProductImageCarouselProps {
+  productId: string;
   images: string[];
   videoUrl?: string;
   alt: string;
@@ -13,6 +14,8 @@ interface ProductImageCarouselProps {
   videoFit?: 'contain' | 'cover';
   fallbackImage?: string;
 }
+
+type PreviewMedia = { type: 'image' | 'video'; src: string };
 
 const shouldRemoveStudioBackground = (src: string) => /V5-Pink-750\.webp/i.test(src);
 
@@ -48,7 +51,7 @@ const removeStudioBackground = (source: string): Promise<string> => new Promise(
   image.src = source;
 });
 
-const getYouTubeEmbedUrl = (url: string): string | null => {
+const getYouTubeEmbed = (url: string) => {
   try {
     const parsed = new URL(url);
     const host = parsed.hostname.replace(/^www\./, '');
@@ -68,20 +71,24 @@ const getYouTubeEmbedUrl = (url: string): string | null => {
 
     // Use the privacy-enhanced player. It is more reliable in embedded
     // storefront contexts and avoids a blank player before the viewer opts in.
-    return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
+    return videoId ? {
+      url: `https://www.youtube-nocookie.com/embed/${videoId}`,
+      isShort: parsed.pathname.startsWith('/shorts/'),
+    } : null;
   } catch {
     return null;
   }
 };
 
 export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.memo(
-  ({ images, videoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain', fallbackImage }) => {
+  ({ productId, images, videoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain', fallbackImage }) => {
     const fade = useMemo(() => Fade(), []);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [processedImages, setProcessedImages] = useState<Record<string, string>>({});
     const [snapPoints, setSnapPoints] = useState<number[]>([]);
     const [hoverZoomPoint, setHoverZoomPoint] = useState({ x: 50, y: 50 });
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+    const [previewMedia, setPreviewMedia] = useState<PreviewMedia | null>(null);
+    const isPreviewOpen = previewMedia !== null;
     const [isPreviewZoomed, setIsPreviewZoomed] = useState(false);
     const [zoomScale, setZoomScale] = useState(1.8);
     const previewImageRef = useRef<HTMLImageElement | null>(null);
@@ -94,7 +101,6 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
       ],
       [images, videoUrl]
     );
-    const getVideoEmbedUrl = (src: string) => getYouTubeEmbedUrl(src);
 
     const [emblaRef, emblaApi] = useEmblaCarousel(
       { loop: mediaItems.length > 1, dragFree: false },
@@ -144,11 +150,11 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
       onSelectIndex?.(index);
       setIsPreviewZoomed(false);
       setZoomScale(1.8);
-      setIsPreviewOpen(true);
+      setPreviewMedia(mediaItems[index]);
     };
 
     const closePreview = () => {
-      setIsPreviewOpen(false);
+      setPreviewMedia(null);
       setIsPreviewZoomed(false);
       setZoomScale(1.8);
     };
@@ -188,6 +194,18 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
 
       return () => window.clearInterval(timer);
     }, [emblaApi, mediaItems.length, isPreviewOpen]);
+
+    useEffect(() => {
+      if (!videoUrl) return;
+      const seenKey = `tfx_product_video_seen:${productId}`;
+      try {
+        if (window.localStorage.getItem(seenKey)) return;
+        window.localStorage.setItem(seenKey, '1');
+      } catch {
+        // The preview can still open if browser storage is unavailable.
+      }
+      setPreviewMedia({ type: 'video', src: videoUrl });
+    }, [productId, videoUrl]);
 
     useEffect(() => {
       if (!isPreviewOpen) return;
@@ -270,10 +288,10 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
                 aria-label={`View ${alt} ${item.type} ${idx + 1}`}
               >
                 {item.type === 'video' && idx !== selectedIndex ? <span className="grid h-full place-items-center bg-slate-100 text-slate-600">Select to load video</span> : item.type === 'video' ? (() => {
-                  const embedUrl = getVideoEmbedUrl(item.src);
-                  return embedUrl ? (
+                  const embed = getYouTubeEmbed(item.src);
+                  return embed ? (
                     <iframe
-                      src={`${embedUrl}?rel=0&modestbranding=1&playsinline=1&controls=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
+                      src={`${embed.url}?rel=0&modestbranding=1&playsinline=1&controls=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}`}
                       title={`${alt} video`}
                       className="h-full w-full bg-black"
                       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -339,37 +357,39 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
         )}
 
         {/* Escape transformed and sticky gallery ancestors so the preview covers the viewport. */}
-        {isPreviewOpen && createPortal(
+        {previewMedia && createPortal(
           <div
             className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 px-4 py-6"
             role="dialog"
             aria-modal="true"
-            aria-label={`${alt} image preview`}
+            aria-label={`${alt} ${previewMedia.type} preview`}
             onClick={closePreview}
           >
             <button
               type="button"
+              autoFocus
               className="absolute right-4 top-4 rounded-lg border border-white/30 px-3 py-2 text-sm font-semibold text-white hover:bg-white/10"
               onClick={closePreview}
             >
               Close
             </button>
-            {mediaItems[selectedIndex]?.type === 'video' ? (
+            {previewMedia.type === 'video' ? (
               (() => {
-                const selectedVideo = mediaItems[selectedIndex];
-                const embedUrl = selectedVideo?.type === 'video' ? getVideoEmbedUrl(selectedVideo.src) : null;
-                return embedUrl ? (
+                const embed = getYouTubeEmbed(previewMedia.src);
+                return embed ? (
                   <iframe
-                    src={`${embedUrl}?rel=0&modestbranding=1&playsinline=1&autoplay=1`}
+                    src={`${embed.url}?rel=0&modestbranding=1&playsinline=1&autoplay=1&mute=1`}
                     title={`${alt} video preview`}
-                    className="aspect-video w-full max-w-[min(100vw-2rem,1200px)] rounded-2xl bg-black"
+                    className={`h-auto w-full rounded-2xl bg-black ${embed.isShort ? 'aspect-[9/16]' : 'aspect-video max-w-[min(100vw-2rem,1200px)]'}`}
+                    style={embed.isShort ? { maxWidth: 'min(calc((100dvh - 6rem) * 9 / 16), 438px)' } : undefined}
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     allowFullScreen
+                    referrerPolicy="strict-origin-when-cross-origin"
                     onClick={(event) => event.stopPropagation()}
                   />
                 ) : (
                   <video
-                    src={selectedVideo?.src}
+                    src={previewMedia.src}
                     className="h-[86vh] w-full max-w-[min(100vw-2rem,1200px)] rounded-2xl bg-black/80 object-contain"
                     controls
                     autoPlay
@@ -405,7 +425,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
               >
                 <img
                   ref={previewImageRef}
-                  src={mediaItems[selectedIndex]?.src}
+                  src={previewMedia.src}
                   alt={`${alt} enlarged view`}
                   decoding="async"
                   width={1200}

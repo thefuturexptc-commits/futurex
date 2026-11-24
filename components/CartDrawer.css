@@ -1,0 +1,39 @@
+@media (prefers-reduced-motion: no-preference) {
+  .cart-drawer:not([hidden]) .cart-drawer-backdrop {
+    animation: cart-drawer-fade-in 200ms ease-out;
+  }
+
+  .cart-drawer:not([hidden]) .cart-drawer-panel {
+    animation: cart-drawer-slide-in 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@keyframes cart-drawer-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes cart-drawer-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+}
+
+/* The site's dark-body styles also apply to light surfaces inside the drawer. */
+.cart-drawer-panel :is(.cart-drawer-pricing, .cart-drawer-emi, .holi-btn-secondary, .holi-btn-outline) {
+  color: #0f172a !important;
+}
+
+html.dark .cart-drawer-panel :is(.cart-drawer-pricing, .cart-drawer-emi, .holi-btn-secondary, .holi-btn-outline) {
+  color: #f8fafc !important;
+}
+
+.cart-drawer-panel h2 {
+  font-size: 18px !important;
+}
+
+.cart-drawer-panel h3 {
+  font-size: 13px !important;
+  line-height: 16px !important;
+}

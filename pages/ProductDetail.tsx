@@ -3639,6 +3639,8 @@ export const ProductDetail: React.FC = () => {
         >
           <div ref={productGalleryRef} className="order-1 min-w-0 max-w-full scroll-mt-28 space-y-4 overflow-hidden sm:space-y-6 lg:sticky lg:top-24 lg:order-none lg:row-span-2 lg:overflow-visible">
             <ProductImageCarousel
+              key={product.id}
+              productId={product.id}
               images={displayedImages}
               fallbackImage={getProductFallbackImage(product)}
               videoUrl={galleryVideoUrl}

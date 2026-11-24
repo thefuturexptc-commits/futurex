@@ -165,6 +165,7 @@ const TrustMarquee: React.FC = () => {
 
 const CATALOG_PAGE_SIZE = 4;
 const HOME_VIDEO_ID = '36BQ2gCuiiE';
+const HOME_VIDEO_SEEN_KEY = 'tfx_home_youtube_popup_seen';
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 const FEATURED_FAN_PRODUCT_PATH = '/product/tfx-advance';
@@ -561,6 +562,16 @@ export const Home: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem(HOME_VIDEO_SEEN_KEY)) return;
+      window.localStorage.setItem(HOME_VIDEO_SEEN_KEY, '1');
+    } catch {
+      // The video can still open if browser storage is unavailable.
+    }
+    setShowSmartBandReel(true);
+  }, []);
 
   useEffect(() => {
     if (!showSmartBandReel) return undefined;
