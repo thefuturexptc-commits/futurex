@@ -7,6 +7,7 @@ import { useAuthModal } from '../context/AuthModalContext';
 import { auth } from '../services/firebaseConfig';
 import { addOfferLead, addProductNotifyRequest, addProductReview, getProductById, getProductFallbackById, getProductReviews, getProductSlug, getProducts, getUserOrders, toProductSlug, uploadFile } from '../services/backend';
 import { ProductImageCarousel } from '../components/ProductImageCarousel';
+import { getYouTubeEmbed } from '../utils/youtube';
 import { DeliveryEstimate } from '../components/DeliveryEstimate';
 import { ReviewPhotos } from '../components/ReviewPhotos';
 import { BandAppShowcase } from '../components/BandAppShowcase';
@@ -183,25 +184,6 @@ const sanitizeProductDescriptionHtml = (html: string): string => {
   return output.innerHTML;
 };
 
-const getYouTubeEmbedUrl = (url: string) => {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, '');
-    const pathParts = parsed.pathname.split('/').filter(Boolean);
-    const videoId = host === 'youtu.be'
-      ? pathParts[0]
-      : parsed.pathname.startsWith('/embed/') || parsed.pathname.startsWith('/shorts/')
-        ? pathParts[1]
-        : ['youtube.com', 'm.youtube.com', 'youtube-nocookie.com'].includes(host)
-          ? parsed.searchParams.get('v') || ''
-          : '';
-
-    return videoId ? `https://www.youtube-nocookie.com/embed/${videoId}` : null;
-  } catch {
-    return null;
-  }
-};
-
 const ProductOverviewVideo: React.FC<{ src: string; title: string; className: string }> = ({ src, title, className }) => {
   const wrapper = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -214,7 +196,7 @@ const ProductOverviewVideo: React.FC<{ src: string; title: string; className: st
     observer.observe(wrapper.current);
     return () => observer.disconnect();
   }, []);
-  const embedUrl = getYouTubeEmbedUrl(src);
+  const embedUrl = getYouTubeEmbed(src)?.url;
 
   if (embedUrl) {
     return (
@@ -2499,7 +2481,21 @@ export const ProductDetail: React.FC = () => {
     selectedColorVideoUrl ||
     product.videoUrl ||
     (isDisplayProProduct ? DISPLAY_PRO_YOUTUBE_URL : '');
-  const galleryVideoUrl = productVideoUrl;
+  const popupVideoUrl = [
+    selectedVariantVideoUrl,
+    selectedColorVideoUrl,
+    product.videoUrl,
+    ...Object.values(product.videoByColor || {}),
+    ...(product.variants || []).map(variant => variant.videoUrl),
+    isDisplayProProduct ? DISPLAY_PRO_YOUTUBE_URL : undefined,
+  ].find(url => {
+    const embed = url && getYouTubeEmbed(url);
+    if (!embed) return false;
+    // The catalog currently links the TP02 3-in-1 demo from the TP02 PLUS listing too.
+    return productSlug !== 'tfx-breeze-pro' ||
+      embed.url !== 'https://www.youtube-nocookie.com/embed/6YTVSq_zM6E';
+  });
+  const galleryVideoUrl = productVideoUrl || popupVideoUrl;
   const productVideoIndex = displayedImages.length;
   const displayedMediaCount = displayedImages.length + (galleryVideoUrl ? 1 : 0);
   const detailedProductContent = getProductDetailContent(product);
@@ -3644,6 +3640,7 @@ export const ProductDetail: React.FC = () => {
               images={displayedImages}
               fallbackImage={getProductFallbackImage(product)}
               videoUrl={galleryVideoUrl}
+              popupVideoUrl={popupVideoUrl}
               alt={product.name}
               selectedIndex={selectedImageIndex}
               onSelectIndex={setSelectedImageIndex}

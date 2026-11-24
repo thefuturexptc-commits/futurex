@@ -2,11 +2,13 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import useEmblaCarousel from 'embla-carousel-react';
 import Fade from 'embla-carousel-fade';
+import { getYouTubeEmbed } from '../utils/youtube';
 
 interface ProductImageCarouselProps {
   productId: string;
   images: string[];
   videoUrl?: string;
+  popupVideoUrl?: string;
   alt: string;
   selectedIndex?: number;
   onSelectIndex?: (index: number) => void;
@@ -51,43 +53,15 @@ const removeStudioBackground = (source: string): Promise<string> => new Promise(
   image.src = source;
 });
 
-const getYouTubeEmbed = (url: string) => {
-  try {
-    const parsed = new URL(url);
-    const host = parsed.hostname.replace(/^www\./, '');
-    let videoId = '';
-
-    if (host === 'youtu.be') {
-      videoId = parsed.pathname.split('/').filter(Boolean)[0] || '';
-    } else if (host === 'youtube.com' || host === 'm.youtube.com' || host === 'youtube-nocookie.com') {
-      if (parsed.pathname.startsWith('/embed/')) {
-        videoId = parsed.pathname.split('/').filter(Boolean)[1] || '';
-      } else if (parsed.pathname.startsWith('/shorts/')) {
-        videoId = parsed.pathname.split('/').filter(Boolean)[1] || '';
-      } else {
-        videoId = parsed.searchParams.get('v') || '';
-      }
-    }
-
-    // Use the privacy-enhanced player. It is more reliable in embedded
-    // storefront contexts and avoids a blank player before the viewer opts in.
-    return videoId ? {
-      url: `https://www.youtube-nocookie.com/embed/${videoId}`,
-      isShort: parsed.pathname.startsWith('/shorts/'),
-    } : null;
-  } catch {
-    return null;
-  }
-};
-
 export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.memo(
-  ({ productId, images, videoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain', fallbackImage }) => {
+  ({ productId, images, videoUrl, popupVideoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain', fallbackImage }) => {
     const fade = useMemo(() => Fade(), []);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [processedImages, setProcessedImages] = useState<Record<string, string>>({});
     const [snapPoints, setSnapPoints] = useState<number[]>([]);
     const [hoverZoomPoint, setHoverZoomPoint] = useState({ x: 50, y: 50 });
     const [previewMedia, setPreviewMedia] = useState<PreviewMedia | null>(null);
+    const hasOpenedVideo = useRef(false);
     const isPreviewOpen = previewMedia !== null;
     const [isPreviewZoomed, setIsPreviewZoomed] = useState(false);
     const [zoomScale, setZoomScale] = useState(1.8);
@@ -196,16 +170,17 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
     }, [emblaApi, mediaItems.length, isPreviewOpen]);
 
     useEffect(() => {
-      if (!videoUrl) return;
-      const seenKey = `tfx_product_video_seen:${productId}`;
+      if (!popupVideoUrl || hasOpenedVideo.current) return;
+      hasOpenedVideo.current = true;
+      const seenKey = `tfx_product_youtube_popup_seen:${productId}`;
       try {
         if (window.localStorage.getItem(seenKey)) return;
         window.localStorage.setItem(seenKey, '1');
       } catch {
         // The preview can still open if browser storage is unavailable.
       }
-      setPreviewMedia({ type: 'video', src: videoUrl });
-    }, [productId, videoUrl]);
+      setPreviewMedia({ type: 'video', src: popupVideoUrl });
+    }, [productId, popupVideoUrl]);
 
     useEffect(() => {
       if (!isPreviewOpen) return;
