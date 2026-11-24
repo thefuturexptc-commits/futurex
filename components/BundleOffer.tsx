@@ -27,3 +27,13 @@ export function BundleOffer({ catalog }: { catalog?: Product[] }) {
     <button type="button" disabled={selected.length !== 2} className="mt-5 rounded-xl bg-slate-950 px-5 py-3 font-semibold text-white disabled:opacity-40" onClick={() => { if (selected.length !== 2) return; addToCart(selected[0], 1, { openCart: false }); addToCart(selected[1], 1); setBand(''); setRing(''); }}>Add bundle to cart</button>
   </section>;
 }
+
+
+
+
+
+
+
+
+
+

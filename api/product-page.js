@@ -29,6 +29,7 @@ const getProductColorVariant = (product, colorSlug) => {
 
 export const renderProductPage = (shell, product, variant = null) => {
   const seo = buildProductSeoRecord(product);
+  const metaDescription = seo.metaDescription ?? seo.description;
   const url = `${SITE_URL}/product/${seo.canonicalSlug}${variant ? `/${slugify(variant.name)}` : ''}`;
   const title = variant ? `${seo.name} - ${variant.name}` : seo.name;
   const image = variant?.images?.[0] || seo.image;
@@ -49,11 +50,11 @@ export const renderProductPage = (shell, product, variant = null) => {
   };
   const metadata = [
     `<title>${escape(title)}</title>`,
-    `<meta name="description" content="${escape(seo.description)}">`,
+    `<meta name="description" content="${escape(metaDescription)}">`,
     `<link rel="canonical" href="${escape(url)}">`,
-    ...Object.entries({ 'og:title': title, 'og:description': seo.description, 'og:url': url, 'og:image': image, 'og:type': 'product' })
+    ...Object.entries({ 'og:title': title, 'og:description': metaDescription, 'og:url': url, 'og:image': image, 'og:type': 'product' })
       .map(([key, value]) => `<meta property="${key}" content="${escape(value)}">`),
-    ...Object.entries({ 'twitter:title': title, 'twitter:description': seo.description, 'twitter:image': image })
+    ...Object.entries({ 'twitter:title': title, 'twitter:description': metaDescription, 'twitter:image': image })
       .map(([key, value]) => `<meta name="${key}" content="${escape(value)}">`),
     `<script id="product-json-ld" type="application/ld+json">${JSON.stringify(schema).replace(/</g, '\\u003c')}</script>`,
   ].join('\n');

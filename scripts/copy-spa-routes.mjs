@@ -753,7 +753,7 @@ const injectPageSeo = (html, { title, description, url, image = DEFAULT_IMAGE, t
 
 const injectProductSeo = (html, product) => {
   const title = product.seoTitle || `${product.name} - TheFutureX`;
-  const description = product.description;
+  const description = product.metaDescription ?? product.description;
   const productUrl = getProductUrl(product);
   const imageUrl = resolveUrl(product.image || product.images?.[0] || DEFAULT_IMAGE);
   const jsonLd = buildJsonLd(product);

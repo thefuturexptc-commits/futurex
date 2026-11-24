@@ -1,7 +1,5 @@
 import type { Product } from '../types';
-
-// Shared TP09 copy, using the model name from each product listing.
-export const TP09_PRO_DESCRIPTION = "Enjoy everyday comfort across seasons with the FutureX TP09 PRO. Combining cooling airflow with PTC ceramic heating, this bladeless tower fan brings convenient control and a modern, space-saving design to your home. Choose from 10 airflow speeds, activate 180° automatic oscillation, and set the 9-hour timer to suit your routine. Adjust settings using the touch panel or included remote control, from your sofa, desk or bedside.";
+import { getTp09Model, TP09_PRO_DESCRIPTION } from './productOverviews.js';
 
 export const TP09_PRO_FEATURES = [
   "One Fan. Every Season: Cooling airflow for warmer days and warm air for chilly evenings. Switch modes as the weather changes.",
@@ -121,15 +119,8 @@ export const TP09_PRO_WARRANTY_HTML = `
 `;
 
 export const getTp09Content = (product?: Pick<Product, 'name' | 'slug' | 'specs'> | null) => {
-  if (!product) return null;
-  const modelText = [product.name, product.specs?.Model, product.specs?.['Model Number']].filter(Boolean).join(' ');
-  const identifiers = modelText + ' ' + (product.slug || '').replace(/-/g, ' ');
-  if (!/\btp\s*-?\s*09(?=\b|pro\b|plus\b)|\bcoolair\s*pro\b/i.test(identifiers)) return null;
-  const model = /\btp\s*-?\s*09\s*-?\s*pro\s*-?\s*plus\b/i.test(modelText)
-    ? 'TP09 PRO PLUS'
-    : /\btp\s*-?\s*09\s*-?\s*plus\b/i.test(identifiers)
-      ? 'TP09 PLUS'
-      : 'TP09 PRO';
+  const model = getTp09Model(product);
+  if (!model) return null;
   const label = (value: string) => value.replaceAll('TP09 PRO', model);
   return {
     description: label(TP09_PRO_DESCRIPTION),

@@ -1,4 +1,5 @@
 import type { Product } from '../types';
+import { matchesQ8Pro } from './productOverviews.js';
 
 // Q8 PRO content supplied for the product detail page.
 const Q8_PRO_CONTENT = {
@@ -92,12 +93,8 @@ const Q8_PRO_CONTENT = {
   ]
 };
 
-export const getQ8ProContent = (product?: Pick<Product, 'name' | 'slug' | 'specs'> & Partial<Pick<Product, 'id'>> | null) => {
-  if (!product) return null;
-  if (product.id === 'p-1772265903701' || product.slug === 'tfx-advance') return Q8_PRO_CONTENT;
-  const identifiers = [product.name, product.specs?.Model, product.specs?.['Model Number'], product.slug?.replace(/-/g, ' ')].filter(Boolean).join(' ');
-  return /\bq\s*-?\s*8\s*(?:pro\b|$)/i.test(identifiers) ? Q8_PRO_CONTENT : null;
-};
+export const getQ8ProContent = (product?: Pick<Product, 'name' | 'slug' | 'specs'> & Partial<Pick<Product, 'id'>> | null) =>
+  matchesQ8Pro(product) ? Q8_PRO_CONTENT : null;
 
 export const Q8_PRO_TITLE = "The FutureX Q8 PRO Bladeless Tower Fan with Hot & Cool Modes, PTC Heating, Remote Control, 71° Oscillation & 180° Adjustable Head";
 

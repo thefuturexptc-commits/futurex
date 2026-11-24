@@ -4,6 +4,7 @@ import { formatProductName } from './productName.js';
 import { isCatalogProductPublished } from './catalogVisibility.js';
 import { getCatalogOffer } from './catalogPricing.js';
 import { getSchemaReviews } from './productSchema.js';
+import { getProductOverview } from './productOverviews.js';
 
 export const SITE_URL = 'https://thefuturex.in';
 
@@ -229,6 +230,7 @@ export const staticProductSeoRecords = productFallbacks.map((product) => ({
   price: getCustomerFacingPrice(product),
   id: product.id || product.slug,
   canonicalSlug: product.canonicalSlug || getProductSlug(product),
+  metaDescription: getProductOverview(product, product.canonicalSlug || getProductSlug(product))?.description,
   availability: product.availability || 'https://schema.org/InStock',
   brand: product.brand || 'The Future X',
 }));
@@ -283,6 +285,7 @@ export const buildProductSeoRecord = (product = {}) => {
     seoTitle: product.name.trim(),
     category: product.category || fallback?.category || 'Products',
     description: truncateText(description),
+    metaDescription: getProductOverview(product, slug)?.description,
     image: images[0] || resolveUrl(fallback?.image || '/images/tfx-google-logo.webp'),
     images: images.length ? images : [resolveUrl(fallback?.image || '/images/tfx-google-logo.webp')],
     // Invalid prices are omitted from offers rather than replaced by stale prices.
