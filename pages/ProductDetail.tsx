@@ -1624,6 +1624,7 @@ export const ProductDetail: React.FC = () => {
     toProductSlug(product.name) === DISPLAY_PRO_PRODUCT_SLUG
   ));
   const isTouchSmartRingListing = productSlug === 'tfx-touch-smart-ring';
+  const isAppControlSmartRingListing = productSlug === 'tfx-ring-pro-smart-ring-with-app-control-and-gesture-features';
   const isWallMount4319bListing = productSlug === 'tfx-airwall-pro';
   const isQg830Listing = productSlug === 'tfx-smart-10x-air';
   const isTp09ProListing = productSlug === 'tfxhot-and-coolair-pro';
@@ -2517,6 +2518,19 @@ export const ProductDetail: React.FC = () => {
     : product.name);
   const shortDescription = detailedProductContent?.description || stripHtml(product.description);
   const productSubtitle = detailedProductContent ? detailedProductContent.description : stripHtml(product.seoDescription || product.shortDescription || '');
+  const smartRingOverview = isTouchSmartRingListing ? (
+    <>
+      <strong>Track Your Health. Elevate Your Lifestyle.</strong> Discover <strong>The FutureX TFX Touch Smart Ring</strong>, an advanced <strong>fitness tracking smart ring</strong> with touch control, heart rate monitoring, blood oxygen (SpO2) tracking, sleep monitoring and HRV insights. Featuring Bluetooth connectivity, daily activity tracking and a premium stainless steel design, this lightweight <strong>Smart Health Ring</strong> offers a stylish alternative to traditional smartwatches. Designed for everyday fitness, wellness and sleep tracking, it brings smart wearable technology to your fingertips.
+    </>
+  ) : isAppControlSmartRingListing ? (
+    <>
+      <strong>Your Health. Your Insights. Your Everyday Companion.</strong> Discover <strong>The FutureX TFX Smart Ring with App Control</strong>, a premium <strong>fitness tracking smart ring</strong> featuring 24/7 heart rate monitoring, blood oxygen (SpO2) tracking, sleep monitoring, body temperature tracking and HRV insights. With Bluetooth connectivity, Qring app support for Android and iOS, and an elegant stainless steel design, this <strong>Smart Health Ring</strong> offers a comfortable alternative to traditional smartwatches. Track your activity, understand your recovery and stay connected to your wellness goals, day and night.
+    </>
+  ) : isDisplayProProduct ? (
+    <>
+      <strong>Big on Technology. Small in Design.</strong> Upgrade your everyday wellness with <strong>The FutureX TFX Smart Ring with App Control</strong>, a premium <strong>Smart Fitness Ring</strong> featuring 24/7 heart rate monitoring, SpO2 tracking, sleep analysis, body temperature monitoring and HRV insights. With Bluetooth connectivity, Qring app support for Android and iPhone, and a lightweight stainless steel body, this <strong>Fitness Tracking Smart Ring</strong> delivers personalised wellness insights without the bulk of a smartwatch. Monitor your activity, sleep and recovery effortlessly, all from your finger.
+    </>
+  ) : null;
   const productFamilyText = `${normalizedCategory} ${product.name}`.toLowerCase();
   const productFamily = /\b(band|bracelet)\b/.test(productFamilyText)
     ? 'band'
@@ -2534,7 +2548,7 @@ export const ProductDetail: React.FC = () => {
   const isFanMarketplacePage = productFamily === 'fan';
   const productGalleryVideoFit: 'contain' | 'cover' = productFamily === 'fan' ? 'contain' : 'cover';
   const showProductOverview = productFamily !== 'fan' && !isQ8ProProduct;
-  const overviewTab = { key: 'more-information' as const, label: 'Overview' };
+  const overviewTab = { key: 'more-information' as const, label: smartRingOverview ? 'Product Media' : 'Overview' };
   const descriptionTab = { key: 'description' as const, label: 'Description' };
   const detailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
     { key: 'features', label: 'Features' },
@@ -3170,7 +3184,7 @@ export const ProductDetail: React.FC = () => {
   const mobileProductBannerSections = isQ8ProProduct ? [] : overviewMediaSections.filter((section) => section.image || section.video);
   const overviewFallback = (
     <>
-      <h2 className="store-section-heading mb-4">Product Overview</h2>
+      {!smartRingOverview && <h2 className="store-section-heading mb-4">Product Overview</h2>}
       <img src={displayedImages[0]} alt={displayProductName} loading="lazy" decoding="async" className="mx-auto max-h-80 w-full object-contain" />
     </>
   );
@@ -3810,21 +3824,29 @@ export const ProductDetail: React.FC = () => {
             <span className={`${isTfxV5Band ? 'mt-2' : 'mt-3'} inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]`}>
               Overview
             </span>
-            <div className={`relative max-w-none ${isTfxV5Band ? 'mt-1' : 'mt-1.5'}`}>
-              <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? (isTfxV5Band ? 'line-clamp-2' : 'line-clamp-3') : ''}`}>
-                {productSubtitle || shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
+            {smartRingOverview ? (
+              <p className="mt-1.5 max-w-[680px] text-left text-sm leading-6 text-slate-700 sm:text-base sm:leading-7">
+                {smartRingOverview}
               </p>
-              {!isHeroDescriptionExpanded && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent sm:h-5" />
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsHeroDescriptionExpanded((prev) => !prev)}
-              className={`${isTfxV5Band ? 'mt-1' : 'mt-1.5'} w-fit text-xs font-bold text-[#8a6a20] transition hover:text-slate-950 sm:text-sm`}
-            >
-              {isHeroDescriptionExpanded ? 'Read Less' : 'Read More'}
-            </button>
+            ) : (
+              <>
+                <div className={`relative max-w-none ${isTfxV5Band ? 'mt-1' : 'mt-1.5'}`}>
+                  <p className={`text-left text-xs font-medium leading-5 text-slate-700 sm:text-sm sm:leading-6 ${!isHeroDescriptionExpanded ? (isTfxV5Band ? 'line-clamp-2' : 'line-clamp-3') : ''}`}>
+                    {productSubtitle || shortDescription || (isFanMarketplacePage ? fanMarketplaceDescription : overviewSections[0]?.copy || whyBuyCopy)}
+                  </p>
+                  {!isHeroDescriptionExpanded && (
+                    <div className="pointer-events-none absolute inset-x-0 bottom-0 h-4 bg-gradient-to-t from-white to-transparent sm:h-5" />
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsHeroDescriptionExpanded((prev) => !prev)}
+                  className={`${isTfxV5Band ? 'mt-1' : 'mt-1.5'} w-fit text-xs font-bold text-[#8a6a20] transition hover:text-slate-950 sm:text-sm`}
+                >
+                  {isHeroDescriptionExpanded ? 'Read Less' : 'Read More'}
+                </button>
+              </>
+            )}
             <div className={`${isTfxV5Band ? 'mt-2 gap-2' : 'mt-4 gap-3'} flex flex-wrap items-center justify-start`}>
               <div className={`flex items-center gap-2 rounded-full border border-slate-200 bg-white ${isTfxV5Band ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-sm'} font-semibold text-slate-800 shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_6px_16px_rgba(15,23,42,0.1)]`}>
                 <span className="tracking-tight text-[#a9812f]">
