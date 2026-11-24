@@ -558,7 +558,6 @@ export const Home: React.FC = () => {
   const bannerGesture = useRef<{ x: number; y: number } | null>(null);
   const suppressBannerClick = useRef(false);
   const [isBannerTouching, setIsBannerTouching] = useState(false);
-  const [popupEntered, setPopupEntered] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addToCart } = useCart();
@@ -597,12 +596,6 @@ export const Home: React.FC = () => {
   }, [loadProducts]);
 
   useEffect(() => {
-    if (user || window.sessionStorage.getItem('tfx_offer_popup_dismissed') || window.localStorage.getItem('tfx_surprise_coupon_phone')) return;
-    const timer = window.setTimeout(() => setShowOfferPopup(true), 12000);
-    return () => window.clearTimeout(timer);
-  }, [user]);
-
-  useEffect(() => {
     if (!showOfferPopup) return undefined;
     const previousOverflow = document.body.style.overflow;
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -611,7 +604,7 @@ export const Home: React.FC = () => {
     const elements = () => Array.from(dialog?.querySelectorAll<HTMLElement>('button, input, a[href]') || []).filter(element => !element.hasAttribute('disabled'));
     elements()[0]?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { window.sessionStorage.setItem('tfx_offer_popup_dismissed', '1'); setShowOfferPopup(false); }
+      if (event.key === 'Escape') setShowOfferPopup(false);
       if (event.key === 'Tab') {
         const focusable = elements();
         const first = focusable[0];
@@ -626,15 +619,6 @@ export const Home: React.FC = () => {
       document.removeEventListener('keydown', onKey);
       previousFocus?.focus();
     };
-  }, [showOfferPopup]);
-
-  useEffect(() => {
-    if (!showOfferPopup) {
-      setPopupEntered(false);
-      return undefined;
-    }
-    const raf = window.requestAnimationFrame(() => setPopupEntered(true));
-    return () => window.cancelAnimationFrame(raf);
   }, [showOfferPopup]);
 
   useEffect(() => {
@@ -807,22 +791,15 @@ export const Home: React.FC = () => {
           role="dialog"
           aria-modal="true"
           aria-label="First order offer"
-          className={`fixed inset-0 flex min-h-[100dvh] items-center justify-center overflow-y-auto bg-black/85 px-3 py-5 transition-opacity duration-300 ease-out sm:px-4 sm:py-8 ${
-            popupEntered ? 'opacity-100' : 'opacity-0'
-          }`}
+          className="fixed inset-0 flex min-h-[100dvh] items-center justify-center overflow-y-auto bg-black/85 px-3 py-5 sm:px-4 sm:py-8"
           style={{ zIndex: 2147483647 }}
         >
           <div
-            className={`relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-[390px] overflow-y-auto rounded-2xl bg-[#050505] px-4 pb-5 pt-8 text-center shadow-2xl ring-1 ring-white/10 transition-all duration-300 ease-out sm:max-w-[460px] sm:px-8 sm:pb-8 sm:pt-9 ${
-              popupEntered ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-4 scale-95 opacity-0'
-            }`}
+            className="relative my-auto max-h-[calc(100dvh-2rem)] w-full max-w-[390px] overflow-y-auto rounded-2xl bg-[#050505] px-4 pb-5 pt-8 text-center shadow-2xl ring-1 ring-white/10 sm:max-w-[460px] sm:px-8 sm:pb-8 sm:pt-9"
           >
             <button
               type="button"
-              onClick={() => {
-                window.sessionStorage.setItem('tfx_offer_popup_dismissed', '1');
-                setShowOfferPopup(false);
-              }}
+              onClick={() => setShowOfferPopup(false)}
               className="absolute right-2 top-2 z-20 grid h-11 w-11 place-items-center rounded-full bg-white/10 text-xl font-black leading-none text-white transition hover:bg-white/15 hover:text-[#df0b16] focus:outline-none focus:ring-2 focus:ring-[#df0b16] sm:right-3 sm:top-3"
               aria-label="Close offer"
             >
@@ -1078,7 +1055,7 @@ export const Home: React.FC = () => {
         )}
       </section>
 
-      <div className="flex justify-center bg-white px-4 py-3">
+      <div className="flex flex-wrap justify-center gap-2 bg-white px-4 py-3">
         <button
           type="button"
           onClick={() => setShowSmartBandReel(true)}
@@ -1086,6 +1063,16 @@ export const Home: React.FC = () => {
         >
           Watch the smart band pairing guide
         </button>
+        {!user && (
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setShowOfferPopup(true)}
+            className="min-h-11 rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
+          >
+            View first-order offer
+          </button>
+        )}
       </div>
       <section id="explore-collection" className="relative z-10 bg-[#fbfbfc] px-0 pb-4 pt-6 sm:pb-12 sm:pt-12">
         <div className="mx-auto w-full max-w-7xl">

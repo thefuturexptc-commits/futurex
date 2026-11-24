@@ -1694,7 +1694,6 @@ export const ProductDetail: React.FC = () => {
   const detailTabsAnchorRef = useRef<HTMLDivElement | null>(null);
   const detailTabsBarRef = useRef<HTMLElement | HTMLDivElement | null>(null);
   const trackedProductViewRef = useRef('');
-  const initialEmiProductRef = useRef('');
   const reviewImagePreviews = useMemo(
     () => reviewImages.map((file) => ({ file, url: URL.createObjectURL(file) })),
     [reviewImages]
@@ -1705,6 +1704,7 @@ export const ProductDetail: React.FC = () => {
     let requestVersion = 0;
     let displayedProduct: Product | undefined;
     setLoading(true);
+    setShowEmiModal(false);
     setActiveMobileDetailTab('more-information');
     setShowAllMobileOverview(false);
 
@@ -1764,14 +1764,6 @@ export const ProductDetail: React.FC = () => {
     if (!canonicalSlug || id === canonicalSlug) return;
     navigate(`/product/${canonicalSlug}${window.location.search}`, { replace: true });
   }, [id, navigate, product, productRouteId]);
-
-  useEffect(() => {
-    if (loading || !product || productRouteId !== id) return;
-    const productKey = getProductSlug(product);
-    if (initialEmiProductRef.current === productKey) return;
-    initialEmiProductRef.current = productKey;
-    setShowEmiModal(!isQ8ProProduct || !window.matchMedia('(max-width: 767px)').matches);
-  }, [id, isQ8ProProduct, loading, product, productRouteId]);
 
   useEffect(() => {
     if (!product) return;
