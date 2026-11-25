@@ -171,9 +171,12 @@ const ProductCardComponent: React.FC<ProductCardProps> = ({
   const enableHoverEffects = !disableHoverEffects && supportsHover;
 
   const offerPricing = getAutomaticOfferItemPricing(product);
-  const mrp = getProductSlug(product) === 'tfx-display-pro-smart-ring'
+  const productSlug = getProductSlug(product);
+  const mrp = productSlug === 'tfx-display-pro-smart-ring'
     ? Number((offerPricing.unitOfferPrice / 0.85).toFixed(2))
-    : getCatalogOffer(product).regularPrice;
+    : productSlug === 'tfx5-ai-smart-band'
+      ? 12498.75
+      : getCatalogOffer(product).regularPrice;
   const savings = Math.max(0, mrp - offerPricing.unitOfferPrice);
   const savingsPercent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
 

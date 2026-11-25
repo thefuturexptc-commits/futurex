@@ -269,8 +269,10 @@ export const SmartBands: React.FC = () => {
               )}
               <div ref={catalogScrollerRef} className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {catalogProducts.map((product, index) => {
-                const mrp = getCatalogOffer(product).regularPrice;
                 const offerPricing = getAutomaticOfferItemPricing(product);
+                const mrp = getProductSlug(product) === 'tfx5-ai-smart-band'
+                  ? 12498.75
+                  : getCatalogOffer(product).regularPrice;
                 const savings = Math.max(0, mrp - offerPricing.unitOfferPrice);
                 const savingsPercent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
                 const detailLine = getCatalogBullets(product).slice(0, 2).join(' | ');
