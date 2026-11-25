@@ -1848,6 +1848,8 @@ export const ProductDetail: React.FC = () => {
   const productSlugForPricing = product ? getProductSlug(product) : '';
   const mrp = productSlugForPricing === 'tfx5-ai-smart-band'
     ? 12498.75
+    : productSlugForPricing === 'tfx-display-pro-smart-ring'
+      ? 4308.53
     : product ? getCatalogOffer(product).regularPrice : 0;
   const savings = Math.max(0, mrp - salePrice);
   const percent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
@@ -1863,7 +1865,7 @@ export const ProductDetail: React.FC = () => {
   const displayedPrice = couponRate > 0 ? couponPrice : salePrice;
   const displayedSavings = Math.max(0, mrp - displayedPrice);
   const displayedPercent = mrp > 0 ? Math.round((displayedSavings / mrp) * 100) : 0;
-  const videoOfferMrp = product && getProductSlug(product) === 'tfx-display-pro-smart-ring' ? 4069.17 : mrp;
+  const videoOfferMrp = mrp;
   const videoOfferSavings = Math.max(0, videoOfferMrp - displayedPrice);
   const videoOfferPercent = videoOfferMrp > 0 ? Math.round((videoOfferSavings / videoOfferMrp) * 100) : 0;
   const isFeaturedBandProduct = Boolean(product && (id === FEATURED_BAND_PRODUCT_SLUG || getProductSlug(product) === FEATURED_BAND_PRODUCT_SLUG || toProductSlug(product.name) === FEATURED_BAND_PRODUCT_SLUG));
