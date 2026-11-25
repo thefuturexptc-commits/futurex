@@ -7,6 +7,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
+import { smartRingBanner } from '../utils/collectionBanners';
 import ringProduct from '../assets/images/mainring.webp';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringAiWellness from '../assets/images/ring-ai-wellness.webp';
@@ -15,8 +16,6 @@ import ringOverviewWaterproof from '../assets/images/ring-overview-waterproof.jp
 import ringOverviewColors from '../assets/images/ring-overview-colors.jpg';
 import smartRingHeroVideo from '../assets/images/smart-ring-hero-video.mp4';
 import smartRingsCatalogBanner from '../assets/images/smart-rings-main-banner.webp';
-
-const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 
 const getProductImage = (product: Product): string =>
   product.colors?.[0]?.images?.[0] || product.images?.[0] || ringProduct;
@@ -253,7 +252,7 @@ export const SmartRings: React.FC = () => {
       >
         <img
           src={smartRingsCatalogBanner}
-          alt="Meet the TFX Smart Ring. Smart Insights. Seamless Style. Fitness, sleep and heart rate tracking."
+          alt={smartRingBanner.alt}
           width={1983}
           height={793}
           className="site-hero-media smart-rings-banner-image absolute inset-0 h-full w-full object-contain object-center"
@@ -261,7 +260,7 @@ export const SmartRings: React.FC = () => {
           fetchPriority="high"
           decoding="async"
         />
-        <Link to={FEATURED_RING_PRODUCT_PATH} className="absolute inset-0 z-10" aria-label="View The FutureX TFX Display Pro Smart Ring">
+        <Link to={smartRingBanner.featuredHref} className="absolute inset-0 z-10" aria-label="View The FutureX TFX Display Pro Smart Ring">
           <span className="sr-only">View The FutureX TFX Display Pro Smart Ring</span>
         </Link>
       </section>
@@ -313,8 +312,10 @@ export const SmartRings: React.FC = () => {
               )}
               <div ref={catalogScrollerRef} className="flex snap-x gap-5 overflow-x-auto pb-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {catalogProducts.map((product, index) => {
-                const mrp = getCatalogOffer(product).regularPrice;
                 const offerPricing = getAutomaticOfferItemPricing(product);
+                const mrp = getProductSlug(product) === 'tfx-display-pro-smart-ring'
+                  ? Number((offerPricing.unitOfferPrice / 0.85).toFixed(2))
+                  : getCatalogOffer(product).regularPrice;
                 const savings = Math.max(0, mrp - offerPricing.unitOfferPrice);
                 const savingsPercent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
                 const allPreviewImages = getProductPreviewImages(product);

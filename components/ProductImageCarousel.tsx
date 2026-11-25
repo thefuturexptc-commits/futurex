@@ -12,6 +12,7 @@ interface ProductImageCarouselProps {
   alt: string;
   selectedIndex?: number;
   onSelectIndex?: (index: number) => void;
+  onVideoPreviewClose?: () => void;
   bannerMode?: boolean;
   videoFit?: 'contain' | 'cover';
   fallbackImage?: string;
@@ -54,7 +55,7 @@ const removeStudioBackground = (source: string): Promise<string> => new Promise(
 });
 
 export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.memo(
-  ({ productId, images, videoUrl, popupVideoUrl, alt, selectedIndex: externalIndex, onSelectIndex, bannerMode = false, videoFit = 'contain', fallbackImage }) => {
+  ({ productId, images, videoUrl, popupVideoUrl, alt, selectedIndex: externalIndex, onSelectIndex, onVideoPreviewClose, bannerMode = false, videoFit = 'contain', fallbackImage }) => {
     const fade = useMemo(() => Fade(), []);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [processedImages, setProcessedImages] = useState<Record<string, string>>({});
@@ -128,6 +129,7 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
     };
 
     const closePreview = () => {
+      if (previewMedia?.type === 'video') onVideoPreviewClose?.();
       setPreviewMedia(null);
       setIsPreviewZoomed(false);
       setZoomScale(1.8);
@@ -172,13 +174,6 @@ export const ProductImageCarousel: React.FC<ProductImageCarouselProps> = React.m
     useEffect(() => {
       if (!popupVideoUrl || hasOpenedVideo.current) return;
       hasOpenedVideo.current = true;
-      const seenKey = `tfx_product_youtube_popup_seen:${productId}`;
-      try {
-        if (window.localStorage.getItem(seenKey)) return;
-        window.localStorage.setItem(seenKey, '1');
-      } catch {
-        // The preview can still open if browser storage is unavailable.
-      }
       setPreviewMedia({ type: 'video', src: popupVideoUrl });
     }, [productId, popupVideoUrl]);
 

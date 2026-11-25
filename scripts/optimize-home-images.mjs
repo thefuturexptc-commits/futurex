@@ -3,8 +3,6 @@ import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
 
 const names = [
-  'home-diwali-smart-rings',
-  'home-desktop-diwali-rings',
   'home-collection-bands-banner',
   'home-collection-rings-banner',
   'home-collection-fans-banner',

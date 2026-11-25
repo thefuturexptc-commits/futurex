@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
 import { isMegaPriceDropProduct } from '../utils/catalogPricing.js';
+import { smartBandBanner, useCollectionBannerAnchor } from '../utils/collectionBanners';
 import bandCutout from '../assets/images/band-hero-cutout.webp';
 import bandHeroLifestyle from '../assets/images/band-men-women-lifestyle.webp';
 import bandHeroVideo from '../assets/images/band-hero-video.mp4';
@@ -21,8 +22,6 @@ const stats = [
   ['24/7', 'vitals sync'],
   ['TFXVital', 'app support'],
 ];
-
-const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 
 const bandFaqs = [
   {
@@ -79,6 +78,7 @@ const getCatalogBullets = (product: Product): string[] => {
 };
 
 export const SmartBands: React.FC = () => {
+  useCollectionBannerAnchor();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
@@ -141,7 +141,7 @@ export const SmartBands: React.FC = () => {
       return bScore - aScore || a.name.localeCompare(b.name);
     });
   }, [products]);
-  const featuredBandHref = FEATURED_BAND_PRODUCT_PATH;
+  const featuredBandHref = smartBandBanner.featuredHref;
 
   useEffect(() => {
     if (loading || catalogProducts.length < 2) return;
@@ -197,16 +197,16 @@ export const SmartBands: React.FC = () => {
             style={{ opacity: 1, transform: 'translate3d(0, 0, 0)' }}
           >
             <h1 className="max-w-[340px] font-display text-[1.7rem] font-black leading-[1.12] tracking-normal text-white drop-shadow-[0_2px_18px_rgba(0,0,0,0.55)] sm:max-w-none sm:text-5xl lg:text-6xl">
-              Your <span className="text-[#23d4ca]">Health.</span> Predicted. Optimized. Protected.
+              {smartBandBanner.titleStart} <span className="text-[#23d4ca]">{smartBandBanner.titleAccent}</span> {smartBandBanner.titleEnd}
             </h1>
             <p className="mt-2 max-w-[340px] text-[13px] font-extrabold leading-5 text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)] sm:mt-5 sm:max-w-none sm:text-xl">
-              AI-powered wellness that learns from your body
+              {smartBandBanner.subtitle}
             </p>
             <p className="mt-3 max-w-[340px] text-[15px] font-medium leading-[1.48] text-white/95 drop-shadow-[0_2px_14px_rgba(0,0,0,0.55)] sm:mt-4 sm:max-w-2xl sm:text-lg sm:leading-8">
-              Our AI continuously learns from your body, helping you stay ahead with smarter insights, deeper analysis, and personalized recommendations.
+              {smartBandBanner.description}
             </p>
             <div className="mt-5 flex gap-2.5 sm:mt-8 sm:flex-wrap sm:gap-4">
-              <a href="#models" className="site-hero-cta site-hero-cta-primary">
+              <a href={`#${smartBandBanner.catalogId}`} className="site-hero-cta site-hero-cta-primary">
                 Buy Now
               </a>
               <Link to={featuredBandHref} className="site-hero-cta site-hero-cta-secondary">
@@ -217,7 +217,7 @@ export const SmartBands: React.FC = () => {
         </div>
       </section>
 
-      <section id="models" className="bg-[#f2fbfb] px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
+      <section id={smartBandBanner.catalogId} className="scroll-mt-[var(--tfx-sticky-header-height)] bg-[#f2fbfb] px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 flex flex-col items-center justify-between gap-5 text-center lg:flex-row lg:text-left">
             <div>

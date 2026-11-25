@@ -836,11 +836,7 @@ const getRouteHtml = (route, product) => {
       image: DEFAULT_IMAGE,
       jsonLd: `${buildHomepageJsonLd()}\n    <script id="homepage-faq-json-ld" type="application/ld+json">${JSON.stringify(homepageFaqSchema)}</script>`,
     });
-    const heroPreloads = [
-      ['home-diwali-smart-rings', '(max-width: 767px)'],
-      ['home-desktop-diwali-rings', '(min-width: 768px)'],
-    ].map(([name, media]) => `<link rel="preload" as="image" type="image/webp" media="${media}" imagesrcset="${[480, 768, 1280].map((width) => `/images/optimized/${name}-${width}.webp ${width}w`).join(', ')}" imagesizes="100vw" fetchpriority="high">`).join('\n');
-    return injectStaticRoot(html.replace('</head>', `${heroPreloads}\n</head>`), buildHomeStaticHtml(productRecords));
+    return injectStaticRoot(html, buildHomeStaticHtml(productRecords));
   }
 
   const categoryPage = categoryPages[route];

@@ -1841,6 +1841,7 @@ button {
   }
 
   .home-hero-arrows {
+    top: 50%;
     right: 8px;
     left: 8px;
   }
@@ -10690,5 +10691,15 @@ html.dark .site-main-content .blog-post-page [class*="text-white"] {
 .product-detail-page .product-information-card .product-feature-heading {
   font-weight: 700 !important;
   color: #0f172a !important;
+}
+
+/* The post-video offer dialog uses a dark header in both site themes. */
+.product-detail-page .video-offer-card__header,
+.product-detail-page .video-offer-card__header h2 {
+  color: #ffffff !important;
+}
+
+.product-detail-page .video-offer-card__header p {
+  color: #f2d29a !important;
 }
 

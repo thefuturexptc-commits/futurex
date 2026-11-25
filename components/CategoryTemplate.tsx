@@ -10,6 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
 import { getProductFallbackImage } from '../utils/productImages';
+import { useCollectionBannerAnchor } from '../utils/collectionBanners';
 import './FanCatalogCards.css';
 
 interface Feature {
@@ -80,6 +81,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
   const { addToCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  useCollectionBannerAnchor(!loading);
 
   const loadProducts = useCallback(() => {
     let cancelled = false;
@@ -330,7 +332,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
         </div>
       </section>
 
-      <section id="catalog" className="bg-[#f2fbfb] px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
+      <section id="catalog" className="scroll-mt-[var(--tfx-sticky-header-height)] bg-[#f2fbfb] px-4 py-12 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
           {loadError && (
             <div className="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
@@ -565,7 +567,7 @@ const CategoryTemplateComponent: React.FC<CategoryTemplateProps> = ({
         </div>
       </section>
 
-      <section id="overview" className="bg-white px-5 py-12 text-slate-950 sm:px-8 lg:px-10 lg:py-16">
+      <section id="overview" className="scroll-mt-[var(--tfx-sticky-header-height)] bg-white px-5 py-12 text-slate-950 sm:px-8 lg:px-10 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <h2 className="text-center font-display text-3xl font-black leading-tight text-slate-950 sm:text-6xl">
             Product Line Overview

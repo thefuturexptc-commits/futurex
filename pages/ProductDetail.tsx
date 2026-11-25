@@ -19,6 +19,7 @@ import { absoluteUrl, removeJsonLd, setJsonLd, setProductSocialMetadata, setSeoM
 import { formatInrAmount, getAutomaticOfferItemPricing, getPrepaidDiscountForItems, isTfxV5Band as isTfxV5OfferExcluded } from '../utils/coupons';
 import { getProductModelIdentifiers } from '../utils/productSearch';
 import { getFanFlipkartListing } from '../utils/fanListings';
+import { getStorefrontFlipkartListings } from '../utils/storefrontFlipkartListings.js';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
 import { buildProductSeoRecord } from '../utils/productSeoData.js';
 import { getProductOverview, TP09_PRO_DESCRIPTION } from '../utils/productOverviews.js';
@@ -1412,8 +1413,8 @@ const RazorpayEmiModal: React.FC<{
   ];
 
   return (
-    <div className="fixed inset-0 z-[95] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-      <div className="product-emi-dialog relative w-full max-w-[380px] overflow-hidden rounded-2xl bg-white text-slate-950 shadow-[0_28px_90px_rgba(0,0,0,0.35)]">
+    <div className="fixed inset-0 z-[95] flex items-center justify-center overflow-y-auto bg-slate-950/70 px-3 py-3 backdrop-blur-sm sm:p-4">
+      <div className="product-emi-dialog relative my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-[380px] overflow-x-hidden overflow-y-auto rounded-2xl bg-white text-slate-950 shadow-[0_28px_90px_rgba(0,0,0,0.35)] sm:max-h-[calc(100dvh-2rem)]">
         <button
           type="button"
           onClick={onClose}
@@ -1422,21 +1423,21 @@ const RazorpayEmiModal: React.FC<{
         >
           x
         </button>
-        <div className="px-5 pb-5 pt-6 text-center">
+        <div className="px-4 pb-4 pt-5 text-center sm:px-5 sm:pb-5 sm:pt-6">
           <p className="text-sm font-bold text-slate-700">Pay with Razorpay EMI</p>
-          <h2 className="mt-1 text-2xl font-semibold text-slate-950">Pay only {formatInr(monthlyAmount)} now</h2>
+          <h2 className="mt-1 text-xl font-semibold text-slate-950 min-[380px]:text-2xl">Pay only {formatInr(monthlyAmount)} now</h2>
           <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
             Indicative split. Final EMI plans, bank eligibility, interest, and charges are shown by Razorpay at checkout.
           </p>
         </div>
-        <div className="product-detail-emi-graph-card mx-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div className="grid grid-cols-3 gap-3">
+        <div className="product-detail-emi-graph-card mx-3 rounded-xl border border-slate-200 bg-slate-50 p-3 sm:mx-5 sm:p-4">
+          <div className="grid grid-cols-3 gap-1.5 min-[380px]:gap-3">
             {installmentOptions.map((installment) => (
               <div key={installment.label} className="text-center">
-                <div className="product-detail-emi-donut mx-auto grid h-16 w-16 place-items-center rounded-full">
+                <div className="product-detail-emi-donut mx-auto grid h-14 w-14 place-items-center rounded-full min-[380px]:h-16 min-[380px]:w-16">
                   <span className="product-detail-emi-donut-hole" />
                 </div>
-                <p className="mt-2 text-sm font-black text-slate-950">{formatInr(installment.amount)}</p>
+                <p className="mt-2 text-xs font-black text-slate-950 min-[380px]:text-sm">{formatInr(installment.amount)}</p>
                 <p className="text-[11px] font-bold text-slate-500">{installment.label}</p>
               </div>
             ))}
@@ -1446,12 +1447,12 @@ const RazorpayEmiModal: React.FC<{
             <span>{formatInr(price)}</span>
           </div>
         </div>
-        <div className="mt-5 grid grid-cols-3 divide-x divide-slate-300 px-5 text-center text-[11px] font-black leading-4 text-slate-700">
+        <div className="mt-4 grid grid-cols-3 divide-x divide-slate-300 px-3 text-center text-[10px] font-black leading-4 text-slate-700 sm:mt-5 sm:px-5 sm:text-[11px]">
           <span>Razorpay secure</span>
           <span>EMI options</span>
           <span>Cards accepted</span>
         </div>
-        <div className="mt-5 bg-slate-100 px-5 py-5">
+        <div className="mt-4 bg-slate-100 px-4 py-4 sm:mt-5 sm:px-5 sm:py-5">
           <h3 className="text-center text-sm font-black text-slate-950">Get started with Razorpay EMI</h3>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <input
@@ -1658,6 +1659,7 @@ export const ProductDetail: React.FC = () => {
   const [couponMessage, setCouponMessage] = useState('');
   const [surprisePhone, setSurprisePhone] = useState('');
   const [showEmiModal, setShowEmiModal] = useState(false);
+  const [showVideoOfferCard, setShowVideoOfferCard] = useState(false);
   const [emiFirstName, setEmiFirstName] = useState('');
   const [emiLastName, setEmiLastName] = useState('');
   const [emiPhone, setEmiPhone] = useState('');
@@ -1843,10 +1845,14 @@ export const ProductDetail: React.FC = () => {
   );
 
   const salePrice = Number(product?.salePrice || product?.price || 0);
-  const mrp = product ? getCatalogOffer(product).regularPrice : 0;
+  const productSlugForPricing = product ? getProductSlug(product) : '';
+  const mrp = productSlugForPricing === 'tfx5-ai-smart-band'
+    ? 12498.75
+    : product ? getCatalogOffer(product).regularPrice : 0;
   const savings = Math.max(0, mrp - salePrice);
   const percent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
   const hidePercentageOffer = product ? isTfxV5OfferExcluded(product) : false;
+  const showPercentageOffer = !hidePercentageOffer || productSlugForPricing === 'tfx5-ai-smart-band';
   const automaticOfferPricing = product ? getAutomaticOfferItemPricing(product) : null;
   const couponRate = automaticOfferPricing?.rate || 0;
   const couponDiscount = automaticOfferPricing?.unitDiscount || 0;
@@ -1857,6 +1863,9 @@ export const ProductDetail: React.FC = () => {
   const displayedPrice = couponRate > 0 ? couponPrice : salePrice;
   const displayedSavings = Math.max(0, mrp - displayedPrice);
   const displayedPercent = mrp > 0 ? Math.round((displayedSavings / mrp) * 100) : 0;
+  const videoOfferMrp = product && getProductSlug(product) === 'tfx-display-pro-smart-ring' ? 4069.17 : mrp;
+  const videoOfferSavings = Math.max(0, videoOfferMrp - displayedPrice);
+  const videoOfferPercent = videoOfferMrp > 0 ? Math.round((videoOfferSavings / videoOfferMrp) * 100) : 0;
   const isFeaturedBandProduct = Boolean(product && (id === FEATURED_BAND_PRODUCT_SLUG || getProductSlug(product) === FEATURED_BAND_PRODUCT_SLUG || toProductSlug(product.name) === FEATURED_BAND_PRODUCT_SLUG));
   const isMegaPriceDropBand = Boolean(product && (
     MEGA_PRICE_DROP_BAND_SLUGS.includes(id || '') ||
@@ -2524,7 +2533,7 @@ export const ProductDetail: React.FC = () => {
   const isFanMarketplacePage = productFamily === 'fan';
   const productGalleryVideoFit: 'contain' | 'cover' = productFamily === 'fan' ? 'contain' : 'cover';
   const showProductOverview = productFamily !== 'fan' && !isQ8ProProduct;
-  const overviewTab = { key: 'more-information' as const, label: productOverview ? 'Product Media' : 'Overview' };
+  const overviewTab = { key: 'more-information' as const, label: 'Overview' };
   const descriptionTab = { key: 'description' as const, label: 'Description' };
   const detailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
     { key: 'features', label: 'Features' },
@@ -2740,6 +2749,13 @@ export const ProductDetail: React.FC = () => {
         url: product.flipkartUrl || productFlipkartLink?.url || '',
       }
     : undefined);
+  const suppliedFlipkartListings = getStorefrontFlipkartListings(getProductSlug(product), selectedColor?.name, selectedSize);
+  const visibleFlipkartListings = suppliedFlipkartListings.length
+    ? suppliedFlipkartListings.map(({ url, color, size, label }) => ({
+        url,
+        product: label || (color ? `${color} · Size ${size}` : product.name),
+      }))
+    : flipkartListing ? [flipkartListing] : [];
   const heroSpecProfiles = {
     band: [
       ['Battery life', product.specs?.['Battery life'] || product.specs?.Battery || product.specs?.battery || 'Up to 14 Days'],
@@ -3595,6 +3611,41 @@ export const ProductDetail: React.FC = () => {
           }}
         />
       )}
+      {showVideoOfferCard && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-slate-950/70 px-3 py-3 backdrop-blur-sm sm:p-4" role="dialog" aria-modal="true" aria-labelledby="video-offer-title">
+          <div className="my-auto max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100dvh-2rem)]">
+            <div className="video-offer-card__header relative bg-gradient-to-r from-[#17213b] to-[#071326] px-6 py-5 !text-white">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] !text-[#f2d29a]">Special offer</p>
+              <h2 id="video-offer-title" className="mt-1 text-2xl font-black !text-white">Your exclusive savings</h2>
+              <button type="button" onClick={() => setShowVideoOfferCard(false)} aria-label="Close offer" className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full border border-white/30 text-lg font-bold !text-white transition hover:bg-white/15">
+                ×
+              </button>
+            </div>
+            <div className="p-4 min-[380px]:p-6">
+              <p className="text-xs font-bold text-slate-600">{displayProductName}</p>
+              <p className="text-3xl font-black text-slate-950">
+                {videoOfferSavings > 0 ? `Save ${formatInrAmount(videoOfferSavings)}` : 'Special price today'}
+              </p>
+              {videoOfferSavings > 0 && !hidePercentageOffer && <p className="mt-1 text-sm font-bold text-emerald-700">{videoOfferPercent}% off the regular price</p>}
+              <p className="mt-2 text-sm font-semibold text-slate-700">
+                Now {formatInrAmount(displayedPrice)}{videoOfferMrp > displayedPrice && <> · <span className="text-slate-500">MRP </span><span className="text-slate-500 line-through">{formatInrAmount(videoOfferMrp)}</span></>}
+              </p>
+              <div className="mt-5 rounded-xl bg-[#f5f8ff] p-4">
+                <p className="text-sm font-black text-slate-950">Easy EMI available</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">Choose EMI at checkout to spread your payment into monthly instalments.</p>
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <button type="button" onClick={() => setShowVideoOfferCard(false)} className="rounded-lg border border-slate-300 px-4 py-3 text-xs font-black uppercase tracking-[0.08em] text-slate-800 transition hover:border-slate-950">
+                  Continue
+                </button>
+                <button type="button" onClick={() => { setShowVideoOfferCard(false); setShowEmiModal(true); }} className="rounded-lg bg-slate-950 px-4 py-3 text-xs font-black uppercase tracking-[0.08em] !text-white transition hover:bg-slate-800">
+                  View EMI
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {useMarketplaceArrangement && (
         <>
           <div className="border-b border-slate-200 bg-white">
@@ -3641,6 +3692,7 @@ export const ProductDetail: React.FC = () => {
               fallbackImage={getProductFallbackImage(product)}
               videoUrl={galleryVideoUrl}
               popupVideoUrl={popupVideoUrl}
+              onVideoPreviewClose={() => setShowVideoOfferCard(true)}
               alt={product.name}
               selectedIndex={selectedImageIndex}
               onSelectIndex={setSelectedImageIndex}
@@ -3837,7 +3889,7 @@ export const ProductDetail: React.FC = () => {
                   </div>
                   {displayedSavings > 0 && (
                     <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700">
-                      Save {formatInrAmount(displayedSavings)}{!hidePercentageOffer ? ` (${displayedPercent}% off)` : ''}
+                      Save {formatInrAmount(displayedSavings)}{showPercentageOffer ? ` (${displayedPercent}% off)` : ''}
                     </span>
                   )}
                   <span className={`product-current-price font-display text-2xl font-semibold tracking-tight sm:text-3xl ${couponRate > 0 ? 'text-emerald-700' : 'text-slate-950'}`}>{formatInrAmount(displayedPrice)}</span>
@@ -3999,20 +4051,21 @@ export const ProductDetail: React.FC = () => {
 
               <DeliveryEstimate warranty={getWarrantyDisplayText(productFamily)} />
 
-              {flipkartListing && (
+              {visibleFlipkartListings.map((listing) => (
                 <a
-                  href={flipkartListing.url}
+                  key={listing.url}
+                  href={listing.url}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-[#2874f0]/25 bg-[#f3f8ff] p-3 transition hover:border-[#2874f0]"
                 >
                   <span className="min-w-0">
                     <span className="block text-[10px] font-black uppercase tracking-[0.16em] text-yellow-500">Also on Flipkart</span>
-                    <span className="mt-1 block whitespace-normal break-words text-sm font-bold text-slate-950">{flipkartListing.product}</span>
+                    <span className="mt-1 block whitespace-normal break-words text-sm font-bold text-slate-950">{listing.product}</span>
                   </span>
                   <span className="shrink-0 rounded-lg bg-[#ffe500] px-3 py-2 text-[11px] font-black text-slate-950">View</span>
                 </a>
-              )}
+              ))}
             </aside>
           )}
         </div>
@@ -4118,6 +4171,22 @@ export const ProductDetail: React.FC = () => {
                   </div>
                 )}
               </RevealOnScroll>
+              {section.video && (
+                <div className="rounded-xl border border-[#b89452]/30 bg-gradient-to-r from-[#fffaf0] to-[#f5fbff] px-4 py-4 shadow-[0_3px_14px_rgba(15,23,42,0.07)]">
+                  <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8a6a20]">Limited-time offer</p>
+                      <p className="mt-1 text-base font-black text-slate-950">
+                        {videoOfferSavings > 0 ? `Save ${formatInrAmount(videoOfferSavings)}${hidePercentageOffer ? '' : ` (${videoOfferPercent}% off)`}` : 'Special price available today'}
+                      </p>
+                      <p className="mt-1 text-xs font-semibold text-slate-600">Easy EMI is available at checkout.</p>
+                    </div>
+                    <button type="button" onClick={() => setShowEmiModal(true)} className="shrink-0 rounded-lg bg-slate-950 px-4 py-2.5 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-slate-800">
+                      View EMI options
+                    </button>
+                  </div>
+                </div>
+              )}
               {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
               {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-2">{tfx5Showcase}</div>}
               </React.Fragment>
@@ -4247,7 +4316,7 @@ export const ProductDetail: React.FC = () => {
           className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 ${activeMobileDetailTab === 'more-information' ? '' : 'hidden'}`}
         >
           <div className="mx-auto max-w-[1200px]">
-            <h2 id="q8-pro-media-title" className="store-section-heading mb-4">Product Media</h2>
+            <h2 id="q8-pro-media-title" className="store-section-heading mb-4">Overview</h2>
             <p className="mb-3 text-sm text-slate-600 sm:hidden">Tap a diagram to enlarge it.</p>
             <div className="space-y-3 sm:space-y-4">
               {Q8_PRO_OVERVIEW_BANNERS.map(({ src, alt }) => (
@@ -4317,6 +4386,22 @@ export const ProductDetail: React.FC = () => {
                       </div>
                     )}
                   </RevealOnScroll>
+                  {section.video && (
+                    <div className="rounded-xl border border-[#b89452]/30 bg-gradient-to-r from-[#fffaf0] to-[#f5fbff] px-5 py-4 shadow-[0_3px_14px_rgba(15,23,42,0.07)] sm:px-6">
+                      <div className="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8a6a20]">Limited-time offer</p>
+                          <p className="mt-1 text-lg font-black text-slate-950">
+                            {videoOfferSavings > 0 ? `Save ${formatInrAmount(videoOfferSavings)}${hidePercentageOffer ? '' : ` (${videoOfferPercent}% off)`}` : 'Special price available today'}
+                          </p>
+                          <p className="mt-1 text-sm font-semibold text-slate-600">Easy EMI is available at checkout.</p>
+                        </div>
+                        <button type="button" onClick={() => setShowEmiModal(true)} className="rounded-lg bg-slate-950 px-5 py-3 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-slate-800">
+                          View EMI options
+                        </button>
+                      </div>
+                    </div>
+                  )}
                   {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
                   {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-3">{tfx5Showcase}</div>}
                   </React.Fragment>

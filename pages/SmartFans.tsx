@@ -2,6 +2,7 @@ import React from 'react';
 import '../components/CategoryInfoCards.css';
 import { CategoryTemplate } from '../components/CategoryTemplate';
 import type { Product } from '../types';
+import { bladelessFanBanner } from '../utils/collectionBanners';
 import fanHero from '../assets/images/fan-family-hero.webp';
 import fanMobileHero from '../assets/images/fan-mobile-hero.webp';
 import fanHeroVideo from '../assets/images/bladeless-fan-hero-video.mp4';
@@ -116,15 +117,15 @@ export const SmartFans: React.FC = () => {
   return (
   <>
     <CategoryTemplate
-      category="Smart Fans"
-      title="The Future of Bladeless Comfort."
+      category={bladelessFanBanner.category}
+      title={bladelessFanBanner.title}
       subtitle=""
       heroGradient="from-slate-950 via-slate-900 to-cyan-950"
       heroImage={fanHero}
       mobileHeroImage={fanMobileHero}
       heroVideo={fanHeroVideo}
       heroAsFullBanner
-      heroHref="/product/tfx-advance"
+      heroHref={bladelessFanBanner.featuredHref}
       overviewImage={tp09ProOverview}
       overviewProductSlug="tfxhot-and-coolair-pro"
       accentColor="#0ea5e9"

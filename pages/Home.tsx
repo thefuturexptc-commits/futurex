@@ -9,14 +9,16 @@ import { addOfferLead, getProductSlug } from '../services/backend';
 import { WearableFinder } from '../components/WearableFinder';
 import { formatInrAmount, getAutomaticOfferItemPricing } from '../utils/coupons';
 import { getCatalogMrp, isMegaPriceDropProduct } from '../utils/catalogPricing.js';
+import { bladelessFanBanner, smartBandBanner, smartRingBanner } from '../utils/collectionBanners';
 import { getProductFallbackImage } from '../utils/productImages';
 import homeCollectionBandImage from '../assets/images/home-collection-bands-banner.webp';
 import homeCollectionRingImage from '../assets/images/home-collection-rings-banner.webp';
 import homeCollectionFanImage from '../assets/images/home-collection-fans-banner.webp';
-import homeDiwaliSmartRingsBanner from '../assets/images/home-diwali-smart-rings.webp';
-import homeDiwaliAirCleanerBanner from '../assets/images/home-diwali-air-cleaner.webp';
-import homeDesktopDiwaliRingsBanner from '../assets/images/home-desktop-diwali-rings.webp';
-import homeDesktopDiwaliAirCleanerBanner from '../assets/images/home-desktop-diwali-air-cleaner.webp';
+import smartRingsBanner from '../assets/images/smart-rings-main-banner.webp';
+import bandHeroVideo from '../assets/images/band-hero-video.mp4';
+import bandVideoPoster from '../assets/images/band-mobile-sleep-hero.webp';
+import fanHeroVideo from '../assets/images/bladeless-fan-hero-video.mp4';
+import fanVideoPoster from '../assets/images/fan-mobile-hero.webp';
 import tfxV5BannerOne from '../assets/images/tfx-v5-banner-01.webp';
 import tfxV5BannerTwo from '../assets/images/tfx-v5-banner-02.webp';
 import { homepageFaqs } from '../services/seo';
@@ -165,7 +167,6 @@ const TrustMarquee: React.FC = () => {
 
 const CATALOG_PAGE_SIZE = 4;
 const HOME_VIDEO_ID = '36BQ2gCuiiE';
-const HOME_VIDEO_SEEN_KEY = 'tfx_home_youtube_popup_seen';
 const FEATURED_BAND_PRODUCT_PATH = '/product/tfx5-ai-smart-band';
 const FEATURED_RING_PRODUCT_PATH = '/product/tfx-display-pro-smart-ring';
 const FEATURED_FAN_PRODUCT_PATH = '/product/tfx-advance';
@@ -311,30 +312,231 @@ const FeaturedBannerTabs: React.FC<{ href: string }> = ({ href }) => {
   );
 };
 
-const HOME_WATER_RESISTANT_BANNERS = [
+const HOME_BANNER_SLIDES = [
   {
-    image: homeDiwaliSmartRingsBanner,
-    desktopImage: homeDesktopDiwaliRingsBanner,
-    href: '/smart-rings',
-    alt: 'FutureX smart rings in a Diwali setting with a brighter you message',
-    width: 1374,
-    height: 1145,
-    backgroundColor: '#ead3ac',
+    title: 'Smart Bands',
+    href: '/smart-bands',
+    src: bandHeroVideo,
+    poster: bandVideoPoster,
+    duration: 14000,
+    copy: {
+      heading: <>{smartBandBanner.titleStart} <span className="text-[#23d4ca] [-webkit-text-fill-color:#23d4ca]">{smartBandBanner.titleAccent}</span> {smartBandBanner.titleEnd}</>,
+      subtitle: smartBandBanner.subtitle,
+      description: smartBandBanner.description,
+      buyHref: `/smart-bands#${smartBandBanner.catalogId}`,
+      learnHref: smartBandBanner.featuredHref,
+    },
   },
   {
-    image: homeDiwaliAirCleanerBanner,
-    desktopImage: homeDesktopDiwaliAirCleanerBanner,
+    title: 'Bladeless Fans',
     href: '/bladeless-fan',
-    alt: 'FutureX air cleaners and bladeless fans with a breathe cleaner air this Diwali message',
-    width: 1374,
-    height: 1145,
-    backgroundColor: '#ead3ac',
+    mediaHref: bladelessFanBanner.featuredHref,
+    src: fanHeroVideo,
+    poster: fanVideoPoster,
+    duration: 9000,
+    copy: {
+      eyebrow: bladelessFanBanner.category,
+      heading: bladelessFanBanner.title,
+      buyHref: `/bladeless-fan#${bladelessFanBanner.catalogId}`,
+      learnHref: `/bladeless-fan#${bladelessFanBanner.overviewId}`,
+    },
+  },
+  {
+    title: 'Smart Rings',
+    href: '/smart-rings',
+    mediaHref: smartRingBanner.featuredHref,
+    image: smartRingsBanner,
+    alt: smartRingBanner.alt,
+    duration: 6500,
   },
 ];
 
-const getNextHomeBannerIndex = (current: number, direction: -1 | 1): number => {
-  const count = HOME_WATER_RESISTANT_BANNERS.length;
-  return (current + direction + count) % count;
+const HomeBanner: React.FC = () => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
+  const [focusWithin, setFocusWithin] = useState(false);
+  const [touching, setTouching] = useState(false);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const suppressClick = useRef(false);
+  const slide = HOME_BANNER_SLIDES[activeIndex];
+  const moveSlide = (direction: -1 | 1) => {
+    setActiveIndex((index) => (index + direction + HOME_BANNER_SLIDES.length) % HOME_BANNER_SLIDES.length);
+  };
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage) return undefined;
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotionPreference = () => setReducedMotion(motionPreference.matches);
+    updateMotionPreference();
+    const observer = new IntersectionObserver(([entry]) => {
+      setVisible(entry.intersectionRatio >= 0.25);
+    }, { threshold: 0.25 });
+
+    observer.observe(stage);
+    motionPreference.addEventListener('change', updateMotionPreference);
+    return () => {
+      observer.disconnect();
+      motionPreference.removeEventListener('change', updateMotionPreference);
+    };
+  }, []);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (visible && !reducedMotion) void video.play().catch(() => undefined);
+    else video.pause();
+  }, [activeIndex, visible, reducedMotion]);
+
+  useEffect(() => {
+    if (!visible || reducedMotion || focusWithin || touching) return undefined;
+    const timer = window.setTimeout(() => {
+      setActiveIndex((index) => (index + 1) % HOME_BANNER_SLIDES.length);
+    }, slide.duration);
+    return () => window.clearTimeout(timer);
+  }, [activeIndex, slide.duration, focusWithin, reducedMotion, touching, visible]);
+
+  return (
+    <section
+      aria-label="Homepage banner"
+      aria-roledescription="carousel"
+      aria-keyshortcuts="ArrowLeft ArrowRight"
+      className={`w-full ${slide.image ? 'bg-[#24170f]' : 'bg-slate-950'}`}
+      onKeyDown={(event) => {
+        if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+        event.preventDefault();
+        moveSlide(event.key === 'ArrowRight' ? 1 : -1);
+      }}
+      onFocus={(event) => {
+        if (event.target.matches(':focus-visible')) setFocusWithin(true);
+      }}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setFocusWithin(false);
+      }}
+    >
+      <div
+        ref={stageRef}
+        className={`relative grid w-full touch-pan-y overflow-hidden sm:aspect-[1983/793] ${
+          slide.image ? 'aspect-[1983/793] min-h-0' : 'min-h-[calc(100svh-var(--tfx-sticky-header-height,70px))] sm:min-h-[370px]'
+        }`}
+        onTouchStart={(event) => {
+          suppressClick.current = false;
+          const touch = event.touches[0];
+          touchStart.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
+          setTouching(true);
+        }}
+        onTouchEnd={(event) => {
+          const start = touchStart.current;
+          touchStart.current = null;
+          setTouching(false);
+          if (!start) return;
+          const touch = event.changedTouches[0];
+          const dx = touch.clientX - start.x;
+          const dy = touch.clientY - start.y;
+          if (Math.abs(dx) < 40 || Math.abs(dx) <= Math.abs(dy) * 1.5) return;
+          suppressClick.current = true;
+          moveSlide(dx < 0 ? 1 : -1);
+        }}
+        onTouchCancel={() => {
+          touchStart.current = null;
+          setTouching(false);
+        }}
+        onClickCapture={(event) => {
+          if (suppressClick.current && event.detail !== 0) {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+          suppressClick.current = false;
+        }}
+      >
+        <Link to={slide.mediaHref ?? slide.href} aria-label={`View ${slide.title}`} className="absolute inset-0">
+          {slide.image ? (
+            <img
+              src={slide.image}
+              alt={slide.alt}
+              width={1983}
+              height={793}
+              className="absolute inset-0 h-full w-full object-contain"
+              fetchPriority="high"
+              decoding="async"
+            />
+          ) : (
+            <video
+              key={slide.href}
+              ref={videoRef}
+              src={slide.src}
+              poster={slide.poster}
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 h-full w-full object-cover brightness-[0.84] contrast-105"
+              preload="none"
+              muted
+              playsInline
+            />
+          )}
+        </Link>
+        {slide.copy && (
+          <>
+            <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-black/10 bg-gradient-to-t from-black/75 via-black/42 to-black/15 sm:bg-gradient-to-r sm:from-black/75 sm:via-black/42 sm:to-black/15" />
+            <div className="pointer-events-none relative mx-auto flex w-full max-w-7xl items-end px-4 pb-12 pt-5 sm:items-center sm:px-8 sm:py-10 lg:px-10">
+              <div className="max-w-2xl [text-shadow:0_1px_5px_rgba(0,0,0,0.65)]">
+                {slide.copy.eyebrow && <p className="mb-2 text-xs font-bold uppercase tracking-[0.2em] !text-[#67e8f9] [-webkit-text-fill-color:#67e8f9] sm:mb-4">{slide.copy.eyebrow}</p>}
+                <h2 className="font-display font-black !text-white [-webkit-text-fill-color:#fff]">{slide.copy.heading}</h2>
+                {slide.copy.subtitle && <p className="mt-2 text-sm font-extrabold !text-white [-webkit-text-fill-color:#fff] sm:mt-4 sm:text-xl">{slide.copy.subtitle}</p>}
+                {slide.copy.description && <p className="mt-2 text-sm leading-relaxed !text-white [-webkit-text-fill-color:#fff] sm:mt-3 sm:text-lg">{slide.copy.description}</p>}
+                <div className="pointer-events-auto mt-4 flex w-fit max-w-full flex-wrap gap-2 sm:mt-6 sm:gap-4">
+                  <Link to={slide.copy.buyHref} className="site-hero-cta site-hero-cta-primary !min-h-11">Buy Now</Link>
+                  <Link to={slide.copy.learnHref} className="site-hero-cta site-hero-cta-secondary !min-h-11">Learn More</Link>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+        <div className="home-hero-arrows" aria-label="Browse homepage banners">
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              moveSlide(-1);
+            }}
+            aria-label={`Previous banner, currently ${slide.title}`}
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              moveSlide(1);
+            }}
+            aria-label={`Next banner, currently ${slide.title}`}
+          >
+            ›
+          </button>
+        </div>
+        <div className="absolute inset-x-0 bottom-4 z-[12] flex justify-center gap-2" aria-label="Homepage banner slides">
+          {HOME_BANNER_SLIDES.map((banner, index) => (
+            <button
+              key={banner.title}
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                setActiveIndex(index);
+              }}
+              className={`h-2.5 rounded-full border border-white/70 shadow-sm transition ${activeIndex === index ? 'w-7 bg-white' : 'w-2.5 bg-white/55 hover:bg-white'}`}
+              aria-label={`Show ${banner.title} banner`}
+              aria-current={activeIndex === index ? 'true' : undefined}
+            />
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 };
 
 const HOME_COLLECTION_CARDS = [
@@ -424,14 +626,14 @@ const InfluencerVideos: React.FC = () => {
   return (
   <section className="bg-[#f1f5f9] py-10 sm:py-14" aria-labelledby="creator-videos-title">
     <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div className="mb-5 flex items-end justify-between gap-4">
+      <div className="mb-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#087481]">Featured by creators</p>
           <h2 id="creator-videos-title" className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">See TheFutureX in action</h2>
         </div>
-        <a href="https://www.youtube.com/@TheFutureXdotin" target="_blank" rel="noopener noreferrer" className="hidden rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-[#087481] hover:text-[#087481] sm:inline-flex">Visit our YouTube channel <span className="ml-1" aria-hidden="true">↗</span></a>
+        <a href="https://www.youtube.com/@TheFutureXdotin" target="_blank" rel="noopener noreferrer" className="inline-flex min-h-11 items-center rounded-full border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-800 transition hover:border-[#087481] hover:text-[#087481]">Visit our YouTube channel <span className="ml-1" aria-hidden="true">↗</span></a>
       </div>
-      <p className="mb-3 text-sm font-medium text-slate-600 sm:hidden">Swipe sideways to watch more creator videos.</p>
+      <p className="mb-3 text-sm font-medium text-slate-600">Scroll sideways to watch more creator videos.</p>
       <div className="group/creator relative">
         <div ref={railRef} className="flex snap-x gap-4 overflow-x-auto pb-3 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {INFLUENCER_SHORT_IDS.map((videoId, index) => (
@@ -551,27 +753,9 @@ export const Home: React.FC = () => {
   const [offerSaving, setOfferSaving] = useState(false);
   const [offerUnlocked, setOfferUnlocked] = useState(false);
   const [copiedOfferCode, setCopiedOfferCode] = useState('');
-  const [homeWaterBannerIndex, setHomeWaterBannerIndex] = useState(0);
-  const [visitedHeroBanners, setVisitedHeroBanners] = useState(() => new Set([0]));
-  useEffect(() => {
-    setVisitedHeroBanners((previous) => new Set([...previous, homeWaterBannerIndex]));
-  }, [homeWaterBannerIndex]);
-  const bannerGesture = useRef<{ x: number; y: number } | null>(null);
-  const suppressBannerClick = useRef(false);
-  const [isBannerTouching, setIsBannerTouching] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const { addToCart } = useCart();
-
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem(HOME_VIDEO_SEEN_KEY)) return;
-      window.localStorage.setItem(HOME_VIDEO_SEEN_KEY, '1');
-    } catch {
-      // The video can still open if browser storage is unavailable.
-    }
-    setShowSmartBandReel(true);
-  }, []);
 
   useEffect(() => {
     if (!showSmartBandReel) return undefined;
@@ -636,19 +820,6 @@ export const Home: React.FC = () => {
     window.addEventListener('products-updated', loadProducts);
     return () => window.removeEventListener('products-updated', loadProducts);
   }, [loadProducts]);
-
-  const [isHomeBannerPaused, setIsHomeBannerPaused] = useState(false);
-
-  useEffect(() => {
-    if (isHomeBannerPaused || isBannerTouching || HOME_WATER_RESISTANT_BANNERS.length <= 1) return undefined;
-    if (typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-      return undefined;
-    }
-    const intervalId = window.setInterval(() => {
-      setHomeWaterBannerIndex((current) => getNextHomeBannerIndex(current, 1));
-    }, 4500);
-    return () => window.clearInterval(intervalId);
-  }, [isHomeBannerPaused, isBannerTouching, homeWaterBannerIndex]);
 
   const handleSeedDefaults = async () => {
     setSeeding(true);
@@ -764,7 +935,7 @@ export const Home: React.FC = () => {
               type="button"
               onClick={() => setShowSmartBandReel(false)}
               aria-label="Close video"
-              className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-black/65 text-2xl leading-none text-white ring-1 ring-white/30 transition hover:bg-black"
+              className="absolute right-3 top-3 z-10 grid h-11 w-11 place-items-center rounded-full bg-black/65 text-2xl leading-none text-white ring-1 ring-white/30 transition hover:bg-black"
             >
               ×
             </button>
@@ -921,170 +1092,8 @@ export const Home: React.FC = () => {
       ), document.body)}
 
       <h1 className="sr-only">TheFutureX Smart Wearables and Connected Lifestyle Products</h1>
-      <section
-        className="relative isolate left-1/2 w-screen max-w-none -translate-x-1/2 overflow-hidden bg-[#ead3ac] shadow-[0_18px_45px_rgba(15,23,42,0.12)] sm:rounded-b-[1.75rem]"
-        aria-label="Homepage banner"
-        onMouseEnter={() => setIsHomeBannerPaused(true)}
-        onMouseLeave={() => setIsHomeBannerPaused(false)}
-        onFocus={() => setIsHomeBannerPaused(true)}
-        onBlur={() => setIsHomeBannerPaused(false)}
-      >
-        <div
-          className="relative aspect-[6/5] w-full min-w-0 overflow-hidden md:aspect-[21/9]"
-          style={{ touchAction: 'pan-y pinch-zoom' }}
-          onTouchStart={(event) => {
-            suppressBannerClick.current = false;
-            const touch = event.touches[0];
-            bannerGesture.current = event.touches.length === 1 ? { x: touch.clientX, y: touch.clientY } : null;
-            setIsBannerTouching(true);
-          }}
-          onTouchMove={(event) => {
-            const start = bannerGesture.current;
-            if (!start) return;
-            const touch = event.touches[0];
-            if (event.touches.length !== 1) {
-              bannerGesture.current = null;
-              suppressBannerClick.current = true;
-            } else if (Math.hypot(touch.clientX - start.x, touch.clientY - start.y) > 10) {
-              suppressBannerClick.current = true;
-            }
-          }}
-          onTouchEnd={(event) => {
-            const start = bannerGesture.current;
-            bannerGesture.current = null;
-            setIsBannerTouching(false);
-            if (!start) return;
-            const touch = event.changedTouches[0];
-            const dx = touch.clientX - start.x;
-            const dy = touch.clientY - start.y;
-            if (Math.abs(dx) >= 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-              suppressBannerClick.current = true;
-              setHomeWaterBannerIndex((current) =>
-                getNextHomeBannerIndex(current, dx < 0 ? 1 : -1)
-              );
-            }
-          }}
-          onTouchCancel={() => {
-            bannerGesture.current = null;
-            suppressBannerClick.current = true;
-            setIsBannerTouching(false);
-          }}
-          onClickCapture={(event) => {
-            if (suppressBannerClick.current && event.detail !== 0) {
-              event.preventDefault();
-              event.stopPropagation();
-            }
-            suppressBannerClick.current = false;
-          }}
-          onPointerDown={(event) => {
-            if (event.pointerType === 'mouse') suppressBannerClick.current = false;
-          }}
-        >
-          {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
-            <Link
-              key={banner.alt}
-              to={banner.href || '#'}
-              style={{ backgroundColor: banner.backgroundColor }}
-              className={`absolute inset-0 overflow-hidden transition-opacity duration-[900ms] ease-out ${
-                index === homeWaterBannerIndex ? 'z-10 opacity-100' : 'z-0 opacity-0 pointer-events-none'
-              }`}
-              aria-hidden={index !== homeWaterBannerIndex}
-              tabIndex={index === homeWaterBannerIndex ? 0 : -1}
-            >
-              {(visitedHeroBanners.has(index) || index === homeWaterBannerIndex) && <picture className="block h-full w-full">
-                <source media="(min-width: 768px)" srcSet={index === 0 ? homeImageSrcSet('home-desktop-diwali-rings') : banner.desktopImage} sizes="100vw" />
-                {banner.image && (
-                  <img
-                    src={banner.image}
-                    srcSet={index === 0 ? homeImageSrcSet('home-diwali-smart-rings') : undefined}
-                    sizes="100vw"
-                    alt={banner.alt}
-                    width={banner.width}
-                    height={banner.height}
-                    className="h-full w-full object-cover object-center"
-                    loading={index === 0 ? 'eager' : 'lazy'}
-                    fetchPriority={index === 0 ? 'high' : 'auto'}
-                    decoding="async"
-                  />
-                )}
-              </picture>}
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-1/4 bg-gradient-to-t from-black/45 via-black/0 to-transparent" />
-              <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-1/5 bg-gradient-to-b from-black/25 via-black/0 to-transparent" />
-            </Link>
-          ))}
-        </div>
+      <HomeBanner />
 
-        {HOME_WATER_RESISTANT_BANNERS.length > 1 && (
-          <>
-            <button
-              type="button"
-              onClick={() =>
-                setHomeWaterBannerIndex(
-                  (current) => getNextHomeBannerIndex(current, -1)
-                )
-              }
-              aria-label="Previous banner"
-              className="absolute left-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition-all duration-200 hover:scale-110 hover:bg-white hover:shadow-[0_0_0_4px_rgba(14,165,233,0.25)] active:scale-95 sm:flex"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="15 18 9 12 15 6" />
-              </svg>
-            </button>
-            <button
-              type="button"
-              onClick={() => setHomeWaterBannerIndex((current) => getNextHomeBannerIndex(current, 1))}
-              aria-label="Next banner"
-              className="absolute right-3 top-1/2 z-20 hidden -translate-y-1/2 items-center justify-center rounded-full bg-white/85 p-2 text-slate-900 shadow-md backdrop-blur transition-all duration-200 hover:scale-110 hover:bg-white hover:shadow-[0_0_0_4px_rgba(14,165,233,0.25)] active:scale-95 sm:flex"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="9 18 15 12 9 6" />
-              </svg>
-            </button>
-
-            <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2 sm:bottom-5">
-              {HOME_WATER_RESISTANT_BANNERS.map((banner, index) => (
-                <button
-                  key={banner.alt}
-                  type="button"
-                  onClick={() => setHomeWaterBannerIndex(index)}
-                  aria-label={`Show banner ${index + 1} of ${HOME_WATER_RESISTANT_BANNERS.length}`}
-                  aria-current={index === homeWaterBannerIndex}
-                  className={`relative h-1.5 overflow-hidden rounded-full shadow-[0_1px_6px_rgba(0,0,0,0.35)] transition-all duration-300 ${
-                    index === homeWaterBannerIndex ? 'w-8 bg-white/30' : 'w-1.5 bg-white/55 hover:bg-white/80'
-                  }`}
-                >
-                  {index === homeWaterBannerIndex && !isHomeBannerPaused && (
-                    <span className="tfx-dot-fill absolute inset-0 rounded-full bg-white" />
-                  )}
-                  {index === homeWaterBannerIndex && isHomeBannerPaused && (
-                    <span className="absolute inset-0 rounded-full bg-white" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </section>
-
-      <div className="flex flex-wrap justify-center gap-2 bg-white px-4 py-3">
-        <button
-          type="button"
-          onClick={() => setShowSmartBandReel(true)}
-          className="min-h-11 rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-        >
-          Watch the smart band pairing guide
-        </button>
-        {!user && (
-          <button
-            type="button"
-            aria-haspopup="dialog"
-            onClick={() => setShowOfferPopup(true)}
-            className="min-h-11 rounded-full border border-slate-300 px-5 py-2 text-sm font-semibold text-slate-800 transition hover:bg-slate-100"
-          >
-            View first-order offer
-          </button>
-        )}
-      </div>
       <section id="explore-collection" className="relative z-10 bg-[#fbfbfc] px-0 pb-4 pt-6 sm:pb-12 sm:pt-12">
         <div className="mx-auto w-full max-w-7xl">
           <RevealOnScroll variant="blur">
@@ -1130,9 +1139,6 @@ export const Home: React.FC = () => {
             className="relative left-1/2 mb-5 flex w-screen max-w-none -translate-x-1/2 flex-col items-center justify-between gap-2 rounded-none bg-slate-950 px-5 pb-4 pt-7 text-center text-white shadow-[0_12px_28px_rgba(15,23,42,0.18)] sm:mb-8 sm:gap-3 sm:px-7 sm:pb-5 sm:pt-8"
             style={{ border: '2px solid #111827' }}
           >
-            <span className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded-full border-2 border-[#8c351b] bg-gradient-to-r from-[#7f1d1d] via-[#b45309] to-[#7f1d1d] px-4 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#fff7dc] shadow-[0_3px_12px_rgba(124,45,18,0.24)] sm:px-5 sm:text-xs">
-              <span aria-hidden="true">🪔 </span>Diwali New Launch<span aria-hidden="true"> 🪔</span>
-            </span>
             <RevealOnScroll variant="left">
               <h2 className="font-display text-3xl font-black leading-tight text-white [-webkit-text-fill-color:#fff] sm:text-4xl">
                 New Launches
