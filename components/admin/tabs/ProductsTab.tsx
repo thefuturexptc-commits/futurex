@@ -19,6 +19,7 @@ interface Props {
   onSyncMerchantCatalog: () => void;
   merchantSyncing: boolean;
   merchantSyncMessage: string;
+  merchantSyncWarning?: string;
 }
 
 export const ProductsTab: React.FC<Props> = ({
@@ -31,6 +32,7 @@ export const ProductsTab: React.FC<Props> = ({
   onSyncMerchantCatalog,
   merchantSyncing,
   merchantSyncMessage,
+  merchantSyncWarning = '',
 }) => {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
@@ -81,34 +83,34 @@ export const ProductsTab: React.FC<Props> = ({
         right={<Button onClick={onAdd}>+ Add Product</Button>}
       />
 
-      <section className="relative max-w-xl rounded-xl border-2 border-blue-500 bg-white p-6 text-gray-900 shadow-sm dark:bg-slate-900 dark:text-white">
-        <span className="absolute -right-3 -top-3 grid h-7 w-7 place-items-center rounded-full border-2 border-blue-500 bg-white text-blue-600 dark:bg-slate-900" aria-label="Selected">
-          <svg viewBox="0 0 20 20" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.5" aria-hidden="true"><path d="m4 10 4 4 8-8" /></svg>
-        </span>
-        <h3 className="text-lg font-semibold">Add products using API</h3>
+      <section className="max-w-2xl rounded-2xl border border-slate-200 bg-white p-5 text-slate-900 shadow-sm dark:border-white/10 dark:bg-slate-900 dark:text-white sm:p-6">
+        <h3 className="text-lg font-semibold">Google Merchant Center</h3>
         <p className="mt-3 max-w-md text-sm leading-6 text-gray-600 dark:text-slate-300">
-          Send products directly to Google Merchant Center. The first save handles project registration and data source setup; new products, edits, and inventory changes then sync automatically.
+          Product images, prices, and stock are sent when you save a product. Use a full sync to resend the current catalog.
         </p>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
           <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-800 dark:text-slate-100">
             <svg viewBox="0 0 20 20" className="h-5 w-5 text-emerald-600" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="M16.5 7.5A7 7 0 0 0 4.2 5.2L2.8 6.7M3 3.2v3.7h3.7M3.5 12.5a7 7 0 0 0 12.3 2.3l1.4-1.5M17 16.8v-3.7h-3.7" /><path d="m7.4 10 1.7 1.7 3.6-4" /></svg>
             Automatic updates enabled
           </span>
-          <Button type="button" size="sm" variant="outline" onClick={onSyncMerchantCatalog} isLoading={merchantSyncing} disabled={merchantSyncing}>
-            {merchantSyncing ? 'Syncing catalog…' : 'Sync catalog now'}
+          <Button type="button" size="sm" variant="outline" onClick={onSyncMerchantCatalog} isLoading={merchantSyncing} disabled={merchantSyncing || products.length === 0}>
+            {merchantSyncing ? 'Syncing catalog…' : 'Sync catalog'}
           </Button>
         </div>
-        {merchantSyncMessage && <p className="mt-3 text-xs text-emerald-700 dark:text-emerald-300" role="status">{merchantSyncMessage}</p>}
+        {merchantSyncMessage && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200" role="status">{merchantSyncMessage}</p>}
+        {merchantSyncWarning && <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-200" role="alert">{merchantSyncWarning}</p>}
       </section>
 
       <div className="bg-slate-900 rounded-xl border border-white/10 p-4 grid grid-cols-1 md:grid-cols-4 gap-3">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search product"
+          aria-label="Search products"
+          placeholder="Search products"
           className="h-10 rounded-lg border border-white/15 bg-slate-900 px-3 text-sm text-white bg-slate-800 text-white border-white/15"
         />
         <select
+          aria-label="Filter products by category"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           className="h-10 rounded-lg border border-white/15 bg-slate-900 px-3 text-sm text-white bg-slate-800 text-white border-white/15"
@@ -119,6 +121,7 @@ export const ProductsTab: React.FC<Props> = ({
           ))}
         </select>
         <select
+          aria-label="Sort products"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as 'newest' | 'price' | 'stock' | 'bestSeller')}
           className="h-10 rounded-lg border border-white/15 bg-slate-900 px-3 text-sm text-white bg-slate-800 text-white border-white/15"

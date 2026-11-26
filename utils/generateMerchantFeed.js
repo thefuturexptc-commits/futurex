@@ -90,13 +90,13 @@ const flattenValues = (value) => {
 
 const collectImages = (product) => {
   const values = [
+    product.images,
     product.image,
     product.imageLink,
     product.additionalImageLink,
     product.additionalImageLinks,
     product.additional_image_link,
     product.additional_image_links,
-    product.images,
     product.imagesByColor,
     ...(Array.isArray(product.colors) ? product.colors.map((color) => color.images) : []),
     ...(Array.isArray(product.variants) ? product.variants.map((variant) => variant.images) : []),

@@ -215,9 +215,9 @@ const flattenImageValues = (value) => {
 
 const collectProductImages = (product) => {
   const values = [
+    ...(Array.isArray(product.images) ? product.images : []),
     product.image, product.imageLink, product.additionalImageLink, product.additionalImageLinks,
     product.additional_image_link, product.additional_image_links,
-    ...(Array.isArray(product.images) ? product.images : []),
     ...(Array.isArray(product.colors) ? product.colors.flatMap((color) => color.images || []) : []),
     ...(Array.isArray(product.variants) ? product.variants.flatMap((variant) => variant.images || []) : []),
     ...flattenImageValues(product.imagesByColor),

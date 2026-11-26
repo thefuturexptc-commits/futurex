@@ -1555,6 +1555,7 @@ export const AdminDashboard: React.FC = () => {
           onSyncMerchantCatalog={handleMerchantCatalogSync}
           merchantSyncing={isMerchantCatalogSyncing}
           merchantSyncMessage={merchantSyncMessage}
+          merchantSyncWarning={merchantSyncWarning}
         />
       )}
       {activeTab === 'orders' && (

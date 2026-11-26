@@ -3163,13 +3163,13 @@ export const ProductDetail: React.FC = () => {
           : isRingProProduct
             ? [...ringProBannerSections, ...ringOverviewSections]
             : ringOverviewSections
+      : productFamily === 'fan'
+        ? []
         : lifestyleOverviewSections.map(([title, copy], index) => ({
             title,
             copy,
-            image: productFamily === 'fan'
-              ? familyProfile.images[(index + 1) % familyProfile.images.length]
-              : storyImages[index + 1] || storyImages[0],
-          })).filter((section) => !(productFamily === 'fan' && section.title === 'Modern Controls and Flexible Use'))),
+            image: storyImages[index + 1] || storyImages[0],
+          }))),
   ];
   const overviewMediaSections = [
     ...(productVideoUrl
@@ -4194,7 +4194,7 @@ export const ProductDetail: React.FC = () => {
         </section>
       )}
 
-      {!isFanMarketplacePage && !isQ8ProProduct && activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
+      {(!isFanMarketplacePage || overviewMediaSections.length === 0) && !isQ8ProProduct && activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
         <section className="bg-white px-4 py-5 sm:hidden">{overviewFallback}</section>
       )}
 
@@ -4381,7 +4381,7 @@ export const ProductDetail: React.FC = () => {
               </div>
             </section>
           )}
-          {!isFanMarketplacePage && (!showProductOverview || overviewMediaSections.length === 0) && (
+          {(!isFanMarketplacePage || overviewMediaSections.length === 0) && (!showProductOverview || overviewMediaSections.length === 0) && (
             <section id="more-information" className="product-scroll-section hidden scroll-mt-36 bg-white px-6 py-10 sm:block">
               <div className="mx-auto max-w-5xl">{overviewFallback}</div>
             </section>
