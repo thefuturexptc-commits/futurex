@@ -39,6 +39,7 @@
 #root .site-main-content .product-detail-page .product-information-card .description-panel-white * { color: #fff !important; }
 #root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].description-panel-dark { min-height: 240px; background: #222a32 !important; color: #fff !important; }
 #root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].description-panel-dark * { color: #fff !important; }
+#root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].description-panel-dark .product-rich-description { border: 0 !important; border-radius: 0 !important; background: transparent !important; }
 #root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].warranty-panel-dark { background: #222a32 !important; color: #fff !important; }
 #root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].warranty-panel-dark * { border-color: #333 !important; color: #fff !important; }
 #root .site-main-content .product-detail-page .product-information-tabs { border-color: #43515d !important; background: #222a32 !important; }
