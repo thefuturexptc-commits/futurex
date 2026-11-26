@@ -10,7 +10,6 @@ import tp09ProOverview from '../assets/images/tp-09-pro-home.webp';
 import fanSlide1 from '../assets/images/fan-slide-1.webp';
 import fanSlide2 from '../assets/images/fan-slide-2.webp';
 import fanSlide3 from '../assets/images/fan-slide-3.webp';
-import fanSlide4 from '../assets/images/fan-slide-4.webp';
 
 const FanIcon = ({ path }: { path: React.ReactNode }) => (
   <svg className="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -133,7 +132,6 @@ export const SmartFans: React.FC = () => {
         { src: fanSlide1, alt: 'Smart fan control features' },
         { src: fanSlide2, alt: 'Smart fan heating and cooling function' },
         { src: fanSlide3, alt: 'Smart fan bladeless design' },
-        { src: fanSlide4, alt: 'Smart fan all-season comfort' },
       ]}
       catalogGroups={fanCatalogGroups}
       showComparisonSection={false}

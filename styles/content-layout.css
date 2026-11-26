@@ -35,6 +35,43 @@
 #root .site-main-content .store-home-faq { padding-block: 48px; background: #f8fbfc !important; border-top: 1px solid #e6eef0; }
 
 #root .site-main-content .product-detail-page > .product-scroll-section:not(.product-mobile-details) { padding-top: 48px; padding-bottom: 48px; }
+#root .site-main-content .product-detail-page .product-information-card .description-panel-white,
+#root .site-main-content .product-detail-page .product-information-card .description-panel-white * { color: #fff !important; }
+#root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].description-panel-dark { min-height: 240px; background: #222a32 !important; color: #fff !important; }
+#root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].description-panel-dark * { color: #fff !important; }
+#root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].warranty-panel-dark { background: #222a32 !important; color: #fff !important; }
+#root .site-main-content .product-detail-page .product-information-card [role="tabpanel"].warranty-panel-dark * { border-color: #333 !important; color: #fff !important; }
+#root .site-main-content .product-detail-page .product-information-tabs { border-color: #43515d !important; background: #222a32 !important; }
+#root .site-main-content .product-detail-page .product-information-tabs [role="tab"] { color: #c4d0d7 !important; }
+#root .site-main-content .product-detail-page .product-information-tabs [role="tab"][aria-selected="true"] { border: 2px solid #d6ad55 !important; border-bottom-width: 3px !important; border-radius: 12px; background: #d6ad55 !important; color: #111820 !important; }
+#root .site-main-content .product-detail-page .product-information-tabs [role="tab"]:hover { color: #fff !important; }
+#root .site-main-content .product-detail-page .product-information-card:has(.product-specifications-panel) [role="tabpanel"]:has(.product-specifications-panel) { background: #222a32 !important; color: #fff !important; }
+#root .site-main-content .product-detail-page .product-specifications-panel,
+#root .site-main-content .product-detail-page .product-specifications-panel * { color: #fff !important; }
+#root .site-main-content .product-detail-page .product-specifications-panel .overflow-hidden.rounded-xl { border-color: #4a5661 !important; background: #2a333c !important; }
+#root .site-main-content .product-detail-page .product-specifications-panel .overflow-hidden.rounded-xl > div { background: #2a333c !important; }
+#root .site-main-content .product-detail-page .product-specifications-panel .overflow-hidden.rounded-xl > div:nth-child(even) { background: #35414b !important; }
+#root .site-main-content .product-detail-page .product-specifications-panel article,
+#root .site-main-content .product-detail-page .product-specifications-panel > p { border-color: #4a5661 !important; background: #303a44 !important; }
+#root .site-main-content .product-detail-page .product-review-form { border-color: #d8e2eb !important; background: #f5f8fc !important; box-shadow: 0 10px 30px rgb(15 23 42 / 7%) !important; }
+#root .site-main-content .product-detail-page .product-review-form h3 { color: #102a43 !important; }
+#root .site-main-content .product-detail-page .product-review-form label > span { color: #40566d !important; }
+#root .site-main-content .product-detail-page .product-review-form input:not([type="file"]),
+#root .site-main-content .product-detail-page .product-review-form textarea,
+#root .site-main-content .product-detail-page .product-review-form input[type="file"] { border: 1px solid #cbd5e1 !important; border-radius: 10px !important; background: #fff !important; color: #102a43 !important; }
+#root .site-main-content .product-detail-page .product-review-form input::placeholder,
+#root .site-main-content .product-detail-page .product-review-form textarea::placeholder { color: #8a99aa !important; opacity: 1; }
+#root .site-main-content .product-detail-page .product-review-form input[type="file"]::file-selector-button { border-radius: 7px; background: #123d4c; color: #fff !important; }
+#root .site-main-content .product-detail-page .product-review-form button[type="submit"] { border: 0; background: #123d4c !important; color: #fff !important; font-weight: 700; }
+#root .site-main-content .product-detail-page .product-review-form button[type="submit"]:hover { background: #087481 !important; }
+#root .site-main-content .product-detail-page .product-review-faq-stack { display: flex; flex-direction: column; }
+#root .site-main-content .product-detail-page .product-review-faq-stack > #reviews { order: 1; }
+#root .site-main-content .product-detail-page .product-review-faq-stack > #faq { order: 2; }
+#root .site-main-content .product-detail-page #faq .store-product-faq details { border-color: #43515d !important; background: #222a32 !important; }
+#root .site-main-content .product-detail-page #faq .store-product-faq details[open] { border-color: #2584e8 !important; }
+#root .site-main-content .product-detail-page #faq .store-product-faq summary { color: #f4f8fb !important; }
+#root .site-main-content .product-detail-page #faq .store-product-faq summary::after { color: #38c2c7 !important; }
+#root .site-main-content .product-detail-page #faq .store-product-faq details > p { color: #c4d0d7 !important; }
 #root .site-main-content .product-detail-page > .product-scroll-section:not(.product-mobile-details):not(#more-information) > div { max-width: 1152px; }
 #root .site-main-content .product-detail-page > :is(#features, #specs, #faq, #reviews) { border-top: 1px solid #e4ecef !important; }
 #root .site-main-content .product-detail-page .product-mobile-details { padding-top: 24px; padding-bottom: 32px; min-height: 0; }

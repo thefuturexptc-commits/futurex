@@ -3166,8 +3166,10 @@ export const ProductDetail: React.FC = () => {
         : lifestyleOverviewSections.map(([title, copy], index) => ({
             title,
             copy,
-            image: storyImages[index + 1] || storyImages[0],
-          }))),
+            image: productFamily === 'fan'
+              ? familyProfile.images[(index + 1) % familyProfile.images.length]
+              : storyImages[index + 1] || storyImages[0],
+          })).filter((section) => !(productFamily === 'fan' && section.title === 'Modern Controls and Flexible Use'))),
   ];
   const overviewMediaSections = [
     ...(productVideoUrl
@@ -3289,7 +3291,7 @@ export const ProductDetail: React.FC = () => {
   );
   const tfx5ArrangedDescription = (
     <div className="product-information-card overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-      <div role="tablist" aria-label="TFX5 product information" className="grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
+      <div role="tablist" aria-label="TFX5 product information" className="product-information-tabs grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
         {([
           ['description', 'Description'],
           ['additional', 'Additional Detail'],
@@ -3308,26 +3310,26 @@ export const ProductDetail: React.FC = () => {
           </button>
         ))}
       </div>
-      <div role="tabpanel" aria-labelledby={`tfx5-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-6">
+      <div role="tabpanel" aria-labelledby={`tfx5-description-tab-${activeTfx5DescriptionTab}`} className={`p-4 sm:p-6 ${activeTfx5DescriptionTab === 'description' ? 'description-panel-dark' : activeTfx5DescriptionTab === 'warranty' ? 'warranty-panel-dark' : ''}`}>
         {activeTfx5DescriptionTab === 'description' && (
           <div>
             {productDescriptionHtml ? (
               <div
-                className={`product-rich-description text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}
+                className={`product-rich-description description-panel-white text-sm leading-6 text-white sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}
                 dangerouslySetInnerHTML={{ __html: productDescriptionHtml }}
               />
             ) : (
-              <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
+              <p className={`text-sm leading-6 text-white sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
                 {TFX5_SMART_BAND_DESCRIPTION}
               </p>
             )}
-            <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-4 text-sm font-bold text-[#8f2428] transition hover:text-slate-950">
+            <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-4 text-sm font-bold text-white transition hover:text-slate-200">
               {isTfx5DescriptionExpanded ? 'Read Less ▲' : 'Read More ▼'}
             </button>
           </div>
         )}
         {activeTfx5DescriptionTab === 'additional' && (
-          <div className="space-y-6">
+          <div className="product-specifications-panel space-y-6">
             <section>
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Product specifications</h3>
               <div className="overflow-hidden rounded-xl border border-slate-200">
@@ -3369,7 +3371,7 @@ export const ProductDetail: React.FC = () => {
   );
   const generalArrangedDescription = (
     <div className="product-information-card overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
-      <div role="tablist" aria-label={`${product.name} product information`} className="grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
+      <div role="tablist" aria-label={`${product.name} product information`} className="product-information-tabs grid grid-cols-3 border-b border-slate-200 bg-[#fbf7f7]">
         {([
           ['description', 'Description'],
           ['additional', 'Additional Detail'],
@@ -3388,28 +3390,28 @@ export const ProductDetail: React.FC = () => {
           </button>
         ))}
       </div>
-      <div role="tabpanel" aria-labelledby={`product-description-tab-${activeTfx5DescriptionTab}`} className="p-4 sm:p-6">
+      <div role="tabpanel" aria-labelledby={`product-description-tab-${activeTfx5DescriptionTab}`} className={`p-4 sm:p-6 ${activeTfx5DescriptionTab === 'description' ? 'description-panel-dark' : activeTfx5DescriptionTab === 'warranty' ? 'warranty-panel-dark' : ''}`}>
         {activeTfx5DescriptionTab === 'description' && (
           <div>
             {productDescriptionHtml ? (
               <div
-                className={`product-rich-description text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}
+                className={`product-rich-description description-panel-white text-sm leading-6 text-white sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}
                 dangerouslySetInnerHTML={{ __html: productDescriptionHtml }}
               />
             ) : (
-              <p className={`text-sm leading-6 text-slate-700 sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
+              <p className={`text-sm leading-6 text-white sm:text-base sm:leading-8 ${isTfx5DescriptionExpanded ? '' : 'line-clamp-3'}`}>
                 {overviewSections[0]?.copy || whyBuyCopy}
               </p>
             )}
             {(suppliedDescriptionHtml || (shortDescription || overviewSections[0]?.copy || whyBuyCopy).length > 240) && (
-              <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-3 text-sm font-bold text-[#8f2428]">
+              <button type="button" onClick={() => setIsTfx5DescriptionExpanded((expanded) => !expanded)} className="mt-3 text-sm font-bold text-white">
                 {isTfx5DescriptionExpanded ? 'Read Less' : 'Read More'}
               </button>
             )}
           </div>
         )}
         {activeTfx5DescriptionTab === 'additional' && (
-          <div className="space-y-5">
+          <div className="product-specifications-panel space-y-5">
             {existingProductInformationSpecEntries.filter(([key]) => !WARRANTY_SPEC_LABELS.has(key)).length > 0 && (
               <section>
                 <h3 className="mb-3 text-sm font-bold uppercase tracking-wide text-slate-900 sm:text-base">Product specifications</h3>
@@ -4173,22 +4175,6 @@ export const ProductDetail: React.FC = () => {
                   </div>
                 )}
               </RevealOnScroll>
-              {section.video && (
-                <div className="rounded-xl border border-[#b89452]/30 bg-gradient-to-r from-[#fffaf0] to-[#f5fbff] px-4 py-4 shadow-[0_3px_14px_rgba(15,23,42,0.07)]">
-                  <div className="flex flex-col gap-3 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
-                    <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8a6a20]">Limited-time offer</p>
-                      <p className="mt-1 text-base font-black text-slate-950">
-                        {videoOfferSavings > 0 ? `Save ${formatInrAmount(videoOfferSavings)}${hidePercentageOffer ? '' : ` (${videoOfferPercent}% off)`}` : 'Special price available today'}
-                      </p>
-                      <p className="mt-1 text-xs font-semibold text-slate-600">Easy EMI is available at checkout.</p>
-                    </div>
-                    <button type="button" onClick={() => setShowEmiModal(true)} className="shrink-0 rounded-lg bg-slate-950 px-4 py-2.5 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-slate-800">
-                      View EMI options
-                    </button>
-                  </div>
-                </div>
-              )}
               {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
               {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-2">{tfx5Showcase}</div>}
               </React.Fragment>
@@ -4208,7 +4194,7 @@ export const ProductDetail: React.FC = () => {
         </section>
       )}
 
-      {!isQ8ProProduct && activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
+      {!isFanMarketplacePage && !isQ8ProProduct && activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
         <section className="bg-white px-4 py-5 sm:hidden">{overviewFallback}</section>
       )}
 
@@ -4388,22 +4374,6 @@ export const ProductDetail: React.FC = () => {
                       </div>
                     )}
                   </RevealOnScroll>
-                  {section.video && (
-                    <div className="rounded-xl border border-[#b89452]/30 bg-gradient-to-r from-[#fffaf0] to-[#f5fbff] px-5 py-4 shadow-[0_3px_14px_rgba(15,23,42,0.07)] sm:px-6">
-                      <div className="flex flex-wrap items-center justify-between gap-4">
-                        <div>
-                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#8a6a20]">Limited-time offer</p>
-                          <p className="mt-1 text-lg font-black text-slate-950">
-                            {videoOfferSavings > 0 ? `Save ${formatInrAmount(videoOfferSavings)}${hidePercentageOffer ? '' : ` (${videoOfferPercent}% off)`}` : 'Special price available today'}
-                          </p>
-                          <p className="mt-1 text-sm font-semibold text-slate-600">Easy EMI is available at checkout.</p>
-                        </div>
-                        <button type="button" onClick={() => setShowEmiModal(true)} className="rounded-lg bg-slate-950 px-5 py-3 text-xs font-black uppercase tracking-[0.08em] text-white transition hover:bg-slate-800">
-                          View EMI options
-                        </button>
-                      </div>
-                    </div>
-                  )}
                   {productFamily === 'band' && section.title === bandAppShowcaseAfterTitle && <BandAppShowcase />}
                   {isTfxV5Band && section.title === tfx5SecondOverviewImageTitle && <div className="py-3">{tfx5Showcase}</div>}
                   </React.Fragment>
@@ -4411,7 +4381,7 @@ export const ProductDetail: React.FC = () => {
               </div>
             </section>
           )}
-          {(!showProductOverview || overviewMediaSections.length === 0) && (
+          {!isFanMarketplacePage && (!showProductOverview || overviewMediaSections.length === 0) && (
             <section id="more-information" className="product-scroll-section hidden scroll-mt-36 bg-white px-6 py-10 sm:block">
               <div className="mx-auto max-w-5xl">{overviewFallback}</div>
             </section>
@@ -4434,6 +4404,7 @@ export const ProductDetail: React.FC = () => {
         </div>
       </section>
 
+      <div className="product-review-faq-stack">
       <section id="faq" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-5xl">
           <h2 className="store-section-heading">Frequently asked questions</h2>
@@ -4465,7 +4436,7 @@ export const ProductDetail: React.FC = () => {
             <div><p className="product-review-stars text-lg tracking-widest" aria-label={`${product.rating} out of 5 stars`}>{'★'.repeat(Math.round(product.rating || 0))}{'☆'.repeat(5 - Math.round(product.rating || 0))}</p><p className="text-sm text-slate-600">Based on {product.reviewCount} {product.reviewCount === 1 ? 'review' : 'reviews'}</p></div>
           </div>}
 
-          <form onSubmit={handleSubmitReview} className="rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
+          <form onSubmit={handleSubmitReview} className="product-review-form rounded-[1.25rem] border border-slate-200 bg-white p-4 shadow-sm sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <h3 className="text-lg font-black text-slate-950">Share your experience</h3>
               <div className="flex items-center gap-1 text-2xl leading-none text-amber-400">
@@ -4585,6 +4556,7 @@ export const ProductDetail: React.FC = () => {
           )}
         </div>
       </section>
+      </div>
 
       {showNotifyModal && product && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/70 px-4 backdrop-blur">
