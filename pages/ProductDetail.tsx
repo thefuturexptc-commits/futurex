@@ -55,6 +55,7 @@ import { getProductDetailContent } from '../utils/productDetailContent';
 import { DISPLAY_PRO_RING_DESCRIPTION_HTML, DISPLAY_PRO_RING_TITLE } from '../utils/displayProRingContent';
 import { TOUCH_SMART_RING_DESCRIPTION_HTML, TOUCH_SMART_RING_TITLE } from '../utils/touchSmartRingContent';
 import {
+  get4319bContent,
   WALL_MOUNT_4319B_DESCRIPTION_HTML,
   WALL_MOUNT_4319B_FAQS,
   WALL_MOUNT_4319B_SPECS,
@@ -123,6 +124,12 @@ import q8ProOverviewStructure from '../assets/images/q8-pro-overview-01.webp';
 import q8ProOverviewAssembly from '../assets/images/q8-pro-overview-02.webp';
 import q8ProOverviewCare from '../assets/images/q8-pro-overview-03.webp';
 import q8ProOverviewModes from '../assets/images/q8-pro-overview-04.webp';
+import fanUsageBanner from '../assets/images/fan_usage_banner.webp';
+import fanProductBanner from '../assets/images/fan_product_banner.webp';
+import fanWarningBanner from '../assets/images/fan_warning_banner.webp';
+import maintenanceUpdatedBanner from '../assets/images/maintenance_updated.webp';
+import fanInstallationMaintenanceBanner from '../assets/images/fan_installation_maintenance.webp';
+import remoteWallMountBanner from '../assets/images/remote_wall_mount_banner.webp';
 import monitoringHero from '../assets/images/monitoring-proactive-wellness-hero.webp';
 import monitoringHeartRate from '../assets/images/monitoring-hero-heart-rate.webp';
 import monitoringPhonePhoto from '../assets/images/monitoring-phone-photo.webp';
@@ -134,6 +141,32 @@ const Q8_PRO_OVERVIEW_BANNERS = [
   { src: q8ProOverviewCare, alt: 'Q8 Pro cleaning, clearing blockages, heater precautions, and remote battery replacement' },
   { src: q8ProOverviewModes, alt: 'Q8 Pro cool and hot modes, airflow, cleaning, and direction adjustment' },
 ];
+
+const WALL_MOUNT_OVERVIEW_BANNERS = [
+  { src: fanProductBanner, alt: '4319B wall mount fan product introduction, controls, and included accessories' },
+  { src: fanUsageBanner, alt: '4319B fan usage method, controls, and adjustable airflow ring' },
+  { src: remoteWallMountBanner, alt: '4319B remote control operation and wall mounting method' },
+  { src: fanInstallationMaintenanceBanner, alt: '4319B wall installation and filter replacement guide' },
+  { src: maintenanceUpdatedBanner, alt: '4319B cleaning and maintenance guide' },
+  { src: fanWarningBanner, alt: '4319B important safety and warning instructions' },
+];
+
+const WallMountOverviewBanners: React.FC<{ showAll: boolean; onToggle: () => void }> = ({ showAll, onToggle }) => (
+  <div className="mt-6 grid min-w-0 grid-cols-1 gap-3 sm:gap-4" aria-label="Wall mount fan product guides">
+    <h2 className="sr-only">Wall mount fan overview</h2>
+    {WALL_MOUNT_OVERVIEW_BANNERS.slice(0, showAll ? undefined : 3).map(({ src, alt }) => (
+      <img key={src} src={src} alt={alt} loading="lazy" decoding="async" className="block h-auto w-full max-w-full rounded-lg object-contain sm:rounded-xl" />
+    ))}
+    <button
+      type="button"
+      onClick={onToggle}
+      aria-expanded={showAll}
+      className="w-full rounded-xl border border-slate-200 bg-[#fbfaf7] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
+    >
+      {showAll ? 'View Fewer Banners' : 'View More Banners'}
+    </button>
+  </div>
+);
 
 const featureMarkerPattern = /^\s*(?:[-*\u2022]\s*|\d+[.)]\s*)/;
 const cleanFeatureText = (feature: string) => feature.replace(featureMarkerPattern, '').trim();
@@ -1609,7 +1642,7 @@ export const ProductDetail: React.FC = () => {
   const isTouchSmartRingListing = productSlug === 'tfx-touch-smart-ring';
   const productOverview = getProductOverview(product, isDisplayProProduct ? DISPLAY_PRO_PRODUCT_SLUG : productSlug);
   const overviewDescription = productOverview?.description;
-  const isWallMount4319bListing = productSlug === 'tfx-airwall-pro';
+  const isWallMount4319bListing = Boolean(get4319bContent(product));
   const isQg830Listing = productSlug === 'tfx-smart-10x-air';
   const isTp09ProListing = productSlug === 'tfxhot-and-coolair-pro';
   const isTp02PlusListing = productSlug === 'tfx-breeze-pro';
@@ -1646,6 +1679,7 @@ export const ProductDetail: React.FC = () => {
   const [isTfx5DescriptionExpanded, setIsTfx5DescriptionExpanded] = useState(false);
   const [isHeroDescriptionExpanded, setIsHeroDescriptionExpanded] = useState(false);
   const [showAllMobileOverview, setShowAllMobileOverview] = useState(false);
+  const [showAllWallMountBanners, setShowAllWallMountBanners] = useState(false);
   const [visibleReviewCount, setVisibleReviewCount] = useState(2);
   const [reviewName, setReviewName] = useState('');
   const [reviewRating, setReviewRating] = useState(5);
@@ -1691,6 +1725,7 @@ export const ProductDetail: React.FC = () => {
     setShowEmiModal(false);
     setActiveMobileDetailTab('more-information');
     setShowAllMobileOverview(false);
+    setShowAllWallMountBanners(false);
 
     const displayProduct = (nextProduct: Product) => {
       const isFirstDisplay = !displayedProduct;
@@ -4125,9 +4160,10 @@ export const ProductDetail: React.FC = () => {
         </div>
       </nav>
 
-      {activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length > 0 && (
+      {activeMobileDetailTab === 'more-information' && (mobileProductBannerSections.length > 0 || isWallMount4319bListing) && (
         <section className={`product-mobile-banners ${productFamily === 'ring' && isDisplayProduct ? 'product-mobile-banners--display' : ''} bg-white px-4 py-4 sm:hidden`}>
           <div className="space-y-3">
+            {isWallMount4319bListing && <WallMountOverviewBanners showAll={showAllWallMountBanners} onToggle={() => setShowAllWallMountBanners((value) => !value)} />}
             {(showAllProductBannersOnMobile || showAllMobileOverview ? mobileProductBannerSections : mobileProductBannerSections.slice(0, 3)).map((section, index) => (
               <React.Fragment key={section.title}>
               <RevealOnScroll className="product-banner-group mx-auto w-full max-w-[1200px] overflow-hidden rounded-xl bg-[#f8fbfb] shadow-[0_2px_10px_rgba(15,23,42,0.05)]">
@@ -4180,14 +4216,14 @@ export const ProductDetail: React.FC = () => {
               </React.Fragment>
             ))}
           </div>
-          {!showAllProductBannersOnMobile && mobileProductBannerSections.length > 3 && (
+          {!showAllProductBannersOnMobile && !isWallMount4319bListing && mobileProductBannerSections.length > 3 && (
             <div className="px-4 pt-3">
               <button
                 type="button"
                 onClick={() => setShowAllMobileOverview((prev) => !prev)}
                 className="w-full rounded-xl border border-slate-200 bg-[#fbfaf7] px-4 py-3 text-xs font-semibold uppercase tracking-[0.12em] text-slate-700 transition hover:border-slate-950 hover:text-slate-950"
               >
-                {showAllMobileOverview ? 'Show Less' : 'Show More Banners'}
+                {showAllMobileOverview ? 'View Fewer Banners' : 'View More Banners'}
               </button>
             </div>
           )}
@@ -4324,6 +4360,14 @@ export const ProductDetail: React.FC = () => {
         </section>
       ) : (
         <>
+          {isWallMount4319bListing && (
+            <section id="more-information" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-6 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 lg:px-8 lg:py-14">
+              <div className="mx-auto w-full max-w-[1200px] min-w-0">
+                <h2 className="store-section-heading mb-4">Overview</h2>
+                <WallMountOverviewBanners showAll={showAllWallMountBanners} onToggle={() => setShowAllWallMountBanners((value) => !value)} />
+              </div>
+            </section>
+          )}
           {showProductOverview && overviewMediaSections.length > 0 && (
             <section id="more-information" className="product-scroll-section hidden scroll-mt-32 bg-white px-0 pb-10 sm:block sm:scroll-mt-36 lg:pb-14">
               <div className="mx-auto w-full max-w-[1200px] space-y-4 px-4 sm:px-6 lg:px-0">
@@ -4381,7 +4425,7 @@ export const ProductDetail: React.FC = () => {
               </div>
             </section>
           )}
-          {(!isFanMarketplacePage || overviewMediaSections.length === 0) && (!showProductOverview || overviewMediaSections.length === 0) && (
+          {!isWallMount4319bListing && (!isFanMarketplacePage || overviewMediaSections.length === 0) && (!showProductOverview || overviewMediaSections.length === 0) && (
             <section id="more-information" className="product-scroll-section hidden scroll-mt-36 bg-white px-6 py-10 sm:block">
               <div className="mx-auto max-w-5xl">{overviewFallback}</div>
             </section>
@@ -4391,7 +4435,7 @@ export const ProductDetail: React.FC = () => {
 
       <section
         id="description"
-        className={`product-scroll-section scroll-mt-32 bg-white px-4 py-5 sm:block sm:scroll-mt-36 sm:px-6 sm:py-10 lg:px-8 lg:py-14 ${isQ8ProProduct && activeMobileDetailTab === 'description' ? '' : 'hidden'}`}
+        className={`product-scroll-section scroll-mt-32 bg-white px-4 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 ${isFanMarketplacePage ? 'pt-0 pb-8 sm:pt-0 lg:pb-12' : 'py-5 sm:py-10 lg:py-14'} ${isQ8ProProduct && activeMobileDetailTab === 'description' ? '' : 'hidden'}`}
       >
         <div className={`mx-auto ${isQ8ProProduct || showProductOverview ? 'max-w-7xl' : 'max-w-5xl'}`}>
           {arrangedProductInformation}
