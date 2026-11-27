@@ -318,7 +318,8 @@ export const getProductFallbackById = (id: string): Product | undefined => {
 export const isProductSlugUnique = (products: Product[], slug: string, currentProductId?: string): boolean => {
   const normalizedSlug = toProductSlug(slug);
   if (!normalizedSlug) return false;
-  return !products.some((product) => product.id !== currentProductId && getProductSlug(product) === normalizedSlug);
+  return !products.some((product) => product.id !== currentProductId &&
+    (getProductSlug(product) === normalizedSlug || product.seoPreviousSlugs?.includes(normalizedSlug)));
 };
 
 const refreshProductsCache = (products?: Product[]) => {
@@ -821,7 +822,7 @@ export const resolveAuthenticatedUser = async (firebaseUser: FirebaseAuthUser): 
 const normalizeProductColors = (product: Product): Product => {
   const slug = normalizeProductSlug(product);
   const displayProduct = correctRingModel(sanitizeUnsupportedRingGestureClaims(product));
-  const pricedProduct = isTfxV5Band(displayProduct)
+  const pricedProduct = displayProduct.useCatalogPricing ? displayProduct : isTfxV5Band(displayProduct)
     ? {
         ...displayProduct,
         // These are the regular and selling prices displayed on the TFX5 page.
@@ -895,7 +896,7 @@ const normalizeProductColors = (product: Product): Product => {
       return {
         colorName,
         colorHex: String(variant?.colorHex || variant?.hex || '#6b7280'),
-        price: Number(isTfxV5Band(pricedProduct) ? TFX5_AI_BAND_PRICE : variant?.price ?? pricedProduct.salePrice ?? pricedProduct.price ?? 0),
+        price: Number(!pricedProduct.useCatalogPricing && isTfxV5Band(pricedProduct) ? TFX5_AI_BAND_PRICE : variant?.price ?? pricedProduct.salePrice ?? pricedProduct.price ?? 0),
         images: Array.isArray(variant?.images) && variant.images.length > 0
           ? variant.images
           : existingColorMap.get(colorName.toLowerCase())?.images || [...(product.images || [])],
@@ -920,7 +921,7 @@ const normalizeProductColors = (product: Product): Product => {
             return {
               colorName,
               colorHex: String(typeof color === 'string' ? '#6b7280' : color?.hex || '#6b7280'),
-              price: Number(isTfxV5Band(pricedProduct) ? TFX5_AI_BAND_PRICE : pricedProduct.salePrice || pricedProduct.price || 0),
+              price: Number(!pricedProduct.useCatalogPricing && isTfxV5Band(pricedProduct) ? TFX5_AI_BAND_PRICE : pricedProduct.salePrice || pricedProduct.price || 0),
               images:
                 typeof color === 'string'
                   ? [...(product.images || [])]
@@ -953,7 +954,7 @@ const normalizeProductColors = (product: Product): Product => {
       size: sizeEntry.size,
       weight: product.weight || '',
       color: variant.colorName,
-      price: Number(isTfxV5Band(pricedProduct) ? TFX5_AI_BAND_PRICE : variant.price || pricedProduct.salePrice || pricedProduct.price || 0),
+      price: Number(!pricedProduct.useCatalogPricing && isTfxV5Band(pricedProduct) ? TFX5_AI_BAND_PRICE : variant.price || pricedProduct.salePrice || pricedProduct.price || 0),
       stock: Number(sizeEntry.stock || 0),
     }))
   );
@@ -1627,6 +1628,20 @@ export const deleteProduct = async (id: string): Promise<void> => {
 };
 
 // --- Category Service ---
+export const getCatalogCategoryRows = async () => {
+  const snapshot = await withTimeout(getDocs(collection(db, 'categories')), 3500);
+  return snapshot.docs.map((entry) => entry.data());
+};
+
+export const updateCategorySeo = async (name: string, seoTitle: string, seoDescription: string) => {
+  await ensureFirebaseConnection();
+  const categories = collection(db, 'categories');
+  const snapshot = await getDocs(query(categories, where('name', '==', name)));
+  const fields = { name, seoTitle: seoTitle.trim(), seoDescription: seoDescription.trim() };
+  if (snapshot.empty) await addDoc(categories, fields);
+  else await Promise.all(snapshot.docs.map(({ ref }) => setDoc(ref, fields, { merge: true })));
+};
+
 export const getCategories = async (): Promise<string[]> => {
   const withDefaultCategories = (categories: string[]) => {
     const merged = [...categories];

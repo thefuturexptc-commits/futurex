@@ -1,3 +1,4 @@
+import { getProductFaqs, normalizeProductFaqs } from '../utils/productFaqs';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -247,6 +248,9 @@ export const AdminDashboard: React.FC = () => {
   };
 
   const [productForm, setProductForm] = useState<Partial<Product>>(initialProductState);
+  const faqRows = productForm.faqs === undefined && productForm.id
+    ? getProductFaqs(productForm as Product)
+    : (productForm.faqs || []).map((faq) => 'q' in faq ? faq : { q: faq.question, a: faq.answer });
   const [featuresString, setFeaturesString] = useState('');
   const [specsString, setSpecsString] = useState('');
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
@@ -1030,9 +1034,21 @@ export const AdminDashboard: React.FC = () => {
           }, {})
         : {};
 
+      const previousProduct = products.find((item) => item.id === productForm.id);
+      const previousSlug = previousProduct ? toProductSlug(previousProduct.slug || previousProduct.name) : '';
+      const seoPreviousSlugs = [...new Set([...(previousProduct?.seoPreviousSlugs || []), previousSlug])]
+        .filter((slug) => slug && slug !== finalSlug);
       const productData = {
         ...productForm,
+        ...(productForm.faqs !== undefined ? { faqs: normalizeProductFaqs(productForm.faqs) } : {}),
         slug: finalSlug,
+        seoPreviousSlugs,
+        useCatalogPricing: Boolean(productForm.useCatalogPricing || !previousProduct ||
+          Number(productForm.salePrice || 0) !== Number(previousProduct.salePrice || 0) ||
+          Number(productForm.mrp || 0) !== Number(previousProduct.mrp || 0)),
+        useCatalogDescription: Boolean(productForm.useCatalogDescription || !previousProduct ||
+          productForm.description !== previousProduct.description),
+        useCatalogTitle: Boolean(productForm.useCatalogTitle || !previousProduct || productForm.name !== previousProduct.name),
         mrp: Number(productForm.mrp || 0),
         salePrice: Number(productForm.salePrice || 0),
         price: Number(productForm.salePrice || productForm.price || 0),
@@ -1722,6 +1738,11 @@ export const AdminDashboard: React.FC = () => {
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">These details help search engines understand this product. Keywords are stored as metadata and are not shown as product text.</p>
                   </div>
                   <div>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300" htmlFor="product-seo-title">SEO Title</label>
+                    <input id="product-seo-title" className={inputClass} value={productForm.seoTitle || ''} maxLength={160}
+                      onChange={(e) => setProductForm((prev) => ({ ...prev, seoTitle: e.target.value }))} />
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Description / Short Description</label>
                     <textarea className={`${inputClass} min-h-[90px]`} value={productForm.seoDescription || ''} onChange={(e) => setProductForm((prev) => ({ ...prev, seoDescription: e.target.value }))} placeholder="Brief product summary shown below the title and in search results" maxLength={320} />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shown below the product title and used as the search result description. Keep it concise.</p>
@@ -1731,6 +1752,36 @@ export const AdminDashboard: React.FC = () => {
                     <textarea className={`${inputClass} min-h-[72px]`} value={(productForm.searchKeywords || []).join(', ')} onChange={(e) => setProductForm((prev) => ({ ...prev, searchKeywords: e.target.value.split(/[\n,]+/).map((keyword) => keyword.trim()).filter(Boolean) }))} placeholder="smart band, fitness tracker, wearable" />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Separate keywords with commas or new lines.</p>
                   </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {([['brand', 'Brand'], ['sku', 'SKU'], ['modelNumber', 'Model number'], ['mpn', 'MPN'], ['gtin', 'GTIN']] as const).map(([field, label]) => (
+                      <label key={field} className="block text-sm font-medium">
+                        {label}
+                        <input className={inputClass} value={productForm[field] || ''}
+                          inputMode={field === 'gtin' ? 'numeric' : undefined}
+                          pattern={field === 'gtin' ? '[0-9]{8}|[0-9]{12,14}' : undefined}
+                          onChange={(e) => setProductForm((prev) => ({ ...prev, [field]: e.target.value }))} />
+                      </label>
+                    ))}
+                  </div>
+                </section>
+                <section className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 dark:border-white/10 dark:bg-white/5">
+                  <h3 className="text-sm font-semibold">Product FAQs</h3>
+                  {faqRows.map((faq, index) => (
+                    <div key={index} className="space-y-2 border-b pb-3">
+                      <label className="block text-sm">Question {index + 1}
+                        <input required className={inputClass} value={faq.q} onChange={(event) =>
+                          setProductForm({ ...productForm, faqs: faqRows.map((row, i) => i === index ? { ...row, q: event.target.value } : row) })} />
+                      </label>
+                      <label className="block text-sm">Answer {index + 1}
+                        <textarea required className={inputClass} value={faq.a} onChange={(event) =>
+                          setProductForm({ ...productForm, faqs: faqRows.map((row, i) => i === index ? { ...row, a: event.target.value } : row) })} />
+                      </label>
+                      <button type="button" className="text-sm text-red-600" onClick={() =>
+                        setProductForm({ ...productForm, faqs: faqRows.filter((_, i) => i !== index) })}>Remove FAQ</button>
+                    </div>
+                  ))}
+                  <button type="button" className="text-sm font-semibold text-primary" onClick={() =>
+                    setProductForm({ ...productForm, faqs: [...faqRows, { q: '', a: '' }] })}>Add FAQ</button>
                 </section>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -2089,4 +2140,3 @@ export const AdminDashboard: React.FC = () => {
     </div>
   );
 };
-

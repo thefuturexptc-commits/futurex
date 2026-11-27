@@ -1,3 +1,4 @@
+import { ringFaqs } from '../utils/categoryFaqs.js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
@@ -71,33 +72,6 @@ interface RingPageReview {
   images: string[];
   date: string;
 }
-
-const ringFaqs = [
-  {
-    q: 'What is a smart ring?',
- a: 'A smart ring is a wearable device designed to track fitness, activity and wellness metrics while maintaining the form factor of a traditional ring.',
-  },
-  {
-    q: 'What can a TFX Smart Ring track?',
- a: 'TFX Smart Rings support features such as activity tracking, sleep monitoring, heart rate tracking, wellness insights and connected app-based monitoring depending on the model.',
-  },
-  {
-    q: 'Does a TFX Smart Ring connect to an app?',
-    a: 'Yes, TFX Smart Rings connect with compatible smartphones through app-based sync for wellness, activity, and sleep insights.',
-  },
-  {
-    q: 'Is a smart ring suitable for daily wear?',
-    a: 'TFX Smart Rings are designed with a compact wearable form factor for everyday wellness monitoring, sleep tracking, and activity tracking.',
-  },
-  {
-    q: 'What is the difference between a smart ring and a smart band?',
-    a: 'A smart ring offers a compact ring form factor for discreet daily tracking, while a smart band is worn on the wrist and may suit users who prefer wrist-based fitness tracking.',
-  },
-  {
-    q: 'Which TFX Smart Ring should I choose?',
-    a: 'Choose TFX Display Pro if you want quick on-device information, TFX Touch if you prefer touch-enabled control, and TFX Smart Ring for compact app-connected wellness tracking.',
-  },
-];
 
 export const SmartRings: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);

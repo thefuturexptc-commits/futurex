@@ -1,3 +1,4 @@
+import { fanFaqs } from '../utils/categoryFaqs.js';
 import React from 'react';
 import '../components/CategoryInfoCards.css';
 import { CategoryTemplate } from '../components/CategoryTemplate';
@@ -67,49 +68,6 @@ const fanPopularSearches = [
   'Smart Air Circulation Fan',
   'TFX Bladeless Fan',
   'The Future X Fan',
-];
-
-const fanFaqs = [
-  {
-    question: 'What is a bladeless fan?',
-    answer: 'A bladeless fan uses airflow amplification technology to circulate air without exposed rotating blades.',
-  },
-  {
-    question: 'How does a bladeless fan work?',
-    answer: 'A bladeless fan draws air into its base and pushes smooth airflow through a ring or tower outlet to circulate air around a room.',
-  },
-  {
-    question: 'Are bladeless fans energy efficient?',
-    answer: 'Many bladeless fans are designed for efficient airflow and adjustable speed settings, helping users manage comfort and power use.',
-  },
-  {
-    question: 'What is the difference between a bladeless fan and a traditional fan?',
-    answer: 'A bladeless fan has no exposed rotating blades and usually offers a modern tower design, smoother airflow, and easier cleaning than many traditional fans.',
-  },
-  {
-    question: 'Can a bladeless fan be used year-round?',
-    answer: 'Selected hot and cool bladeless fans can support both cooling airflow and heating functionality for year-round indoor comfort.',
-  },
-  {
-    question: 'What is a hot and cool fan?',
-    answer: 'A hot and cool fan is designed to provide cooling airflow in warmer conditions and heated airflow when extra warmth is needed.',
-  },
-  {
-    question: 'What are the benefits of a HEPA bladeless fan?',
-    answer: 'A HEPA bladeless fan combines air circulation with filtration support, helping manage indoor airflow while supporting cleaner air movement.',
-  },
-  {
-    question: 'Are bladeless fans suitable for bedrooms?',
-    answer: 'Many users prefer bladeless fans in bedrooms due to their modern design and smooth airflow delivery.',
-  },
-  {
-    question: 'Do bladeless fans require less maintenance?',
-    answer: 'Bladeless fans can be easier to clean because they do not have exposed blades, though filters and vents should still be maintained as recommended.',
-  },
-  {
-    question: 'Which TFX bladeless fan is best for home use?',
-    answer: 'The best TFX bladeless fan depends on the room and use case. Cooling models suit everyday airflow, hot and cool models support year-round comfort, and HEPA models add filtration support.',
-  },
 ];
 
 export const SmartFans: React.FC = () => {

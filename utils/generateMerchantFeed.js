@@ -1,6 +1,9 @@
-import { getProductStock } from './productAvailability.js';
+import { getProductSlug } from './productSeoData.js';
+import { getMerchantProductId, getVariantProductId } from './merchantProductId.js';
+export { getMerchantProductId };
+import { getColorVariants, getMerchantAvailability } from './productOfferAvailability.js';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { collection, getDocs, getFirestore, query, where } from 'firebase/firestore';
 import { isCatalogProductPublished } from './catalogVisibility.js';
 import { isTfxV5Band } from './catalogPricing.js';
 import { getMerchantPricing } from './merchantPricing.js';
@@ -20,41 +23,6 @@ const firebaseConfig = {
   messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || '721727785001',
   appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || '1:721727785001:web:f0ed7c4ed7555e018ef438',
   measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID || 'G-JD32TH0PJS',
-};
-
-const DISPLAY_PRO_LEGACY_SLUG = 'tfx-display-pro-smart-ring-premium-tracking-with-display-and-wireless-charging';
-const DISPLAY_PRO_CANONICAL_SLUG = 'tfx-display-pro-smart-ring';
-
-const slugify = (value = '') =>
-  String(value)
-    .trim()
-    .toLowerCase()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-const getProductSlug = (product) => {
-  const slug = slugify(product.slug || product.name || product.id);
-  return slug === DISPLAY_PRO_LEGACY_SLUG ? DISPLAY_PRO_CANONICAL_SLUG : slug;
-};
-
-const hashString = (value = '') => {
-  let hash = 5381;
-  for (const char of String(value)) {
-    hash = ((hash << 5) + hash + char.charCodeAt(0)) >>> 0;
-  }
-  return hash.toString(36);
-};
-
-export const getMerchantProductId = (product) => {
-  const source = String(product.id || product.slug || product.name || 'item');
-  const normalized = slugify(source) || 'item';
-  if (normalized.length <= 50) return normalized;
-
-  const suffix = hashString(source);
-  const prefixLength = Math.max(1, 49 - suffix.length);
-  const prefix = normalized.slice(0, prefixLength).replace(/-+$/, '') || 'item';
-  return `${prefix}-${suffix}`;
 };
 
 const xmlEscape = (value = '') =>
@@ -155,14 +123,6 @@ export const buildDescription = (product) => {
   return parts.join(' ').replace(/\s+/g, ' ').trim().slice(0, 5000);
 };
 
-const getMerchantAvailability = (product) => {
-  const rawAvailability = String(product.availability || product.availabilityStatus || '').trim().toLowerCase();
-  const normalized = rawAvailability.split('/').pop()?.replace(/[^a-z]/g, '') || '';
-  if (['instock', 'outofstock', 'preorder', 'backorder'].includes(normalized)) {
-    return normalized === 'instock' ? 'in_stock' : normalized === 'outofstock' ? 'out_of_stock' : normalized;
-  }
-  return getProductStock(product) > 0 && product.inStock !== false ? 'in_stock' : 'out_of_stock';
-};
 
 const getAvailabilityDate = (product) => {
   const date = String(product.availabilityDate || product.availability_date || '').trim();
@@ -184,6 +144,7 @@ const getColors = (product) => {
 };
 
 export const getMerchantTitle = (product) => {
+  if (product.useCatalogTitle) return formatProductName(product.name || product.id);
   if (isTfxV5Band(product)) {
     return 'The FutureX AI Smart Band TFX5 - Heart Rate, SPO2 & Fitness Tracker';
   }
@@ -199,30 +160,7 @@ export const getMerchantTitle = (product) => {
     : title;
 };
 
-const getColorVariants = (product) => {
-  const colors = Array.isArray(product.colors) ? product.colors : [];
-  const variants = Array.isArray(product.variants) ? product.variants : [];
-  const names = [...new Set([
-    ...colors.map((color) => typeof color === 'string' ? color : color?.name),
-    ...variants.map((variant) => variant?.colorName || variant?.color),
-  ].map((name) => String(name || '').trim()).filter(Boolean))];
-  return names.map((name) => {
-    const key = slugify(name);
-    const color = colors.find((item) => slugify(typeof item === 'string' ? item : item?.name) === key);
-    const variant = variants.find((item) => slugify(item?.colorName || item?.color) === key);
-    const sizeStock = (variant?.sizes || []).reduce((sum, row) => sum + Number(row.stock || 0), 0);
-    const colorStock = color ? Number(color.stock || 0) - Number(color.reservedStock || 0) : 0;
-    const stock = Math.max(0, colorStock > 0 ? colorStock : sizeStock > 0 ? sizeStock : Number(variant?.stock || 0));
-    const images = flattenValues(color?.images?.length ? color.images : variant?.images);
-    const price = Number(variant?.price || product.prices?.[name] || product.price || product.salePrice || 0);
-    return { name, slug: key, stock, images, price };
-  });
-};
 
-const getVariantProductId = (product, variant) => getMerchantProductId({
-  ...product,
-  id: `${product.id || product.slug || product.name}-${variant.slug}`,
-});
 
 const withTimeout = (promise, timeoutMs) =>
   Promise.race([
@@ -250,6 +188,23 @@ export const getRemoteProducts = async ({ includeReviews = false, requireReviews
     if (requireReviews) throw error;
     console.warn('Public review fetch failed; using saved product reviews.');
     return products.map(product => withProductReviewSummary(product));
+  }
+};
+
+export const getRemoteCatalogCategories = async () => {
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const snapshot = await withTimeout(getDocs(collection(getFirestore(app), 'categories')), 3500);
+  return snapshot.docs.map((doc) => doc.data());
+};
+
+export const getRemoteProductWithReviews = async (product) => {
+  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+  const reviews = query(collection(getFirestore(app), 'product_reviews'), where('productId', '==', product.id));
+  try {
+    const snapshot = await withTimeout(getDocs(reviews), 3500);
+    return withProductReviewSummary(product, snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })));
+  } catch {
+    return withProductReviewSummary(product);
   }
 };
 

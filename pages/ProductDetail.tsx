@@ -1,5 +1,6 @@
 import React, { useEffect, useId, useMemo, useState, useCallback, useRef } from 'react';
-import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
+import { CatalogPrerender, hasCatalogPrerender } from '../components/CatalogPrerender';
 import { Product, ProductColor, ProductPublicReview } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -15,67 +16,56 @@ import { ProductFeatureList, ProductSpecifications } from '../components/Product
 import { getProductFallbackImage } from '../utils/productImages';
 import { ProductCard } from '../components/ProductCard';
 import { ProductComparisonSection } from '../components/ProductComparisonSection';
-import { absoluteUrl, removeJsonLd, setJsonLd, setProductSocialMetadata, setSeoMetadata, stripHtml } from '../services/seo';
+import { removeJsonLd, setJsonLd, setProductSocialMetadata, setSeoMetadata, stripHtml } from '../services/seo';
 import { formatInrAmount, getAutomaticOfferItemPricing, getPrepaidDiscountForItems, isTfxV5Band as isTfxV5OfferExcluded } from '../utils/coupons';
 import { getProductModelIdentifiers } from '../utils/productSearch';
 import { getFanFlipkartListing } from '../utils/fanListings';
 import { getStorefrontFlipkartListings } from '../utils/storefrontFlipkartListings.js';
 import { productToAnalyticsItem, pushDataLayerEvent } from '../services/analytics';
-import { buildProductSeoRecord } from '../utils/productSeoData.js';
+import { getProductHeading, getProductPresentation } from '../utils/productPresentation';
 import { getProductOverview, TP09_PRO_DESCRIPTION } from '../utils/productOverviews.js';
-import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification, getSchemaReviews, withProductReviewSummary } from '../utils/productSchema.js';
+import { getSchemaReviews, withProductReviewSummary } from '../utils/productSchema.js';
 import { getCatalogOffer } from '../utils/catalogPricing.js';
 import {
   TP09_PRO_FEATURES,
   TP09_PRO_LISTING_DESCRIPTION_HTML,
-  TP09_PRO_LISTING_FAQS,
   TP09_PRO_LISTING_SPECS,
-  TP09_PRO_LISTING_TITLE,
   TP09_PRO_SPECS,
 } from '../utils/tp09ProContent';
 import {
   TP02_PLUS_LISTING_DESCRIPTION_HTML,
-  TP02_PLUS_LISTING_FAQS,
   TP02_PLUS_LISTING_SPECS,
-  TP02_PLUS_LISTING_TITLE,
 } from '../utils/tp02PlusContent';
 import {
   TP02_THREE_IN_ONE_LISTING_DESCRIPTION_HTML,
-  TP02_THREE_IN_ONE_LISTING_FAQS,
   TP02_THREE_IN_ONE_LISTING_SPECS,
-  TP02_THREE_IN_ONE_LISTING_TITLE,
 } from '../utils/tp02ThreeInOneContent';
 import {
   TP12_LISTING_DESCRIPTION_HTML,
-  TP12_LISTING_FAQS,
   TP12_LISTING_SPECS,
-  TP12_LISTING_TITLE,
 } from '../utils/tp12Content';
+import { getProductFamily, getProductFaqs, getProductWarranty } from '../utils/productFaqs';
 import { getProductDetailContent } from '../utils/productDetailContent';
 import { DISPLAY_PRO_RING_DESCRIPTION_HTML, DISPLAY_PRO_RING_TITLE } from '../utils/displayProRingContent';
 import { TOUCH_SMART_RING_DESCRIPTION_HTML, TOUCH_SMART_RING_TITLE } from '../utils/touchSmartRingContent';
 import {
   get4319bContent,
   WALL_MOUNT_4319B_DESCRIPTION_HTML,
-  WALL_MOUNT_4319B_FAQS,
   WALL_MOUNT_4319B_SPECS,
-  WALL_MOUNT_4319B_TITLE,
 } from '../utils/wallMount4319bContent';
 import {
   SMART_BAND_2208A_DESCRIPTION_HTML,
-  SMART_BAND_2208A_FAQS,
   SMART_BAND_2208A_SLUG,
   SMART_BAND_2208A_SPECS,
   SMART_BAND_2208A_TITLE,
 } from '../utils/smartBand2208AContent';
 import {
   SMART_SLEEP_MONITOR_DESCRIPTION_HTML,
-  SMART_SLEEP_MONITOR_FAQS,
   SMART_SLEEP_MONITOR_SLUG,
   SMART_SLEEP_MONITOR_SPECS,
 } from '../utils/smartSleepMonitoringContent';
-import { getQ8ProContent, Q8_PRO_DESCRIPTION_HTML, Q8_PRO_FAQS, Q8_PRO_SPECS, Q8_PRO_TITLE } from '../utils/q8ProContent';
-import { QG830_DESCRIPTION_HTML, QG830_TITLE } from '../utils/qg830Content';
+import { getQ8ProContent, Q8_PRO_DESCRIPTION_HTML, Q8_PRO_SPECS } from '../utils/q8ProContent';
+import { QG830_DESCRIPTION_HTML } from '../utils/qg830Content';
 import ringLowProfile from '../assets/images/ring-low-profile.webp';
 import ringWellness from '../assets/images/ring-wellness.webp';
 import ringDailySync from '../assets/images/ring-daily-sync.webp';
@@ -693,14 +683,6 @@ const TFX5_SUPPLIED_SPECS: Record<string, string> = {
   Warranty: '6-month limited warranty',
 };
 
-const TFX5_SUPPLIED_FAQS = [
-  { q: 'What does The FutureX AI Smart Band TFX5 track?', a: 'It supports heart rate, SpO2, HRV, sleep, stress, steps, distance, calories and activity-related monitoring through the connected app.' },
-  { q: 'Does the TFX5 have a screen?', a: 'No. The TFX5 is a screenless fitness tracker. Supported information is available through the TFX Vital App.' },
-  { q: 'How do I charge the TFX5?', a: 'Remove the battery pack, place it in the charging dock and connect the Type-C charging cable to a compatible power source.' },
-  { q: 'How long does the battery last?', a: 'The advertised battery life is approximately 7â€“10 days, depending on usage and settings.' },
-  { q: 'Is the TFX5 a medical device?', a: 'No. It is intended for general fitness and wellness monitoring, not medical diagnosis or treatment.' },
-];
-
 const TFX_DISPLAY_PRO_RING_DESCRIPTION =
  'The FutureX Display Pro Smart Ring combines wearable technology with a compact ring design, offering convenient access to essential and activity information directly from the ring. Featuring an integrated display, this smart ring allows users to view selected data while maintaining a lightweight and comfortable form factor suitable for everyday wear. Designed for fitness tracking, activity monitoring and wellness insights, the FutureX Display Pro Smart Ring helps users stay connected to their daily metrics throughout work, exercise, travel and daily activities.';
 
@@ -1063,29 +1045,6 @@ const getCategoryPathForSchema = (category = '') => {
   return '/shop/all';
 };
 
-const getProductFaqSchema = (productName: string) => ({
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: `Is ${productName} available in India?`,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: `${productName} is available from The Future X in India when the product page shows it in stock.`,
-      },
-    },
-    {
-      '@type': 'Question',
-      name: `Does ${productName} come with warranty support?`,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'The Future X provides warranty and support information on the product page and order support pages.',
-      },
-    },
-  ],
-});
-
 const TRUST_TILE_ICONS: Record<'shipping' | 'warranty' | 'secure' | 'exchange', React.ReactNode> = {
   shipping: (
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -1135,7 +1094,7 @@ const ProductCheckoutTrustBlock: React.FC<{ product?: Product; productFamily?: s
   mobileDetails = false,
 }) => {
   const [isWarrantyExpanded, setIsWarrantyExpanded] = useState(false);
-  const warrantyText = product ? getWarrantyDisplayText(productFamily) : 'Brand-backed help';
+  const warrantyText = product ? getProductWarranty(product) : 'Brand-backed help';
   const registrationPath = product ? `/register-warranty?product=${encodeURIComponent(product.name)}` : '/register-warranty';
   const tileTitleClass = dark
     ? 'break-words text-[10px] font-semibold leading-3 text-primary-200 sm:text-xs sm:leading-normal'
@@ -1622,6 +1581,7 @@ const RevealOnScroll: React.FC<{
 };
 
 export const ProductDetail: React.FC = () => {
+  const { pathname } = useLocation();
   const { id, color: colorSlug } = useParams<{ id: string; color?: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -1640,7 +1600,7 @@ export const ProductDetail: React.FC = () => {
     toProductSlug(product.name) === DISPLAY_PRO_PRODUCT_SLUG
   ));
   const isTouchSmartRingListing = productSlug === 'tfx-touch-smart-ring';
-  const productOverview = getProductOverview(product, isDisplayProProduct ? DISPLAY_PRO_PRODUCT_SLUG : productSlug);
+  const productOverview = product?.shortDescription?.trim() ? { description: stripHtml(product.shortDescription), html: undefined } : getProductOverview(product, isDisplayProProduct ? DISPLAY_PRO_PRODUCT_SLUG : productSlug);
   const overviewDescription = productOverview?.description;
   const isWallMount4319bListing = Boolean(get4319bContent(product));
   const isQg830Listing = productSlug === 'tfx-smart-10x-air';
@@ -1651,13 +1611,6 @@ export const ProductDetail: React.FC = () => {
   const supplementalSpecs = isTp12Listing ? TP12_LISTING_SPECS
     : isTp02ThreeInOneListing ? TP02_THREE_IN_ONE_LISTING_SPECS
     : isTp02PlusListing ? TP02_PLUS_LISTING_SPECS : null;
-  const suppliedFanHeading = isQ8ProProduct ? Q8_PRO_TITLE
-    : isQg830Listing ? QG830_TITLE
-    : isTp09ProListing ? TP09_PRO_LISTING_TITLE
-    : isTp02PlusListing ? TP02_PLUS_LISTING_TITLE
-    : isTp12Listing ? TP12_LISTING_TITLE
-    : isTp02ThreeInOneListing ? TP02_THREE_IN_ONE_LISTING_TITLE
-    : isWallMount4319bListing ? WALL_MOUNT_4319B_TITLE : '';
   const suppliedProductTitle = isDisplayProProduct ? DISPLAY_PRO_RING_TITLE
     : isTouchSmartRingListing ? TOUCH_SMART_RING_TITLE
     : isStandardBand ? SMART_BAND_2208A_TITLE : '';
@@ -1781,8 +1734,8 @@ export const ProductDetail: React.FC = () => {
     if (!product || !id || productRouteId !== id) return;
     const canonicalSlug = getProductSlug(product);
     if (!canonicalSlug || id === canonicalSlug) return;
-    navigate(`/product/${canonicalSlug}${window.location.search}`, { replace: true });
-  }, [id, navigate, product, productRouteId]);
+    navigate(`/product/${canonicalSlug}${colorSlug ? '/' + colorSlug : ''}${window.location.search}`, { replace: true });
+  }, [id, colorSlug, navigate, product, productRouteId]);
 
   useEffect(() => {
     if (!product) return;
@@ -1881,11 +1834,7 @@ export const ProductDetail: React.FC = () => {
 
   const salePrice = Number(product?.salePrice || product?.price || 0);
   const productSlugForPricing = product ? getProductSlug(product) : '';
-  const mrp = productSlugForPricing === 'tfx5-ai-smart-band'
-    ? 12498.75
-    : productSlugForPricing === 'tfx-display-pro-smart-ring'
-      ? 4308.53
-    : product ? getCatalogOffer(product).regularPrice : 0;
+  const mrp = product ? getCatalogOffer(product).regularPrice : 0;
   const savings = Math.max(0, mrp - salePrice);
   const percent = mrp > 0 ? Math.round((savings / mrp) * 100) : 0;
   const hidePercentageOffer = product ? isTfxV5OfferExcluded(product) : false;
@@ -1965,11 +1914,6 @@ export const ProductDetail: React.FC = () => {
           : isMonitoringProductForSpecs
             ? 'monitoring'
             : 'wearable';
-    // Merge everything except the warranty rows first. The warranty rows themselves
-    // always come from getWarrantySpecEntries(warrantyFamily) below, which is a fixed
-    // per-family policy (fans = 1 year, everything else = 6 months) — never read from
-    // product.warranty, product.specs.Warranty, or any hardcoded per-product profile,
-    // so a stray backend value or an old profile constant can never override it.
     const detailedProductContent = getProductDetailContent(product);
     const catalogSpecs = product?.specs || {};
     const listingSpecs = supplementalSpecs || isQg830Listing
@@ -1980,7 +1924,7 @@ export const ProductDetail: React.FC = () => {
             return text && !/^not (?:provided|specified)$/i.test(text);
           })),
         }
-      : { ...catalogSpecs, ...detailedProductContent?.specs };
+      : { ...detailedProductContent?.specs, ...catalogSpecs };
     const baseMergedSpecs: Record<string, string> = {
       ...supplementalSpecs,
       ...bandSpecs,
@@ -1989,8 +1933,8 @@ export const ProductDetail: React.FC = () => {
       ...monitoringSpecs,
       ...listingSpecs,
     };
-    const warrantySpecs = product ? getWarrantySpecEntries(warrantyFamily) : {};
-    const mergedSpecs = { ...baseMergedSpecs, ...warrantySpecs };
+    const warrantySpecs = product ? { ...getWarrantySpecEntries(warrantyFamily), 'Warranty Period': getProductWarranty(product) } : {};
+    const mergedSpecs: Record<string, string> = { ...baseMergedSpecs, ...warrantySpecs };
     const hasModelSpec = Object.keys(mergedSpecs).some((key) => /model|sku|serial|code|item\s*no|product\s*id|pid/i.test(key));
     const specsWithModel = primaryProductModel && !hasModelSpec
       ? { 'Model Number': primaryProductModel, ...mergedSpecs }
@@ -2064,111 +2008,16 @@ export const ProductDetail: React.FC = () => {
   useEffect(() => {
     if (!product) return;
 
-    const productPath = `/product/${getProductSlug(product)}`;
-    const image = product.images?.[0] || product.colors?.[0]?.images?.[0] || '/images/fav.webp';
-    const seoRecord = buildProductSeoRecord(product);
-    const baseDescription = product.seoDescription?.trim() || seoRecord?.description ||
-      stripHtml(product.description).slice(0, 155) ||
-      product.features?.slice(0, 3).join(', ') ||
-      `Shop ${product.name} from TheFutureX.`;
-    const description = product.seoDescription?.trim() || seoRecord?.description || (primaryProductModel && !baseDescription.toLowerCase().includes(primaryProductModel.toLowerCase())
-      ? `${baseDescription.replace(/[. ]*$/, '')}. Model number: ${primaryProductModel}.`
-      : baseDescription);
-    const seoKeywords = (product.searchKeywords || []).map((keyword) => keyword.trim()).filter(Boolean);
-    const metaDescription = overviewDescription ?? (seoKeywords.length
-      ? `${description.replace(/[.\s]+$/, '')}. Keywords: ${seoKeywords.join(', ')}.`
-      : description);
-    const price = Number(product.salePrice || product.price || product.mrp || 0);
-    const customerFacingPrice = getAutomaticOfferItemPricing(product).unitOfferPrice || price;
-    // Schema.org expects Offer.price to be a number, not a currency-formatted string.
-    const schemaPrice = Number(Math.max(customerFacingPrice, 1).toFixed(2));
-    const productImages = product.images?.length ? product.images : [image];
-    const categoryPath = getCategoryPathForSchema(product.category);
-    const categoryUrl = absoluteUrl(categoryPath);
-    const productUrl = absoluteUrl(productPath);
-    setSeoMetadata({
-      title: suppliedProductTitle || seoRecord?.seoTitle || `${product.name} - TheFutureX`,
-      description: metaDescription,
-      path: productPath,
-      image,
-      type: 'product',
-    });
-    setProductSocialMetadata(customerFacingPrice);
-
-    const additionalProperty = Object.entries(product.specs || {})
-      .filter(([name, value]) => String(name).trim() && String(value).trim())
-      .slice(0, 20)
-      .map(([name, value]) => ({ '@type': 'PropertyValue', name: String(name), value: String(value) }));
-
-    const productSchema: Record<string, unknown> = {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      '@id': `${productUrl}#product`,
-      name: suppliedProductTitle || product.name,
-      description: metaDescription,
-      ...(product.searchKeywords?.length ? { keywords: product.searchKeywords.join(', ') } : {}),
-      image: productImages.map((item) => absoluteUrl(item)),
-      model: primaryProductModel || undefined,
-      mpn: primaryProductModel || undefined,
-      brand: {
-        '@type': 'Brand',
-        name: 'The Future X',
-      },
-      sku: product.id,
-      category: product.category,
-      ...(primaryProductModel ? { mpn: primaryProductModel, model: primaryProductModel } : {}),
-      ...(additionalProperty.length ? { additionalProperty } : {}),
-      offers: {
-        '@type': 'Offer',
-        url: productUrl,
-        priceCurrency: 'INR',
-        price: schemaPrice,
-        availability: canAdd ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-        itemCondition: 'https://schema.org/NewCondition',
-        seller: {
-          '@type': 'Organization',
-          name: 'The Future X',
-        },
-        ...productOfferPolicies,
-        ...buildSalePriceSpecification(getCatalogOffer(product).regularPrice, schemaPrice),
-      },
-    };
-    Object.assign(productSchema, buildReviewSchema(product.reviews));
-    setJsonLd('product-json-ld', productSchema);
-
-    setJsonLd('product-breadcrumb-json-ld', {
-      '@context': 'https://schema.org',
-      '@type': 'BreadcrumbList',
-      itemListElement: [
-        {
-          '@type': 'ListItem',
-          position: 1,
-          name: 'Home',
-          item: 'https://thefuturex.in/',
-        },
-        {
-          '@type': 'ListItem',
-          position: 2,
-          name: product.category || 'Products',
-          item: categoryUrl,
-        },
-        {
-          '@type': 'ListItem',
-          position: 3,
-          name: suppliedProductTitle || product.name,
-          item: productUrl,
-        },
-      ],
-    });
-
-    setJsonLd('product-faq-json-ld', getProductFaqSchema(product.name));
-
-    return () => {
-      removeJsonLd('product-json-ld');
-      removeJsonLd('product-breadcrumb-json-ld');
-      removeJsonLd('product-faq-json-ld');
-    };
-  }, [canAdd, primaryProductModel, product, overviewDescription, suppliedProductTitle]);
+    const page = getProductPresentation(product, colorSlug);
+    if (!page) return;
+    setSeoMetadata({ title: page.title, exactTitle: true, description: page.metaDescription, path: page.url, image: page.images[0], type: 'product' });
+    setProductSocialMetadata(page.offer.currentPrice);
+    for (const [key, schema] of Object.entries(page.schemas)) {
+      if (schema) setJsonLd(key, schema);
+      else removeJsonLd(key);
+    }
+    return () => Object.keys(page.schemas).forEach(removeJsonLd);
+  }, [product, colorSlug]);
 
   useEffect(() => {
     if (user?.name && !reviewName) {
@@ -2486,6 +2335,8 @@ export const ProductDetail: React.FC = () => {
     };
   }, [product]);
 
+  if ((loading || error || !product) && hasCatalogPrerender(pathname)) return <CatalogPrerender />;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -2522,12 +2373,12 @@ export const ProductDetail: React.FC = () => {
         Object.entries(product.videoByColor).find(([key]) => normalizeOptionKey(key) === selectedColorKeyForVideo)?.[1] ||
         ''
       : '';
-  const productVideoUrl =
+  const productVideoUrl = isWallMount4319bListing ? '' :
     selectedVariantVideoUrl ||
     selectedColorVideoUrl ||
     product.videoUrl ||
     (isDisplayProProduct ? DISPLAY_PRO_YOUTUBE_URL : '');
-  const popupVideoUrl = [
+  const popupVideoUrl = isWallMount4319bListing ? undefined : [
     selectedVariantVideoUrl,
     selectedColorVideoUrl,
     product.videoUrl,
@@ -2552,19 +2403,8 @@ export const ProductDetail: React.FC = () => {
       ? product.name.replace(/wireless\s+charging/gi, 'Magnetic Charging')
     : product.name);
   const shortDescription = detailedProductContent?.description || stripHtml(product.description);
-  const productSubtitle = detailedProductContent ? detailedProductContent.description : stripHtml(product.seoDescription || product.shortDescription || '');
-  const productFamilyText = `${normalizedCategory} ${product.name}`.toLowerCase();
-  const productFamily = /\b(band|bracelet)\b/.test(productFamilyText)
-    ? 'band'
-    : /\bring\b/.test(productFamilyText)
-      ? 'ring'
-      : /\bfan\b/.test(productFamilyText)
-        ? 'fan'
-        : /\b(glass|glasses|eyewear|ai\s*glass)\b/.test(productFamilyText)
-          ? 'glasses'
-          : /\b(monitor|watch|belt|spo2|ecg|blood\s*pressure|glucose|sleep|bedside|recovery)\b/.test(productFamilyText)
-            ? 'monitoring'
-            : 'wearable';
+  const productSubtitle = stripHtml(product.shortDescription || product.seoDescription || '') || detailedProductContent?.description || '';
+  const productFamily = getProductFamily(product);
   const isRingOverview = productFamily === 'ring';
   const useMarketplaceArrangement = true;
   const isFanMarketplacePage = productFamily === 'fan';
@@ -2575,7 +2415,7 @@ export const ProductDetail: React.FC = () => {
   const detailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
     { key: 'features', label: 'Features' },
     overviewTab,
-    descriptionTab,
+    ...(!isWallMount4319bListing ? [descriptionTab] : []),
     { key: 'specs', label: 'Specifications' },
     { key: 'faq', label: 'FAQs' },
     { key: 'reviews', label: 'Reviews' },
@@ -2585,7 +2425,7 @@ export const ProductDetail: React.FC = () => {
   };
   const mobileDetailTabs: Array<{ key: ProductDetailTabKey; label: string }> = [
     overviewTab,
-    descriptionTab,
+    ...(!isWallMount4319bListing ? [descriptionTab] : []),
     { key: 'features', label: 'Features' },
     { key: 'specs', label: 'Specs' },
     ...(!detailedProductContent || productFamily === 'ring' ? [{ key: 'battery' as const, label: 'Battery' }] : []),
@@ -2854,7 +2694,7 @@ export const ProductDetail: React.FC = () => {
         ? TFX_TOUCH_RING_DESCRIPTION
         : TFX_RING_PRO_DESCRIPTION
     : '';
-  const featureList = detailedProductContent ? detailedProductContent.features : product.features?.length
+  const featureList = product.features?.length
     ? product.features.map(cleanFeatureText).filter(Boolean)
     : isTfxV5Band
       ? TFX5_BAND_FEATURES
@@ -2954,7 +2794,9 @@ export const ProductDetail: React.FC = () => {
       : monitoringProfile
         ? monitoringProfile.description
       : `${product.name} is a practical choice if you want reliable technology, useful everyday performance, and a premium TheFutureX experience in one product. It focuses on the things customers actually use most, including ${topFeatureText || 'smart performance, daily comfort, easy setup, and dependable support'}.`);
-  const existingProductDescriptionHtml = detailedProductContent
+  const existingProductDescriptionHtml = product.useCatalogDescription && product.description?.trim()
+    ? sanitizeProductDescriptionHtml(product.description)
+    : detailedProductContent
     ? sanitizeProductDescriptionHtml([detailedProductContent.html, detailedProductContent.careHtml].join('\n'))
     : isTfxV5Band
     ? sanitizeProductDescriptionHtml(TFX5_SUPPLIED_DESCRIPTION_HTML)
@@ -2974,7 +2816,7 @@ export const ProductDetail: React.FC = () => {
     : isWallMount4319bListing ? WALL_MOUNT_4319B_DESCRIPTION_HTML
     : isStandardBand ? SMART_BAND_2208A_DESCRIPTION_HTML
     : isSmartSleepMonitor ? SMART_SLEEP_MONITOR_DESCRIPTION_HTML : '';
-  const productDescriptionHtml = suppliedDescriptionHtml
+  const productDescriptionHtml = product.useCatalogDescription && product.description?.trim() ? existingProductDescriptionHtml : suppliedDescriptionHtml
     ? sanitizeProductDescriptionHtml(suppliedDescriptionHtml) + (isSmartSleepMonitor ? '' : existingProductDescriptionHtml)
     : existingProductDescriptionHtml;
   const ringOverviewSections = [
@@ -3225,58 +3067,7 @@ export const ProductDetail: React.FC = () => {
   const tfx5SecondOverviewImageTitle = isTfxV5Band
     ? overviewMediaSections.filter((section) => section.image)[1]?.title
     : undefined;
-  const familyProductFaqs: Record<string, Array<{ q: string; a: string }>> = {
-    band: [
-      { q: `What does ${product.name} track?`, a: `${product.name} supports fitness and wellness tracking such as activity, sleep, heart rate and connected app insights depending on the model.` },
-      { q: `Does ${product.name} support SpO2 monitoring?`, a: 'Selected The FutureX smart band models support blood oxygen (SpO2) monitoring. Check the product specifications for the exact model features.' },
-      { q: 'Can this smart band connect to a smartphone?', a: 'Yes. Compatible The FutureX smart bands connect to smartphones using Bluetooth and app integration for wellness summaries and trend review.' },
-      { q: 'Is this smart band suitable for daily wear?', a: 'Yes. The FutureX smart bands are designed with lightweight everyday wearability for work, workouts, sleep tracking and daily activities.' },
-    ],
-    ring: [
- { q: `What can ${product.name} track?`, a: `${product.name} is designed for compact wellness tracking such as activity, sleep, heart rate trends and app-connected insights depending on the model.` },
-      { q: 'Does this smart ring connect to an app?', a: 'Yes. The FutureX smart rings connect with compatible smartphones through app-based sync for wellness, activity and sleep insights.' },
-      { q: 'Is this smart ring suitable for daily wear?', a: 'Yes. The FutureX smart rings use a compact ring form factor designed for daily wellness monitoring, activity tracking and overnight sleep tracking.' },
-      { q: 'How is a smart ring different from a smart band?', a: 'A smart ring offers discreet ring-style tracking, while a smart band is worn on the wrist and may suit users who prefer wrist-based fitness tracking.' },
-    ],
-    fan: [
-      { q: 'What is a bladeless fan?', a: 'A bladeless fan uses airflow amplification technology to circulate air without exposed rotating blades.' },
-      { q: 'Can this fan be used in a bedroom?', a: 'Yes. Many The FutureX bladeless fans are suitable for bedrooms because they offer smooth airflow, modern styling and selected quiet operating modes.' },
-      { q: 'Can hot and cool fan models be used year-round?', a: 'Selected The FutureX hot and cool models provide cooling airflow and heating functionality for year-round indoor comfort.' },
-      { q: 'Do bladeless fans require less maintenance?', a: 'Bladeless fans can be easier to clean because there are no exposed blades, though filters, vents and surfaces should still be maintained as recommended.' },
-    ],
-    monitoring: [
- { q: `What does ${product.name} monitor?`, a: `${product.name} is designed to support connected fitness or sleep monitoring through sensors and compatible app connectivity depending on the model.` },
- { q: 'Can this smart monitoring device connect to a phone?', a: 'Yes. Compatible smart monitoring products connect to supported smartphones or apps to display fitness and wellness data.' },
-      { q: 'Who should use a heart rate monitoring device?', a: 'Heart rate monitoring devices are useful for running, cycling, gym workouts, cardio training and sports activities where real-time heart rate tracking matters.' },
-      { q: 'How can sleep tracking help daily wellness?', a: 'Sleep tracking can help users understand sleep duration, rest patterns, routine consistency and recovery trends over time.' },
-    ],
-    glasses: [
-      { q: 'What can smart glasses be used for?', a: 'Smart glasses can support hands-free calling, music, voice assistant access and selected capture features depending on the model.' },
-      { q: 'Do smart glasses connect to a smartphone?', a: 'Yes. Compatible smart glasses connect with supported smartphones through Bluetooth for calling, media and smart controls.' },
-      { q: 'Are smart glasses suitable for everyday use?', a: 'The FutureX smart glasses are designed as modern eyewear with connected features for daily convenience, travel and hands-free use.' },
-    ],
-    wearable: [
-      { q: `What is ${product.name} used for?`, a: `${product.name} is designed for everyday connected wellness, smart convenience and practical daily use depending on its features.` },
-      { q: 'Does this product support app connectivity?', a: 'Compatible The FutureX products support app or Bluetooth connectivity for setup, summaries or connected features depending on the model.' },
-    ],
-  };
-  const suppliedFaqs = isTfxV5Band ? TFX5_SUPPLIED_FAQS
-    : isQ8ProProduct ? Q8_PRO_FAQS
-    : isTp09ProListing ? TP09_PRO_LISTING_FAQS
-    : isTp02PlusListing ? TP02_PLUS_LISTING_FAQS
-    : isTp12Listing ? TP12_LISTING_FAQS
-    : isTp02ThreeInOneListing ? TP02_THREE_IN_ONE_LISTING_FAQS
-    : isWallMount4319bListing ? WALL_MOUNT_4319B_FAQS
-    : isStandardBand ? SMART_BAND_2208A_FAQS
-    : isSmartSleepMonitor ? SMART_SLEEP_MONITOR_FAQS : [];
-  const suppliedFaqQuestions = new Set(suppliedFaqs.map(({ q }) => q));
-  const existingFaqs = [
-    ...(detailedProductContent ? detailedProductContent.faqs : familyProductFaqs[productFamily] || familyProductFaqs.wearable),
-    { q: 'What is the delivery timeline?', a: 'Orders are typically delivered within 3 to 7 business days.' },
-    { q: 'Is there a return or refund policy?', a: 'TheFutureX follows a no-return, no-refund policy. If the product has a verified manufacturing defect at delivery, you can request an exchange within 7 days.' },
-    { q: 'How do I claim warranty?', a: 'Register the product from the warranty registration page, then share feedback with your order ID, product name, issue description, and photo/video proof.' },
-  ];
-  const productFaqs = [...suppliedFaqs, ...existingFaqs.filter(({ q }) => !suppliedFaqQuestions.has(q))];
+  const productFaqs = getProductFaqs(product);
   const fanMarketplaceDescription =
     shortDescription ||
     fanProfile?.description ||
@@ -3484,12 +3275,12 @@ export const ProductDetail: React.FC = () => {
         )}
         {activeTfx5DescriptionTab === 'warranty' && (
           <div className="divide-y divide-slate-100">
-            {detailedProductContent ? <div className="product-rich-description text-sm leading-7 text-slate-700 sm:text-base" dangerouslySetInnerHTML={{ __html: sanitizeProductDescriptionHtml(detailedProductContent.warrantyHtml) }} /> : warrantySpecEntries.length > 0 ? warrantySpecEntries.map(([key, value]) => (
+            {warrantySpecEntries.length > 0 ? warrantySpecEntries.map(([key, value]) => (
               <div key={key} className="py-3 first:pt-0 last:pb-0 sm:py-4">
                 <h3 className="text-sm font-bold text-slate-900 sm:text-base">{formatSpecLabel(key)}</h3>
                 <p className="mt-1.5 whitespace-pre-line text-xs leading-6 text-slate-600 sm:text-sm sm:leading-7">{String(value ?? '')}</p>
               </div>
-            )) : <p className="text-sm leading-6 text-slate-600">{product.warranty || getWarrantyDisplayText(productFamily)}. Contact TheFutureX support for warranty assistance.</p>}
+            )) : <p className="text-sm leading-6 text-slate-600">{product.warranty || getProductWarranty(product)}. Contact TheFutureX support for warranty assistance.</p>}
           </div>
         )}
       </div>
@@ -3859,7 +3650,7 @@ export const ProductDetail: React.FC = () => {
               </div>
             )}
             <h1 className={`${isFeaturedBandProduct || isMegaPriceDropBand ? (isTfxV5Band ? 'mt-2' : 'mt-3') : 'mt-4'} product-detail-title max-w-[560px] break-words text-left ${isTfxV5Band ? 'text-[1.12rem] leading-[1.16]' : 'text-[1.3rem] leading-[1.22]'} font-semibold tracking-[-0.01em] text-slate-950 sm:text-[1.5rem] md:text-[1.65rem] lg:text-[1.78rem] xl:text-[1.9rem] 2xl:text-[2.05rem]`}>
-              {suppliedFanHeading || displayProductName}
+              {getProductHeading(product)}
             </h1>
             <span className={`${isTfxV5Band ? 'mt-2' : 'mt-3'} inline-flex w-fit items-center rounded-full border border-[#b89452]/25 bg-[#fbf8f0] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#8a6a20]`}>
               Overview
@@ -4088,7 +3879,7 @@ export const ProductDetail: React.FC = () => {
                 </button>
               )}
 
-              <DeliveryEstimate warranty={getWarrantyDisplayText(productFamily)} />
+              <DeliveryEstimate warranty={getProductWarranty(product)} />
 
               {visibleFlipkartListings.map((listing) => (
                 <a
@@ -4230,7 +4021,7 @@ export const ProductDetail: React.FC = () => {
         </section>
       )}
 
-      {(!isFanMarketplacePage || overviewMediaSections.length === 0) && !isQ8ProProduct && activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
+      {!isWallMount4319bListing && (!isFanMarketplacePage || overviewMediaSections.length === 0) && !isQ8ProProduct && activeMobileDetailTab === 'more-information' && mobileProductBannerSections.length === 0 && (
         <section className="bg-white px-4 py-5 sm:hidden">{overviewFallback}</section>
       )}
 
@@ -4433,14 +4224,14 @@ export const ProductDetail: React.FC = () => {
         </>
       )}
 
-      <section
+      {!isWallMount4319bListing && <section
         id="description"
         className={`product-scroll-section scroll-mt-32 bg-white px-4 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 ${isFanMarketplacePage ? 'pt-0 pb-8 sm:pt-0 lg:pb-12' : 'py-5 sm:py-10 lg:py-14'} ${isQ8ProProduct && activeMobileDetailTab === 'description' ? '' : 'hidden'}`}
       >
         <div className={`mx-auto ${isQ8ProProduct || showProductOverview ? 'max-w-7xl' : 'max-w-5xl'}`}>
           {arrangedProductInformation}
         </div>
-      </section>
+      </section>}
 
       <section id="specs" className="product-scroll-section hidden scroll-mt-32 bg-white px-4 py-10 sm:block sm:scroll-mt-36 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto max-w-6xl">

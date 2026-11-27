@@ -1,14 +1,15 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { collection, getDocs, getFirestore } from 'firebase/firestore';
+import { build } from 'esbuild';
 import { infoRoutes, sitemapRoutes, spaFallbackRoutes } from '../utils/siteRoutes.js';
 import { fanGuideRoutes } from '../utils/fanGuideRoutes.js';
-import { SITE_URL, mergeProductSeoRecords, resolveUrl, slugify } from '../utils/productSeoData.js';
+import { SITE_URL, mergeProductSeoRecords, resolveUrl } from '../utils/productSeoData.js';
 import { generateSitemapXML, getRemotePublishedBlogPosts } from '../utils/generateSitemap.js';
-import { generateMerchantFeedXML, generateMerchantFeedCSV } from '../utils/generateMerchantFeed.js';
+import { generateMerchantFeedXML, generateMerchantFeedCSV, getRemoteCatalogCategories, getRemoteProducts } from '../utils/generateMerchantFeed.js';
 import { homepageFaqs, homepageFaqSchema } from '../utils/homepageFaqs.js';
-import { productOfferPolicies, buildReviewSchema, buildSalePriceSpecification, withProductReviewSummary } from '../utils/productSchema.js';
+import { renderProductPage } from '../utils/renderProductPage.js';
+import { getColorVariants } from '../utils/productOfferAvailability.js';
+import { getProductSlug } from '../utils/productSeoData.js';
 import { tfx5BlogPosts } from '../utils/tfx5BlogPosts.js';
 import { getBlogProductImage } from '../utils/blogProductImage.ts';
 import { publishedBlogPosts, isBlogPostPublic } from '../utils/publishedBlogPosts.ts';
@@ -18,23 +19,23 @@ const indexFile = join(distDir, 'index.html');
 const DEFAULT_IMAGE = `${SITE_URL}/images/tfx-google-logo.webp`;
 const BRAND_NAME = 'The Future X';
 
-const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || 'AIzaSyDx62Wa4HSx97I-91AqC3poaMzcNrpfKAc',
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || process.env.FIREBASE_AUTH_DOMAIN || 'futurexweb-ae46b.firebaseapp.com',
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || 'futurexweb-ae46b',
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET || process.env.FIREBASE_STORAGE_BUCKET || 'futurexweb-ae46b.firebasestorage.app',
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID || process.env.FIREBASE_MESSAGING_SENDER_ID || '721727785001',
-  appId: process.env.VITE_FIREBASE_APP_ID || process.env.FIREBASE_APP_ID || '1:721727785001:web:f0ed7c4ed7555e018ef438',
-  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID || process.env.FIREBASE_MEASUREMENT_ID || 'G-JD32TH0PJS',
-};
-
 if (!existsSync(indexFile)) {
   throw new Error('Missing dist/index.html. Run this script after vite build.');
 }
 
-// Remove stale product route directories from previous catalog builds so old
-// ID/slug aliases cannot remain indexable with duplicate titles.
-rmSync(join(distDir, 'product'), { recursive: true, force: true });
+// Package the shared TypeScript modules as JavaScript for the Vercel functions.
+if (process.env.VERCEL === '1') {
+  await build({
+    entryPoints: ['utils/renderProductPage.js', 'utils/renderCategoryPage.js', 'utils/publishedBlogPosts.ts'],
+    outdir: join(distDir, '_catalog/server'),
+    outExtension: { '.js': '.mjs' },
+    bundle: true,
+    splitting: true,
+    format: 'esm',
+    platform: 'node',
+    target: 'node24',
+  });
+}
 
 const htmlEscape = (value = '') =>
   String(value)
@@ -43,29 +44,10 @@ const htmlEscape = (value = '') =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
-const xmlEscape = (value = '') =>
-  String(value)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&apos;');
-
-const csvEscape = (value = '') => {
-  const text = String(value ?? '');
-  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-};
-
 const textOnly = (value = '') =>
   String(value || '')
     .replace(/<[^>]*>/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim();
-
-const cleanFeedText = (value = '') =>
-  textOnly(value)
-    .replace(/\s+([,.;:!?])/g, '$1')
-    .replace(/\s{2,}/g, ' ')
     .trim();
 
 const truncate = (value = '', maxLength = 220) => {
@@ -81,54 +63,8 @@ const formatPrice = (value = 0) => {
   return price > 0 ? `₹${price.toLocaleString('en-IN')}` : 'Check price';
 };
 
-const getProductFamily = (product = {}) => {
-  const text = `${product.category || ''} ${product.name || ''}`.toLowerCase();
-  if (text.includes('ring')) return 'ring';
-  if (text.includes('band') || text.includes('bracelet')) return 'band';
-  if (text.includes('fan') || text.includes('air')) return 'fan';
-  if (text.includes('monitor') || text.includes('sleep') || text.includes('heart rate')) return 'monitoring';
-  if (text.includes('glass')) return 'glasses';
-  return 'product';
-};
-
-const categoryPages = {
-  shop: {
-    name: 'Shop All Products',
-    title: 'Shop All Products | TheFutureX',
-    description: 'Browse all TheFutureX smart wearables, smart rings, smart bands, smart fans, monitoring products, and connected lifestyle devices.',
-    category: '',
-  },
-  'shop/all': {
-    name: 'Shop All Products',
-    title: 'Shop All Products | TheFutureX',
-    description: 'Browse all TheFutureX smart wearables, smart rings, smart bands, smart fans, monitoring products, and connected lifestyle devices.',
-    category: '',
-  },
-  'smart-bands': {
-    name: 'Smart Bands',
-    title: 'Smart Bands | TheFutureX',
-    description: 'Explore TheFutureX smart bands for fitness tracking, sleep monitoring, SpO2, heart rate insights, app sync, and comfortable daily wear.',
-    category: 'Smart Bands',
-  },
-  'smart-rings': {
-    name: 'Smart Rings',
-    title: 'The FutureX Smart Rings',
-    description: 'Explore TheFutureX smart rings for compact activity tracking, sleep insights, heart rate trends, app connectivity, and everyday ring comfort.',
-    category: 'Smart Rings',
-  },
-  'bladeless-fan': {
-    name: 'Bladeless Fan',
-    title: 'The FutureX Bladeless Fans',
-    description: 'Shop TheFutureX bladeless fans built for smooth airflow, modern homes, quiet room comfort, remote control, and all-season living.',
-    category: 'Smart Fans',
-  },
-  'smart-monitoring': {
-    name: 'Smart Monitoring',
-    title: 'Smart Monitoring | TheFutureX',
-    description: 'Discover TheFutureX smart monitoring devices for fitness performance, sleep tracking, heart rate monitoring, recovery trends, and app-based reports.',
-    category: 'Smart Monitoring',
-  },
-};
+import { getCatalogCategoryPages } from '../utils/categorySeo.js';
+import { renderCategoryPage } from '../utils/renderCategoryPage.js';
 
 const blogSeoOverrides = {
   ...Object.fromEntries(tfx5BlogPosts.map((post) => [`blog/${post.slug}`, { title: post.metaTitle, description: post.metaDescription, post }])),
@@ -184,72 +120,6 @@ const infoPages = Object.fromEntries(
 const publicPages = Object.fromEntries(
   sitemapRoutes.map((route) => [route.path.replace(/^\//, '') || '', route])
 );
-
-const productFaqsByFamily = {
-  band: [
-    ['What does this smart band track?', 'TheFutureX smart bands can support activity tracking, sleep monitoring, heart rate trends, SpO2 on selected models, and app-based daily summaries.'],
-    ['Does this smart band connect to a phone?', 'Yes. Compatible smart bands connect to supported smartphones through Bluetooth and companion app integration.'],
-    ['Is this smart band suitable for daily wear?', 'Yes. The bands are designed for lightweight everyday wear during work, exercise, travel, and sleep tracking.'],
-  ],
-  ring: [
-    ['What can this smart ring track?', 'TheFutureX smart rings are designed for compact activity tracking, sleep insights, heart rate trends, and app-connected wellness summaries depending on the model.'],
-    ['How is a smart ring different from a smart band?', 'A smart ring gives discreet finger-worn tracking, while a smart band is worn on the wrist and can suit users who prefer wrist-based fitness tracking.'],
-    ['Does this smart ring connect to an app?', 'Yes. Compatible TFX smart rings sync with supported smartphones for activity, sleep, and wellness insights.'],
-  ],
-  fan: [
-    ['What is a bladeless fan?', 'A bladeless fan circulates air without exposed rotating blades, giving a modern design and smoother everyday airflow.'],
-    ['Can this fan be used in a bedroom?', 'Yes. Selected TheFutureX bladeless fans are suitable for bedrooms, study rooms, living rooms, and home offices.'],
-    ['Do bladeless fans require maintenance?', 'Bladeless fans can be easier to clean than traditional exposed-blade fans, though filters, vents, and surfaces should be maintained as recommended.'],
-  ],
-  monitoring: [
-    ['What is a smart monitoring device?', 'Smart monitoring devices help track activity, sleep, training, or recovery metrics through sensors and compatible apps.'],
-    ['Can it connect to a phone?', 'Compatible monitoring products connect to supported smartphones or apps to show fitness and wellness data.'],
-    ['Who should use smart monitoring products?', 'They are useful for people who want focused fitness, sleep, recovery, or performance tracking.'],
-  ],
-  product: [
-    ['What is this product used for?', 'This TheFutureX product is designed for everyday connected convenience, practical performance, and modern lifestyle use.'],
-    ['Does it include brand support?', 'Eligible products include TheFutureX support, secure checkout, India shipping, and product assistance.'],
-  ],
-};
-
-const getProductFaqs = (product) => productFaqsByFamily[getProductFamily(product)] || productFaqsByFamily.product;
-
-const withTimeout = (promise, timeoutMs) =>
-  Promise.race([
-    promise,
-    new Promise((_, reject) => {
-      setTimeout(() => reject(new Error(`Product SEO fetch timed out after ${timeoutMs}ms`)), timeoutMs);
-    }),
-  ]);
-
-const fetchRemoteProducts = async () => {
-  try {
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const snapshot = await withTimeout(getDocs(collection(db, 'products')), 6500);
-    const reviewsByProduct = new Map();
-    try {
-      const reviewsSnapshot = await withTimeout(getDocs(collection(db, 'product_reviews')), 6500);
-      reviewsSnapshot.forEach((reviewDoc) => {
-        const review = { ...reviewDoc.data(), id: reviewDoc.id };
-        const reviews = reviewsByProduct.get(review.productId) || [];
-        reviews.push(review);
-        reviewsByProduct.set(review.productId, reviews);
-      });
-    } catch (error) {
-      console.warn('Product review fetch failed; using persisted product reviews only.');
-    }
-    return snapshot.docs
-      .map((doc) => {
-        const product = { ...doc.data(), id: doc.id };
-        return withProductReviewSummary(product, reviewsByProduct.get(doc.id) || []);
-      })
-      .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
-  } catch (error) {
-    console.warn('Using static product SEO fallbacks because Firebase product fetch failed:', error instanceof Error ? error.message : error);
-    return [];
-  }
-};
 
 const upsertTag = (html, pattern, tag) => {
   if (pattern.test(html)) return html.replace(pattern, tag);
@@ -323,21 +193,6 @@ const buildHomeStaticHtml = (products = []) => {
     </main>`;
 };
 
-const buildCategoryStaticHtml = (page, products = []) => {
-  const categoryProducts = page.category
-    ? products.filter((product) => String(product.category || '').toLowerCase() === String(page.category || '').toLowerCase())
-    : products;
-  return `${buildStaticStyles()}
-    <main>
-      <h1>${htmlEscape(page.name)}</h1>
-      <p>${htmlEscape(page.description)}</p>
-      <section>
-        <h2>${htmlEscape(page.name)} Products</h2>
-        <div class="seo-prerendered-grid">${buildProductCards(categoryProducts.length ? categoryProducts : products.slice(0, 8))}</div>
-      </section>
-    </main>`;
-};
-
 const buildBlogIndexStaticHtml = () => {
   const posts = Object.entries(blogPages)
     .filter(([route]) => route !== 'blog' && !unlistedJournalPaths.has(`/${route}`))
@@ -365,42 +220,6 @@ const buildBlogPostStaticHtml = (page) => `${buildStaticStyles()}
       </article>
     </main>`;
 
-const buildProductStaticHtml = (product) => {
-  const image = resolveUrl(product.image || product.images?.[0] || DEFAULT_IMAGE);
-  const faqs = getProductFaqs(product);
-  const highlights = Array.isArray(product.features) && product.features.length
-    ? product.features.slice(0, 6)
-    : [
-      'Secure checkout and India shipping from TheFutureX.',
-      'App-connected features and everyday support depending on product model.',
-      'Designed for practical daily use, comfort, and modern connected living.',
-    ];
-  const specs = Object.entries(product.specs || {}).slice(0, 10);
-  return `${buildStaticStyles()}
-    <main>
-      <nav aria-label="Breadcrumb"><a href="/">Home</a> / <a href="${htmlEscape(getCategoryUrl(product.category).replace(SITE_URL, ''))}">${htmlEscape(product.category || 'Products')}</a> / <span>${htmlEscape(product.name)}</span></nav>
-      <article>
-        <h1>${htmlEscape(product.name)}</h1>
-        <img src="${htmlEscape(image)}" alt="${htmlEscape(product.name)}" loading="eager" decoding="async" />
-        <p>${htmlEscape(product.description)}</p>
-        <p><strong>${htmlEscape(formatPrice(product.price))}</strong></p>
-        ${product.regularPrice > product.price ? `<p>Regular price: <del>${htmlEscape(formatPrice(product.regularPrice))}</del> — Sale price: ${htmlEscape(formatPrice(product.price))}</p>` : ''}
-        <p>Brand: <span>${htmlEscape(product.brand || BRAND_NAME)}</span></p>
-        <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
-      </article>
-      <section>
-        <h2>Product Highlights</h2>
-        <ul>${highlights.map((highlight) => `<li>${htmlEscape(highlight)}</li>`).join('')}</ul>
-      </section>
-      ${specs.length ? `<section><h2>Key Specifications</h2><dl>${specs.map(([name, value]) => `<dt><strong>${htmlEscape(name)}</strong></dt><dd>${htmlEscape(value)}</dd>`).join('')}</dl></section>` : ''}
-      ${buildProductReviewHtml(product)}
-      <section class="seo-faq">
-        <h2>Frequently Asked Questions</h2>
-        ${faqs.map(([question, answer]) => `<details><summary>${htmlEscape(question)}</summary><p>${htmlEscape(answer)}</p></details>`).join('')}
-      </section>
-    </main>`;
-};
-
 const crawlerDisallowRules = [
   '/admin',
   '/api/',
@@ -415,65 +234,6 @@ const crawlerDisallowRules = [
 
 const buildRobotsBlock = (userAgent) =>
   `User-agent: ${userAgent}\nAllow: /\n${crawlerDisallowRules.map((path) => `Disallow: ${path}`).join('\n')}`;
-
-const buildProductReviewHtml = (product) => {
-  const { aggregateRating, review } = buildReviewSchema(product.reviews);
-  if (!aggregateRating) return '';
-  return `<section><h2>Customer Reviews</h2><p>${aggregateRating.ratingValue} out of 5 (${aggregateRating.reviewCount} reviews)</p>${review.map((item) => `<article><h3>${htmlEscape(item.author.name)}</h3><p>${item.reviewRating.ratingValue} out of 5</p><p>${htmlEscape(item.reviewBody)}</p></article>`).join('')}</section>`;
-};
-
-const buildProductNoscriptHtml = (product) => {
-  const specs = Object.entries(product.specs || {}).slice(0, 8);
-  const highlights = Array.isArray(product.features) ? product.features.slice(0, 5) : [];
-  const details = highlights.length
-    ? highlights
-    : specs.map(([name, value]) => `${name}: ${value}`).slice(0, 5);
-  return `<main>
-      <h1>${htmlEscape(product.name)}</h1>
-      <p>${htmlEscape(product.description)}</p>
-      <p><strong>Price: ${htmlEscape(formatPrice(product.price))}</strong></p>
-      ${product.regularPrice > product.price ? `<p>Regular price: <del>${htmlEscape(formatPrice(product.regularPrice))}</del> — Sale price: ${htmlEscape(formatPrice(product.price))}</p>` : ''}
-      <p>Availability: ${product.availability?.includes('OutOfStock') ? 'Out of stock' : 'In stock'}</p>
-      <p><strong>Free delivery</strong> across India.</p>
-      <p><a href="/info/returns-refund"><strong>7-day exchange review</strong> for verified delivery-time defects.</a></p>
-      ${details.length ? `<h2>Key specifications</h2><ul>${details.map((detail) => `<li>${htmlEscape(detail)}</li>`).join('')}</ul>` : ''}
-      <p><a href="${htmlEscape(getProductUrl(product))}">View ${htmlEscape(product.name)}</a></p>
-      ${buildProductReviewHtml(product)}
-    </main>${buildJsonLd(product).replace(/ id="[^"]*"/g, '')}`;
-};
-
-// Product pages must replace the site-wide marketing fallback, not the font or
-// tag-manager noscript tags. Keeping both content fallbacks creates duplicate
-// H1s and conflicting crawler-visible page descriptions.
-const injectProductNoscript = (html, bodyHtml) => {
-  const genericFallback = /<noscript>\s*<main\b[^>]*>\s*<h1\b[^>]*>\s*TheFutureX Smart Wearables and Connected Lifestyle Products\s*<\/h1>[\s\S]*?<\/main>\s*<\/noscript>/i;
-  if (!genericFallback.test(html)) {
-    throw new Error('Could not find the generic noscript fallback to replace for a product page.');
-  }
-  return html.replace(genericFallback, `<noscript>${bodyHtml}</noscript>`);
-};
-
-const buildCollectionJsonLd = (route, page, products = []) => {
-  const url = `${SITE_URL}/${route}`;
-  const categoryProducts = products.filter((product) => String(product.category || '').toLowerCase() === String(page.category || '').toLowerCase()).slice(0, 12);
-  return `    <script id="collection-page-json-ld" type="application/ld+json">${JSON.stringify({
-    '@context': 'https://schema.org',
-    '@type': 'CollectionPage',
-    '@id': `${url}#collection`,
-    name: page.name,
-    description: page.description,
-    url,
-    mainEntity: {
-      '@type': 'ItemList',
-      itemListElement: categoryProducts.map((product, index) => ({
-        '@type': 'ListItem',
-        position: index + 1,
-        url: getProductUrl(product),
-        name: product.name,
-      })),
-    },
-  })}</script>`;
-};
 
 const buildHomepageJsonLd = () => `    <script id="homepage-json-ld" type="application/ld+json">${JSON.stringify({
   '@context': 'https://schema.org',
@@ -501,236 +261,7 @@ const buildHomepageJsonLd = () => `    <script id="homepage-json-ld" type="appli
   ],
 })}</script>`;
 
-const getCategoryUrl = (category = '') => {
-  const normalized = String(category || '').trim().toLowerCase();
-  if (normalized === 'smart bands') return `${SITE_URL}/smart-bands`;
-  if (normalized === 'smart rings') return `${SITE_URL}/smart-rings`;
-  if (normalized === 'smart fans') return `${SITE_URL}/bladeless-fan`;
-  if (normalized === 'smart monitoring') return `${SITE_URL}/smart-monitoring`;
-  return `${SITE_URL}/shop/all`;
-};
-
 const getProductUrl = (product) => `${SITE_URL}/product/${product.canonicalSlug || product.slug}`;
-
-const formatMerchantPrice = (value = 0) => {
-  const price = Number(value || 0);
-  return Number.isFinite(price) && price > 0 ? `${price.toFixed(2)} INR` : '';
-};
-
-const hashString = (value = '') => {
-  let hash = 5381;
-  for (const char of String(value)) {
-    hash = ((hash << 5) + hash + char.charCodeAt(0)) >>> 0;
-  }
-  return hash.toString(36);
-};
-
-const getMerchantProductId = (product) => {
-  const source = String(product.id || product.canonicalSlug || product.slug || product.name || 'item');
-  const normalized = slugify(source) || 'item';
-  if (normalized.length <= 50) return normalized;
-
-  const suffix = hashString(source);
-  const prefixLength = Math.max(1, 49 - suffix.length);
-  const prefix = normalized.slice(0, prefixLength).replace(/-+$/, '') || 'item';
-  return `${prefix}-${suffix}`;
-};
-
-const getMerchantAvailability = (product) => {
-  const rawAvailability = String(product.availability || product.availabilityStatus || '').trim().toLowerCase();
-  const normalized = rawAvailability.split('/').pop()?.replace(/[^a-z]/g, '') || '';
-  if (['instock', 'outofstock', 'preorder', 'backorder'].includes(normalized)) {
-    return normalized === 'instock' ? 'in_stock' : normalized === 'outofstock' ? 'out_of_stock' : normalized;
-  }
-  return 'in_stock';
-};
-
-const getAvailabilityDate = (product) => {
-  const date = String(product.availabilityDate || product.availability_date || '').trim();
-  return /^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:?\d{2})?)?$/.test(date) ? date : '';
-};
-
-const buildMerchantDescription = (product) =>
-  cleanFeedText(product.description || `Shop ${product.name} from TheFutureX.`).slice(0, 5000);
-
-const getMerchantFeedProducts = (products = []) => {
-  const seen = new Set();
-  return products
-    .filter((product) => product?.id && product?.name && product?.slug && product?.image && product?.price)
-    .filter((product) => {
-      const key = String(product.canonicalSlug || product.slug || product.id).toLowerCase();
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-};
-
-const buildMerchantXmlFeed = (products = []) => {
-  const items = getMerchantFeedProducts(products)
-    .map((product) => {
-      const images = (product.images?.length ? product.images : [product.image]).map(resolveUrl).filter(Boolean);
-      const additionalImages = images
-        .slice(1, 11)
-        .map((image) => `    <g:additional_image_link>${xmlEscape(image)}</g:additional_image_link>`)
-        .join('\n');
-      const availability = getMerchantAvailability(product);
-      const availabilityDate = getAvailabilityDate(product);
-
-      return `  <item>
-    <g:id>${xmlEscape(getMerchantProductId(product))}</g:id>
-    <g:title>${xmlEscape(product.name)}</g:title>
-    <g:description>${xmlEscape(buildMerchantDescription(product))}</g:description>
-    <g:link>${xmlEscape(getProductUrl(product))}</g:link>
-    <g:image_link>${xmlEscape(resolveUrl(product.image))}</g:image_link>
-${additionalImages ? `${additionalImages}\n` : ''}    <g:availability>${availability}</g:availability>
-${availability === 'preorder' && availabilityDate ? `    <g:availability_date>${xmlEscape(availabilityDate)}</g:availability_date>\n` : ''}
-    <g:price>${xmlEscape(formatMerchantPrice(product.price))}</g:price>
-    <g:condition>new</g:condition>
-    <g:brand>${xmlEscape(product.brand || BRAND_NAME)}</g:brand>
-    <g:product_type>${xmlEscape(product.category || 'Products')}</g:product_type>
-  </item>`;
-    })
-    .join('\n');
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0">
-<channel>
-  <title>TheFutureX Product Feed</title>
-  <link>${xmlEscape(SITE_URL)}</link>
-  <description>Product feed for Google Merchant Center</description>
-${items}
-</channel>
-</rss>
-`;
-};
-
-const buildMerchantCsvFeed = (products = []) => {
-  const headers = [
-    'id',
-    'title',
-    'description',
-    'link',
-    'image_link',
-    'availability',
-    'availability_date',
-    'price',
-    'condition',
-    'brand',
-    'product_type',
-  ];
-
-  const rows = getMerchantFeedProducts(products).map((product) => ({
-    id: getMerchantProductId(product),
-    title: product.name,
-    description: buildMerchantDescription(product),
-    link: getProductUrl(product),
-    image_link: resolveUrl(product.image),
-    availability: getMerchantAvailability(product),
-    availability_date: getMerchantAvailability(product) === 'preorder' ? getAvailabilityDate(product) : '',
-    price: formatMerchantPrice(product.price),
-    condition: 'new',
-    brand: product.brand || BRAND_NAME,
-    product_type: product.category || 'Products',
-  }));
-
-  return `${headers.join(',')}\n${rows.map((row) => headers.map((header) => csvEscape(row[header])).join(',')).join('\n')}\n`;
-};
-
-const buildJsonLd = (product) => {
-  const productUrl = getProductUrl(product);
-  const categoryUrl = getCategoryUrl(product.category);
-  // Keep Offer.price numeric in the crawler-visible JSON-LD.
-  const schemaPrice = Number(Math.max(1, Number(product.price || 1)).toFixed(2));
-  const images = (product.images?.length ? product.images : [product.image || DEFAULT_IMAGE]).map(resolveUrl).filter(Boolean);
-  const faqItems = getProductFaqs(product);
-  const additionalProperty = Object.entries(product.specs || {})
-    .filter(([name, value]) => String(name).trim() && String(value).trim())
-    .slice(0, 20)
-    .map(([name, value]) => ({ '@type': 'PropertyValue', name: String(name), value: String(value) }));
-  const productSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    '@id': `${productUrl}#product`,
-    name: product.name,
-    description: product.description,
-    image: images,
-    brand: {
-      '@type': 'Brand',
-      name: product.brand || BRAND_NAME,
-    },
-    sku: product.id || product.slug,
-    ...(product.model ? { mpn: product.model, model: product.model } : {}),
-    category: product.category || 'Products',
-    ...(additionalProperty.length ? { additionalProperty } : {}),
-    offers: {
-      '@type': 'Offer',
-      url: productUrl,
-      priceCurrency: 'INR',
-      price: schemaPrice,
-      availability: product.availability || 'https://schema.org/InStock',
-      itemCondition: 'https://schema.org/NewCondition',
-      seller: {
-        '@type': 'Organization',
-        name: BRAND_NAME,
-      },
-      ...productOfferPolicies,
-      ...buildSalePriceSpecification(product.regularPrice, schemaPrice),
-    },
-  };
-
-  Object.assign(productSchema, buildReviewSchema(product.reviews));
-
-  return [
-    {
-      id: 'product-json-ld',
-      data: productSchema,
-    },
-    {
-      id: 'product-breadcrumb-json-ld',
-      data: {
-        '@context': 'https://schema.org',
-        '@type': 'BreadcrumbList',
-        itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: 'Home',
-            item: `${SITE_URL}/`,
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: product.category || 'Products',
-            item: categoryUrl,
-          },
-          {
-            '@type': 'ListItem',
-            position: 3,
-            name: product.name,
-            item: productUrl,
-          },
-        ],
-      },
-    },
-    {
-      id: 'product-faq-json-ld',
-      data: {
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: faqItems.map(([question, answer]) => ({
-          '@type': 'Question',
-          name: question,
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: answer,
-          },
-        })),
-      },
-    },
-  ]
-    .map(({ id, data }) => `    <script id="${id}" type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>`)
-    .join('\n');
-};
 
 const injectPageSeo = (html, { title, description, url, image = DEFAULT_IMAGE, type = 'website', jsonLd = '' }) => {
   const imageUrl = resolveUrl(image);
@@ -751,81 +282,53 @@ const injectPageSeo = (html, { title, description, url, image = DEFAULT_IMAGE, t
   return jsonLd ? next.replace('</head>', `${jsonLd}\n  </head>`) : next;
 };
 
-const injectProductSeo = (html, product) => {
-  const title = product.seoTitle || `${product.name} - TheFutureX`;
-  const description = product.metaDescription ?? product.description;
-  const productUrl = getProductUrl(product);
-  const imageUrl = resolveUrl(product.image || product.images?.[0] || DEFAULT_IMAGE);
-  const jsonLd = buildJsonLd(product);
-
-  let next = html
-    .replace(/<title>[\s\S]*?<\/title>/i, `<title>${htmlEscape(title)}</title>`)
-    .replace(/<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/i, '<meta property="og:type" content="product" />');
-
-  next = upsertTag(next, /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/i, `<meta name="description" content="${htmlEscape(description)}" />`);
-  next = upsertTag(next, /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, `<link rel="canonical" href="${htmlEscape(productUrl)}" />`);
-  next = upsertTag(next, /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:title" content="${htmlEscape(title)}" />`);
-  next = upsertTag(next, /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:description" content="${htmlEscape(description)}" />`);
-  next = upsertTag(next, /<meta\s+property="og:url"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:url" content="${htmlEscape(productUrl)}" />`);
-  next = upsertTag(next, /<meta\s+property="og:image"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:image" content="${htmlEscape(imageUrl)}" />`);
-  next = upsertTag(next, /<meta\s+name="twitter:title"\s+content="[^"]*"\s*\/?>/i, `<meta name="twitter:title" content="${htmlEscape(title)}" />`);
-  next = upsertTag(next, /<meta\s+name="twitter:description"\s+content="[^"]*"\s*\/?>/i, `<meta name="twitter:description" content="${htmlEscape(description)}" />`);
-  next = upsertTag(next, /<meta\s+name="twitter:image"\s+content="[^"]*"\s*\/?>/i, `<meta name="twitter:image" content="${htmlEscape(imageUrl)}" />`);
-
-  return next.replace('</head>', `${jsonLd}\n  </head>`);
-};
-
 const baseHtml = readFileSync(indexFile, 'utf8');
 // Keep the compiled SPA shell for live product pages, including products added after a build.
 writeFileSync(join(distDir, 'product-shell.html'), baseHtml, 'utf8');
-const remoteProducts = await fetchRemoteProducts();
+let catalogAvailable = true;
+const remoteProducts = await getRemoteProducts({ includeReviews: true }).catch((error) => {
+  catalogAvailable = false;
+  console.warn('Could not build catalog snapshots:', error.message);
+  return [];
+});
 // A production snapshot must represent the live catalog. Vercel exposes VERCEL=1
 // during builds; other CI systems can opt in with REQUIRE_LIVE_PRODUCT_DATA=true.
 // This turns a transient Firestore/network problem into a failed deploy rather
 // than quietly publishing stale fallback pricing, stock, or specifications.
 const requireLiveProductData = process.env.VERCEL === '1' || process.env.REQUIRE_LIVE_PRODUCT_DATA === 'true';
-if (requireLiveProductData && remoteProducts.length === 0) {
+if (requireLiveProductData && !catalogAvailable) {
   throw new Error('Live Firestore product data was unavailable. Refusing to publish SEO snapshots from static fallbacks.');
 }
-const productRecords = mergeProductSeoRecords(remoteProducts).filter((product) =>
-  !/glass/i.test(`${product.name || ''} ${product.category || ''} ${product.slug || ''}`)
-);
+const productRecords = (catalogAvailable && !remoteProducts.length ? [] : mergeProductSeoRecords(remoteProducts)).filter(product => product.slug === product.canonicalSlug);
+const remoteCategories = await getRemoteCatalogCategories().catch((error) => {
+  console.warn('Could not load category SEO during build:', error.message);
+  return [];
+});
+const categoryPages = getCatalogCategoryPages(remoteCategories);
 Object.values(blogPages).forEach((page) => {
   if (page.post) page.post.image = getBlogProductImage(page.post, productRecords) || page.post.image;
 });
-const productRouteMap = new Map();
-
-productRecords.forEach((product) => {
-  const canonicalSlug = product.canonicalSlug || product.slug;
-  productRouteMap.set(canonicalSlug, { ...product, slug: canonicalSlug });
-  if (product.id) {
-    // IDs are not public URLs. Publishing one static page per ID creates
-    // duplicate canonical candidates, so only the canonical slug is built.
-  }
-});
-
-const productRoutes = [...productRouteMap.keys()]
-  .filter(Boolean)
-  .map((slug) => `product/${slug}`);
-
-const publishedRoutes = [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes].map((route) => route.path.replace(/^\//, ''));
+const publishedRoutes = [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes].map(({ path }) => path.replace(/^\//, ''));
 const standaloneBlogPaths = new Set(fanGuideRoutes.map(({ path }) => path));
-// Retired catalog slugs must never receive an indexable homepage shell as their
-// product fallback. Emit product pages only when current Product/Offer data exists.
-const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...productRoutes].filter(route => {
-  const clean = String(route).replace(/^\/+|\/+$/g, '');
-  if (standaloneBlogPaths.has(`/${clean}`)) return false;
-  return !clean.startsWith('product/') || productRouteMap.has(clean.slice('product/'.length));
-}));
+const routes = new Set(['', ...spaFallbackRoutes, ...publishedRoutes, ...Object.keys(categoryPages)].filter((route) =>
+  !standaloneBlogPaths.has('/' + route) && !route.startsWith('product/')
+));
 
-const getRouteHtml = (route, product) => {
-  if (product) {
-    return injectStaticRoot(
-      injectProductNoscript(injectProductSeo(baseHtml, product), buildProductNoscriptHtml(product)),
-      buildProductStaticHtml(product)
-    );
+let snapshotCount = 0;
+for (const product of remoteProducts) {
+  const slug = getProductSlug(product);
+  if (!slug) continue;
+  for (const color of ['', ...getColorVariants(product).map(({ slug }) => slug)]) {
+    const html = renderProductPage(baseHtml, product, color);
+    const target = join(distDir, process.env.VERCEL === '1' ? '_catalog/products' : 'product', slug, color, 'index.html');
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, html, 'utf8');
+    snapshotCount += 1;
   }
+}
 
+const getRouteHtml = (route) => {
+  if (route === 'shop') return renderCategoryPage(baseHtml, 'shop/all', productRecords, categoryPages);
   if (route === '') {
     const title = 'Smart Bands & Fitness Trackers Online India | TheFutureX';
     const description = 'Buy smart bands, fitness trackers, smart rings & bladeless fans online in India. Heart rate, sleep & health tracking with the TheFutureX SmartWear app.';
@@ -839,17 +342,7 @@ const getRouteHtml = (route, product) => {
     return injectStaticRoot(html, buildHomeStaticHtml(productRecords));
   }
 
-  const categoryPage = categoryPages[route];
-  if (categoryPage) {
-    const html = injectPageSeo(baseHtml, {
-      title: categoryPage.title,
-      description: categoryPage.description,
-      url: `${SITE_URL}/${route}`,
-      image: DEFAULT_IMAGE,
-      jsonLd: buildCollectionJsonLd(route, categoryPage, productRecords),
-    });
-    return injectStaticRoot(html, buildCategoryStaticHtml(categoryPage, productRecords));
-  }
+  if (Object.hasOwn(categoryPages, route)) return renderCategoryPage(baseHtml, route, productRecords, categoryPages);
 
   const blogPage = blogPages[route];
   if (blogPage) {
@@ -897,40 +390,28 @@ const getRouteHtml = (route, product) => {
 
 for (const route of routes) {
   const cleanRoute = String(route || '').replace(/^\/+/, '').replace(/\/+$/, '');
-  const target = cleanRoute ? join(distDir, cleanRoute, 'index.html') : indexFile;
-  const productSlug = cleanRoute.startsWith('product/') ? cleanRoute.slice('product/'.length) : '';
-  const product = productSlug ? productRouteMap.get(productSlug) : null;
-  const html = getRouteHtml(cleanRoute, product);
-  if (product) {
-    const requiredSchemaTypes = ['Product', 'Offer', 'BreadcrumbList', 'FAQPage'];
-    const missingSchemaTypes = requiredSchemaTypes.filter((type) => !html.includes(`"@type":"${type}"`));
-    if (missingSchemaTypes.length) {
-      throw new Error(`Missing required JSON-LD schema on /${cleanRoute}: ${missingSchemaTypes.join(', ')}`);
-    }
-    const head = html.split('</head>')[0];
-    const schemaMatch = head.match(/<script id="product-json-ld" type="application\/ld\+json">([\s\S]*?)<\/script>/);
-    const schema = schemaMatch ? JSON.parse(schemaMatch[1]) : null;
-    if (!schema?.offers?.shippingDetails?.deliveryTime || !schema.offers.hasMerchantReturnPolicy || schema.offers.price <= 0) {
-      throw new Error(`Incomplete initial HTML Product offer on /${cleanRoute}`);
-    }
-    if (JSON.stringify(schema.offers.shippingDetails) !== JSON.stringify(productOfferPolicies.shippingDetails) ||
-        JSON.stringify(schema.offers.hasMerchantReturnPolicy) !== JSON.stringify(productOfferPolicies.hasMerchantReturnPolicy)) {
-      throw new Error(`Product policies differ from the storefront on /${cleanRoute}`);
-    }
-  }
-
+  const categorySnapshot = process.env.VERCEL === '1' && (cleanRoute === 'shop' || Object.hasOwn(categoryPages, cleanRoute));
+  const target = cleanRoute ? join(distDir, categorySnapshot ? '_catalog/categories' : '', cleanRoute, 'index.html') : indexFile;
+  const html = getRouteHtml(cleanRoute);
   mkdirSync(dirname(target), { recursive: true });
   writeFileSync(target, html, 'utf8');
 }
 
-writeFileSync(join(distDir, 'sitemap.xml'), await generateSitemapXML(), 'utf8');
-writeFileSync(join(distDir, 'product-feed.xml'), await generateMerchantFeedXML(remoteProducts), 'utf8');
-writeFileSync(join(distDir, 'product-feed.csv'), await generateMerchantFeedCSV(remoteProducts), 'utf8');
+if (process.env.VERCEL === '1') {
+  for (const file of ['sitemap.xml', 'product-feed.xml', 'product-feed.csv']) {
+    const target = join(distDir, file);
+    if (existsSync(target)) unlinkSync(target);
+  }
+} else {
+  writeFileSync(join(distDir, 'sitemap.xml'), await generateSitemapXML(remoteProducts, remoteCategories), 'utf8');
+  writeFileSync(join(distDir, 'product-feed.xml'), await generateMerchantFeedXML(remoteProducts), 'utf8');
+  writeFileSync(join(distDir, 'product-feed.csv'), await generateMerchantFeedCSV(remoteProducts), 'utf8');
+}
 writeFileSync(
   join(distDir, 'robots.txt'),
   `${['*', 'GPTBot', 'Google-Extended', 'ClaudeBot', 'PerplexityBot', 'Applebot-Extended'].map(buildRobotsBlock).join('\n\n')}\n\nSitemap: ${SITE_URL}/sitemap.xml\nLLMS: ${SITE_URL}/llms.txt\n`,
   'utf8'
 );
 
-console.log(`Copied ${routes.size} SPA route fallbacks with ${productRouteMap.size} product SEO route(s).`);
+console.log(`Copied ${routes.size} SPA route fallbacks with ${snapshotCount} product snapshots.`);
 process.exit(0);

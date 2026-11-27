@@ -1,3 +1,4 @@
+import { bandFaqs } from '../utils/categoryFaqs.js';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Product } from '../types';
@@ -21,33 +22,6 @@ const stats = [
   ['IP68', 'water resistant'],
   ['24/7', 'vitals sync'],
   ['TFXVital', 'app support'],
-];
-
-const bandFaqs = [
-  {
-    q: 'What does the TFX Smart Band track?',
-    a: 'The TFX Smart Band supports activity tracking, heart rate monitoring, sleep tracking, calorie tracking and app-connected wellness monitoring features.',
-  },
-  {
-    q: 'Does the TFX Smart Band support SpO2 monitoring?',
-    a: 'Selected TFX Smart Band models support blood oxygen (SpO2) monitoring functionality.',
-  },
-  {
-    q: 'Can the smart band connect to a smartphone?',
-    a: 'Yes, TFX Smart Bands connect to compatible smartphones using Bluetooth and companion app integration.',
-  },
-  {
-    q: 'Is the TFX Smart Band suitable for daily wear?',
-    a: 'The lightweight design is intended for comfortable everyday use during work, exercise and daily activities.',
-  },
-  {
-    q: 'Which TFX Smart Band is best for fitness tracking?',
- a: 'Choose a model based on the metrics you need. TFX5 AI Smart Band is suited for users who want heart rate, SpO2, blood pressure wellness trends, VO2, vital age, sleep, stress, recovery, GPS activity and app-connected AI insights.',
-  },
-  {
-    q: 'Can I use a TFX Smart Band for sleep tracking?',
-    a: 'Yes. TFX Smart Bands are designed for lightweight overnight wear and app-based sleep trend review.',
-  },
 ];
 
 const getProductImage = (product: Product): string =>

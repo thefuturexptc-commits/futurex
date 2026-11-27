@@ -30,6 +30,7 @@ export const isTfxV5Band = (item) => {
     return category.includes('band') && /\btfx\s*v?5\b|\btfx5\b|\bai\s*v5\b|\bv5\b/i.test(name);
 };
 export const getOfferBaseUnitPrice = (item) => {
+    if (item.useCatalogPricing) return Number(item.salePrice || item.price || 0);
     if (isQ8Pro(item))
         return Q8_PRO_SALE_PRICE;
     if (isPureAirThreeInOne(item))

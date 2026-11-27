@@ -3,7 +3,11 @@ import assert from 'node:assert/strict';
 import { buildProductItem, generateMerchantFeedCSV, generateMerchantFeedXML } from '../utils/generateMerchantFeed.js';
 import { buildProductSeoRecord, mergeProductSeoRecords } from '../utils/productSeoData.js';
 import { getAutomaticOfferItemPricing } from '../utils/catalogPricing.js';
-import { renderProductPage } from '../api/product-page.js';
+import { findProductForRoute } from '../api/product-page.js';
+import { renderProductPage } from '../utils/renderProductPage.js';
+import { renderCategoryPage } from '../utils/renderCategoryPage.js';
+import { getCategoryFaqs } from '../utils/categoryFaqs.js';
+import { escapeHtml } from '../utils/renderProductPage.js';
 import { mergeProductReviews } from '../utils/productSchema.js';
 import { buildProductInput } from '../services/merchant-api/merchantService.js';
 import { getCatalogMrp } from '../utils/catalogPricing.js';
@@ -26,7 +30,7 @@ test('feed and page preserve saved title, content, offer price and availability'
   assert.match(item, /My updated description/);
   assert.match(item, /My added feature/);
   assert.match(item, /Material: ABS/);
-  assert.match(item, /<g:price>19000.00 INR/);
+  assert.match(item, /<g:price>15000.00 INR/);
   assert.match(item, /<g:availability>out_of_stock/);
   assert.equal(seo.availability, 'https://schema.org/OutOfStock');
   assert.match(item, /additional_image_link/);
@@ -64,7 +68,7 @@ test('every Merchant title uses the The FutureX brand prefix once', async () => 
 test('standard wearable discounts use the checkout calculation', () => {
   const ring = { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000 };
   assert.equal(buildProductSeoRecord(ring).price, 3800);
-  assert.match(buildProductItem(ring), /<g:price>6000.00 INR/);
+  assert.match(buildProductItem(ring), /<g:price>4000.00 INR/);
   assert.match(buildProductItem(ring), /<g:sale_price>3800.00 INR/);
 });
 
@@ -99,7 +103,7 @@ test('sale price, title and real reviews are visible and agree with structured d
   const review = { id: 'customer-1', name: 'Customer', comment: 'Works well.', rating: 4 };
   const reviews = mergeProductReviews([review, { ...review, id: 'p_seed_review_1', rating: 5 }], [{ ...review, rating: 5 }]);
   assert.equal(reviews.length, 1);
-  const ring = { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000, reviews };
+  const ring = { ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000, mrp: 6000, reviews };
   const html = renderProductPage('<head></head><div id="root"></div>', ring);
   assert.match(html, /<h1>My saved title &amp; model<\/h1>/);
   assert.match(html, /<del>INR 6000.00<\/del>/);
@@ -141,7 +145,7 @@ test('increased MRPs and unchanged sale prices agree in feeds, API and landing p
   }
 });
 
-test('color variant feeds include sale prices alongside the increased MRP', async () => {
+test('color variant feeds include sale prices alongside the saved MRP', async () => {
   const ring = {
     ...product, slug: 'custom-ring', category: 'Smart Rings', price: 4000, mrp: 6000,
     colors: [{ name: 'Black', stock: 4, images: ['/images/ring-black.jpg'] }],
@@ -149,10 +153,55 @@ test('color variant feeds include sale prices alongside the increased MRP', asyn
   const xml = buildProductItem(ring);
   const csv = await generateMerchantFeedCSV([ring]);
   assert.match(xml, /<g:color>Black/);
-  assert.match(xml, /<g:price>8000.00 INR/);
+  assert.match(xml, /<g:price>6000.00 INR/);
   assert.match(xml, /<g:sale_price>3800.00 INR/);
-  assert.ok(csv.includes('"8000.00 INR","3800.00 INR"'));
+  assert.ok(csv.includes('"6000.00 INR","3800.00 INR"'));
   const input = buildProductInput(ring, { name: 'Black', slug: 'black', stock: 4, images: ['/images/ring-black.jpg'] });
-  assert.equal(Number(input.productAttributes.price.amountMicros), 8000e6);
+  assert.equal(Number(input.productAttributes.price.amountMicros), 6000e6);
   assert.equal(Number(input.productAttributes.salePrice.amountMicros), 3800e6);
+});
+
+test('admin edits drive the initial HTML, FAQ schema, canonical redirects and Merchant offers', () => {
+  const edited = {
+    ...product, seoPreviousSlugs: ['old-fan'], seoTitle: 'Updated SEO title', seoDescription: 'Updated meta description',
+    shortDescription: 'Updated overview', warranty: 'Two-year motor warranty', useCatalogPricing: true, useCatalogTitle: true,
+    salePrice: 14000, mrp: 16000, modelNumber: 'TP-02', mpn: 'TX-123', gtin: '8901234567890',
+    faqs: [{ question: 'Can I clean the filter?', answer: 'Yes. Follow the care instructions.' }],
+    colors: [{ name: 'Matte Black', stock: 3, reservedStock: 3 }],
+    variants: [{ colorName: 'Matte Black', sizes: [{ stock: 3 }] }],
+  };
+  const shell = '<head></head><div id="root"></div>';
+  const html = renderProductPage(shell, edited, 'matte-black');
+  const parse = (id) => JSON.parse(html.match(new RegExp(`<script id="${id}" type="application/ld\\+json">(.*?)</script>`))[1]);
+  assert.match(html, /<title>Updated SEO title – Matte Black<\/title>/);
+  assert.match(html, /<meta name="description" content="Updated meta description">/);
+  assert.match(html, /<summary>Can I clean the filter\?<\/summary><p>Yes\. Follow the care instructions\.<\/p>/);
+  assert.match(html, /Two-year motor warranty/);
+  assert.equal(parse('product-faq-json-ld').mainEntity[0].acceptedAnswer.text, edited.faqs[0].answer);
+  assert.equal(parse('product-json-ld').model, 'TP-02');
+  assert.equal(parse('product-json-ld').gtin, edited.gtin);
+  assert.equal(parse('product-json-ld').offers.price, 14000);
+  assert.equal(parse('product-json-ld').offers.availability, 'https://schema.org/OutOfStock');
+  assert.match(buildProductItem(edited), /<g:sale_price>14000.00 INR/);
+  assert.equal(findProductForRoute([edited], 'old-fan'), edited);
+  assert.equal(renderProductPage(shell, edited, 'unknown-color'), null);
+  assert.doesNotMatch(renderProductPage(shell, { ...edited, faqs: [] }), /FAQPage|<details>/);
+  assert.match(renderCategoryPage(shell, 'bladeless-fan', [buildProductSeoRecord(edited)]), /BreadcrumbList.*bladeless-fan/);
+});
+
+test('all dedicated category FAQs are visible before JavaScript and match their schema', () => {
+  const shell = '<head></head><div id="root"></div>';
+  for (const route of ['smart-bands', 'smart-rings', 'bladeless-fan', 'smart-monitoring']) {
+    const html = renderCategoryPage(shell, route, []);
+    const faqs = getCategoryFaqs(route);
+    assert.ok(faqs.length > 0);
+    const script = html.match(/<script id="collection-faq-json-ld" type="application\/ld\+json">([^]*?)<\/script>/);
+    const schema = JSON.parse(script[1]);
+    assert.equal(schema.mainEntity.length, faqs.length);
+    for (const { q, a } of faqs) {
+      assert.ok(html.includes(`<summary>${escapeHtml(q)}</summary><p>${escapeHtml(a)}</p>`));
+      assert.ok(schema.mainEntity.some((question) => question.name === q && question.acceptedAnswer.text === a));
+    }
+  }
+  assert.doesNotMatch(renderCategoryPage(shell, 'shop/all', []), /collection-faq-json-ld/);
 });

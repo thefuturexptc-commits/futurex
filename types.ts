@@ -117,6 +117,18 @@ export interface Product {
   description: string;
   shortDescription?: string;
   seoDescription?: string;
+  seoTitle?: string;
+  faqs?: Array<{ q: string; a: string } | { question: string; answer: string }>;
+  seoPreviousSlugs?: string[];
+  useCatalogPricing?: boolean;
+  useCatalogDescription?: boolean;
+  sku?: string;
+  brand?: string;
+  mpn?: string;
+  useCatalogTitle?: boolean;
+  manufacturerPartNumber?: string;
+  gtin?: string;
+  barcode?: string;
   mrp: number;
   salePrice: number;
   price: number;

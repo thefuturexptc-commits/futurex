@@ -282,10 +282,11 @@ export const buildProductSeoRecord = (product = {}) => {
     slug,
     canonicalSlug: slug,
     name: product.name.trim(),
-    seoTitle: product.name.trim(),
+    seoTitle: product.seoTitle?.trim() || `${product.name.trim()} | TheFutureX`,
     category: product.category || fallback?.category || 'Products',
     description: truncateText(description),
-    metaDescription: getProductOverview(product, slug)?.description,
+    metaDescription: stripHtml(product.seoDescription || product.shortDescription || '') ||
+      getProductOverview(product, slug)?.description || truncateText(description),
     image: images[0] || resolveUrl(fallback?.image || '/images/tfx-google-logo.webp'),
     images: images.length ? images : [resolveUrl(fallback?.image || '/images/tfx-google-logo.webp')],
     // Invalid prices are omitted from offers rather than replaced by stale prices.

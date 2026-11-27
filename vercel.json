@@ -2,10 +2,31 @@
   "trailingSlash": false,
   "functions": {
     "api/product-page.js": {
-      "includeFiles": "dist/**"
+      "includeFiles": "dist/{product-shell.html,_catalog/**,product/**}"
+    },
+    "api/sitemap.js": {
+      "includeFiles": "dist/_catalog/server/**"
     }
   },
   "headers": [
+    {
+      "source": "/product-shell.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
+    {
+      "source": "/_catalog/:path*",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        }
+      ]
+    },
     {
       "source": "/assets/:path*",
       "headers": [
@@ -141,72 +162,72 @@
     {
       "source": "/product/the-future-x-tp-09-pro-heating-cooling-air-safe-for-kids-pets",
       "destination": "/product/tfxhot-and-coolair-pro",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product/ai-v5-smart-health-band-get-advanced-fitness-and-health-monitoring-with-the-future-x",
       "destination": "/product/tfx5-ai-smart-band",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product/tfx-display-pro-smart-ring-premium-tracking-with-display-and-wireless-charging",
       "destination": "/product/tfx-display-pro-smart-ring",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-bracelet",
       "destination": "/smart-bands",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-band",
       "destination": "/smart-bands",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-bands",
       "destination": "/smart-bands",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-ring",
       "destination": "/smart-rings",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-rings",
       "destination": "/smart-rings",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-fan",
       "destination": "/bladeless-fan",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-fans",
       "destination": "/bladeless-fan",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/monitor",
       "destination": "/smart-monitoring",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-category/smart-monitoring",
       "destination": "/smart-monitoring",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/shop/:category/:slug",
       "destination": "/product/:slug",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/product-feed",
       "destination": "/product-feed.xml",
-      "permanent": true
+      "statusCode": 301
     },
     {
       "source": "/merchant-feed",
@@ -275,7 +296,7 @@
     },
     {
       "source": "/product/:slug/:color",
-      "destination": "/api/product-page?slug=:slug&color=:color"
+      "destination": "/api/product-page?slug=:slug&variant=:color"
     },
     {
       "source": "/product/:slug",
@@ -283,27 +304,31 @@
     },
     {
       "source": "/smart-bands",
-      "destination": "/smart-bands/index.html"
+      "destination": "/api/product-page?category=smart-bands"
     },
     {
       "source": "/smart-rings",
-      "destination": "/smart-rings/index.html"
+      "destination": "/api/product-page?category=smart-rings"
     },
     {
       "source": "/bladeless-fan",
-      "destination": "/bladeless-fan/index.html"
+      "destination": "/api/product-page?category=bladeless-fan"
     },
     {
       "source": "/smart-monitoring",
-      "destination": "/smart-monitoring/index.html"
+      "destination": "/api/product-page?category=smart-monitoring"
     },
     {
       "source": "/shop/all",
-      "destination": "/shop/all/index.html"
+      "destination": "/api/product-page?category=shop/all"
     },
     {
       "source": "/shop",
-      "destination": "/shop/index.html"
+      "destination": "/api/product-page?category=shop/all"
+    },
+    {
+      "source": "/shop/:collection",
+      "destination": "/api/product-page?collection=:collection"
     },
     {
       "source": "/register-warranty",

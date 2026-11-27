@@ -1,8 +1,8 @@
 import type { Product } from '../types';
-import { getFanDetailContent } from './fanDetailContent';
-import { getTouchSmartRingContent } from './touchSmartRingContent';
-import { getDisplayProRingContent } from './displayProRingContent';
-import { getRingProContent } from './ringProContent';
+import { getFanDetailContent } from './fanDetailContent.ts';
+import { getTouchSmartRingContent } from './touchSmartRingContent.ts';
+import { getDisplayProRingContent } from './displayProRingContent.ts';
+import { getRingProContent } from './ringProContent.ts';
 
 interface ProductDetailContent {
   description: string;

@@ -1,25 +1,10 @@
 import { initializeApp, getApps, getApp } from 'firebase/app';
 import { collection, getDocs, getFirestore } from 'firebase/firestore';
 import { SITE_URL, sitemapRoutes } from './siteRoutes.js';
-import { isCatalogProductPublished } from './catalogVisibility.js';
-import { staticProductSeoRecords } from './productSeoData.js';
-import { publishedBlogPosts, isBlogPostPublic } from './publishedBlogPosts.ts';
-
-const toSlug = (name = '') =>
-  String(name)
-    .toLowerCase()
-    .trim()
-    .replace(/&/g, ' and ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-
-const DISPLAY_PRO_LEGACY_SLUG = 'tfx-display-pro-smart-ring-premium-tracking-with-display-and-wireless-charging';
-const DISPLAY_PRO_CANONICAL_SLUG = 'tfx-display-pro-smart-ring';
-
-const getProductSlug = (product) => {
-  const slug = toSlug(product.slug || product.name);
-  return slug === DISPLAY_PRO_LEGACY_SLUG ? DISPLAY_PRO_CANONICAL_SLUG : slug;
-};
+import { getProductSlug } from './productSeoData.js';
+import { getRemoteCatalogCategories, getRemoteProducts } from './generateMerchantFeed.js';
+import { getCatalogCategoryPages } from './categorySeo.js';
+import { getColorVariants } from './productOfferAvailability.js';
 
 const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || 'AIzaSyDx62Wa4HSx97I-91AqC3poaMzcNrpfKAc',
@@ -55,23 +40,10 @@ const withTimeout = (promise, timeoutMs) =>
     }),
   ]);
 
-const getRemoteProducts = async () => {
-  const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  const snapshot = await withTimeout(getDocs(collection(db, 'products')), 6500);
-
-  const products = snapshot.docs
-    .map((doc) => ({ ...doc.data(), id: doc.id }))
-    .filter(isCatalogProductPublished)
-    .filter((product) => !isGlassesMention(`${product.name || ''} ${product.category || ''} ${product.slug || ''}`))
-    .filter((product) => typeof product?.name === 'string' && product.name.trim().length > 0);
-
-  const sitemapProducts = products.length ? products : staticProductSeoRecords;
-  console.log('TOTAL PRODUCTS:', sitemapProducts.length);
-  return sitemapProducts;
-};
-
 export async function getRemotePublishedBlogPosts() {
+  const { publishedBlogPosts, isBlogPostPublic } = process.env.VERCEL === '1'
+    ? await import(new URL('../dist/_catalog/server/publishedBlogPosts.mjs', import.meta.url).href)
+    : await import('./publishedBlogPosts.ts');
   const localRoutes = publishedBlogPosts
     .filter((post) => isBlogPostPublic(post) && typeof post.slug === 'string' && post.slug.trim())
     .filter((post) => !isGlassesMention(`${post.slug} ${post.title || ''}`))
@@ -106,34 +78,26 @@ export async function getRemotePublishedBlogPosts() {
   }
 }
 
-export async function generateSitemapXML() {
+export async function generateSitemapXML(products, categories) {
   const nowIso = new Date().toISOString();
-  const [remoteProducts, remoteBlogRoutes] = await Promise.all([
-    getRemoteProducts().catch((error) => {
-      console.warn('Using product fallbacks in sitemap because product fetch failed:', error instanceof Error ? error.message : error);
-      return staticProductSeoRecords;
-    }),
+  const [remoteProducts, remoteBlogRoutes, remoteCategories] = await Promise.all([
+    products ?? getRemoteProducts(),
     getRemotePublishedBlogPosts(),
+    categories ?? getRemoteCatalogCategories(),
   ]);
 
   const productMap = new Map();
 
   remoteProducts.forEach((product) => {
     const slug = getProductSlug(product);
-    if (!slug || isGlassesMention(`${product.name || ''} ${product.category || ''} ${slug}`)) return;
+    if (!slug) return;
     productMap.set(slug, {
       loc: `${SITE_URL}/product/${slug}`,
       lastmod: nowIso,
       changefreq: 'weekly',
       priority: '0.9',
     });
-    const colors = [
-      ...(Array.isArray(product.colors) ? product.colors.map((color) => typeof color === 'string' ? color : color?.name) : []),
-      ...(Array.isArray(product.variants) ? product.variants.map((variant) => variant?.colorName || variant?.color) : []),
-    ];
-    [...new Set(colors.map((color) => String(color || '').trim()).filter(Boolean))].forEach((color) => {
-      const colorSlug = toSlug(color);
-      if (!colorSlug) return;
+    getColorVariants(product).forEach(({ slug: colorSlug }) => {
       const loc = `${SITE_URL}/product/${slug}/${colorSlug}`;
       productMap.set(`${slug}/${colorSlug}`, {
         loc,
@@ -145,6 +109,10 @@ export async function generateSitemapXML() {
   });
 
   const baseRouteMap = new Map(baseRoutes.map((entry) => [entry.loc, { ...entry, lastmod: nowIso }]));
+  Object.keys(getCatalogCategoryPages(remoteCategories)).forEach((path) => {
+    const loc = SITE_URL + '/' + path;
+    if (!baseRouteMap.has(loc)) baseRouteMap.set(loc, { loc, lastmod: nowIso, changefreq: 'weekly', priority: '0.8' });
+  });
   remoteBlogRoutes.forEach((route) => {
     const loc = `${SITE_URL}${route.path}`;
     baseRouteMap.set(loc, { loc, changefreq: route.changefreq, priority: route.priority, lastmod: route.lastmod || nowIso });

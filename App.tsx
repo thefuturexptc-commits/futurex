@@ -1,5 +1,8 @@
-import React, { Suspense, useEffect, useLayoutEffect, useState } from 'react';
+import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
+import { CatalogPrerender, hasCatalogPrerender } from './components/CatalogPrerender';
+import { categoryPages, getCatalogCategoryPages } from './utils/categorySeo.js';
+import { getCatalogCategoryRows } from './services/backend';
 import { ThemeProvider } from './context/ThemeContext';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
@@ -231,34 +234,23 @@ const getRouteSeo = (pathname: string) => {
   return { ...(routeSeo[cleanPath] || routeSeo['/']), path: cleanPath };
 };
 
-const collectionSchemaByPath: Record<string, { name: string; description: string }> = {
-  '/smart-bands': {
-    name: 'Smart Bands',
- description: 'Explore TheFutureX smart bands for activity tracking, everyday insights and connected living.',
-  },
-  '/smart-rings': {
-    name: 'Smart Rings',
-    description: 'Explore TheFutureX smart rings for compact wellness tracking, modern style, and everyday comfort.',
-  },
-  '/bladeless-fan': {
-    name: 'Bladeless Fan',
-    description: 'Shop TheFutureX bladeless fans built for connected comfort, energy-conscious cooling, and modern homes.',
-  },
-  '/smart-monitoring': {
-    name: 'Smart Monitoring',
- description: 'Discover TheFutureX smart monitoring devices for wellness and daily care.',
-  },
-};
-
 const RouteSeo: React.FC = () => {
   const { pathname } = useLocation();
+  const initialPath = useRef(pathname);
 
   useEffect(() => {
     const cleanPath = pathname.replace(/\/+$/, '') || '/';
+    if (initialPath.current === pathname && hasCatalogPrerender(pathname)) {
+      initialPath.current = '';
+      return;
+    }
+    initialPath.current = '';
     removePageScopedJsonLd();
     if (!cleanPath.startsWith('/product/')) removeProductSocialMetadata();
 
-    const seo = getRouteSeo(pathname);
+    const collectionPath = cleanPath === '/shop' ? '/shop/all' : cleanPath;
+    const collection = Object.hasOwn(categoryPages, collectionPath.slice(1)) ? categoryPages[collectionPath.slice(1)] : null;
+    const seo = collection ? { title: collection.title, description: collection.description, path: collectionPath, exactTitle: true } : getRouteSeo(pathname);
     if (!seo) return;
     setSeoMetadata(seo);
 
@@ -267,13 +259,18 @@ const RouteSeo: React.FC = () => {
       return;
     }
 
-    const collection = collectionSchemaByPath[cleanPath];
-    if (collection) {
-      setCollectionPageJsonLd({
-        path: cleanPath,
-        name: collection.name,
-        description: collection.description,
-      });
+    const updateCollection = (page: { title: string; name: string; description: string }) => {
+      setSeoMetadata({ title: page.title, description: page.description, path: collectionPath, exactTitle: true });
+      setCollectionPageJsonLd({ path: collectionPath, name: page.name, description: page.description });
+    };
+    if (collection || cleanPath.startsWith('/shop/')) {
+      if (collection) updateCollection(collection);
+      let active = true;
+      getCatalogCategoryRows().then((rows) => {
+        const page = getCatalogCategoryPages(rows)[collectionPath.slice(1)];
+        if (active && page) updateCollection(page);
+      }).catch(() => {});
+      return () => { active = false; };
     }
   }, [pathname]);
 
@@ -497,7 +494,7 @@ const App: React.FC = () => {
                 <Header />
                 <CartDrawer />
                 <main className="site-main-content flex-grow">
-                  <Suspense fallback={<LoadingFallback />}>
+                  <Suspense fallback={<CatalogPrerender fallback={<LoadingFallback />} />}>
                     <Routes>
                       <Route path="/" element={<Home />} />
 

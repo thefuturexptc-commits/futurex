@@ -1,4 +1,6 @@
 import { homepageFaqSchema } from '../utils/homepageFaqs.js';
+import { getCategoryFaqs } from '../utils/categoryFaqs.js';
+import { buildFaqSchema } from '../utils/faqSchema.js';
 export { homepageFaqs } from '../utils/homepageFaqs.js';
 
 const SITE_NAME = 'TheFutureX';
@@ -246,6 +248,8 @@ export const setCollectionPageJsonLd = ({
   description: string;
 }) => {
   const url = absoluteUrl(path);
+  const faqSchema = buildFaqSchema(getCategoryFaqs(path.replace(/^\//, '')));
+  if (faqSchema) setJsonLd('collection-faq-json-ld', faqSchema);
   setJsonLd('collection-page-json-ld', {
     '@context': 'https://schema.org',
     '@graph': [
@@ -285,6 +289,9 @@ const PAGE_SCOPED_JSON_LD_IDS = [
   'homepage-json-ld',
   'homepage-faq-json-ld',
   'collection-page-json-ld',
+  'collection-breadcrumb-json-ld',
+  'collection-faq-json-ld',
+  'organization-json-ld',
   'product-json-ld',
   'product-breadcrumb-json-ld',
   'product-faq-json-ld',

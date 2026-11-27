@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { buildReviewSchema, withProductReviewSummary } from '../utils/productSchema.js';
-import { renderProductPage } from '../api/product-page.js';
+import { renderProductPage } from '../utils/renderProductPage.js';
 
 const first = { id: 'review-1', name: 'First customer', rating: 5, comment: 'Comfortable for everyday use.', date: '2026-06-25', images: ['https://example.test/photo.webp'] };
 const second = { id: 'review-2', name: 'Second customer', rating: 4, comment: 'Useful app insights.', date: '2026-06-26' };

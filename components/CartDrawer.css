@@ -10,7 +10,7 @@
 
 @keyframes cart-drawer-fade-in {
   from {
-    opacity: 0;
+    opacity: 0; 
   }
 }
 

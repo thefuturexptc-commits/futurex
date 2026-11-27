@@ -1,3 +1,4 @@
+import { monitoringFaqs } from '../utils/categoryFaqs.js';
 import React from 'react';
 import '../components/CategoryInfoCards.css';
 import { CategoryTemplate } from '../components/CategoryTemplate';
@@ -27,33 +28,6 @@ const monitoringPopularSearches = [
   'Wellness Tracking Technology',
   'Fitness Monitoring Device',
   'The Future X Smart Monitoring',
-];
-
-const monitoringFaqs = [
-  {
-    question: 'What is a smart monitoring device?',
- answer: 'Smart monitoring devices are connected technologies designed to help users track fitness, sleep, activity and performance metrics through sensors and companion applications.',
-  },
-  {
-    question: 'What does the Future X Bluetooth Heart Rate Monitor track?',
-    answer: 'The Future X Bluetooth Heart Rate Monitor Chest Belt tracks heart rate data during workouts, fitness training, running, cycling, and sports activities through compatible devices and apps.',
-  },
-  {
-    question: 'What does a smart sleep tracking system monitor?',
-    answer: 'A smart sleep tracking system helps monitor sleep patterns, rest trends, recovery signals, and connected wellness insights through supported sensors and applications.',
-  },
-  {
-    question: 'Can smart monitoring devices connect to a phone?',
- answer: 'Yes, compatible smart monitoring devices connect to smartphones or supported apps to display fitness and wellness data.',
-  },
-  {
-    question: 'Who should use a Bluetooth heart rate chest belt?',
-    answer: 'A Bluetooth heart rate chest belt is useful for runners, cyclists, gym users, cardio training, and sports activities where real-time heart rate tracking is important.',
-  },
-  {
-    question: 'How can sleep tracking help daily wellness?',
-    answer: 'Sleep tracking can help users understand sleep duration, routine consistency, rest patterns, and recovery trends over time.',
-  },
 ];
 
 export const SmartMonitoring: React.FC = () => {

@@ -1,6 +1,7 @@
 import { isCatalogProductPublished } from '../../utils/catalogVisibility.js';
 import { getMerchantPricing } from '../../utils/merchantPricing.js';
 import { getProductStock } from '../../utils/productAvailability.js';
+import { getColorVariants, getMerchantAvailability } from '../../utils/productOfferAvailability.js';
 import { getMerchantProductId, getMerchantTitle, buildDescription } from '../../utils/generateMerchantFeed.js';
 import { getFallbackProductImageUrl } from '../../utils/productImageFallback.js';
 import fs from 'node:fs';
@@ -245,35 +246,10 @@ const toMerchantPrice = (amount) => ({
   currencyCode: 'INR',
 });
 
-const getColorVariants = (product) => {
-  const colors = Array.isArray(product.colors) ? product.colors : [];
-  const variants = Array.isArray(product.variants) ? product.variants : [];
-  const variations = Array.isArray(product.variations) ? product.variations : [];
-  const names = [...new Set([
-    ...colors.map((color) => typeof color === 'string' ? color : color?.name),
-    ...variants.map((variant) => variant?.colorName || variant?.color),
-    ...variations.map((variation) => variation?.color),
-  ].map((name) => String(name || '').trim()).filter(Boolean))];
-  return names.map((name) => {
-    const key = slugify(name);
-    const color = colors.find((item) => slugify(typeof item === 'string' ? item : item?.name) === key);
-    const variant = variants.find((item) => slugify(item?.colorName || item?.color) === key);
-    const legacyVariations = variations.filter((item) => slugify(item?.color) === key);
-    const sizesStock = (variant?.sizes || []).reduce((sum, row) => sum + Number(row.stock || 0), 0);
-    const legacyStock = legacyVariations.reduce((sum, item) => sum + Number(item.stock || 0), 0);
-    const colorStock = color ? Number(color.stock || 0) - Number(color.reservedStock || 0) : 0;
-    const stock = Math.max(0, colorStock > 0 ? colorStock : sizesStock > 0 ? sizesStock : legacyStock > 0 ? legacyStock : Number(variant?.stock || 0));
-    const images = flattenImageValues(
-      color?.images?.length ? color.images : variant?.images?.length ? variant.images : legacyVariations.map((item) => item.images || [])
-    ).map(toAbsoluteUrl).filter(Boolean);
-    return { name, slug: key, stock, images };
-  });
-};
-
 export const buildProductInput = (product, variant = null) => {
   if (!isCatalogProductPublished(product)) throw new Error('This product is excluded from the published catalog.');
   if (!product?.id) throw new Error('Product id is required for Merchant sync.');
-  const variantImages = variant?.images || [];
+  const variantImages = (variant?.images || []).map(toAbsoluteUrl).filter(Boolean);
   const images = variantImages.length ? variantImages : collectProductImages(product);
   const imageLink = images[0] || toAbsoluteUrl(getFallbackProductImageUrl(product));
   if (!imageLink) throw new Error(`Product ${product.id} needs a public image URL.`);
@@ -285,7 +261,7 @@ export const buildProductInput = (product, variant = null) => {
     description: buildDescription(product) || product.name || product.id,
     link: variant ? `${siteUrl}/product/${getProductSlug(product)}/${variant.slug}` : `${siteUrl}/product/${getProductSlug(product)}`,
     imageLink,
-    availability: stock > 0 && product.inStock !== false ? 'IN_STOCK' : 'OUT_OF_STOCK',
+    availability: variant ? (stock > 0 && product.inStock !== false ? 'IN_STOCK' : 'OUT_OF_STOCK') : getMerchantAvailability(product).toUpperCase(),
     sellOnGoogleQuantity: String(Math.max(0, stock)),
     condition: 'NEW',
     price: toMerchantPrice(offer.onSale ? offer.regularPrice : offer.currentPrice),
