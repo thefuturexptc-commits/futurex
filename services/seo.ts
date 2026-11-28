@@ -2,6 +2,7 @@ import { homepageFaqSchema } from '../utils/homepageFaqs.js';
 import { getCategoryFaqs } from '../utils/categoryFaqs.js';
 import { buildFaqSchema } from '../utils/faqSchema.js';
 import { resolveUrl } from '../utils/productSeoData.js';
+import { normalizeSeoKeywords } from '../utils/seoKeywords.js';
 export { homepageFaqs } from '../utils/homepageFaqs.js';
 
 const SITE_NAME = 'TheFutureX';
@@ -99,7 +100,8 @@ export const setSeoMetadata = ({
 
   document.title = fullTitle;
   setMetaName('description', description);
-  if (keywords.length) setMetaName('keywords', keywords.join(', '));
+  const normalizedKeywords = normalizeSeoKeywords(keywords);
+  if (normalizedKeywords.length) setMetaName('keywords', normalizedKeywords.join(', '));
   else document.head.querySelector('meta[name="keywords"]')?.remove();
   setMetaName('robots', robots);
   setMetaName('twitter:card', 'summary_large_image');

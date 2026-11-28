@@ -1,4 +1,5 @@
 import { getProductFaqs, normalizeProductFaqs } from '../utils/productFaqs';
+import { normalizeSeoKeywords } from '../utils/seoKeywords.js';
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { RichTextEditor } from '../components/RichTextEditor';
@@ -597,7 +598,7 @@ export const AdminDashboard: React.FC = () => {
       inStock: product.inStock ?? stock - reservedStock > 0,
     });
     setFeaturesString(product.features?.join('\n') || '');
-    setSeoKeywords(Array.isArray(product.searchKeywords) ? product.searchKeywords.join(', ') : '');
+    setSeoKeywords(normalizeSeoKeywords(product.searchKeywords).join(', '));
     setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
     setSelectedImageFiles([]);
     setSelectedVideoFile(null);
@@ -1045,7 +1046,7 @@ export const AdminDashboard: React.FC = () => {
         ...productForm,
         seoTitle: productForm.seoTitle?.trim() || '',
         seoDescription: productForm.seoDescription?.trim() || '',
-        searchKeywords: [...new Set(seoKeywords.split(/[\n,]+/).map((keyword) => keyword.trim()).filter(Boolean))],
+        searchKeywords: normalizeSeoKeywords(seoKeywords),
         ...(productForm.faqs !== undefined ? { faqs: normalizeProductFaqs(productForm.faqs) } : {}),
         slug: finalSlug,
         seoPreviousSlugs,
@@ -1760,7 +1761,7 @@ export const AdminDashboard: React.FC = () => {
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300" htmlFor="product-seo-keywords">SEO Keywords</label>
                     <textarea id="product-seo-keywords" className={`${inputClass} min-h-[72px]`} value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} placeholder="smart band, fitness tracker, wearable" />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Separate keywords with commas or new lines.</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Used in storefront search and page metadata. Separate phrases with commas or new lines.</p>
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     {([['brand', 'Brand'], ['sku', 'SKU'], ['modelNumber', 'Model number'], ['mpn', 'MPN'], ['gtin', 'GTIN']] as const).map(([field, label]) => (

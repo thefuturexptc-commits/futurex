@@ -1,4 +1,5 @@
 import type { Product } from '../types';
+import { normalizeSeoKeywords } from './seoKeywords.js';
 
 const normalizeLoose = (value = '') =>
   String(value)
@@ -95,7 +96,7 @@ export const scoreProductSearch = (product: Product, rawQuery: string): number =
   const description = normalizeLoose(product.description || '');
   const id = normalizeLoose(product.id);
   const slug = normalizeLoose(product.slug || '');
-  const keywords = flattenTextValues(product.searchKeywords);
+  const keywords = normalizeSeoKeywords(product.searchKeywords);
   const secondaryText = normalizeLoose(
     [
       description,
@@ -106,7 +107,6 @@ export const scoreProductSearch = (product: Product, rawQuery: string): number =
       product.bandType,
       ...(product.features || []),
       ...flattenTextValues(product.specs),
-      ...keywords,
     ].join(' ')
   );
   const compactSecondary = normalizeCompact(secondaryText);
@@ -121,8 +121,9 @@ export const scoreProductSearch = (product: Product, rawQuery: string): number =
   if (name.startsWith(query)) score += 90;
   if (name.includes(query)) score += 70;
   if (category === query || category === `smart ${query}` || category.includes(query)) score += 100;
-  if (secondaryText.includes(query)) score += 20;
-  if (compactQuery.length >= 3 && compactSecondary.includes(compactQuery)) score += 18;
+  if (secondaryText.includes(query) || keywords.some((keyword) => normalizeLoose(keyword).includes(query))) score += 20;
+  if (compactQuery.length >= 3 && (compactSecondary.includes(compactQuery) ||
+    keywords.some((keyword) => normalizeCompact(keyword).includes(compactQuery)))) score += 18;
 
   return score;
 };

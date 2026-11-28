@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fanGuideRoutes } from '../utils/fanGuideRoutes.js';
+import { normalizeSeoKeywords } from '../utils/seoKeywords.js';
 import './BlogJournal.css';
 
 export type JournalArticle = {
@@ -8,6 +9,7 @@ export type JournalArticle = {
   title: string;
   category: string;
   description: string;
+  keywords?: string[];
   standalone?: boolean;
 };
 
@@ -37,7 +39,8 @@ export function BlogJournal({ articles, featuredImage, topics }: BlogJournalProp
   const library: JournalArticle[] = topic === 'Bladeless Fans' ? [...fanArticles, ...articles] : [...articles, ...fanArticles];
   const matchingArticles = library.filter((article) => {
     const articleTopic = topicLabels.includes(article.category) ? article.category : 'More guides';
-    const searchable = `${article.title} ${article.description} ${article.category}`.toLowerCase();
+    const searchable = [article.title, article.description, article.category, ...normalizeSeoKeywords(article.keywords)]
+      .join(' ').toLowerCase();
     return (topic === 'All topics' || articleTopic === topic) && terms.every((term) => searchable.includes(term));
   });
 

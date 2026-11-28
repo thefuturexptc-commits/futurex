@@ -5,6 +5,7 @@ import { isCatalogProductPublished } from './catalogVisibility.js';
 import { getCatalogOffer } from './catalogPricing.js';
 import { getSchemaReviews } from './productSchema.js';
 import { getProductOverview } from './productOverviews.js';
+import { normalizeSeoKeywords } from './seoKeywords.js';
 
 export const SITE_URL = 'https://thefuturex.in';
 
@@ -287,9 +288,7 @@ export const buildProductSeoRecord = (product = {}) => {
     description: truncateText(description),
     metaDescription: stripHtml(product.seoDescription || '') || stripHtml(product.shortDescription || '') ||
       getProductOverview(product, slug)?.description || truncateText(description),
-    keywords: Array.isArray(product.searchKeywords)
-      ? [...new Set(product.searchKeywords.filter((keyword) => typeof keyword === 'string').map(stripHtml).filter(Boolean))]
-      : [],
+    keywords: normalizeSeoKeywords(product.searchKeywords),
     image: images[0] || resolveUrl(fallback?.image || '/images/tfx-google-logo.webp'),
     images: images.length ? images : [resolveUrl(fallback?.image || '/images/tfx-google-logo.webp')],
     // Invalid prices are omitted from offers rather than replaced by stale prices.

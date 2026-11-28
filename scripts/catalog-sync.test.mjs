@@ -8,6 +8,7 @@ import { renderProductPage } from '../utils/renderProductPage.js';
 import { renderCategoryPage } from '../utils/renderCategoryPage.js';
 import { getCategoryFaqs } from '../utils/categoryFaqs.js';
 import { getCatalogCategoryPages } from '../utils/categorySeo.js';
+import { productMatchesSearch } from '../utils/productSearch.ts';
 import { escapeHtml } from '../utils/renderProductPage.js';
 import { mergeProductReviews } from '../utils/productSchema.js';
 import { buildProductInput } from '../services/merchant-api/merchantService.js';
@@ -210,6 +211,17 @@ test('saved SEO for dedicated and custom categories appears in the page metadata
     assert.ok(html.includes(`<meta property="og:description" content="${description}">`));
     assert.ok(html.includes(`<meta name="twitter:description" content="${description}">`));
     assert.doesNotMatch(html, /name="keywords"/);
+  }
+});
+
+test('saved product keywords work in metadata and storefront search', () => {
+  const shell = '<head></head><div id="root"></div>';
+  for (const searchKeywords of [[' Silent   bedroom fan ', 'room-cooling'], ' Silent   bedroom fan, room-cooling ']) {
+    const edited = { ...product, searchKeywords };
+    assert.match(renderProductPage(shell, edited), /<meta name="keywords" content="Silent bedroom fan, room-cooling">/);
+    assert.ok(productMatchesSearch(edited, 'silent bedroom fan'));
+    assert.ok(productMatchesSearch(edited, 'room cooling'));
+    assert.equal(productMatchesSearch(edited, 'fan room'), false);
   }
 });
 

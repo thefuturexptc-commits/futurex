@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useTheme } from '../context/ThemeContext';
 import { Button } from '../components/ui/Button';
-import { getProductSlug, getProducts } from '../services/backend';
+import { getBlogPosts, getProductSlug, getProducts } from '../services/backend';
 import { removeJsonLd, setJsonLd, setSeoMetadata, stripHtml } from '../services/seo';
 import type { Product } from '../types';
 import { isBlogPostPublic, publishedBlogPosts } from '../utils/publishedBlogPosts';
@@ -6360,8 +6360,17 @@ const journalTopicNames: Record<string, RegExp> = {
 };
 
 const BlogLandingPage: React.FC = () => {
+  const [posts, setPosts] = useState(publishedBlogPosts);
+  useEffect(() => {
+    let active = true;
+    getBlogPosts().then((entries) => {
+      if (active) setPosts(entries);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+
   const plannedArticles = new Map(blogPlanCards.map((post) => [post.slug, post]));
-  const publishedArticles = publishedBlogPosts
+  const publishedArticles = posts
     .filter((post) => isBlogPostPublic(post))
     .sort((first, second) => Date.parse(second.publishedAt || second.updatedAt) - Date.parse(first.publishedAt || first.updatedAt))
     .map((post) => {
@@ -6370,16 +6379,18 @@ const BlogLandingPage: React.FC = () => {
       const category = blogPlanCategories.find(({ key }) => journalTopicNames[key]?.test(subject));
       const label = planned?.category || category?.label || 'More guides';
       return {
-        href: blogPath(post.slug),
+        href: post.canonicalPath || blogPath(post.slug),
         title: post.title,
         description: post.excerpt,
+        keywords: post.keywords,
         category: label,
       };
     });
 
   const articles = new Map<string, JournalArticle>();
   for (const post of [...publishedArticles, ...blogPlanCards, ...seoReadyExtraCards]) {
-    if (!articles.has(post.href)) articles.set(post.href, post);
+    const articleKey = post.href.replace(/^\/blogs\//, '/blog/');
+    if (!articles.has(articleKey)) articles.set(articleKey, post);
   }
 
   return (

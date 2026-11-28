@@ -5,6 +5,7 @@ import { getProductSlug } from './productSeoData.js';
 import { getRemoteCatalogCategories, getRemoteProducts } from './generateMerchantFeed.js';
 import { getCatalogCategoryPages } from './categorySeo.js';
 import { getColorVariants } from './productOfferAvailability.js';
+import { normalizeSeoKeywords } from './seoKeywords.js';
 
 const firebaseConfig = {
   apiKey: process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY || 'AIzaSyDx62Wa4HSx97I-91AqC3poaMzcNrpfKAc',
@@ -53,6 +54,7 @@ export async function getRemotePublishedBlogPosts() {
       changefreq: 'monthly',
       priority: '0.7',
       lastmod: post.updatedAt || post.publishedAt,
+      keywords: normalizeSeoKeywords(post.keywords),
     }));
   try {
     const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
@@ -60,7 +62,7 @@ export async function getRemotePublishedBlogPosts() {
     const snapshot = await withTimeout(getDocs(collection(db, 'blog_posts')), 6500);
     const remoteRoutes = snapshot.docs
       .map((doc) => ({ ...doc.data(), id: doc.id }))
-      .filter((post) => post.status === 'published' && typeof post.slug === 'string' && post.slug.trim() && typeof post.title === 'string' && post.title.trim())
+      .filter((post) => isBlogPostPublic(post) && typeof post.slug === 'string' && post.slug.trim() && typeof post.title === 'string' && post.title.trim())
       .filter((post) => !isGlassesMention(post.slug) && !isGlassesMention(post.title))
       .map((post) => ({
         path: `/blog/${post.slug.trim()}`,
@@ -68,6 +70,7 @@ export async function getRemotePublishedBlogPosts() {
         changefreq: 'monthly',
         priority: '0.7',
         lastmod: post.updatedAt,
+        keywords: normalizeSeoKeywords(post.keywords),
       }));
     const routesByPath = new Map(localRoutes.map((route) => [route.path, route]));
     remoteRoutes.forEach((route) => routesByPath.set(route.path, route));

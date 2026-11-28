@@ -13,6 +13,7 @@ import { getProductSlug } from '../utils/productSeoData.js';
 import { tfx5BlogPosts } from '../utils/tfx5BlogPosts.js';
 import { getBlogProductImage } from '../utils/blogProductImage.ts';
 import { publishedBlogPosts, isBlogPostPublic } from '../utils/publishedBlogPosts.ts';
+import { normalizeSeoKeywords } from '../utils/seoKeywords.js';
 
 const distDir = 'dist';
 const indexFile = join(distDir, 'index.html');
@@ -89,19 +90,20 @@ const remoteBlogRoutes = remotePublishedBlogPosts.map((post) => ({
   label: post.label,
   changefreq: post.changefreq,
   priority: post.priority,
-  post,
+  keywords: post.keywords,
 }));
 const unlistedJournalPaths = new Set(fanGuideRoutes.filter(({ listedInJournal }) => !listedInJournal).map(({ path }) => path));
 
 const blogPages = Object.fromEntries(
   [...sitemapRoutes, ...staticPublishedBlogPosts, ...remoteBlogRoutes]
-    .filter((route) => route.path === '/blog' || route.path.startsWith('/blog/'))
+    .filter((route) => route.path === '/blog' || /^\/blogs?\//.test(route.path))
     .map((route) => {
       const cleanRoute = route.path.replace(/^\//, '');
       return [
         cleanRoute,
         {
           title: route.path === '/blog' ? 'TheFutureX Blog' : route.label,
+          keywords: route.keywords || route.post?.keywords,
           description:
             route.path === '/blog'
               ? 'Explore TheFutureX smart wearable guides, smart band articles, smart ring articles, smart fan guides, heart rate monitoring posts, and sleep tracking resources.'
@@ -263,13 +265,18 @@ const buildHomepageJsonLd = () => `    <script id="homepage-json-ld" type="appli
 
 const getProductUrl = (product) => `${SITE_URL}/product/${product.canonicalSlug || product.slug}`;
 
-const injectPageSeo = (html, { title, description, url, image = DEFAULT_IMAGE, type = 'website', jsonLd = '' }) => {
+const injectPageSeo = (html, { title, description, url, image = DEFAULT_IMAGE, type = 'website', jsonLd = '', keywords = [] }) => {
   const imageUrl = resolveUrl(image);
+  const normalizedKeywords = normalizeSeoKeywords(keywords);
   let next = html
+    .replace(/<meta\s+name="keywords"\s+[^>]*>/gi, '')
     .replace(/<title>[\s\S]*?<\/title>/i, `<title>${htmlEscape(title)}</title>`)
     .replace(/<meta\s+property="og:type"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:type" content="${htmlEscape(type)}" />`);
 
   next = upsertTag(next, /<meta\s+name="description"\s+content="[^"]*"\s*\/?>/i, `<meta name="description" content="${htmlEscape(description)}" />`);
+  if (normalizedKeywords.length) {
+    next = next.replace('</head>', () => `    <meta name="keywords" content="${htmlEscape(normalizedKeywords.join(', '))}" />\n  </head>`);
+  }
   next = upsertTag(next, /<link\s+rel="canonical"\s+href="[^"]*"\s*\/?>/i, `<link rel="canonical" href="${htmlEscape(url)}" />`);
   next = upsertTag(next, /<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:title" content="${htmlEscape(title)}" />`);
   next = upsertTag(next, /<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/i, `<meta property="og:description" content="${htmlEscape(description)}" />`);
@@ -352,6 +359,7 @@ const getRouteHtml = (route) => {
       description: blogPage.description,
       url: `${SITE_URL}/${route}`,
       image: blogPage.post?.image || DEFAULT_IMAGE,
+      keywords: blogPage.keywords,
       type: 'article',
       jsonLd: blogPage.post ? `<script id="blog-article-json-ld" type="application/ld+json">${JSON.stringify({
         '@context': 'https://schema.org', '@type': 'Article', headline: blogPage.post.title,
