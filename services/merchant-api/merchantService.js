@@ -1,6 +1,5 @@
 import { isCatalogProductPublished } from '../../utils/catalogVisibility.js';
 import { getMerchantPricing } from '../../utils/merchantPricing.js';
-import { getProductStock } from '../../utils/productAvailability.js';
 import { getColorVariants, getMerchantAvailability } from '../../utils/productOfferAvailability.js';
 import { getMerchantProductId, getMerchantTitle, buildDescription } from '../../utils/generateMerchantFeed.js';
 import { getFallbackProductImageUrl } from '../../utils/productImageFallback.js';
@@ -255,14 +254,12 @@ export const buildProductInput = (product, variant = null) => {
   if (!imageLink) throw new Error(`Product ${product.id} needs a public image URL.`);
 
   const offer = getMerchantPricing(product);
-  const stock = variant ? variant.stock : getProductStock(product);
   const productAttributes = {
     title: variant ? `${getMerchantTitle(product)} - ${variant.name}` : getMerchantTitle(product),
     description: buildDescription(product) || product.name || product.id,
     link: variant ? `${siteUrl}/product/${getProductSlug(product)}/${variant.slug}` : `${siteUrl}/product/${getProductSlug(product)}`,
     imageLink,
-    availability: variant ? (stock > 0 && product.inStock !== false ? 'IN_STOCK' : 'OUT_OF_STOCK') : getMerchantAvailability(product).toUpperCase(),
-    sellOnGoogleQuantity: String(Math.max(0, stock)),
+    availability: variant ? (variant.stock > 0 && product.inStock !== false ? 'IN_STOCK' : 'OUT_OF_STOCK') : getMerchantAvailability(product).toUpperCase(),
     condition: 'NEW',
     price: toMerchantPrice(offer.onSale ? offer.regularPrice : offer.currentPrice),
     brand: product.brand || 'TheFutureX',

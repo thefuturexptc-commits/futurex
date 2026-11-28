@@ -43,6 +43,17 @@ test('every color listing keeps the displayed product offer rather than stale va
   }
 });
 
+test('Merchant product inputs send availability without a sell-on-Google quantity', () => {
+  for (const [stock, availability] of [[1, 'IN_STOCK'], [0, 'OUT_OF_STOCK']]) {
+    const product = { ...base, stock };
+    const variant = { name: 'Black', slug: 'black', stock, images: [] };
+    for (const input of [buildProductInput(product), buildProductInput(product, variant)]) {
+      assert.equal(input.productAttributes.availability, availability);
+      assert.equal(Object.hasOwn(input.productAttributes, 'sellOnGoogleQuantity'), false);
+    }
+  }
+});
+
 test('invalid prices fail exports and API submission rather than publishing zero, negative or nonfinite values', async () => {
   for (const price of [0, -1, NaN, Infinity, 'not-a-price']) {
     const product = { ...base, price };
