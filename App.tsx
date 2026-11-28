@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Routes, Route, Navigate, BrowserRouter, useLocation } from 'react-router-dom';
-import { CatalogPrerender, hasCatalogPrerender } from './components/CatalogPrerender';
+import { hasCatalogPrerender } from './components/CatalogPrerender';
 import { categoryPages, getCatalogCategoryPages } from './utils/categorySeo.js';
 import { getCatalogCategoryRows } from './services/backend';
 import { ThemeProvider } from './context/ThemeContext';
@@ -494,7 +494,7 @@ const App: React.FC = () => {
                 <Header />
                 <CartDrawer />
                 <main className="site-main-content flex-grow">
-                  <Suspense fallback={<CatalogPrerender fallback={<LoadingFallback />} />}>
+                  <Suspense fallback={<LoadingFallback />}>
                     <Routes>
                       <Route path="/" element={<Home />} />
 

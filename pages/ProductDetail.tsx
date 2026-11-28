@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useMemo, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, Link, useLocation, useSearchParams } from 'react-router-dom';
 import { CatalogPrerender, hasCatalogPrerender } from '../components/CatalogPrerender';
+import { LoadingFallback } from '../components/LoadingFallback';
 import { Product, ProductColor, ProductPublicReview } from '../types';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -2338,20 +2339,12 @@ export const ProductDetail: React.FC = () => {
     };
   }, [product]);
 
-  if ((loading || error || !product) && hasCatalogPrerender(pathname)) return <CatalogPrerender />;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-400 text-sm">Loading product...</p>
-        </div>
-      </div>
-    );
+  if (loading || (!error && productRouteId !== id)) {
+    return <LoadingFallback label="Loading product" />;
   }
 
   if (error || !product) {
+    if (hasCatalogPrerender(pathname)) return <CatalogPrerender />;
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-4">
         <p className="text-2xl font-bold text-white">Product Not Found</p>

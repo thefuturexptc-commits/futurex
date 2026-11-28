@@ -80,6 +80,9 @@ test('live product pages render current details and safely replace stale metadat
   assert.doesNotMatch(html, /Old title|href="\/old"|<script>alert/);
   assert.match(html, /My updated description/);
   assert.match(html, /My added feature/);
+  assert.match(html, /class="catalog-startup" role="status">Loading product/);
+  assert.match(html, /\.catalog-starting #root>\.catalog-prerender\{display:none\}/);
+  assert.match(html, /<main class="catalog-prerender">/);
   assert.match(html, /&lt;script&gt;/);
   assert.match(html, /\/assets\/app.js/);
   const schema = JSON.parse(html.match(/<script id="product-json-ld" type="application\/ld\+json">(.*?)<\/script>/)[1]);

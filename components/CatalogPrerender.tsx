@@ -6,9 +6,9 @@ const initialMarkup = document.querySelector('#root > .catalog-prerender')?.oute
 
 export const hasCatalogPrerender = (path: string) => Boolean(initialMarkup && path === initialPath);
 
-export function CatalogPrerender({ fallback = null }: { fallback?: React.ReactNode }) {
+export function CatalogPrerender() {
   const { pathname } = useLocation();
   return hasCatalogPrerender(pathname)
     ? <div dangerouslySetInnerHTML={{ __html: initialMarkup }} />
-    : <>{fallback}</>;
+    : null;
 }

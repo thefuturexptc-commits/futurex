@@ -13,7 +13,25 @@ export const renderFaqSection = (faqs) => faqs.length
     `<details><summary>${escapeHtml(q)}</summary><p>${escapeHtml(a)}</p></details>`).join('')}</section>`
   : '';
 
+const catalogStartupHead = `
+<style>
+  .catalog-startup{display:none}
+  .catalog-starting #root>.catalog-startup{display:grid;place-items:center;min-height:100vh;background:#0b1220;color:#f1f5f9;font:600 1rem system-ui,sans-serif}
+  .catalog-starting #root>.catalog-prerender{display:none}
+  .catalog-prerender{max-width:72rem;margin:auto;padding:1.5rem}
+  .catalog-prerender h1{font-size:2rem}
+  .catalog-prerender h2{font-size:1.4rem;margin-top:1.25rem}
+  .catalog-prerender-images{display:flex;gap:1rem;overflow:auto}
+  .catalog-prerender-images img{width:min(72vw,360px);height:auto;object-fit:contain}
+  .catalog-prerender dt{font-weight:bold}
+</style>
+<script>
+  document.documentElement.classList.add('catalog-starting');
+  window.setTimeout(() => document.documentElement.classList.remove('catalog-starting'), 10000);
+</script>`;
+
 export const renderCatalogShell = (shell, { title, url, metaDescription, image, type, schemas, content, keywords = [], price = 0 }) => {
+  const loadingLabel = type === 'product' ? 'Loading product…' : 'Loading collection…';
   const socialProperties = {
     'og:title': title, 'og:description': metaDescription, 'og:url': url, 'og:image': image,
     'og:type': type, 'og:site_name': 'TheFutureX',
@@ -38,8 +56,9 @@ export const renderCatalogShell = (shell, { title, url, metaDescription, image, 
     .replace(/<link\b[^>]*rel="canonical"[^>]*>/gi, '')
     .replace(/<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<noscript>\s*<main\b[\s\S]*?<\/noscript>/gi, '')
-    .replace('</head>', () => `${metadata}\n<style>.catalog-prerender{max-width:72rem;margin:auto;padding:1.5rem}.catalog-prerender h1{font-size:2rem}.catalog-prerender h2{font-size:1.4rem;margin-top:1.25rem}.catalog-prerender-images{display:flex;gap:1rem;overflow:auto}.catalog-prerender-images img{width:min(72vw,360px);height:auto;object-fit:contain}.catalog-prerender dt{font-weight:bold}</style>\n</head>`)
-    .replace('<div id="root"></div>', () => `<div id="root">${content}</div>`);
+    .replace('</head>', () => `${metadata}\n${catalogStartupHead}\n</head>`)
+    .replace('<div id="root"></div>', () =>
+      `<div id="root"><div class="catalog-startup" role="status">${loadingLabel}</div>${content}</div>`);
 };
 
 export const renderProductPage = (shell, product, colorSlug = '') => {

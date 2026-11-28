@@ -59,6 +59,7 @@ export default async function handler(req, res) {
       return res.redirect(301, SITE_URL + '/product/' + canonicalSlug + (color ? '/' + color.toLowerCase() : '') + requestUrl.search);
     }
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Vercel-CDN-Cache-Control', 'public, s-maxage=30');
     return res.status(200).send(html);
   } catch (error) {
     console.error('Live product page failed', error);
