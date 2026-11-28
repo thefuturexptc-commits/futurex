@@ -253,6 +253,7 @@ export const AdminDashboard: React.FC = () => {
     : (productForm.faqs || []).map((faq) => 'q' in faq ? faq : { q: faq.question, a: faq.answer });
   const [featuresString, setFeaturesString] = useState('');
   const [specsString, setSpecsString] = useState('');
+  const [seoKeywords, setSeoKeywords] = useState('');
   const [selectedImageFiles, setSelectedImageFiles] = useState<File[]>([]);
   const [selectedVideoFile, setSelectedVideoFile] = useState<File | null>(null);
   const [dragImageIndex, setDragImageIndex] = useState<number | null>(null);
@@ -531,6 +532,7 @@ export const AdminDashboard: React.FC = () => {
 
   const handleOpenAddProduct = () => {
     setProductForm(initialProductState);
+    setSeoKeywords('');
     setFeaturesString('');
     setSpecsString('');
     setSelectedImageFiles([]);
@@ -595,6 +597,7 @@ export const AdminDashboard: React.FC = () => {
       inStock: product.inStock ?? stock - reservedStock > 0,
     });
     setFeaturesString(product.features?.join('\n') || '');
+    setSeoKeywords(Array.isArray(product.searchKeywords) ? product.searchKeywords.join(', ') : '');
     setSpecsString(Object.entries(product.specs || {}).map(([k, v]) => `${k}: ${v}`).join('\n'));
     setSelectedImageFiles([]);
     setSelectedVideoFile(null);
@@ -1040,6 +1043,9 @@ export const AdminDashboard: React.FC = () => {
         .filter((slug) => slug && slug !== finalSlug);
       const productData = {
         ...productForm,
+        seoTitle: productForm.seoTitle?.trim() || '',
+        seoDescription: productForm.seoDescription?.trim() || '',
+        searchKeywords: [...new Set(seoKeywords.split(/[\n,]+/).map((keyword) => keyword.trim()).filter(Boolean))],
         ...(productForm.faqs !== undefined ? { faqs: normalizeProductFaqs(productForm.faqs) } : {}),
         slug: finalSlug,
         seoPreviousSlugs,
@@ -1545,7 +1551,11 @@ export const AdminDashboard: React.FC = () => {
         />
       )}
       {activeTab === 'seo' && (
-        <SeoTab siteEvents={siteAnalyticsEvents} />
+        <SeoTab
+          siteEvents={siteAnalyticsEvents}
+          onProductSeo={hasTabAccess('products') ? () => handleTabChange('products') : undefined}
+          onCategorySeo={hasTabAccess('categories') ? () => handleTabChange('categories') : undefined}
+        />
       )}
       {activeTab === 'blog' && <BlogTab />}
       {activeTab === 'inventory' && (
@@ -1735,21 +1745,21 @@ export const AdminDashboard: React.FC = () => {
                 <section className="rounded-lg border border-gray-200 bg-white p-4 space-y-3 dark:border-white/10 dark:bg-white/5">
                   <div>
                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">SEO Details</h3>
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">These details help search engines understand this product. Keywords are stored as metadata and are not shown as product text.</p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">The title and description are used in page metadata and social previews.</p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300" htmlFor="product-seo-title">SEO Title</label>
                     <input id="product-seo-title" className={inputClass} value={productForm.seoTitle || ''} maxLength={160}
+                      placeholder={productForm.name ? `${productForm.name} | TheFutureX` : 'Uses the product name by default'}
                       onChange={(e) => setProductForm((prev) => ({ ...prev, seoTitle: e.target.value }))} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Description / Short Description</label>
-                    <textarea className={`${inputClass} min-h-[90px]`} value={productForm.seoDescription || ''} onChange={(e) => setProductForm((prev) => ({ ...prev, seoDescription: e.target.value }))} placeholder="Brief product summary shown below the title and in search results" maxLength={320} />
-                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Shown below the product title and used as the search result description. Keep it concise.</p>
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300" htmlFor="product-meta-description">Meta Description</label>
+                    <textarea id="product-meta-description" className={`${inputClass} min-h-[90px]`} value={productForm.seoDescription || ''} onChange={(e) => setProductForm((prev) => ({ ...prev, seoDescription: e.target.value }))} placeholder="Uses the short description or product overview by default" maxLength={320} />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">SEO Keywords</label>
-                    <textarea className={`${inputClass} min-h-[72px]`} value={(productForm.searchKeywords || []).join(', ')} onChange={(e) => setProductForm((prev) => ({ ...prev, searchKeywords: e.target.value.split(/[\n,]+/).map((keyword) => keyword.trim()).filter(Boolean) }))} placeholder="smart band, fitness tracker, wearable" />
+                    <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300" htmlFor="product-seo-keywords">SEO Keywords</label>
+                    <textarea id="product-seo-keywords" className={`${inputClass} min-h-[72px]`} value={seoKeywords} onChange={(e) => setSeoKeywords(e.target.value)} placeholder="smart band, fitness tracker, wearable" />
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Separate keywords with commas or new lines.</p>
                   </div>
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

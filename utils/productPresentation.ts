@@ -133,5 +133,8 @@ export const getProductPresentation = (input: Product, colorSlug = '') => {
     'product-faq-json-ld': buildFaqSchema(faqs),
     'organization-json-ld': organizationSchema,
   };
-  return { url, name, title, overview, description, features, specs, model, stockLabel, warranty, faqs, reviews, images, offer, category, schemas, variant, metaDescription: seo.metaDescription };
+  return {
+    url, name, title, overview, description, features, specs, model, stockLabel, warranty,
+    faqs, reviews, images, offer, category, schemas, variant, metaDescription: seo.metaDescription, keywords: seo.keywords,
+  };
 };

@@ -7,6 +7,7 @@ import { findProductForRoute } from '../api/product-page.js';
 import { renderProductPage } from '../utils/renderProductPage.js';
 import { renderCategoryPage } from '../utils/renderCategoryPage.js';
 import { getCategoryFaqs } from '../utils/categoryFaqs.js';
+import { getCatalogCategoryPages } from '../utils/categorySeo.js';
 import { escapeHtml } from '../utils/renderProductPage.js';
 import { mergeProductReviews } from '../utils/productSchema.js';
 import { buildProductInput } from '../services/merchant-api/merchantService.js';
@@ -164,17 +165,23 @@ test('color variant feeds include sale prices alongside the saved MRP', async ()
 test('admin edits drive the initial HTML, FAQ schema, canonical redirects and Merchant offers', () => {
   const edited = {
     ...product, seoPreviousSlugs: ['old-fan'], seoTitle: 'Updated SEO title', seoDescription: 'Updated meta description',
+    searchKeywords: [' cooling & heating ', 'tower fan', 'tower fan'],
     shortDescription: 'Updated overview', warranty: 'Two-year motor warranty', useCatalogPricing: true, useCatalogTitle: true,
     salePrice: 14000, mrp: 16000, modelNumber: 'TP-02', mpn: 'TX-123', gtin: '8901234567890',
     faqs: [{ question: 'Can I clean the filter?', answer: 'Yes. Follow the care instructions.' }],
     colors: [{ name: 'Matte Black', stock: 3, reservedStock: 3 }],
     variants: [{ colorName: 'Matte Black', sizes: [{ stock: 3 }] }],
   };
-  const shell = '<head></head><div id="root"></div>';
+  const shell = '<head><meta name="keywords" content="Stale keywords"><meta property="og:description" content="Stale description"></head><div id="root"></div>';
   const html = renderProductPage(shell, edited, 'matte-black');
   const parse = (id) => JSON.parse(html.match(new RegExp(`<script id="${id}" type="application/ld\\+json">(.*?)</script>`))[1]);
   assert.match(html, /<title>Updated SEO title – Matte Black<\/title>/);
   assert.match(html, /<meta name="description" content="Updated meta description">/);
+  assert.match(html, /<meta property="og:description" content="Updated meta description">/);
+  assert.match(html, /<meta name="twitter:description" content="Updated meta description">/);
+  assert.match(html, /<meta name="keywords" content="cooling &amp; heating, tower fan">/);
+  assert.match(html, /<meta property="product:price:amount" content="14000.00">/);
+  assert.doesNotMatch(html, /Stale keywords|Stale description/);
   assert.match(html, /<summary>Can I clean the filter\?<\/summary><p>Yes\. Follow the care instructions\.<\/p>/);
   assert.match(html, /Two-year motor warranty/);
   assert.equal(parse('product-faq-json-ld').mainEntity[0].acceptedAnswer.text, edited.faqs[0].answer);
@@ -187,6 +194,23 @@ test('admin edits drive the initial HTML, FAQ schema, canonical redirects and Me
   assert.equal(renderProductPage(shell, edited, 'unknown-color'), null);
   assert.doesNotMatch(renderProductPage(shell, { ...edited, faqs: [] }), /FAQPage|<details>/);
   assert.match(renderCategoryPage(shell, 'bladeless-fan', [buildProductSeoRecord(edited)]), /BreadcrumbList.*bladeless-fan/);
+});
+
+test('saved SEO for dedicated and custom categories appears in the page metadata', () => {
+  const pages = getCatalogCategoryPages([
+    { name: 'smart fans', seoTitle: 'Fan collection', seoDescription: 'Browse our fans.' },
+    { name: 'Home Devices', seoTitle: 'Home devices collection', seoDescription: 'Explore our home devices.' },
+  ]);
+  const shell = '<head><meta name="keywords" content="Stale"></head><div id="root"></div>';
+  for (const route of ['bladeless-fan', 'shop/Home%20Devices']) {
+    const { title, description } = pages[route];
+    const html = renderCategoryPage(shell, route, [], pages);
+    assert.ok(html.includes(`<title>${title}</title>`));
+    assert.ok(html.includes(`<meta name="description" content="${description}">`));
+    assert.ok(html.includes(`<meta property="og:description" content="${description}">`));
+    assert.ok(html.includes(`<meta name="twitter:description" content="${description}">`));
+    assert.doesNotMatch(html, /name="keywords"/);
+  }
 });
 
 test('all dedicated category FAQs are visible before JavaScript and match their schema', () => {

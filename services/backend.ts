@@ -1,5 +1,5 @@
 import { 
-  collection, getDocs, getDocsFromServer, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, getFirestore
+  collection, getDocs, getDocsFromServer, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, limit, onSnapshot, getFirestore, writeBatch
 } from 'firebase/firestore';
 import { 
   signInAnonymously, 
@@ -1636,10 +1636,17 @@ export const getCatalogCategoryRows = async () => {
 export const updateCategorySeo = async (name: string, seoTitle: string, seoDescription: string) => {
   await ensureFirebaseConnection();
   const categories = collection(db, 'categories');
-  const snapshot = await getDocs(query(categories, where('name', '==', name)));
-  const fields = { name, seoTitle: seoTitle.trim(), seoDescription: seoDescription.trim() };
-  if (snapshot.empty) await addDoc(categories, fields);
-  else await Promise.all(snapshot.docs.map(({ ref }) => setDoc(ref, fields, { merge: true })));
+  const key = name.trim().toLowerCase();
+  const snapshot = await getDocs(categories);
+  const matches = snapshot.docs.filter((entry) => String(entry.data().name || '').trim().toLowerCase() === key);
+  const fields = { seoTitle: seoTitle.trim(), seoDescription: seoDescription.trim() };
+  if (!matches.length) {
+    await setDoc(doc(categories, `seo-${encodeURIComponent(key)}`), { name: name.trim(), ...fields }, { merge: true });
+    return;
+  }
+  const batch = writeBatch(db);
+  for (const { ref } of matches) batch.set(ref, fields, { merge: true });
+  await batch.commit();
 };
 
 export const getCategories = async (): Promise<string[]> => {

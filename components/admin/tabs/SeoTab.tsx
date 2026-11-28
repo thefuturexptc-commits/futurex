@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { SectionHeader } from '../common/SectionHeader';
+import { Button } from '../../ui/Button';
 import type { SiteAnalyticsEvent } from '../../../types';
 
 const siteUrl = 'https://thefuturex.in/';
@@ -137,6 +138,8 @@ const formatLocationSource = (source?: SiteAnalyticsEvent['locationSource']) => 
 
 interface SeoTabProps {
   siteEvents: SiteAnalyticsEvent[];
+  onProductSeo?: () => void;
+  onCategorySeo?: () => void;
 }
 
 type SeoVisitorRow = {
@@ -158,7 +161,7 @@ type SeoVisitorRow = {
   locationAccuracy: number | '';
 };
 
-export const SeoTab: React.FC<SeoTabProps> = ({ siteEvents }) => {
+export const SeoTab: React.FC<SeoTabProps> = ({ siteEvents, onProductSeo, onCategorySeo }) => {
   const visitorRows = useMemo(() => {
     const visitorMap = new Map<string, SeoVisitorRow>();
 
@@ -267,6 +270,13 @@ export const SeoTab: React.FC<SeoTabProps> = ({ siteEvents }) => {
         title="SEO"
         subtitle="Search snippets, indexing checks, sitemap status, and Search Console fixes"
       />
+
+      {(onProductSeo || onCategorySeo) && (
+        <div className="flex flex-wrap gap-3">
+          {onProductSeo && <Button variant="outline" onClick={onProductSeo}>Manage product SEO</Button>}
+          {onCategorySeo && <Button variant="outline" onClick={onCategorySeo}>Manage category SEO</Button>}
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {seoChecks.map(({ title, description, status }) => (

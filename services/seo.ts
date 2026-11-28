@@ -1,6 +1,7 @@
 import { homepageFaqSchema } from '../utils/homepageFaqs.js';
 import { getCategoryFaqs } from '../utils/categoryFaqs.js';
 import { buildFaqSchema } from '../utils/faqSchema.js';
+import { resolveUrl } from '../utils/productSeoData.js';
 export { homepageFaqs } from '../utils/homepageFaqs.js';
 
 const SITE_NAME = 'TheFutureX';
@@ -94,7 +95,7 @@ export const setSeoMetadata = ({
   const titleHasBrand = title.includes(SITE_NAME) || /The Future X/i.test(title);
   const fullTitle = exactTitle || titleHasBrand ? title : `${title} | ${SITE_NAME}`;
   const canonicalUrl = absoluteUrl(path);
-  const imageUrl = absoluteUrl(image);
+  const imageUrl = resolveUrl(image) || DEFAULT_IMAGE;
 
   document.title = fullTitle;
   setMetaName('description', description);
@@ -115,7 +116,10 @@ export const setSeoMetadata = ({
 };
 
 export const setProductSocialMetadata = (price: number, currency = 'INR') => {
-  if (!Number.isFinite(price) || price <= 0) return;
+  if (!Number.isFinite(price) || price <= 0) {
+    removeProductSocialMetadata();
+    return;
+  }
   setMetaProperty('product:price:amount', price.toFixed(2));
   setMetaProperty('product:price:currency', currency);
 };

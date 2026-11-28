@@ -2010,7 +2010,10 @@ export const ProductDetail: React.FC = () => {
 
     const page = getProductPresentation(product, colorSlug);
     if (!page) return;
-    setSeoMetadata({ title: page.title, exactTitle: true, description: page.metaDescription, path: page.url, image: page.images[0], type: 'product' });
+    setSeoMetadata({
+      title: page.title, exactTitle: true, description: page.metaDescription, path: page.url,
+      image: page.images[0], keywords: page.keywords, type: 'product',
+    });
     setProductSocialMetadata(page.offer.currentPrice);
     for (const [key, schema] of Object.entries(page.schemas)) {
       if (schema) setJsonLd(key, schema);

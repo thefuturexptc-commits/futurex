@@ -13,20 +13,28 @@ export const renderFaqSection = (faqs) => faqs.length
     `<details><summary>${escapeHtml(q)}</summary><p>${escapeHtml(a)}</p></details>`).join('')}</section>`
   : '';
 
-export const renderCatalogShell = (shell, { title, url, metaDescription, image, type, schemas, content }) => {
+export const renderCatalogShell = (shell, { title, url, metaDescription, image, type, schemas, content, keywords = [], price = 0 }) => {
+  const socialProperties = {
+    'og:title': title, 'og:description': metaDescription, 'og:url': url, 'og:image': image,
+    'og:type': type, 'og:site_name': 'TheFutureX',
+    ...(type === 'product' && Number.isFinite(price) && price > 0
+      ? { 'product:price:amount': price.toFixed(2), 'product:price:currency': 'INR' }
+      : {}),
+  };
   const metadata = [
     `<title>${escapeHtml(title)}</title>`,
     `<meta name="description" content="${escapeHtml(metaDescription)}">`,
+    ...(keywords.length ? [`<meta name="keywords" content="${escapeHtml(keywords.join(', '))}">`] : []),
     `<link rel="canonical" href="${escapeHtml(url)}">`,
-    ...Object.entries({ 'og:title': title, 'og:description': metaDescription, 'og:url': url, 'og:image': image, 'og:type': type })
+    ...Object.entries(socialProperties)
       .map(([key, value]) => `<meta property="${key}" content="${escapeHtml(value)}">`),
-    ...Object.entries({ 'twitter:title': title, 'twitter:description': metaDescription, 'twitter:image': image })
+    ...Object.entries({ 'twitter:card': 'summary_large_image', 'twitter:title': title, 'twitter:description': metaDescription, 'twitter:image': image })
       .map(([key, value]) => `<meta name="${key}" content="${escapeHtml(value)}">`),
     ...Object.entries(schemas).filter(([, data]) => data).map(([id, data]) => jsonLdTag(id, data)),
   ].join('\n');
   return shell
     .replace(/<title>[\s\S]*?<\/title>/gi, '')
-    .replace(/<meta\b[^>]*(?:name="(?:description|twitter:(?:title|description|image))"|property="og:[^"]*")[^>]*>/gi, '')
+    .replace(/<meta\b[^>]*(?:name="(?:description|keywords|twitter:(?:card|title|description|image))"|property="(?:og:[^"]*|product:price:(?:amount|currency))")[^>]*>/gi, '')
     .replace(/<link\b[^>]*rel="canonical"[^>]*>/gi, '')
     .replace(/<script\b[^>]*type="application\/ld\+json"[^>]*>[\s\S]*?<\/script>/gi, '')
     .replace(/<noscript>\s*<main\b[\s\S]*?<\/noscript>/gi, '')
@@ -39,7 +47,7 @@ export const renderProductPage = (shell, product, colorSlug = '') => {
   if (!page) return null;
 
   const { title, url, name, overview, description, features, specs, model, stockLabel, warranty, faqs,
-    reviews, images, offer, category, schemas, variant, metaDescription } = page;
+    reviews, images, offer, category, schemas, variant, metaDescription, keywords } = page;
   const price = (amount) => 'INR ' + amount.toFixed(2);
   const productImages = images.map((src, index) =>
     `<img src="${escapeHtml(src)}" alt="${escapeHtml(name + (variant ? ' – ' + variant.name : '') + (index ? ' – image ' + (index + 1) : ''))}" width="360" height="360" ${index ? 'loading="lazy"' : 'fetchpriority="high"'}>`
@@ -68,5 +76,7 @@ export const renderProductPage = (shell, product, colorSlug = '') => {
     <section id="reviews"><h2>Customer reviews</h2>${reviewHtml}</section>
     ${renderFaqSection(faqs)}
   </main>`;
-  return renderCatalogShell(shell, { title, url, metaDescription, image: images[0], type: 'product', schemas, content });
+  return renderCatalogShell(shell, {
+    title, url, metaDescription, image: images[0], type: 'product', schemas, content, keywords, price: offer.currentPrice,
+  });
 };
